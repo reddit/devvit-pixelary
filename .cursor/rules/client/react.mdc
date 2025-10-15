@@ -1,0 +1,8 @@
+---
+description: React
+globs: ['**/*.tsx']
+alwaysApply: true
+---
+
+- Prefer functional components over classes
+- Prefer function keyword over const for components

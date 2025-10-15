@@ -1,0 +1,12 @@
+{
+  // Only build references.
+  "files": [],
+  "references": [
+    { "path": "./src/client" },
+    { "path": "./src/shared" },
+    { "path": "./src/server" }
+  ],
+  "compilerOptions": {
+    "noEmit": true
+  }
+}

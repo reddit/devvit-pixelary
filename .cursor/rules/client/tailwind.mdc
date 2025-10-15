@@ -1,0 +1,8 @@
+---
+description: Tailwind
+globs: ['**/*.tsx', '**/*.css']
+alwaysApply: true
+---
+
+- Use tailwind for styling
+- Prefer tailwind instead of style attributes

@@ -1,0 +1,168 @@
+import { vi } from 'vitest';
+
+// Mock @devvit/web/server
+vi.mock('@devvit/web/server', () => ({
+  redis: {
+    get: vi.fn(),
+    set: vi.fn(),
+    del: vi.fn(),
+    incr: vi.fn(),
+    mGet: vi.fn(),
+    zAdd: vi.fn(),
+    zRange: vi.fn(),
+    zCard: vi.fn(),
+    zScore: vi.fn(),
+    zRank: vi.fn(),
+    hGet: vi.fn(),
+    hSet: vi.fn(),
+    hGetAll: vi.fn(),
+    hDel: vi.fn(),
+    hIncrBy: vi.fn(),
+    sAdd: vi.fn(),
+    sRem: vi.fn(),
+    sMembers: vi.fn(),
+    sIsMember: vi.fn(),
+    lPush: vi.fn(),
+    rPop: vi.fn(),
+    lLen: vi.fn(),
+    lRange: vi.fn(),
+    expire: vi.fn(),
+    ttl: vi.fn(),
+    exists: vi.fn(),
+    keys: vi.fn(),
+    flushDb: vi.fn(),
+  },
+  reddit: {
+    getPostById: vi.fn(),
+    getCommentById: vi.fn(),
+    getSubredditByName: vi.fn(),
+    getUserByUsername: vi.fn(),
+    createComment: vi.fn(),
+    updateComment: vi.fn(),
+    deleteComment: vi.fn(),
+    createPost: vi.fn(),
+    updatePost: vi.fn(),
+    deletePost: vi.fn(),
+    sendPrivateMessage: vi.fn(),
+    banUser: vi.fn(),
+    unbanUser: vi.fn(),
+    muteUser: vi.fn(),
+    unmuteUser: vi.fn(),
+    approvePost: vi.fn(),
+    removePost: vi.fn(),
+    lockPost: vi.fn(),
+    unlockPost: vi.fn(),
+    stickyPost: vi.fn(),
+    unstickyPost: vi.fn(),
+    distinguishComment: vi.fn(),
+    undistinguishComment: vi.fn(),
+    approveComment: vi.fn(),
+    removeComment: vi.fn(),
+    lockComment: vi.fn(),
+    unlockComment: vi.fn(),
+  },
+  realtime: {
+    send: vi.fn(),
+    subscribe: vi.fn(),
+    unsubscribe: vi.fn(),
+  },
+  scheduler: {
+    runAfter: vi.fn(),
+    runAt: vi.fn(),
+    runEvery: vi.fn(),
+    cancelJob: vi.fn(),
+  },
+  logger: {
+    info: vi.fn(),
+    warn: vi.fn(),
+    error: vi.fn(),
+    debug: vi.fn(),
+  },
+  moderator: {
+    isModerator: vi.fn(),
+    getModerators: vi.fn(),
+  },
+  user: {
+    isModerator: vi.fn(),
+    isAdmin: vi.fn(),
+    isOwner: vi.fn(),
+    isApproved: vi.fn(),
+    isBanned: vi.fn(),
+    isMuted: vi.fn(),
+  },
+}));
+
+// Mock factory functions for test data
+export const createMockUser = (overrides = {}) => ({
+  id: 'user123',
+  username: 'testuser',
+  displayName: 'Test User',
+  isModerator: false,
+  isAdmin: false,
+  isOwner: false,
+  ...overrides,
+});
+
+export const createMockPost = (overrides = {}) => ({
+  id: 't3_test123',
+  title: 'Test Post',
+  author: 'testuser',
+  subreddit: 'testsubreddit',
+  score: 0,
+  numComments: 0,
+  created: Date.now(),
+  ...overrides,
+});
+
+export const createMockComment = (overrides = {}) => ({
+  id: 't1_test123',
+  author: 'testuser',
+  body: 'Test comment',
+  score: 0,
+  created: Date.now(),
+  ...overrides,
+});
+
+export const createMockSubreddit = (overrides = {}) => ({
+  name: 'testsubreddit',
+  displayName: 'Test Subreddit',
+  description: 'A test subreddit',
+  subscribers: 1000,
+  ...overrides,
+});
+
+// Redis mock utilities
+export const mockRedisResponse = async <T>(data: T) => {
+  // Note: This function creates mock responses for Redis operations
+  // The actual Redis client is mocked at the module level above
+  return {
+    get: vi.fn().mockResolvedValue(JSON.stringify(data)),
+    set: vi.fn().mockResolvedValue('OK'),
+    del: vi.fn().mockResolvedValue(1),
+    incr: vi.fn().mockResolvedValue(1),
+    mGet: vi.fn().mockResolvedValue([JSON.stringify(data)]),
+    zAdd: vi.fn().mockResolvedValue(1),
+    zRange: vi.fn().mockResolvedValue([JSON.stringify(data)]),
+    zCard: vi.fn().mockResolvedValue(1),
+    zScore: vi.fn().mockResolvedValue(1),
+    zRank: vi.fn().mockResolvedValue(0),
+    hGet: vi.fn().mockResolvedValue(JSON.stringify(data)),
+    hSet: vi.fn().mockResolvedValue(1),
+    hGetAll: vi.fn().mockResolvedValue({ key: JSON.stringify(data) }),
+    hDel: vi.fn().mockResolvedValue(1),
+    hIncrBy: vi.fn().mockResolvedValue(1),
+    sAdd: vi.fn().mockResolvedValue(1),
+    sRem: vi.fn().mockResolvedValue(1),
+    sMembers: vi.fn().mockResolvedValue([JSON.stringify(data)]),
+    sIsMember: vi.fn().mockResolvedValue(1),
+    lPush: vi.fn().mockResolvedValue(1),
+    rPop: vi.fn().mockResolvedValue(JSON.stringify(data)),
+    lLen: vi.fn().mockResolvedValue(1),
+    lRange: vi.fn().mockResolvedValue([JSON.stringify(data)]),
+    expire: vi.fn().mockResolvedValue(1),
+    ttl: vi.fn().mockResolvedValue(3600),
+    exists: vi.fn().mockResolvedValue(1),
+    keys: vi.fn().mockResolvedValue(['key1', 'key2']),
+    flushDb: vi.fn().mockResolvedValue('OK'),
+  };
+};

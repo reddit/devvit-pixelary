@@ -1,0 +1,208 @@
+@import 'tailwindcss';
+
+@layer base {
+  /* CSS Custom Properties */
+  :root {
+    /* Brand colors */
+    --color-brand-primary: #000000;
+    --color-brand-secondary: #07495f;
+    --color-brand-tertiary: #0e92be;
+    --color-brand-weak: #b2b2b2;
+    --color-brand-background: #56ccf2;
+    --color-brand-background-highlight: rgba(255, 255, 255, 0.1);
+    --color-brand-orangered: #ff4500;
+
+    --color-shadow: rgba(0, 0, 0, 0.3);
+
+    --color-skeleton: rgba(0, 0, 0, 0.2);
+
+    /* Pixel shadows */
+    --shadow-pixel: 4px 4px 0px 0px var(--color-shadow);
+
+    font-family: monospace;
+    color: var(--color-brand-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* CSS Reset */
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+  }
+
+  * {
+    margin: 0;
+    padding: 0;
+    font-family: monospace;
+  }
+
+  html {
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-text-size-adjust: 100%;
+    -moz-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+  }
+
+  body {
+    min-height: 100vh;
+  }
+
+  /* Pixel-perfect rendering */
+  canvas,
+  img,
+  svg {
+    image-rendering: pixelated;
+    image-rendering: -moz-crisp-edges;
+    image-rendering: crisp-edges;
+  }
+
+  /* Pixel shadow utilities */
+  .pixel-shadow {
+    box-shadow: var(--shadow-pixel);
+  }
+
+  /* Skeleton utilities */
+  .skeleton {
+    background-color: var(--color-skeleton);
+    @apply animate-pulse;
+  }
+
+  /* Reduced motion support */
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
+
+    /* Disable our custom animations for accessibility */
+    .animate-pixel-breathe,
+    .animate-count-pulse,
+    .animate-diagonal-shimmer {
+      animation: none !important;
+    }
+  }
+
+  @layer utilities {
+    /* Skeleton utilities */
+    .skeleton {
+      background-color: var(--color-skeleton);
+      @apply animate-pulse;
+    }
+  }
+
+  /* Animation utilities */
+  @keyframes nudge-right {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    50% {
+      transform: translateX(4px);
+    }
+  }
+
+  @keyframes nudge-left {
+    0%,
+    100% {
+      transform: translateX(0);
+    }
+    50% {
+      transform: translateX(-4px);
+    }
+  }
+
+  @keyframes incorrect-guess {
+    0% {
+      transform: translateX(0);
+    }
+    25% {
+      transform: translateX(-4px);
+    }
+    50% {
+      transform: translateX(0);
+    }
+    75% {
+      transform: translateX(4px);
+    }
+    100% {
+      transform: translateX(0);
+    }
+  }
+
+  @keyframes pixel-breathe {
+    0%,
+    100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.02);
+    }
+  }
+
+  @keyframes count-pulse {
+    0% {
+      transform: scale(1);
+      color: var(--color-brand-primary);
+    }
+    50% {
+      transform: scale(1.15);
+      color: var(--color-brand-orangered);
+    }
+    100% {
+      transform: scale(1);
+      color: var(--color-brand-primary);
+    }
+  }
+
+  @keyframes diagonal-shimmer {
+    75% {
+      background-position-x: 100%;
+    }
+    100% {
+      background-position-x: 0%;
+    }
+  }
+
+  .animate-nudge-right {
+    animation: nudge-right 1s ease-in-out infinite;
+  }
+
+  .animate-nudge-left {
+    animation: nudge-left 1s ease-in-out infinite;
+  }
+
+  .animate-incorrect-guess {
+    animation: incorrect-guess 0.2s ease-out infinite;
+  }
+
+  .animate-pixel-breathe {
+    animation: pixel-breathe 3.5s ease-in-out infinite;
+  }
+
+  .animate-count-pulse {
+    animation: count-pulse 0.6s ease-out;
+  }
+
+  .animate-diagonal-shimmer {
+    animation-timing-function: linear;
+    animation-iteration-count: infinite;
+    animation-name: diagonal-shimmer;
+    animation-duration: 4s;
+  }
+
+  /* Hide native text selection for PixelInput */
+  .pixel-input-native-selection::selection {
+    background: transparent !important;
+  }
+
+  .pixel-input-native-selection::-moz-selection {
+    background: transparent !important;
+  }
+}

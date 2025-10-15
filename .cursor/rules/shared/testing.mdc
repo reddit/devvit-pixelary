@@ -1,0 +1,10 @@
+---
+description: Testing
+globs: ['**/*.ts', '**/*.tsx']
+alwaysApply: true
+---
+
+- Run tests (npm run check) before and after making changes.
+- When adding new functions and components, add new tests.
+- Use the existing vitest setup
+- Prefer to co-locate test files next to function files.

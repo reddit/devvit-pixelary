@@ -1,0 +1,7 @@
+---
+description: DRY principles
+globs: ['**/*.ts', '**/*.tsx']
+alwaysApply: true
+---
+
+- Follow the Do Not Repeat (DRY) principles. Avoid duplicate code paths.

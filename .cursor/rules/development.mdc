@@ -1,0 +1,7 @@
+---
+description: Development
+globs: ['**/*.ts', '**/*.tsx']
+alwaysApply: true
+---
+
+- You can assume that the dev server (npm run dev) is already running.

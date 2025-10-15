@@ -1,0 +1,33 @@
+node_modules
+.yarn
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.DS_Store
+webroot
+dist
+
+# TypeScript compiled files (prevent accidental compilation in source)
+src/**/*.js
+src/**/*.js.map
+src/**/*.d.ts
+*.js
+*.js.map
+*.d.ts
+!eslint.config.js
+!tools/tsconfig-base.json
+
+# Testing
+.coverage/
+coverage/
+.vitest/
+
+# Build outputs in source directories
+src/client/dist/
+src/server/dist/
+
+# TypeScript build outputs
+dist/types/
+dist/*.tsbuildinfo

@@ -1,0 +1,8 @@
+---
+description: Typescript
+globs: ['**/*.ts', '**/*.tsx']
+alwaysApply: true
+---
+
+- Use strict typescript everywhere
+- Do not use "any"

@@ -1,0 +1,95 @@
+{
+  "$schema": "https://developers.reddit.com/schema/config-file.v1.json",
+  "name": "pixelary-beta",
+  "post": {
+    "dir": "dist/client",
+    "entrypoints": {
+      "default": {
+        "entry": "index.html",
+        "height": "tall",
+        "inline": true
+      }
+    }
+  },
+  "server": {
+    "dir": "dist/server",
+    "entry": "index.cjs"
+  },
+  "permissions": {
+    "realtime": true
+  },
+  "media": {},
+  "forms": {
+    "postCreateForm": "/internal/form/post-create-submit",
+    "postTypeForm": "/internal/form/post-type-select",
+    "pinnedPostForm": "/internal/form/pinned-post-submit",
+    "drawingPostForm": "/internal/form/drawing-post-submit",
+    "weeklyLeaderboardForm": "/internal/form/weekly-leaderboard-submit",
+    "weeklyCollectionForm": "/internal/form/weekly-collection-submit",
+    "editDictionaryForm": "/internal/form/edit-dictionary-submit",
+    "bannedWordsForm": "/internal/form/banned-words-submit"
+  },
+  "menu": {
+    "items": [
+      {
+        "label": "[Pixelary] New Post",
+        "description": "pixelary-beta",
+        "location": "subreddit",
+        "forUserType": "moderator",
+        "endpoint": "/internal/menu/post-create"
+      },
+      {
+        "label": "[Pixelary] Word List",
+        "description": "Edit community dictionary",
+        "location": "subreddit",
+        "forUserType": "moderator",
+        "endpoint": "/internal/menu/edit-dictionary"
+      },
+      {
+        "label": "[Pixelary] Banned Words",
+        "description": "Manage banned words",
+        "location": "subreddit",
+        "forUserType": "moderator",
+        "endpoint": "/internal/menu/banned-words"
+      },
+      {
+        "label": "[Pixelary] Reveal Word",
+        "description": "Show the word for this drawing",
+        "location": "post",
+        "forUserType": "moderator",
+        "endpoint": "/internal/menu/reveal-word"
+      }
+    ]
+  },
+  "triggers": {
+    "onAppInstall": "/internal/on-app-install",
+    "onAppUpgrade": "/internal/on-app-upgrade",
+    "onCommentCreate": "/internal/on-comment-create",
+    "onCommentDelete": "/internal/on-comment-delete"
+  },
+  "scheduler": {
+    "tasks": {
+      "NEW_DRAWING_PINNED_COMMENT": {
+        "endpoint": "/internal/scheduler/new-drawing-pinned-comment"
+      },
+      "UPDATE_DRAWING_PINNED_COMMENT": {
+        "endpoint": "/internal/scheduler/update-drawing-pinned-comment"
+      },
+      "FIRST_SOLVE_COMMENT": {
+        "endpoint": "/internal/scheduler/first-solve-comment"
+      },
+      "USER_LEVEL_UP": {
+        "endpoint": "/internal/scheduler/user-level-up"
+      },
+      "CREATE_PINNED_POST_COMMENT": {
+        "endpoint": "/internal/scheduler/create-pinned-post-comment"
+      },
+      "CREATE_WEEKLY_COLLECTION": {
+        "endpoint": "/internal/scheduler/create-weekly-collection"
+      }
+    }
+  },
+  "dev": {
+    "subreddit": "lekegrind"
+  }
+}
