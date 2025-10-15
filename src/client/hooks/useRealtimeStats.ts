@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { connectRealtime } from '@devvit/web/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { trpc } from '../trpc/client';
-import type { PostGuesses } from '../../../shared/schema/pixelary';
+import type { PostGuesses } from '../../shared/schema';
 
 type StatsData = PostGuesses;
 
@@ -37,12 +37,13 @@ class RealtimeManager {
       try {
         const connection = await connectRealtime({
           channel: channelName,
-          onMessage: (data: RealtimeMessage) => {
-            if (data.stats) {
+          onMessage: (data) => {
+            if (data && typeof data === 'object' && 'stats' in data) {
+              const message = data as RealtimeMessage;
               // Notify all subscribers
               const subscribers = this.subscribers.get(channelName);
               if (subscribers) {
-                subscribers.forEach((callback) => callback(data.stats));
+                subscribers.forEach((callback) => callback(message.stats));
               }
             }
           },
