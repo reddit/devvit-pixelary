@@ -9,7 +9,6 @@ import {
   UserDataSchema,
   WordSelectionEventSchema,
   DrawingPostDataExtendedSchema,
-  CollectionPostDataExtendedSchema,
   DrawingSubmitInputSchema,
   GuessSubmitInputSchema,
   DictionaryAddInputSchema,
@@ -19,7 +18,6 @@ import {
   LeaderboardInputSchema,
   GuessStatsInputSchema,
   PostDataInputSchema,
-  CollectionCreateInputSchema,
   WordSelectionLogInputSchema,
 } from '../schema/pixelary';
 import {
@@ -34,7 +32,6 @@ import {
   createMockUserData,
   createMockWordSelectionEvent,
   createMockDrawingPostDataExtended,
-  createMockCollectionPostDataExtended,
   createMockDrawingSubmitInput,
   createMockGuessSubmitInput,
   createMockDictionaryAddInput,
@@ -44,7 +41,6 @@ import {
   createMockLeaderboardInput,
   createMockGuessStatsInput,
   createMockPostDataInput,
-  createMockCollectionCreateInput,
   createMockWordSelectionLogInput,
 } from '../test-utils';
 
@@ -223,32 +219,11 @@ describe('Pixelary Schema Validation', () => {
       expectInvalidZodSchema(DrawingPostDataExtendedSchema, invalidData);
     });
 
-    it('rejects invalid createdAt', () => {
+    it('rejects invalid authorId', () => {
       const invalidData = createMockDrawingPostDataExtended({
-        createdAt: 'not a number' as never,
+        authorId: 123 as never,
       });
       expectInvalidZodSchema(DrawingPostDataExtendedSchema, invalidData);
-    });
-  });
-
-  describe('CollectionPostDataExtendedSchema', () => {
-    it('validates correct collection post data', () => {
-      const validData = createMockCollectionPostDataExtended();
-      expectValidZodSchema(CollectionPostDataExtendedSchema, validData);
-    });
-
-    it('rejects invalid type', () => {
-      const invalidData = createMockCollectionPostDataExtended({
-        type: 'invalid' as never,
-      });
-      expectInvalidZodSchema(CollectionPostDataExtendedSchema, invalidData);
-    });
-
-    it('rejects non-array data', () => {
-      const invalidData = createMockCollectionPostDataExtended({
-        data: 'not an array' as never,
-      });
-      expectInvalidZodSchema(CollectionPostDataExtendedSchema, invalidData);
     });
   });
 
@@ -296,11 +271,6 @@ describe('Pixelary Schema Validation', () => {
     it('validates PostDataInputSchema', () => {
       const validData = createMockPostDataInput();
       expectValidZodSchema(PostDataInputSchema, validData);
-    });
-
-    it('validates CollectionCreateInputSchema', () => {
-      const validData = createMockCollectionCreateInput();
-      expectValidZodSchema(CollectionCreateInputSchema, validData);
     });
 
     it('validates WordSelectionLogInputSchema', () => {

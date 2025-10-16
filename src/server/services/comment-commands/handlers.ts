@@ -8,7 +8,7 @@ import {
   getWordMetadata,
   getBannedWords,
 } from '../dictionary';
-import { getLeaderboard } from '../leaderboard';
+import { getLeaderboard } from '../progression';
 import { getUserProfile } from '../user';
 
 /**

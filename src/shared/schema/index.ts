@@ -1,51 +1,20 @@
 import { z } from 'zod';
 
 // Post Data Types (defined first to avoid circular references)
-export const PostTypeSchema = z.enum([
-  'drawing',
-  'pinned',
-  'weekly-leaderboard',
-]);
+export const PostTypeSchema = z.enum(['drawing', 'pinned']);
 export type PostType = z.infer<typeof PostTypeSchema>;
 
-export const DrawingPostDataSchema = z.object({
-  type: z.literal('drawing'),
-  seed: z.string().optional(),
-  mode: z.string().optional(),
-  createdAt: z.number().optional(),
-  timerSec: z.number().optional(),
-  admins: z.array(z.string()).optional(),
-});
-export type DrawingPostData = z.infer<typeof DrawingPostDataSchema>;
+// DrawingPostDataSchema is imported from pixelary.ts
+import { DrawingPostDataSchema } from './pixelary';
 
 export const PinnedPostDataSchema = z.object({
   type: z.literal('pinned'),
-  pinnedAt: z.number(),
-  pinnedBy: z.string(),
-  message: z.string().optional(),
 });
 export type PinnedPostData = z.infer<typeof PinnedPostDataSchema>;
-
-export const WeeklyLeaderboardPostDataSchema = z.object({
-  type: z.literal('weekly-leaderboard'),
-  weekStart: z.number(),
-  weekEnd: z.number(),
-  topScores: z.array(
-    z.object({
-      username: z.string(),
-      score: z.number().int(),
-      rank: z.number().int(),
-    })
-  ),
-});
-export type WeeklyLeaderboardPostData = z.infer<
-  typeof WeeklyLeaderboardPostDataSchema
->;
 
 export const PostDataSchema = z.discriminatedUnion('type', [
   DrawingPostDataSchema,
   PinnedPostDataSchema,
-  WeeklyLeaderboardPostDataSchema,
 ]);
 export type PostData = z.infer<typeof PostDataSchema>;
 

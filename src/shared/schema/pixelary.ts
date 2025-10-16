@@ -117,44 +117,40 @@ export const WordCommandCommentSchema = z.object({
 });
 export type WordCommandComment = z.infer<typeof WordCommandCommentSchema>;
 
-// Drawing Post Data (extends base DrawingPostData)
+// Drawing Post Data
+export const DrawingDataSchema = z.object({
+  data: z.string(),
+  colors: z.array(z.string()).max(256),
+  bg: z.number().int().min(0),
+  size: z.number().int().min(1).max(64).default(16),
+});
+export type DrawingData = z.infer<typeof DrawingDataSchema>;
+
+export const DrawingPostDataSchema = z.object({
+  type: z.literal('drawing'),
+  word: z.string(),
+  dictionary: z.string(),
+  drawing: DrawingDataSchema,
+  authorId: z.string(),
+  authorName: z.string(),
+});
+export type DrawingPostData = z.infer<typeof DrawingPostDataSchema>;
+
 export const DrawingPostDataExtendedSchema = z.object({
   type: z.literal('drawing'),
   postId: z.string(),
   word: z.string(),
-  dictionaryName: z.string(),
-  data: z.object({
-    data: z.string(),
-    colors: z.array(z.string()).max(256),
-    bg: z.number().int().min(0),
-    size: z.number().int().min(1).max(64).default(16),
-  }),
-  authorUserId: z.string(),
-  authorUsername: z.string(),
-  date: z.number().int(),
-  solves: z.number().int(),
-  skips: z.number().int(),
-  seed: z.string().optional(),
-  mode: z.string().optional(),
-  createdAt: z.number().int().optional(),
-  timerSec: z.number().int().optional(),
-  admins: z.array(z.string()).optional(),
+  dictionary: z.string(),
+  drawing: DrawingDataSchema,
+  authorId: z.string(),
+  authorName: z.string(),
+  playerCount: z.number().int(),
+  solvedPercentage: z.number().int(),
   pinnedCommentId: z.string().optional(),
   lastCommentUpdate: z.number().int().optional(),
 });
 export type DrawingPostDataExtended = z.infer<
   typeof DrawingPostDataExtendedSchema
->;
-
-// Collection Post Data
-export const CollectionPostDataExtendedSchema = z.object({
-  type: z.literal('collection'),
-  postId: z.string(),
-  data: z.array(CollectionDataSchema),
-  timeframe: z.string(),
-});
-export type CollectionPostDataExtended = z.infer<
-  typeof CollectionPostDataExtendedSchema
 >;
 
 // Input/Output Schemas for API
@@ -213,12 +209,6 @@ export const PostDataInputSchema = z.object({
   postId: z.string(),
 });
 export type PostDataInput = z.infer<typeof PostDataInputSchema>;
-
-export const CollectionCreateInputSchema = z.object({
-  timeframe: z.enum(['week', 'month', 'all']).default('week'),
-  limit: z.number().int().min(1).max(50).default(20),
-});
-export type CollectionCreateInput = z.infer<typeof CollectionCreateInputSchema>;
 
 export const WordSelectionLogInputSchema = z.object({
   postId: z.string(),

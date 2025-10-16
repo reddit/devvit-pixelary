@@ -13,6 +13,7 @@ vi.mock('@devvit/web/server', () => ({
     zCard: vi.fn(),
     zScore: vi.fn(),
     zRank: vi.fn(),
+    zIncrBy: vi.fn(),
     hGet: vi.fn(),
     hSet: vi.fn(),
     hGetAll: vi.fn(),
@@ -71,6 +72,7 @@ vi.mock('@devvit/web/server', () => ({
     runAt: vi.fn(),
     runEvery: vi.fn(),
     cancelJob: vi.fn(),
+    runJob: vi.fn(),
   },
   logger: {
     info: vi.fn(),

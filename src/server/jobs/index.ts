@@ -1,11 +1,11 @@
 import { reddit } from '@devvit/web/server';
 import { getUserProfile } from '../services/user';
-import { getLevelByScore } from '../services/leaderboard';
+import { getLevelByScore } from '../services/progression';
 import {
   getDrawingPost,
   savePinnedCommentId,
   saveLastCommentUpdate,
-} from '../services/drawing-post';
+} from '../services/drawing';
 import { getGuessStats } from '../services/guess';
 import type { Level } from '../../shared/schema/pixelary';
 

@@ -10,7 +10,6 @@ import type {
   UserData,
   WordSelectionEvent,
   DrawingPostDataExtended,
-  CollectionPostDataExtended,
   DrawingSubmitInput,
   GuessSubmitInput,
   DictionaryAddInput,
@@ -20,7 +19,6 @@ import type {
   LeaderboardInput,
   GuessStatsInput,
   PostDataInput,
-  CollectionCreateInput,
   WordSelectionLogInput,
 } from './schema/pixelary';
 
@@ -140,28 +138,17 @@ export const createMockDrawingPostDataExtended = (
   type: 'drawing',
   postId: 't3_test123',
   word: 'test',
-  dictionaryName: 'main',
-  data: {
+  dictionary: 'main',
+  drawing: {
     data: 'test-data',
     colors: ['#FFFFFF', '#000000'],
     bg: 0,
     size: 16,
   },
-  authorUserId: 'testuser123',
-  authorUsername: 'testuser',
-  date: Date.now(),
-  solves: 0,
-  skips: 0,
-  ...overrides,
-});
-
-export const createMockCollectionPostDataExtended = (
-  overrides: Partial<CollectionPostDataExtended> = {}
-): CollectionPostDataExtended => ({
-  postId: 't3_test123',
-  type: 'collection',
-  data: [createMockCollectionData()],
-  timeframe: 'week',
+  authorId: 'testuser123',
+  authorName: 'testuser',
+  playerCount: 0,
+  solvedPercentage: 0,
   ...overrides,
 });
 
@@ -235,14 +222,6 @@ export const createMockPostDataInput = (
   overrides: Partial<PostDataInput> = {}
 ): PostDataInput => ({
   postId: 't3_test123',
-  ...overrides,
-});
-
-export const createMockCollectionCreateInput = (
-  overrides: Partial<CollectionCreateInput> = {}
-): CollectionCreateInput => ({
-  timeframe: 'week',
-  limit: 20,
   ...overrides,
 });
 

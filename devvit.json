@@ -24,9 +24,7 @@
     "postTypeForm": "/internal/form/post-type-select",
     "pinnedPostForm": "/internal/form/pinned-post-submit",
     "drawingPostForm": "/internal/form/drawing-post-submit",
-    "weeklyLeaderboardForm": "/internal/form/weekly-leaderboard-submit",
-    "weeklyCollectionForm": "/internal/form/weekly-collection-submit",
-    "editDictionaryForm": "/internal/form/edit-dictionary-submit",
+    "editDictionaryForm": "/internal/form/dictionary-submit",
     "bannedWordsForm": "/internal/form/banned-words-submit"
   },
   "menu": {
