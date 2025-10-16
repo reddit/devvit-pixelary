@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import { getBannedWords } from '../services/dictionary';
 import { context } from '@devvit/web/server';
 
@@ -11,7 +11,7 @@ export async function handleBannedWords(
   res: Response
 ): Promise<void> {
   try {
-    const bannedWords = await getBannedWords(context.subredditName);
+    const bannedWords = await getBannedWords(context.subredditId);
 
     res.json({
       showForm: {

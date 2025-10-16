@@ -1,5 +1,5 @@
-import { Request, Response } from 'express';
-import { getDictionary } from '../services/dictionary';
+import type { Request, Response } from 'express';
+import { getWords } from '../services/dictionary';
 import { context } from '@devvit/web/server';
 
 /**
@@ -11,15 +11,7 @@ export async function handleEditDictionary(
   res: Response
 ): Promise<void> {
   try {
-    const dictionary = await getDictionary(context.subredditName);
-
-    if (!dictionary) {
-      res.status(404).json({
-        status: 'error',
-        message: 'No dictionary found',
-      });
-      return;
-    }
+    const words = await getWords(context.subredditId);
 
     res.json({
       showForm: {
@@ -35,7 +27,7 @@ export async function handleEditDictionary(
               label: 'Drawing prompts',
               lineHeight: 8,
               required: true,
-              defaultValue: dictionary.words.join(', '),
+              defaultValue: words.join(', '),
               placeholder: 'Apple, Banana, Cherry, ...',
               helpText: 'Separate by commas',
             },

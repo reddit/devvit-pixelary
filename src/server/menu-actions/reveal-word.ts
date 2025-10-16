@@ -1,5 +1,5 @@
-import { Request, Response } from 'express';
-import { getDrawingPost } from '../services/drawing';
+import type { Request, Response } from 'express';
+import { getDrawing } from '../services/drawing';
 
 /**
  * Menu action handler for revealing word
@@ -20,9 +20,9 @@ export async function handleRevealWord(
       return;
     }
 
-    const drawingPost = await getDrawingPost(postId);
+    const drawing = await getDrawing(postId);
 
-    if (!drawingPost) {
+    if (!drawing) {
       res.status(404).json({
         status: 'error',
         message: 'Drawing post not found',
@@ -31,7 +31,7 @@ export async function handleRevealWord(
     }
 
     res.json({
-      showToast: drawingPost.word,
+      showToast: drawing.word,
     });
   } catch (error) {
     console.error(`Error revealing word: ${error}`);
