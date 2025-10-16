@@ -42,10 +42,8 @@ export async function handleCommentCreate(
         return;
       }
 
-      // Import new command system
-      const { CommandManager, CommandMonitor } = await import(
-        '../services/comment-commands'
-      );
+      // Import simplified command system
+      const { processCommand } = await import('../services/comment-commands');
 
       // Parse command and arguments
       const commandParts = comment.body.trim().split(' ');
@@ -57,25 +55,13 @@ export async function handleCommentCreate(
         commentId: comment.id,
         authorName: author.name,
         subredditName: subreddit.name,
+        subredditId: subreddit.id as `t5_${string}`,
         timestamp: Date.now(),
         source: 'http' as const,
       };
 
-      // Process command through new system
-      const result = await CommandManager.processCommand(
-        command,
-        args,
-        commandContext
-      );
-
-      // Record metrics
-      await CommandMonitor.recordCommandExecution({
-        command,
-        subredditName: subreddit.name,
-        success: result.success,
-        responseTime: Date.now() - startTime,
-        ...(result.error && { error: result.error }),
-      });
+      // Process command through simplified system
+      const result = await processCommand(command, args, commandContext);
 
       console.log(`Command result: ${result.success ? 'SUCCESS' : 'FAILED'}`);
 
