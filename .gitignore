@@ -13,6 +13,7 @@ dist
 src/**/*.js
 src/**/*.js.map
 src/**/*.d.ts
+!src/client/types.d.ts
 *.js
 *.js.map
 *.d.ts

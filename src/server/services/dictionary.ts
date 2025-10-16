@@ -1,5 +1,5 @@
 import { redis } from '@devvit/web/server';
-import { WORDS } from '../../shared/words';
+import { DEFAULT_WORDS } from '../../shared/words';
 import type { T5 } from '../../shared/types/TID';
 import { capitalize } from '../../shared/utils/string';
 import { shuffle } from '../../shared/utils/math';
@@ -205,7 +205,7 @@ export async function unbanWord(
 
 export async function getRandomWords(
   subredditId: T5,
-  count: number
+  count: number = 3
 ): Promise<string[]> {
   const words = await getWords(subredditId);
   const shuffled = shuffle<string>(words);
@@ -239,7 +239,7 @@ export async function initializeDictionary(subredditId: T5): Promise<void> {
 
   if (!words) {
     seedActions.push(
-      redis.global.set(wordsKey(subredditId), JSON.stringify(WORDS))
+      redis.global.set(wordsKey(subredditId), JSON.stringify(DEFAULT_WORDS))
     );
   }
 

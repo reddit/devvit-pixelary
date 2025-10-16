@@ -2,15 +2,11 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { DrawingPost } from './posts/drawing-post/DrawingPost';
 import { PinnedPost } from './posts/pinned-post/PinnedPost';
-import { WeeklyLeaderboardPost } from './posts/weekly-leaderboard-post/WeeklyLeaderboardPost';
 import { trpc } from './trpc/client';
 import { httpBatchLink } from '@trpc/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { context } from '@devvit/web/client';
-import type {
-  WeeklyLeaderboardPostData,
-  DrawingPostDataExtended,
-} from '../shared/schema';
+import type { DrawingPostDataExtended } from '../shared/schema';
 import './index.css';
 import { Background } from './components/Background';
 import { ToastProvider } from './components/ToastManager';
@@ -82,12 +78,6 @@ const App = () => {
         return <DrawingPost postData={postData as DrawingPostDataExtended} />;
       case 'pinned':
         return <PinnedPost />;
-      case 'weekly-leaderboard':
-        return (
-          <WeeklyLeaderboardPost
-            postData={postData as WeeklyLeaderboardPostData}
-          />
-        );
       default:
         return (
           <div className="flex items-center justify-center h-screen">

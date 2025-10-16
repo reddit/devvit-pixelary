@@ -440,31 +440,6 @@ Ready to play? Start guessing! 🎯`;
 }
 
 /**
- * Job handler for weekly collection creation
- * Creates a weekly leaderboard post with top drawings
- */
-export async function createWeeklyCollection(jobData: {
-  subredditName: string;
-  timeframe: 'week' | 'month' | 'all';
-  limit: number;
-}) {
-  try {
-    const { subredditName, timeframe, limit } = jobData;
-
-    // This would integrate with the collection service
-    // For now, just log the job
-    console.log(
-      `Creating weekly collection for ${subredditName} (${timeframe}, ${limit} drawings)`
-    );
-
-    // The actual collection creation would be handled by the collection service
-    // which has access to Reddit API and can create posts
-  } catch (error) {
-    console.error('Error creating weekly collection:', error);
-  }
-}
-
-/**
  * Job handler for cleanup tasks
  * Runs periodic maintenance tasks
  */
