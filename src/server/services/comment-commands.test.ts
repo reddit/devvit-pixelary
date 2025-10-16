@@ -12,6 +12,7 @@ describe('Simplified Command System', () => {
   ): CommandContext => ({
     commentId: 'test123',
     authorName,
+    authorId: 'testuser123',
     subredditName,
     subredditId: 't5_test' as const,
     timestamp: Date.now(),
@@ -64,6 +65,24 @@ describe('Simplified Command System', () => {
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('Invalid page number');
+    });
+
+    test('should handle word command without arguments', async () => {
+      const context = createContext();
+      const result = await processCommand('!word', [], context);
+
+      expect(result.success).toBe(true);
+      expect(result.response).toContain('Please provide a word');
+      expect(result.response).toContain('!word <word>');
+    });
+
+    test('should handle word command with arguments', async () => {
+      const context = createContext();
+      const result = await processCommand('!word', ['testword'], context);
+
+      // This will fail because the word doesn't exist in the dictionary
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('not in the dictionary');
     });
   });
 

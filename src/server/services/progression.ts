@@ -1,7 +1,7 @@
 import { redis, scheduler } from '@devvit/web/server';
 import { LEVELS } from '../../shared/constants';
 import type { Level } from '../../shared/constants';
-import { getUsernameById } from './redis';
+import { getUsername } from './redis';
 import { parseT2, type T2 } from '../../shared/types/TID';
 
 /**
@@ -45,7 +45,7 @@ export async function getLeaderboard(options?: {
   // Hydrate entries with usernames
   const data = await Promise.all(
     entries.map(async (entry, index) => {
-      const username = await getUsernameById(parseT2(entry.member));
+      const username = await getUsername(parseT2(entry.member));
       return {
         username: username ?? 'Unknown',
         userId: parseT2(entry.member),

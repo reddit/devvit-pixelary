@@ -1,6 +1,5 @@
 import type { CommandContext, CommandResult } from './comment-commands';
 import { getWords, addWord, removeWord, getBannedWords } from './dictionary';
-import { getLeaderboard } from './progression';
 
 /**
  * Simple command handlers as plain functions
@@ -161,7 +160,7 @@ export async function handleRemove(
   }
 }
 
-export async function handleStats(
+export async function handleWord(
   args: string[],
   context: CommandContext
 ): Promise<CommandResult> {
@@ -169,7 +168,7 @@ export async function handleStats(
     if (args.length === 0) {
       return {
         success: true,
-        response: 'Please provide a word. Usage: `!stats <word>`',
+        response: 'Please provide a word. Usage: `!word <word>`',
       };
     }
 
@@ -225,95 +224,25 @@ export async function handleScore(
   };
 }
 
-export async function handleLevel(
-  args: string[],
-  context: CommandContext
-): Promise<CommandResult> {
-  const targetUser =
-    args.length > 0 ? args[0]?.trim() || '' : context.authorName;
-
-  return {
-    success: true,
-    response: `Level tracking is not yet implemented. This would show u/${targetUser}'s level.`,
-  };
-}
-
-export async function handleLeaderboard(
-  args: string[],
-  _context: CommandContext
-): Promise<CommandResult> {
-  try {
-    const limit = args.length > 0 ? parseInt(args[0] || '10') || 10 : 10;
-
-    if (limit < 1 || limit > 50) {
-      return {
-        success: false,
-        error: 'Limit must be between 1 and 50',
-      };
-    }
-
-    const leaderboardResult = await getLeaderboard({ limit });
-
-    if (leaderboardResult.entries.length === 0) {
-      return {
-        success: true,
-        response: 'No players found on the leaderboard.',
-        metadata: { limit, playerCount: 0 },
-      };
-    }
-
-    const leaderboardText = leaderboardResult.entries
-      .map((player, index) => {
-        const medal =
-          index === 0
-            ? '🥇'
-            : index === 1
-              ? '🥈'
-              : index === 2
-                ? '🥉'
-                : `${index + 1}.`;
-        return `${medal} u/${player.username} - ${player.score.toLocaleString()} points`;
-      })
-      .join('\n');
-
-    const response = `🏆 **Top ${limit} Players**\n\n` + leaderboardText;
-
-    return {
-      success: true,
-      response,
-      metadata: { limit, playerCount: leaderboardResult.entries.length },
-    };
-  } catch (error) {
-    return {
-      success: false,
-      error: 'Failed to retrieve leaderboard',
-    };
-  }
-}
-
 export async function handleHelp(
   _args: string[],
   _context: CommandContext
 ): Promise<CommandResult> {
   const response =
-    `🎨 **Pixelary Commands**\n\n` +
-    `**Public Commands:**\n` +
-    `• \`!words [page]\` - Show dictionary (paginated if >200 words)\n` +
-    `• \`!add <word>\` - Add word to dictionary\n` +
-    `• \`!stats <word>\` - Show word statistics\n` +
-    `• \`!score [username]\` - Show user score\n` +
-    `• \`!level [username]\` - Show user level\n` +
-    `• \`!leaderboard [limit]\` - Show top players\n` +
+    `Beep boop. I can help you with the following commands:\n\n` +
+    `• \`!words\` - Show dictionary\n` +
+    `  \`!words\` or \`!words 2\` - Show page 1 or specific page\n\n` +
+    `• \`!add\` - Add word to dictionary\n` +
+    `  \`!add dog\` - Add "dog" to dictionary\n\n` +
+    `• \`!remove\` - Remove word from dictionary\n` +
+    `  \`!remove cat\` - Remove "cat" from dictionary\n\n` +
+    `• \`!word\` - Show word statistics\n` +
+    `  \`!word meatloaf\` - Show statistics for "meatloaf"\n\n` +
+    `• \`!score\` - Show user score\n` +
+    `  \`!score\` or \`!score username\` - Show your score or another user's\n\n` +
     `• \`!help\` - Show this help\n\n` +
-    `**Moderator Commands:**\n` +
-    `• \`!remove <word>\` - Remove word from dictionary\n` +
     `**Accountability:**\n` +
-    `All word additions are tracked. If a comment containing \`!add\` is removed, the word is automatically removed and banned.\n\n` +
-    `**How to Play:**\n` +
-    `1. Draw the given word in 16x16 pixels\n` +
-    `2. Others guess what you drew\n` +
-    `3. Earn points for correct guesses!\n\n` +
-    `Good luck! 🎨`;
+    `Users add words publicly via comments. Others can remove them. Words removed by Reddit's safety systems cannot be added back.`;
 
   return {
     success: true,

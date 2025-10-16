@@ -11,10 +11,10 @@ import {
 } from './progression';
 import { redis, scheduler } from '@devvit/web/server';
 import { LEVELS } from '../../shared/constants';
-import { getUsernameById } from './redis';
+import { getUsername } from './redis';
 
 vi.mock('./redis', () => ({
-  getUsernameById: vi.fn(),
+  getUsername: vi.fn(),
 }));
 
 // Mock the redis and scheduler functions directly
@@ -44,7 +44,7 @@ describe('Leaderboard Service', () => {
     vi.mocked(redis.zIncrBy).mockClear();
     vi.mocked(redis.zRank).mockClear();
     vi.mocked(scheduler.runJob).mockClear();
-    vi.mocked(getUsernameById).mockClear();
+    vi.mocked(getUsername).mockClear();
   });
 
   describe('getLeaderboard', () => {
@@ -54,7 +54,7 @@ describe('Leaderboard Service', () => {
         { member: 't2_user2', score: 800 },
         { member: 't2_user3', score: 600 },
       ]);
-      vi.mocked(getUsernameById)
+      vi.mocked(getUsername)
         .mockResolvedValueOnce('testuser1')
         .mockResolvedValueOnce('testuser2')
         .mockResolvedValueOnce('testuser3');
