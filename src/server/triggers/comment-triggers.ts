@@ -1,9 +1,6 @@
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import { context, reddit } from '@devvit/web/server';
-import {
-  initializeCommandSystem,
-  isCommand,
-} from '../services/comment-commands';
+import { isCommand } from '../services/comment-commands';
 
 /**
  * Comment trigger handlers

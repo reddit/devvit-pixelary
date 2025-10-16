@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import { context } from '@devvit/web/server';
 import { setupPixelary } from '../services/setup';
 
@@ -13,11 +13,11 @@ export async function handleAppInstall(
 ): Promise<void> {
   try {
     // Run setup for the subreddit
-    await setupPixelary(context.subredditName);
+    await setupPixelary(context.subredditId);
 
     res.json({
       status: 'success',
-      message: `Pixelary installed in subreddit ${context.subredditName}`,
+      message: `Pixelary ${context.appVersion} installed in r/${context.subredditName}`,
     });
   } catch (error) {
     console.error(`Error installing Pixelary: ${error}`);
@@ -34,17 +34,17 @@ export async function handleAppUpgrade(
 ): Promise<void> {
   try {
     // Run setup for the subreddit (idempotent)
-    await setupPixelary(context.subredditName);
+    await setupPixelary(context.subredditId);
 
     res.json({
       status: 'success',
-      message: `App upgraded for subreddit ${context.subredditName}`,
+      message: `Pixelary upgraded to ${context.appVersion} in r/${context.subredditName}`,
     });
   } catch (error) {
-    console.error(`Error upgrading app: ${error}`);
+    console.error(`Error upgrading Pixelary: ${error}`);
     res.status(400).json({
       status: 'error',
-      message: 'Failed to upgrade app',
+      message: 'Failed to upgrade Pixelary',
     });
   }
 }
