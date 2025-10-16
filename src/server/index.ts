@@ -4,34 +4,40 @@ import { createExpressMiddleware } from '@trpc/server/adapters/express';
 import { appRouter } from './trpc/router';
 import { createContext } from './trpc/context';
 
+// Import menu actions
 import {
   handlePostCreate,
   handleEditDictionary,
   handleBannedWords,
   handleRevealWord,
 } from './menu-actions';
-import { handlePinnedPostSubmit } from './forms/pinned-post-submit';
-import { handlePostTypeSelect } from './forms/post-type-select';
-import { handleDictionarySubmit } from './forms/dictionary-submit';
-import { handleBannedWordsSubmit } from './forms/banned-words-submit';
 
-// Import trigger handlers
-import { handleAppInstall, handleAppUpgrade } from './triggers/app-lifecycle';
+// Import form handlers
 import {
-  handleCommentCreate,
-  handleCommentDelete,
-} from './triggers/comment-triggers';
+  handlePinnedPostSubmit,
+  handlePostTypeSelect,
+  handleDictionarySubmit,
+  handleBannedWordsSubmit,
+} from './forms';
+
+// Import scheduler handlers
 import {
   handleNewDrawingPinnedComment,
   handleUpdateDrawingPinnedComment,
   handleFirstSolveComment,
   handleUserLevelUp,
   handleCreatePinnedPostComment,
-} from './triggers/scheduler-triggers';
+} from './scheduler';
+
+// Import trigger handlers
 import {
+  handleAppInstall,
+  handleAppUpgrade,
+  handleCommentCreate,
+  handleCommentDelete,
   handleTestRealtime,
   handleTestScheduler,
-} from './triggers/test-triggers';
+} from './triggers';
 
 const app = express();
 
