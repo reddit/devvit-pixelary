@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import { createPost } from '../core/post';
 import { context, scheduler } from '@devvit/web/server';
 
@@ -6,6 +6,7 @@ import { context, scheduler } from '@devvit/web/server';
  * Form handler for pinned post submission
  * Creates a pinned post with the provided title
  */
+
 export async function handlePinnedPostSubmit(
   req: Request,
   res: Response

@@ -16,8 +16,8 @@ import {
 import {
   handlePinnedPostSubmit,
   handlePostTypeSelect,
-  handleDictionarySubmit,
-  handleBannedWordsSubmit,
+  handleWordsUpdate,
+  handleBannedWordsUpdate,
 } from './forms';
 
 // Import scheduler handlers
@@ -93,8 +93,8 @@ router.post('/internal/menu/reveal-word', handleRevealWord);
 
 router.post('/internal/form/post-type-select', handlePostTypeSelect);
 router.post('/internal/form/pinned-post-submit', handlePinnedPostSubmit);
-router.post('/internal/form/dictionary-submit', handleDictionarySubmit);
-router.post('/internal/form/banned-words-submit', handleBannedWordsSubmit);
+router.post('/internal/form/words-update', handleWordsUpdate);
+router.post('/internal/form/banned-words-update', handleBannedWordsUpdate);
 
 // Use router middleware
 app.use(router);

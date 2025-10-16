@@ -1,9 +1,10 @@
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 
 /**
  * Form handler for post type selection
  * Returns form configuration based on selected post type
  */
+
 export async function handlePostTypeSelect(
   req: Request,
   res: Response

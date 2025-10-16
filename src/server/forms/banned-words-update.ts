@@ -1,4 +1,4 @@
-import { Request, Response } from 'express';
+import type { Request, Response } from 'express';
 import { updateBannedWords } from '../services/dictionary';
 import { context } from '@devvit/web/server';
 
@@ -6,7 +6,8 @@ import { context } from '@devvit/web/server';
  * Form handler for banned words update
  * Updates the banned words list in Redis
  */
-export async function handleBannedWordsSubmit(
+
+export async function handleBannedWordsUpdate(
   req: Request,
   res: Response
 ): Promise<void> {
@@ -32,16 +33,16 @@ export async function handleBannedWordsSubmit(
       )
       .sort();
 
-    await updateBannedWords(context.subredditName, wordList);
+    await updateBannedWords(context.subredditId, wordList);
 
     res.json({
-      showToast: 'Banned words updated successfully!',
+      showToast: 'Updated!',
     });
   } catch (error) {
     console.error(`Error updating banned words: ${error}`);
     res.status(400).json({
       status: 'error',
-      message: 'Failed to update banned words',
+      message: 'Failed to update',
     });
   }
 }
