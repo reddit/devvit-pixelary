@@ -11,8 +11,6 @@ export async function handleCommentCreate(
   req: Request,
   res: Response
 ): Promise<void> {
-  const startTime = Date.now();
-
   try {
     const { comment, author, subreddit } = req.body;
 
@@ -54,6 +52,7 @@ export async function handleCommentCreate(
       const commandContext = {
         commentId: comment.id,
         authorName: author.name,
+        authorId: author.id,
         subredditName: subreddit.name,
         subredditId: subreddit.id as `t5_${string}`,
         timestamp: Date.now(),

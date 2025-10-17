@@ -13,7 +13,7 @@ export async function handleAppInstall(
 ): Promise<void> {
   try {
     // Run setup for the subreddit
-    await setupPixelary(context.subredditId);
+    await setupPixelary(context.subredditName);
 
     res.json({
       status: 'success',
@@ -34,7 +34,7 @@ export async function handleAppUpgrade(
 ): Promise<void> {
   try {
     // Run setup for the subreddit (idempotent)
-    await setupPixelary(context.subredditId);
+    await setupPixelary(context.subredditName);
 
     res.json({
       status: 'success',

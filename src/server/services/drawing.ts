@@ -9,34 +9,7 @@ import {
   AUTHOR_REWARD_SUBMIT,
   GUESSER_REWARD_SOLVE,
 } from '../../shared/constants';
-
-/*
- * Redis keys
- */
-
-// Hash map with drawing data
-const drawingKey = (postId: T3) => `drawing:${postId}`;
-
-// Sorted set tracking the number of guesses for each user for a drawing
-const attemptsForDrawingKey = (postId: T3) => `drawing-attempts:${postId}`;
-
-// Sorted set tracking all users who have skipped a drawing
-const skipsForDrawingKey = (postId: T3) => `drawing-skips:${postId}`;
-
-// Sorted set tracking all users who have solved a drawing
-const solvesForDrawingKey = (postId: T3) => `drawing-solved:${postId}`;
-
-// Sorted set tracking all drawings
-const drawingsKey = 'drawings';
-
-// Sorted set tracking all drawings by user
-const drawingsByUserKey = (userId: T2) => `drawings-by-user:${userId}`;
-
-// Sorted set tracking all drawings for a word
-const drawingsForWordKey = (word: string) => `drawings-for-word:${word}`;
-
-// Sorted set tracking all guesses for a drawing
-const guessesForDrawingKey = (postId: T3) => `drawing-guesses:${postId}`;
+import { REDIS_KEYS } from './redis';
 
 /**
  * Create a new drawing post
@@ -69,7 +42,7 @@ export const createDrawing = async (options: {
   // Run all operations in parallel
   await Promise.all([
     // Save post data and additional metadata to redis. Largely so we can fetch the drawing post later from other contexts.
-    await redis.hSet(drawingKey(postId), {
+    await redis.hSet(REDIS_KEYS.drawing(postId), {
       type: 'drawing',
       postId,
       createdAt: post.createdAt.getTime().toString(),
@@ -95,19 +68,19 @@ export const createDrawing = async (options: {
     }),
 
     // Add to list of drawings for this word
-    await redis.zAdd(drawingsForWordKey(word), {
+    await redis.zAdd(REDIS_KEYS.drawingsByWord(word), {
       member: postId,
       score: currentTime,
     }),
 
     // Add to all drawings list
-    await redis.zAdd(drawingsKey, {
+    await redis.zAdd(REDIS_KEYS.allDrawings(), {
       member: postId,
       score: currentTime,
     }),
 
     // Add to list of drawings for this user
-    await redis.zAdd(drawingsByUserKey(authorId), {
+    await redis.zAdd(REDIS_KEYS.drawingsByUser(authorId), {
       member: postId,
       score: currentTime,
     }),
@@ -125,7 +98,7 @@ export const createDrawing = async (options: {
 export async function getDrawing(
   postId: T3
 ): Promise<DrawingPostDataExtended | null> {
-  const key = drawingKey(postId);
+  const key = REDIS_KEYS.drawing(postId);
 
   const [data, stats] = await Promise.all([
     redis.hGetAll(key),
@@ -203,7 +176,7 @@ export async function getDrawings(
  */
 
 export async function skipDrawing(postId: T3, userId: T2): Promise<void> {
-  const key = skipsForDrawingKey(postId);
+  const key = REDIS_KEYS.userSkipped(postId);
   await redis.zAdd(key, {
     member: userId,
     score: Date.now(),
@@ -217,7 +190,7 @@ export async function skipDrawing(postId: T3, userId: T2): Promise<void> {
  */
 
 export async function getPlayerCount(postId: T3): Promise<number> {
-  const key = attemptsForDrawingKey(postId);
+  const key = REDIS_KEYS.userAttempts(postId);
   return await redis.zCard(key);
 }
 
@@ -232,8 +205,8 @@ export async function getDrawingStats(postId: T3): Promise<{
   solvedPercentage: number;
 }> {
   const [playerCount, solvedCount] = await Promise.all([
-    redis.zCard(attemptsForDrawingKey(postId)),
-    redis.zCard(solvesForDrawingKey(postId)),
+    redis.zCard(REDIS_KEYS.userAttempts(postId)),
+    redis.zCard(REDIS_KEYS.userSolved(postId)),
   ]);
   return {
     playerCount,
@@ -254,7 +227,7 @@ export async function savePinnedCommentId(
   postId: T3,
   commentId: T1
 ): Promise<void> {
-  const key = drawingKey(postId);
+  const key = REDIS_KEYS.drawing(postId);
   await redis.hSet(key, {
     pinnedCommentId: commentId,
   });
@@ -270,7 +243,7 @@ export async function saveLastCommentUpdate(
   postId: T3,
   updatedAt: number
 ): Promise<void> {
-  const key = drawingKey(postId);
+  const key = REDIS_KEYS.drawing(postId);
   await redis.hSet(key, {
     lastCommentUpdate: updatedAt.toString(),
   });
@@ -287,8 +260,8 @@ export async function hasCompletedDrawing(
   userId: T2
 ): Promise<boolean> {
   const [solved, skipped] = await Promise.all([
-    redis.zScore(solvesForDrawingKey(postId), userId),
-    redis.zScore(skipsForDrawingKey(postId), userId),
+    redis.zScore(REDIS_KEYS.userSolved(postId), userId),
+    redis.zScore(REDIS_KEYS.userSkipped(postId), userId),
   ]);
 
   return solved !== null || skipped !== null;
@@ -318,16 +291,16 @@ export async function submitGuess(options: {
   // Check if user already solved this post and get the word
   const [alreadySolved, word, authorId] = await Promise.all([
     hasCompletedDrawing(postId, userId),
-    redis.hGet(drawingKey(postId), 'word'),
-    redis.hGet(drawingKey(postId), 'authorId'),
+    redis.hGet(REDIS_KEYS.drawing(postId), 'word'),
+    redis.hGet(REDIS_KEYS.drawing(postId), 'authorId'),
   ]);
   if (!word || !authorId || alreadySolved) return empty;
 
   // Increment counters
   const [updatedStats, _userAttempts, _wordAttempts] = await Promise.all([
     getGuesses(postId),
-    redis.zIncrBy(attemptsForDrawingKey(postId), userId, 1),
-    redis.zIncrBy(drawingsForWordKey(word), postId, 1),
+    redis.zIncrBy(REDIS_KEYS.userAttempts(postId), userId, 1),
+    redis.zIncrBy(REDIS_KEYS.drawingsByWord(word), postId, 1),
   ]);
 
   // Check if guess is correct (case-insensitive)
@@ -357,7 +330,7 @@ export async function submitGuess(options: {
 
   await Promise.all([
     // Mark as solved
-    await redis.zAdd(solvesForDrawingKey(postId), {
+    await redis.zAdd(REDIS_KEYS.userSolved(postId), {
       member: userId,
       score: Date.now(),
     }),
@@ -408,7 +381,7 @@ export async function getGuesses(
 }> {
   const [guesses, stats] = await Promise.all([
     redis
-      .zRange(guessesForDrawingKey(postId), 0, limit - 1, {
+      .zRange(REDIS_KEYS.drawingGuesses(postId), 0, limit - 1, {
         reverse: true,
         by: 'rank',
       })
@@ -459,12 +432,12 @@ export async function getDrawingCommentData(postId: T3): Promise<{
     guessCount,
     guesses,
   ] = await Promise.all([
-    redis.zCard(attemptsForDrawingKey(postId)),
-    redis.zCard(solvesForDrawingKey(postId)),
-    redis.zCard(skipsForDrawingKey(postId)),
-    redis.zCard(guessesForDrawingKey(postId)),
-    redis.hGet(drawingKey(postId), 'guessCount'),
-    redis.zRange(guessesForDrawingKey(postId), 0, -1, {
+    redis.zCard(REDIS_KEYS.userAttempts(postId)),
+    redis.zCard(REDIS_KEYS.userSolved(postId)),
+    redis.zCard(REDIS_KEYS.userSkipped(postId)),
+    redis.zCard(REDIS_KEYS.drawingGuesses(postId)),
+    redis.hGet(REDIS_KEYS.drawing(postId), 'guessCount'),
+    redis.zRange(REDIS_KEYS.drawingGuesses(postId), 0, -1, {
       reverse: true,
       by: 'rank',
     }),

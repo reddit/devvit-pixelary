@@ -1,8 +1,8 @@
 import { redis } from '@devvit/web/server';
 import { DEFAULT_WORDS } from '../../shared/constants';
-import type { T5 } from '../../shared/types';
 import { titleCase } from '../../shared/utils/string';
 import { shuffle } from '../../shared/utils/array';
+import { REDIS_KEYS } from './redis';
 
 /*
 
@@ -14,22 +14,14 @@ All words are stored using global Redis as opposed to per-subreddit Redis to:
 
 */
 
-/*
- * Redis Keys
- */
-
-const wordsKey = (subredditId: T5) => `words:${subredditId}`;
-const bannedWordsKey = (subredditId: T5) => `banned-words:${subredditId}`;
-const communitiesKey = 'communities';
-
 /**
  * Get the dictionary for a subreddit
  * @param subredditName - The name of the subreddit to get the dictionary for
  * @returns The dictionary for the subreddit
  */
 
-export async function getWords(subredditId: T5): Promise<string[]> {
-  const key = wordsKey(subredditId);
+export async function getWords(subredditName: string): Promise<string[]> {
+  const key = REDIS_KEYS.words(subredditName);
   const words = await redis.global.get(key);
   if (!words) return [];
   return JSON.parse(words) as string[];
@@ -37,15 +29,18 @@ export async function getWords(subredditId: T5): Promise<string[]> {
 
 /**
  * Add a word to the dictionary
- * @param subredditId - The id of the subreddit to add the word to
+ * @param subredditName - The name of the subreddit to add the word to
  * @param word - The word to add to the dictionary
  * @returns True if the word was added, false if it already exists or is banned
  */
 
-export async function addWord(subredditId: T5, word: string): Promise<boolean> {
+export async function addWord(
+  subredditName: string,
+  word: string
+): Promise<boolean> {
   const [dictionary, bannedWords] = await Promise.all([
-    getWords(subredditId),
-    getBannedWords(subredditId),
+    getWords(subredditName),
+    getBannedWords(subredditName),
   ]);
 
   // Format the suggestion
@@ -64,7 +59,7 @@ export async function addWord(subredditId: T5, word: string): Promise<boolean> {
   dictionary.sort();
 
   // Save back to Redis
-  const key = wordsKey(subredditId);
+  const key = REDIS_KEYS.words(subredditName);
   await redis.global.set(key, JSON.stringify(dictionary));
 
   return true;
@@ -73,31 +68,31 @@ export async function addWord(subredditId: T5, word: string): Promise<boolean> {
 /**
  * Wholesale update the words for a subreddit
  * This is useful for when you want to update the dictionary for a subreddit without having to worry about the existing words.
- * @param subredditId - The id of the subreddit to update the words for
+ * @param subredditName - The name of the subreddit to update the words for
  * @param words - The words to update the dictionary with
  */
 
 export async function updateWords(
-  subredditId: T5,
+  subredditName: string,
   words: string[]
 ): Promise<void> {
-  const key = wordsKey(subredditId);
+  const key = REDIS_KEYS.words(subredditName);
   const parsedWords = words.map((word) => titleCase(word.trim())).sort();
   await redis.global.set(key, JSON.stringify(parsedWords));
 }
 
 /**
  * Remove a word from the dictionary
- * @param subredditId - The id of the subreddit to remove the word from
+ * @param subredditName - The name of the subreddit to remove the word from
  * @param word - The word to remove from the dictionary
  * @returns True if the word was removed, false if it was not found
  */
 
 export async function removeWord(
-  subredditId: T5,
+  subredditName: string,
   word: string
 ): Promise<boolean> {
-  const dictionary = await getWords(subredditId);
+  const dictionary = await getWords(subredditName);
 
   // Format the removal petition
   const normalizedWord = titleCase(word.trim());
@@ -110,7 +105,7 @@ export async function removeWord(
   if (filtered.length === originalLength) return false;
 
   // Save back to Redis
-  const key = wordsKey(subredditId);
+  const key = REDIS_KEYS.words(subredditName);
   await redis.global.set(key, JSON.stringify(filtered));
 
   return true;
@@ -118,12 +113,12 @@ export async function removeWord(
 
 /**
  * Get the banned words for a subreddit
- * @param subredditId - The id of the subreddit to get the banned words for
+ * @param subredditName - The name of the subreddit to get the banned words for
  * @returns The banned words for the subreddit
  */
 
-export async function getBannedWords(subredditId: T5): Promise<string[]> {
-  const words = await redis.global.get(bannedWordsKey(subredditId));
+export async function getBannedWords(subredditName: string): Promise<string[]> {
+  const words = await redis.global.get(REDIS_KEYS.bannedWords(subredditName));
   if (!words) return [];
   const wordArray = JSON.parse(words) as string[];
   return wordArray;
@@ -131,13 +126,16 @@ export async function getBannedWords(subredditId: T5): Promise<string[]> {
 
 /**
  * Ban a word
- * @param subredditId - The id of the subreddit to ban the word for
+ * @param subredditName - The name of the subreddit to ban the word for
  * @param word - The word to ban
  * @returns True if the word was banned, false if it was already banned
  */
 
-export async function banWord(subredditId: T5, word: string): Promise<boolean> {
-  const bannedWords = await getBannedWords(subredditId);
+export async function banWord(
+  subredditName: string,
+  word: string
+): Promise<boolean> {
+  const bannedWords = await getBannedWords(subredditName);
   const normalizedWord = titleCase(word.trim());
 
   // Check if already banned
@@ -149,7 +147,7 @@ export async function banWord(subredditId: T5, word: string): Promise<boolean> {
   bannedWords.sort();
 
   // Save back to Redis
-  const key = bannedWordsKey(subredditId);
+  const key = REDIS_KEYS.bannedWords(subredditName);
   await redis.global.set(key, JSON.stringify(bannedWords));
   return true;
 }
@@ -157,31 +155,31 @@ export async function banWord(subredditId: T5, word: string): Promise<boolean> {
 /**
  * Wholesale update the banned words for a subreddit
  * This is useful for when you want to update the banned words for a subreddit without having to worry about the existing banned words.
- * @param subredditId - The id of the subreddit to update the banned words for
+ * @param subredditName - The name of the subreddit to update the banned words for
  * @param words - The words to update the banned words with
  */
 
 export async function updateBannedWords(
-  subredditId: T5,
+  subredditName: string,
   words: string[]
 ): Promise<void> {
-  const key = bannedWordsKey(subredditId);
+  const key = REDIS_KEYS.bannedWords(subredditName);
   const parsedWords = words.map((word) => titleCase(word.trim())).sort();
   await redis.global.set(key, JSON.stringify(parsedWords));
 }
 
 /**
  * Unban a word
- * @param subredditId - The id of the subreddit to remove the banned word from
+ * @param subredditName - The name of the subreddit to remove the banned word from
  * @param word - The word to unban
  * @returns True if the word was unbanned, false if it was not banned
  */
 
 export async function unbanWord(
-  subredditId: T5,
+  subredditName: string,
   word: string
 ): Promise<boolean> {
-  const bannedWords = await getBannedWords(subredditId);
+  const bannedWords = await getBannedWords(subredditName);
   const normalizedWord = titleCase(word.trim());
 
   // Remove word (case-insensitive)
@@ -191,23 +189,23 @@ export async function unbanWord(
   // Return false if word not found
   if (filtered.length === originalLength) return false;
 
-  const key = bannedWordsKey(subredditId);
+  const key = REDIS_KEYS.bannedWords(subredditName);
   await redis.global.set(key, JSON.stringify(filtered));
   return true;
 }
 
 /**
  * Get random words from a dictionary
- * @param subredditId - The id of the subreddit to get the words from
+ * @param subredditName - The name of the subreddit to get the words from
  * @param count - The number of words to get
  * @returns The random words
  */
 
 export async function getRandomWords(
-  subredditId: T5,
+  subredditName: string,
   count: number = 3
 ): Promise<string[]> {
-  const words = await getWords(subredditId);
+  const words = await getWords(subredditName);
   const shuffled = shuffle<string>(words);
   const result = shuffled.slice(0, count);
   return result;
@@ -215,18 +213,20 @@ export async function getRandomWords(
 
 /**
  * Initialize the dictionary for a subreddit. It's idempotent, so it can be called multiple times without causing issues.
- * @param subredditId - The id of the subreddit to initialize the dictionary for
+ * @param subredditName - The name of the subreddit to initialize the dictionary for
  */
 
-export async function initializeDictionary(subredditId: T5): Promise<void> {
+export async function initializeDictionary(
+  subredditName: string
+): Promise<void> {
   // Check if dictionary already exists
   const [words, bannedWords] = await Promise.all([
-    redis.global.get(wordsKey(subredditId)).then((words) => !!words),
+    redis.global.get(REDIS_KEYS.words(subredditName)).then((words) => !!words),
     redis.global
-      .get(bannedWordsKey(subredditId))
+      .get(REDIS_KEYS.bannedWords(subredditName))
       .then((bannedWords) => !!bannedWords),
-    redis.global.zAdd(communitiesKey, {
-      member: subredditId,
+    redis.global.zAdd(REDIS_KEYS.communities(), {
+      member: subredditName,
       score: Date.now(),
     }),
   ]);
@@ -239,13 +239,19 @@ export async function initializeDictionary(subredditId: T5): Promise<void> {
 
   if (!words) {
     seedActions.push(
-      redis.global.set(wordsKey(subredditId), JSON.stringify(DEFAULT_WORDS))
+      redis.global.set(
+        REDIS_KEYS.words(subredditName),
+        JSON.stringify(DEFAULT_WORDS)
+      )
     );
   }
 
   if (!bannedWords) {
     seedActions.push(
-      redis.global.set(bannedWordsKey(subredditId), JSON.stringify([]))
+      redis.global.set(
+        REDIS_KEYS.bannedWords(subredditName),
+        JSON.stringify([])
+      )
     );
   }
 

@@ -1,5 +1,40 @@
 import { reddit, cache } from '@devvit/web/server';
-import type { T2 } from '../../shared/types';
+import type { T2, T3 } from '../../shared/types';
+
+/**
+ * Centralized Redis key management
+ * Uses short prefixes for efficiency and consistency
+ */
+
+export const REDIS_KEYS = {
+  // Global tracking of drawings
+  drawingsByUser: (userId: T2) => `d:u:${userId}`,
+  drawingsByWord: (word: string) => `d:w:${word}`,
+  allDrawings: () => 'd:all',
+
+  // Post level data and user interactions
+  drawing: (postId: T3) => `d:${postId}`,
+  drawingGuesses: (postId: T3) => `guesses:${postId}`,
+  userAttempts: (postId: T3) => `attempts:${postId}`,
+  userSolved: (postId: T3) => `solves:${postId}`,
+  userSkipped: (postId: T3) => `skips:${postId}`,
+
+  // Scores & Leaderboard
+  scores: () => 'scores',
+
+  // Dictionary
+  words: (subredditName: string) => `words:${subredditName}`,
+  bannedWords: (subredditName: string) => `banned:${subredditName}`,
+
+  // User metadata
+  username: (userId: T2) => `username:${userId}`,
+  moderatorStatus: (subredditName: string, userId: T2) =>
+    `mod:${subredditName}:${userId}`,
+  adminStatus: (userId: T2) => `admin:${userId}`,
+
+  // Communities
+  communities: () => 'communities',
+};
 
 const USERNAME_TTL = 30 * 24 * 60 * 60; // 30 days.
 const MODERATOR_STATUS_TTL = 10 * 24 * 60 * 60; // 10 days.
@@ -20,7 +55,7 @@ export async function getUsername(userId: T2): Promise<string> {
       return user.username;
     },
     {
-      key: `username:${userId}`,
+      key: REDIS_KEYS.username(userId),
       ttl: USERNAME_TTL,
     }
   );
@@ -45,7 +80,7 @@ export async function isModerator(
       return moderators.some((user) => user.id === userId);
     },
     {
-      key: `isModerator:${subredditName}:${userId}`,
+      key: REDIS_KEYS.moderatorStatus(subredditName, userId),
       ttl: MODERATOR_STATUS_TTL,
     }
   );
@@ -64,7 +99,7 @@ export async function isAdmin(userId: T2): Promise<boolean> {
       return false;
     },
     {
-      key: `isAdmin:${userId}`,
+      key: REDIS_KEYS.adminStatus(userId),
       ttl: ADMIN_STATUS_TTL,
     }
   );

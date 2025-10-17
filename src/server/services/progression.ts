@@ -1,6 +1,6 @@
 import { redis, scheduler } from '@devvit/web/server';
 import { LEVELS } from '../../shared/constants';
-import { getUsername } from './redis';
+import { getUsername, REDIS_KEYS } from './redis';
 import { parseT2, type T2, type Level } from '../../shared/types';
 
 /**
@@ -14,9 +14,6 @@ export interface ScoresEntry {
   score: number;
   rank: number;
 }
-
-// REDIS KEYS
-const scoresKey = 'scores';
 
 /**
  * Get the leaderboard
@@ -36,10 +33,15 @@ export async function getLeaderboard(options?: {
   const { cursor = 0, limit = 10, reverse = true, by = 'rank' } = options ?? {};
 
   // Top leaderboard entries
-  const entries = await redis.zRange(scoresKey, cursor, cursor + limit - 1, {
-    reverse,
-    by,
-  });
+  const entries = await redis.zRange(
+    REDIS_KEYS.scores(),
+    cursor,
+    cursor + limit - 1,
+    {
+      reverse,
+      by,
+    }
+  );
 
   // Hydrate entries with usernames
   const data = await Promise.all(
@@ -68,7 +70,7 @@ export async function getLeaderboard(options?: {
  */
 
 export async function getScore(userId: T2): Promise<number> {
-  const key = scoresKey;
+  const key = REDIS_KEYS.scores();
   const score = await redis.zScore(key, userId);
   return score ?? 0; // Default to 0 if user not found
 }
@@ -84,7 +86,7 @@ export async function incrementScore(
   userId: T2,
   amount: number
 ): Promise<number> {
-  const key = scoresKey;
+  const key = REDIS_KEYS.scores();
   const score = await redis.zIncrBy(key, userId, amount);
   const level = getLevelByScore(score);
   const didUserLevelUp = level.min > score - amount;
@@ -152,7 +154,8 @@ export function getUserLevel(score: number): Level {
  */
 
 export async function getRank(userId: T2): Promise<number> {
-  return (await redis.zRank(scoresKey, userId)) ?? -1; // -1 if user not found
+  const rank = await redis.zRank(REDIS_KEYS.scores(), userId);
+  return rank ?? -1; // -1 if user not found
 }
 
 // Utility function for calculating level progress percentage
