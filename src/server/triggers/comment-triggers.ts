@@ -1,6 +1,11 @@
 import type { Request, Response } from 'express';
 import { context, reddit } from '@devvit/web/server';
 import { isCommand } from '../services/comment-commands';
+import {
+  findChampionCommentByCommentId,
+  removeChampionComment,
+} from '../services/champion-comments';
+import { banWord } from '../services/dictionary';
 
 /**
  * Comment trigger handlers
@@ -55,6 +60,7 @@ export async function handleCommentCreate(
         authorId: author.id,
         subredditName: subreddit.name,
         subredditId: subreddit.id as `t5_${string}`,
+        postId: comment.postId as `t3_${string}`,
         timestamp: Date.now(),
         source: 'http' as const,
       };
@@ -100,11 +106,31 @@ export async function handleCommentDelete(
   res: Response
 ): Promise<void> {
   try {
-    const { postId, commentId } = req.body;
+    const { postId, commentId, subredditName } = req.body;
 
     if (!postId || !commentId) {
       res.json({ status: 'ignored' });
       return;
+    }
+
+    // Check if this deleted comment was a champion comment
+    const championData = await findChampionCommentByCommentId(commentId);
+
+    if (championData) {
+      console.log(
+        `Champion comment deleted: ${commentId} for word "${championData.word}" on post ${championData.postId}`
+      );
+
+      // Remove champion comment reference
+      await removeChampionComment(championData.postId, championData.word);
+
+      // Ban the word as enforcement
+      if (subredditName) {
+        await banWord(subredditName, championData.word);
+        console.log(
+          `Word "${championData.word}" banned due to champion comment removal`
+        );
+      }
     }
 
     // TODO: Implement command comment cleanup when command system is updated

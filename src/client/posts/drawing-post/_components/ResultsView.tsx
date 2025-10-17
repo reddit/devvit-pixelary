@@ -8,6 +8,7 @@ import { abbreviateNumber } from '@shared/utils/numbers';
 import { DrawingData } from '../../../../shared/schema/drawing';
 import { PixelFont } from '@components/PixelFont';
 import { obfuscateString } from '@shared/utils/string';
+import { titleCase } from '@shared/utils/string';
 import { useState, useEffect } from 'react';
 import { useToastHelpers } from '@components/ToastManager';
 import type { PostGuesses } from '../../../../shared/schema/pixelary';
@@ -22,6 +23,7 @@ interface ResultsViewProps {
   earnedPoints?: number | null;
   stats?: PostGuesses;
   isLoading?: boolean;
+  postId?: string;
 }
 
 export function ResultsView({
@@ -34,12 +36,19 @@ export function ResultsView({
   earnedPoints,
   stats,
   isLoading,
+  postId,
 }: ResultsViewProps) {
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const { success } = useToastHelpers();
 
   // Get current user profile for level progress calculation
   const { data: userProfile } = trpc.app.user.getProfile.useQuery();
+
+  // Get allowed words for this post
+  const { data: allowedWords = [] } = trpc.app.post.getAllowedWords.useQuery(
+    { postId: postId || '' },
+    { enabled: !!postId }
+  );
 
   // Early return if essential data is missing
   if (!drawing || !word) {
@@ -146,6 +155,7 @@ export function ResultsView({
                   guess={guess}
                   count={count}
                   percentage={percentage}
+                  allowedWords={allowedWords}
                 />
               );
             }
@@ -179,27 +189,43 @@ interface GuessRowProps {
   count?: number;
   percentage?: number;
   obfuscate?: boolean;
+  allowedWords?: string[];
 }
 
 function GuessRow(props: GuessRowProps) {
-  const { guess, count, percentage, obfuscate = false } = props;
+  const {
+    guess,
+    count,
+    percentage,
+    obfuscate = false,
+    allowedWords = [],
+  } = props;
 
   // Check if this is an empty row (no data provided)
   if (guess === undefined || count === undefined || percentage === undefined) {
     return <div className="w-full h-1/5 bg-white/25" />;
   }
 
+  // Determine if word should be obfuscated
+  const normalizedGuess = titleCase(guess.trim());
+  const isAllowed = allowedWords.some(
+    (allowedWord) => allowedWord.toLowerCase() === normalizedGuess.toLowerCase()
+  );
+  const shouldObfuscate = obfuscate || !isAllowed;
+
   return (
     <div className="flex items-center gap-3 px-3 justify-between w-full h-1/5 bg-white/25 relative">
       <div
         className={`absolute inset-y-0 left-0 bg-white transition-all duration-300 ${
-          obfuscate ? 'text-[var(--color-brand-secondary)]' : ''
+          shouldObfuscate ? 'text-[var(--color-brand-secondary)]' : ''
         }`}
         style={{ width: `${percentage}%` }}
       />
 
       <PixelFont className="relative">
-        {obfuscate && guess ? obfuscateString(guess) : guess}
+        {shouldObfuscate && guess
+          ? obfuscateString(normalizedGuess)
+          : normalizedGuess}
       </PixelFont>
 
       <div className="relative flex items-center gap-3">

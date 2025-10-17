@@ -8,13 +8,15 @@ import type { CommandContext } from './comment-commands';
 describe('Simplified Command System', () => {
   const createContext = (
     authorName = 'testuser',
-    subredditName = 'testsub'
+    subredditName = 'testsub',
+    postId?: string
   ): CommandContext => ({
     commentId: 'test123',
     authorName,
     authorId: 'testuser123',
     subredditName,
     subredditId: 't5_test' as const,
+    postId: postId as `t3_${string}` | undefined,
     timestamp: Date.now(),
     source: 'test' as const,
   });
@@ -42,6 +44,31 @@ describe('Simplified Command System', () => {
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('Please provide a word');
+    });
+
+    test('should handle !show command with word', async () => {
+      const context = createContext('testuser', 'testsub', 't3_post123');
+      const result = await processCommand('!show', ['testword'], context);
+
+      expect(result.success).toBe(true);
+      expect(result.response).toContain('testword');
+      expect(result.response).toContain('statistics');
+    });
+
+    test('should reject !show command without word', async () => {
+      const context = createContext('testuser', 'testsub', 't3_post123');
+      const result = await processCommand('!show', [], context);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Please provide a word');
+    });
+
+    test('should reject !show command without postId', async () => {
+      const context = createContext('testuser', 'testsub');
+      const result = await processCommand('!show', ['testword'], context);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Unable to determine post context');
     });
 
     test('should handle words command with pagination', async () => {

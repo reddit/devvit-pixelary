@@ -1,5 +1,6 @@
 import { redis, scheduler, realtime } from '@devvit/web/server';
 import { incrementScore } from './progression';
+import { titleCase } from '../../shared/utils/string';
 import type { DrawingPostDataExtended } from '../../shared/schema/pixelary';
 import { createPost } from '../core/post';
 import type { DrawingData } from '../../shared/schema/drawing';
@@ -410,7 +411,11 @@ export async function submitGuess(options: {
     // Always increment user attempts (zIncrBy will add if not exists, increment if exists)
     redis.zIncrBy(REDIS_KEYS.userAttempts(postId), userId, 1),
     redis.zIncrBy(REDIS_KEYS.drawingsByWord(word), postId, 1),
-    redis.zIncrBy(REDIS_KEYS.drawingGuesses(postId), guess, 1),
+    redis.zIncrBy(
+      REDIS_KEYS.drawingGuesses(postId),
+      titleCase(guess.trim()),
+      1
+    ),
   ]);
 
   // Get updated stats after all Redis operations complete
@@ -542,15 +547,17 @@ export async function getGuesses(
         reverse: true,
         by: 'rank',
       })
-      .then((guesses) =>
-        guesses.reduce(
+      .then((guesses) => {
+        const result = guesses.reduce(
           (acc, guess) => {
             acc[guess.member] = guess.score;
             return acc;
           },
           {} as Record<string, number>
-        )
-      ),
+        );
+
+        return result;
+      }),
     getDrawingStats(postId),
     redis.zCard(REDIS_KEYS.userSolved(postId)),
   ]);

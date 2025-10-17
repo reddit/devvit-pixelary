@@ -3,6 +3,8 @@ import { DEFAULT_WORDS } from '../../shared/constants';
 import { titleCase } from '../../shared/utils/string';
 import { shuffle } from '../../shared/utils/array';
 import { REDIS_KEYS } from './redis';
+import { getAllChampionWords } from './champion-comments';
+import type { T3 } from '../../shared/types';
 
 /*
 
@@ -262,4 +264,112 @@ export async function initializeDictionary(
   if (seedActions.length > 0) {
     await Promise.all(seedActions);
   }
+}
+
+/**
+ * Get all allowed words for a post (dictionary words + champion comment words - banned words)
+ * @param subredditName - The subreddit name
+ * @param postId - The post ID
+ * @returns Array of allowed words that can appear unobfuscated
+ */
+export async function getAllowedWords(
+  subredditName: string,
+  postId: T3
+): Promise<string[]> {
+  const [dictionaryWords, championWords, bannedWords] = await Promise.all([
+    getWords(subredditName),
+    getAllChampionWords(postId),
+    getBannedWords(subredditName),
+  ]);
+
+  // Combine dictionary and champion words
+  const allWords = [...dictionaryWords, ...championWords];
+
+  // Normalize all words to titleCase for consistent comparison
+  const normalizedWords = allWords.map((word) => titleCase(word.trim()));
+  const normalizedBannedWords = bannedWords.map((word) =>
+    titleCase(word.trim())
+  );
+
+  // Remove duplicates and banned words
+  const allowedWords = normalizedWords.filter((word, index, arr) => {
+    // Remove duplicates (case-insensitive)
+    const firstIndex = arr.findIndex(
+      (w) => w.toLowerCase() === word.toLowerCase()
+    );
+    if (firstIndex !== index) return false;
+
+    // Remove banned words (case-insensitive)
+    const isBanned = normalizedBannedWords.some(
+      (bannedWord) => bannedWord.toLowerCase() === word.toLowerCase()
+    );
+    return !isBanned;
+  });
+
+  return allowedWords;
+}
+
+// Debug function to help troubleshoot word matching issues
+export async function debugAllowedWords(
+  subredditName: string,
+  postId: T3,
+  testWord?: string
+): Promise<{
+  dictionaryWords: string[];
+  championWords: string[];
+  bannedWords: string[];
+  normalizedWords: string[];
+  normalizedBannedWords: string[];
+  allowedWords: string[];
+  testWord?: string;
+  testWordNormalized?: string;
+  isTestWordAllowed?: boolean;
+}> {
+  const [dictionaryWords, championWords, bannedWords] = await Promise.all([
+    getWords(subredditName),
+    getAllChampionWords(postId),
+    getBannedWords(subredditName),
+  ]);
+
+  const allWords = [...dictionaryWords, ...championWords];
+  const normalizedWords = allWords.map((word) => titleCase(word.trim()));
+  const normalizedBannedWords = bannedWords.map((word) =>
+    titleCase(word.trim())
+  );
+
+  const allowedWords = normalizedWords.filter((word, index, arr) => {
+    const firstIndex = arr.findIndex(
+      (w) => w.toLowerCase() === word.toLowerCase()
+    );
+    if (firstIndex !== index) return false;
+
+    const isBanned = normalizedBannedWords.some(
+      (bannedWord) => bannedWord.toLowerCase() === word.toLowerCase()
+    );
+    return !isBanned;
+  });
+
+  const result = {
+    dictionaryWords,
+    championWords,
+    bannedWords,
+    normalizedWords,
+    normalizedBannedWords,
+    allowedWords,
+  };
+
+  if (testWord) {
+    const testWordNormalized = titleCase(testWord.trim());
+    const isTestWordAllowed = allowedWords.some(
+      (word) => word.toLowerCase() === testWordNormalized.toLowerCase()
+    );
+    return {
+      ...result,
+      testWord,
+      testWordNormalized,
+      isTestWordAllowed,
+    };
+  }
+
+  return result;
 }

@@ -1,5 +1,9 @@
 import type { CommandContext, CommandResult } from './comment-commands';
 import { getWords, addWord, removeWord, getBannedWords } from './dictionary';
+import { setChampionComment, isWordBanned } from './champion-comments';
+import { redis } from '@devvit/web/server';
+import { REDIS_KEYS } from './redis';
+import { titleCase } from '../../shared/utils/string';
 
 /**
  * Simple command handlers as plain functions
@@ -224,6 +228,105 @@ export async function handleScore(
   };
 }
 
+export async function handleShow(
+  args: string[],
+  context: CommandContext
+): Promise<CommandResult> {
+  try {
+    if (args.length === 0) {
+      return {
+        success: false,
+        error: 'Please provide a word to show. Usage: `!show <word>`',
+      };
+    }
+
+    const word = args[0]?.trim();
+    if (!word) {
+      return {
+        success: false,
+        error: 'Invalid word',
+      };
+    }
+
+    // Normalize the word using titleCase for consistent comparison
+    const normalizedWord = titleCase(word);
+
+    // Extract postId from context
+    if (!context.postId) {
+      return {
+        success: false,
+        error: 'Unable to determine post context',
+      };
+    }
+
+    // Get guess statistics for this word on this post
+    const guessCount = await redis.zScore(
+      REDIS_KEYS.drawingGuesses(context.postId),
+      normalizedWord
+    );
+    const count = guessCount || 0;
+
+    // Get total guesses to calculate percentage
+    const allGuesses = await redis.zRange(
+      REDIS_KEYS.drawingGuesses(context.postId),
+      0,
+      -1,
+      { reverse: true, by: 'rank' }
+    );
+    const totalGuesses = allGuesses.reduce(
+      (sum, guess) => sum + guess.score,
+      0
+    );
+    const percentage =
+      totalGuesses > 0 ? Math.round((count / totalGuesses) * 100) : 0;
+
+    // Check if word is in dictionary
+    const dictionaryWords = await getWords(context.subredditName);
+    const isInDictionary = dictionaryWords.some(
+      (dictWord) => dictWord.toLowerCase() === normalizedWord.toLowerCase()
+    );
+
+    // Check if word is banned
+    const isBanned = await isWordBanned(context.subredditName, normalizedWord);
+
+    // Store this comment as champion comment for this word
+    await setChampionComment(context.postId, normalizedWord, context.commentId);
+
+    // Build response
+    let response = `📊 **"${normalizedWord}"** statistics:\n\n`;
+    response += `• **${count}** guesses (${percentage}% of total)\n`;
+
+    if (isInDictionary) {
+      response += `• ✅ In dictionary\n`;
+    } else {
+      response += `• ⚠️ Not in dictionary\n`;
+    }
+
+    if (isBanned) {
+      response += `• ❌ Banned word\n`;
+    }
+
+    response += `\n*This comment serves as a "champion" for this word. If removed by Reddit's safety systems, the word will be banned.*`;
+
+    return {
+      success: true,
+      response,
+      metadata: {
+        word: normalizedWord,
+        count,
+        percentage,
+        isInDictionary,
+        isBanned,
+      },
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: 'Failed to retrieve word statistics',
+    };
+  }
+}
+
 export async function handleHelp(
   _args: string[],
   _context: CommandContext
@@ -238,6 +341,8 @@ export async function handleHelp(
     `  \`!remove cat\` - Remove "cat" from dictionary\n\n` +
     `• \`!word\` - Show word statistics\n` +
     `  \`!word meatloaf\` - Show statistics for "meatloaf"\n\n` +
+    `• \`!show\` - Show guess statistics for a word\n` +
+    `  \`!show meatloaf\` - Shows stats for "meatloaf" on this post\n\n` +
     `• \`!score\` - Show user score\n` +
     `  \`!score\` or \`!score username\` - Show your score or another user's\n\n` +
     `• \`!help\` - Show this help\n\n` +

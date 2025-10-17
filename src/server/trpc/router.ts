@@ -8,6 +8,7 @@ import {
   removeWord,
   getBannedWords,
   getRandomWords,
+  getAllowedWords,
 } from '../services/dictionary';
 import {
   createDrawing,
@@ -118,6 +119,14 @@ export const appRouter = t.router({
             postId: post.id,
             navigateTo: `https://reddit.com/r/${ctx.subredditName}/comments/${post.id}`,
           };
+        }),
+
+      getAllowedWords: t.procedure
+        .input(z.object({ postId: z.string() }))
+        .query(async ({ ctx, input }) => {
+          if (!ctx.subredditName) throw new Error('Subreddit not found');
+          const postId = parseT3(input.postId);
+          return await getAllowedWords(ctx.subredditName, postId);
         }),
     }),
 

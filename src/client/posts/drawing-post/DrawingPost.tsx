@@ -205,6 +205,7 @@ export const DrawingPost = ({ postData: propPostData }: DrawingPostProps) => {
         earnedPoints={earnedPoints}
         stats={stats}
         isLoading={isLoading}
+        postId={currentPostId}
       />
     );
   }

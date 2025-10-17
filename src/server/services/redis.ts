@@ -34,6 +34,9 @@ export const REDIS_KEYS = {
 
   // Communities
   communities: () => 'communities',
+
+  // Champion comments for !show command
+  championComments: (postId: T3) => `champions:${postId}`,
 };
 
 const USERNAME_TTL = 30 * 24 * 60 * 60; // 30 days.

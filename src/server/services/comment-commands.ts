@@ -1,4 +1,4 @@
-import type { T5 } from '../../shared/types';
+import type { T5, T3 } from '../../shared/types';
 import * as handlers from './comment-command-handlers';
 
 export type CommandContext = {
@@ -7,6 +7,7 @@ export type CommandContext = {
   authorId: string;
   subredditName: string;
   subredditId: T5;
+  postId?: T3;
   timestamp: number;
   source: 'devvit' | 'http' | 'test';
 };
@@ -23,7 +24,15 @@ export type CommandHandler = (
   context: CommandContext
 ) => Promise<CommandResult>;
 
-const COMMAND_LIST = ['!add', '!remove', '!words', '!word', '!score', '!help'];
+const COMMAND_LIST = [
+  '!add',
+  '!remove',
+  '!words',
+  '!word',
+  '!score',
+  '!show',
+  '!help',
+];
 
 export function isCommand(text: string): boolean {
   if (!text || typeof text !== 'string') return false;
@@ -53,6 +62,8 @@ export async function processCommand(
       return handlers.handleWord(args, context);
     case '!score':
       return handlers.handleScore(args, context);
+    case '!show':
+      return handlers.handleShow(args, context);
     case '!help':
       return handlers.handleHelp(args, context);
     default:
