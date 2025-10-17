@@ -198,17 +198,21 @@ export async function unbanWord(
  * Get random words from a dictionary
  * @param subredditName - The name of the subreddit to get the words from
  * @param count - The number of words to get
- * @returns The random words
+ * @returns The random words as CandidateWord objects
  */
 
 export async function getRandomWords(
   subredditName: string,
   count: number = 3
-): Promise<string[]> {
+): Promise<Array<{ word: string; dictionaryName: string }>> {
   const words = await getWords(subredditName);
   const shuffled = shuffle<string>(words);
   const result = shuffled.slice(0, count);
-  return result;
+  const dictionaryName = `r/${subredditName}`;
+  return result.map((word) => ({
+    word,
+    dictionaryName,
+  }));
 }
 
 /**

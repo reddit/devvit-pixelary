@@ -7,6 +7,7 @@ import {
   addWord,
   removeWord,
   getBannedWords,
+  getRandomWords,
 } from '../services/dictionary';
 import {
   createDrawing,
@@ -37,15 +38,15 @@ export const appRouter = t.router({
     // Dictionary endpoints
     dictionary: t.router({
       get: t.procedure.query(async ({ ctx }) => {
-        if (!ctx.subredditId) throw new Error('Subreddit not found');
-        return await getWords(ctx.subredditId);
+        if (!ctx.subredditName) throw new Error('Subreddit not found');
+        return await getWords(ctx.subredditName);
       }),
 
       add: t.procedure
         .input(z.object({ word: z.string().min(1).max(50) }))
         .mutation(async ({ ctx, input }) => {
-          if (!ctx.subredditId) throw new Error('Subreddit not found');
-          const success = await addWord(ctx.subredditId, input.word);
+          if (!ctx.subredditName) throw new Error('Subreddit not found');
+          const success = await addWord(ctx.subredditName, input.word);
           if (!success) {
             throw new Error('Failed to add word or word already exists');
           }
@@ -55,8 +56,8 @@ export const appRouter = t.router({
       remove: t.procedure
         .input(z.object({ word: z.string().min(1).max(50) }))
         .mutation(async ({ ctx, input }) => {
-          if (!ctx.subredditId) throw new Error('Subreddit not found');
-          const success = await removeWord(ctx.subredditId, input.word);
+          if (!ctx.subredditName) throw new Error('Subreddit not found');
+          const success = await removeWord(ctx.subredditName, input.word);
           if (!success) {
             throw new Error('Failed to remove word or word not found');
           }
@@ -64,8 +65,13 @@ export const appRouter = t.router({
         }),
 
       getBanned: t.procedure.query(async ({ ctx }) => {
-        if (!ctx.subredditId) throw new Error('Subreddit not found');
-        return await getBannedWords(ctx.subredditId);
+        if (!ctx.subredditName) throw new Error('Subreddit not found');
+        return await getBannedWords(ctx.subredditName);
+      }),
+
+      getCandidates: t.procedure.query(async ({ ctx }) => {
+        if (!ctx.subredditName) throw new Error('Subreddit not found');
+        return await getRandomWords(ctx.subredditName, 3);
       }),
     }),
 
