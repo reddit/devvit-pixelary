@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ProgressBar } from './ProgressBar';
 import { PixelFont } from './PixelFont';
-import { getLevelByScore } from '../../shared/levels';
+import { getLevelByScore } from '../../shared/utils/progression';
 
 export interface LevelProgressAttachmentProps {
   newScore: number;

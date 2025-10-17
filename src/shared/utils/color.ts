@@ -1,7 +1,10 @@
+import type { HEX, RGB } from '../types';
+
 /**
  * Convert hex color to RGB values
  */
-function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
+
+function hexToRgb(hex: HEX): RGB | null {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
   return result
     ? {
@@ -17,7 +20,8 @@ function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
  * Returns value between 0 (black) and 1 (white)
  * Based on sRGB color space and ITU-R BT.709 standard
  */
-function getRelativeLuminance(color: string): number {
+
+function getRelativeLuminance(color: HEX): number {
   const rgb = hexToRgb(color);
   if (!rgb) return 0.5; // Default to middle gray for invalid colors
 
@@ -43,9 +47,9 @@ function getRelativeLuminance(color: string): number {
  * @returns '#000000' for light backgrounds, '#FFFFFF' for dark backgrounds
  */
 export function getContrastColor(
-  backgroundColor: string,
+  backgroundColor: HEX,
   threshold: number = 0.5
-): string {
+): HEX {
   const luminance = getRelativeLuminance(backgroundColor);
   return luminance > threshold ? '#000000' : '#FFFFFF';
 }

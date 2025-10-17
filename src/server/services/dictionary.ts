@@ -1,8 +1,8 @@
 import { redis } from '@devvit/web/server';
-import { DEFAULT_WORDS } from '../../shared/words';
-import type { T5 } from '../../shared/types/TID';
-import { capitalize } from '../../shared/utils/string';
-import { shuffle } from '../../shared/utils/math';
+import { DEFAULT_WORDS } from '../../shared/constants';
+import type { T5 } from '../../shared/types';
+import { titleCase } from '../../shared/utils/string';
+import { shuffle } from '../../shared/utils/array';
 
 /*
 
@@ -49,7 +49,7 @@ export async function addWord(subredditId: T5, word: string): Promise<boolean> {
   ]);
 
   // Format the suggestion
-  const normalizedWord = capitalize(word.trim());
+  const normalizedWord = titleCase(word.trim());
 
   // Check if word already exists (case-insensitive)
   const exists = dictionary.includes(normalizedWord);
@@ -82,7 +82,7 @@ export async function updateWords(
   words: string[]
 ): Promise<void> {
   const key = wordsKey(subredditId);
-  const parsedWords = words.map((word) => capitalize(word.trim())).sort();
+  const parsedWords = words.map((word) => titleCase(word.trim())).sort();
   await redis.global.set(key, JSON.stringify(parsedWords));
 }
 
@@ -100,7 +100,7 @@ export async function removeWord(
   const dictionary = await getWords(subredditId);
 
   // Format the removal petition
-  const normalizedWord = capitalize(word.trim());
+  const normalizedWord = titleCase(word.trim());
 
   // Remove word (case-insensitive)
   const originalLength = dictionary.length;
@@ -138,7 +138,7 @@ export async function getBannedWords(subredditId: T5): Promise<string[]> {
 
 export async function banWord(subredditId: T5, word: string): Promise<boolean> {
   const bannedWords = await getBannedWords(subredditId);
-  const normalizedWord = capitalize(word.trim());
+  const normalizedWord = titleCase(word.trim());
 
   // Check if already banned
   const exists = bannedWords.includes(normalizedWord);
@@ -166,7 +166,7 @@ export async function updateBannedWords(
   words: string[]
 ): Promise<void> {
   const key = bannedWordsKey(subredditId);
-  const parsedWords = words.map((word) => capitalize(word.trim())).sort();
+  const parsedWords = words.map((word) => titleCase(word.trim())).sort();
   await redis.global.set(key, JSON.stringify(parsedWords));
 }
 
@@ -182,7 +182,7 @@ export async function unbanWord(
   word: string
 ): Promise<boolean> {
   const bannedWords = await getBannedWords(subredditId);
-  const normalizedWord = capitalize(word.trim());
+  const normalizedWord = titleCase(word.trim());
 
   // Remove word (case-insensitive)
   const originalLength = bannedWords.length;

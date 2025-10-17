@@ -1,5 +1,5 @@
 import { trpc } from '../../../trpc/client';
-import { abbreviateNumber } from '../../../../shared/utils/math';
+import { abbreviateNumber } from '../../../../shared/utils/numbers';
 import { PixelFont } from '../../../components/PixelFont';
 import { CardLayout } from './CardLayout';
 import { PixelSymbol } from '@src/client/components/PixelSymbol';

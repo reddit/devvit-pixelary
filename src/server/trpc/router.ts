@@ -1,7 +1,7 @@
 import { initTRPC } from '@trpc/server';
 import type { Context } from './context';
 import { z } from 'zod';
-import { parseT3 } from '../../shared/types/TID';
+import { parseT3 } from '../../shared/types';
 import {
   getWords,
   addWord,

@@ -71,3 +71,27 @@ export function parseT5(id: string): T5 {
   assertT5(id);
   return id as T5;
 }
+
+/*
+ * Color types
+ */
+
+export type RGB = {
+  r: number;
+  g: number;
+  b: number;
+};
+
+export type HEX = `#${string}`;
+
+/**
+ * Progression system
+ */
+
+export type Level = {
+  rank: number;
+  name: string;
+  min: number;
+  max: number;
+  extraTime: number;
+};

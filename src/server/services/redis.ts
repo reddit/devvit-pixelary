@@ -1,5 +1,5 @@
 import { reddit, cache } from '@devvit/web/server';
-import type { T2 } from '../../shared/types/TID';
+import type { T2 } from '../../shared/types';
 
 const USERNAME_TTL = 30 * 24 * 60 * 60; // 30 days.
 const MODERATOR_STATUS_TTL = 10 * 24 * 60 * 60; // 10 days.

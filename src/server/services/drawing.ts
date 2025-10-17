@@ -3,8 +3,12 @@ import { incrementScore } from './progression';
 import type { DrawingPostDataExtended } from '../../shared/schema/pixelary';
 import { createPost } from '../core/post';
 import type { DrawingData } from '../../shared/schema/drawing';
-import { PIXELARY_CONFIG } from '../../shared/constants';
-import { parseT2, type T1, type T2, type T3 } from '../../shared/types/TID';
+import { parseT2, type T1, type T2, type T3 } from '../../shared/types';
+import {
+  AUTHOR_REWARD_CORRECT_GUESS,
+  AUTHOR_REWARD_SUBMIT,
+  GUESSER_REWARD_SOLVE,
+} from '../../shared/constants';
 
 /*
  * Redis keys
@@ -77,10 +81,7 @@ export const createDrawing = async (options: {
     }),
 
     // Award points for submission
-    await incrementScore(
-      authorId,
-      PIXELARY_CONFIG.rewards.authorRewardForSubmit
-    ),
+    await incrementScore(authorId, AUTHOR_REWARD_SUBMIT),
 
     // Schedule pinned comment job
     await scheduler.runJob({
@@ -371,13 +372,10 @@ export async function submitGuess(options: {
     }),
 
     // Award points
-    await incrementScore(userId, PIXELARY_CONFIG.rewards.guesserRewardForSolve),
+    await incrementScore(userId, GUESSER_REWARD_SOLVE),
 
     // Award author points
-    await incrementScore(
-      parseT2(authorId),
-      PIXELARY_CONFIG.rewards.authorRewardForCorrectGuess
-    ),
+    await incrementScore(parseT2(authorId), AUTHOR_REWARD_CORRECT_GUESS),
 
     // Schedule debounced update (30s)
     await scheduler.runJob({
@@ -389,7 +387,7 @@ export async function submitGuess(options: {
 
   return {
     correct: true,
-    points: PIXELARY_CONFIG.rewards.guesserRewardForSolve,
+    points: GUESSER_REWARD_SOLVE,
   };
 }
 

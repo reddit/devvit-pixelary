@@ -1,8 +1,7 @@
 import { redis, scheduler } from '@devvit/web/server';
 import { LEVELS } from '../../shared/constants';
-import type { Level } from '../../shared/constants';
 import { getUsername } from './redis';
-import { parseT2, type T2 } from '../../shared/types/TID';
+import { parseT2, type T2, type Level } from '../../shared/types';
 
 /**
  * Leaderboard and scoring service for Pixelary

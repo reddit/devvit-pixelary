@@ -1,4 +1,4 @@
-import type { T5 } from '../../shared/types/TID';
+import type { T5 } from '../../shared/types';
 import * as handlers from './comment-command-handlers';
 
 export type CommandContext = {
