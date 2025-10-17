@@ -3,7 +3,6 @@ import { trpc } from '../../../trpc/client';
 import { Drawing } from '../../../components/Drawing';
 import { PixelFont } from '../../../components/PixelFont';
 import { IconButton } from '../../../components/IconButton';
-import { DrawingData } from '../../../../shared/schema/drawing';
 import { navigateTo } from '@devvit/web/client';
 import { context } from '@devvit/web/client';
 

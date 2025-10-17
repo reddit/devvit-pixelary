@@ -240,10 +240,11 @@ export const appRouter = t.router({
           })
         )
         .query(async ({ input }) => {
-          return await getLeaderboard({
+          const result = await getLeaderboard({
             limit: input.limit,
             cursor: input.cursor,
           });
+          return result.entries;
         }),
 
       getUserRank: t.procedure.query(async ({ ctx }) => {
