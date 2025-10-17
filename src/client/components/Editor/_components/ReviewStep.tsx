@@ -45,8 +45,8 @@ export function ReviewStep(props: ReviewStepProps) {
     try {
       const result = await submitDrawing.mutateAsync({
         word,
-        dictionaryName,
-        data: drawing,
+        dictionary: dictionaryName,
+        drawing: drawing,
       });
 
       if (result.success) {
