@@ -41,22 +41,15 @@ export async function handleNewDrawingPinnedComment(
       return;
     }
 
-    // Create engaging welcome comment
-    const commentText = `**Welcome to Pixelary!**
+    const commentText = `Pixelary is a community drawing game. Submit your guess in the post above!
 
-How to Play:
-- Submit your guess in the game area above
-- Earn points for guessing correctly
-- Draw stuff for others to guess
-
-I can respond to the following commands:
+Comment commands:
+- \`!words\` - See dictionary
 - \`!add <word>\` - Add word to dictionary
-- \`!remove <word>\` - Remove word from dictionary
-- \`!words\` - Browse dictionary
-- \`!word <word>\` - Show word statistics
-- \`!help\` - Show all commands
+- \`!show <word>\` - Check guess stats
+- \`!help\` - All commands
 
-Good luck, players!`;
+Good luck and thanks for playing!`;
 
     const comment = await reddit.submitComment({
       text: commentText,
@@ -118,22 +111,24 @@ export async function handleUpdateDrawingPinnedComment(
             ? '🟠 Hard'
             : '🔴 Expert';
 
-    const commentText = `📊 **Live Drawing Analytics**
+    const commentText = `Pixelary is a community drawing game. Submit your guess in the post above!
 
-**🎯 Performance Metrics:**
-- **${stats.solves}** solves (${stats.solvedPercentage}% solved rate)
-- **${stats.skips}** skips (${stats.skipPercentage}% skip rate)  
-- **${stats.playerCount}** total players
-- **${stats.guessCount}** total guesses (avg ${Math.round((stats.guessCount / stats.playerCount) * 10) / 10} per player)
-- **${stats.wordCount}** unique words attempted
+Difficulty: ${difficultyLevel} (${difficultyScore}/10)
 
-**📈 Difficulty Analysis:**
-${difficultyLevel} (${difficultyScore}/10 difficulty score)
+Live stats:
+- ${stats.playerCount} unique players guessed
+- ${stats.guessCount} total guesses (avg ${Math.round((stats.guessCount / stats.playerCount) * 10) / 10} per player)
+- ${stats.wordCount} unique words guessed
+- ${stats.skips} skips (${stats.skipPercentage}% skip rate)
+- ${stats.solves} solves (${stats.solvedPercentage}% solved rate)
 
-**🎲 Top ${stats.guesses.length} Guess Distribution:**
-${formatGuessList(stats.guesses, stats.guessCount)}
+Comment commands:
+- \`!words\` - See dictionary
+- \`!add <word>\` - Add word to dictionary
+- \`!show <word>\` - Check guess stats
+- \`!help\` - All commands
 
-^(⬆️ Complete guess breakdown above)`;
+Good luck and thanks for playing!`;
 
     // Update or create comment
     // Get the existing comment and edit it with new content
@@ -153,32 +148,4 @@ ${formatGuessList(stats.guesses, stats.guessCount)}
     console.error(`Error in update drawing pinned comment job: ${error}`);
     res.status(500).json({ status: 'error', message: 'Job failed' });
   }
-}
-
-/**
- * Job handler for updating drawing pinned comment with live stats
- * Updates comment with comprehensive stats and guess distribution
- */
-
-function formatGuessList(
-  guesses: Array<{ word: string; count: number }>,
-  totalGuesses: number
-) {
-  if (guesses.length === 0) {
-    return 'No guesses yet! Be the first to guess! 🎯';
-  }
-
-  return guesses
-    .map((g, i) => {
-      const barLength = Math.ceil((g.count / (guesses[0]?.count || 1)) * 15);
-      const bar = '█'.repeat(barLength) + '░'.repeat(15 - barLength);
-      const rank = String(i + 1).padStart(2, ' ');
-      const word = g.word.padEnd(18);
-      const count = `${g.count}×`.padStart(4);
-      const percentage =
-        `${((g.count / totalGuesses) * 100).toFixed(1)}%`.padStart(6);
-
-      return `${rank}. ${word} ${bar} ${count} (${percentage})`;
-    })
-    .join('\n');
 }

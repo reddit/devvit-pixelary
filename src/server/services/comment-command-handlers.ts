@@ -22,9 +22,8 @@ export async function handleWords(
     if (wordCount <= pageSize) {
       const wordList = words.join(', ');
       const response =
-        `📚 **Dictionary for r/${context.subredditName}**\n\n` +
-        `Words: ${wordList}\n\n` +
-        `Total words: ${wordCount}`;
+        `r/${context.subredditName} dictionary: ${wordList}\n\n` +
+        `${wordCount} total words.\n\n`;
 
       return {
         success: true,
@@ -50,10 +49,9 @@ export async function handleWords(
     const wordList = pageWords.join(', ');
 
     const response =
-      `📚 **Dictionary for r/${context.subredditName}** (Page ${page}/${totalPages})\n\n` +
-      `Words: ${wordList}\n\n` +
-      `Total words: ${wordCount}\n` +
-      `Use \`!words ${page + 1}\` for next page`;
+      `r/${context.subredditName} dictionary: ${wordList}\n\n` +
+      `${wordCount} total words.\n\n` +
+      `Page ${page} of ${totalPages}. Use \`!words ${page + 1}\` for next page.\n\n`;
 
     return {
       success: true,
@@ -63,7 +61,7 @@ export async function handleWords(
   } catch (error) {
     return {
       success: false,
-      error: 'Failed to retrieve dictionary',
+      error: 'Failed to retrieve dictionary.',
     };
   }
 }
@@ -76,7 +74,7 @@ export async function handleAdd(
     if (args.length === 0) {
       return {
         success: false,
-        error: 'Please provide a word to add. Usage: `!add <word>`',
+        error: 'Provide a word. Usage: `!add <word>`',
       };
     }
 
@@ -84,7 +82,7 @@ export async function handleAdd(
     if (!word || word.length > 50) {
       return {
         success: false,
-        error: 'Invalid word (max 50 characters)',
+        error: 'Invalid word. Max 50 characters.',
       };
     }
 
@@ -96,7 +94,7 @@ export async function handleAdd(
     if (isBanned) {
       return {
         success: false,
-        error: '❌ This word cannot be added to the dictionary.',
+        error: 'Word banned.',
       };
     }
 
@@ -105,19 +103,19 @@ export async function handleAdd(
     if (success) {
       return {
         success: true,
-        response: `✅ Added "${word}" to the dictionary! Note: If this comment is removed, the word will be automatically removed and denylisted.`,
+        response: `Added "${word}". Removed if comment deleted.`,
         metadata: { word, addedBy: context.authorName },
       };
     } else {
       return {
         success: false,
-        error: `❌ Failed to add "${word}". It may already exist in the dictionary.`,
+        error: `Already exists.`,
       };
     }
   } catch (error) {
     return {
       success: false,
-      error: 'Failed to add word to dictionary',
+      error: 'Failed to add word.',
     };
   }
 }
@@ -130,7 +128,7 @@ export async function handleRemove(
     if (args.length === 0) {
       return {
         success: false,
-        error: 'Please provide a word to remove. Usage: `!remove <word>`',
+        error: 'Provide a word. Usage: `!remove <word>`',
       };
     }
 
@@ -138,7 +136,7 @@ export async function handleRemove(
     if (!word) {
       return {
         success: false,
-        error: 'Invalid word',
+        error: 'Invalid word.',
       };
     }
 
@@ -147,19 +145,19 @@ export async function handleRemove(
     if (success) {
       return {
         success: true,
-        response: `✅ Removed "${word}" from the dictionary!`,
+        response: `Removed "${word}".`,
         metadata: { word, removedBy: context.authorName },
       };
     } else {
       return {
         success: false,
-        error: `❌ Failed to remove "${word}". It may not exist in the dictionary.`,
+        error: `Not in dictionary.`,
       };
     }
   } catch (error) {
     return {
       success: false,
-      error: 'Failed to remove word from dictionary',
+      error: 'Failed to remove word.',
     };
   }
 }
@@ -172,7 +170,7 @@ export async function handleWord(
     if (args.length === 0) {
       return {
         success: true,
-        response: 'Please provide a word. Usage: `!word <word>`',
+        response: 'Provide a word. Usage: `!word <word>`',
       };
     }
 
@@ -180,7 +178,7 @@ export async function handleWord(
     if (!word) {
       return {
         success: false,
-        error: 'Invalid word',
+        error: 'Invalid word.',
       };
     }
 
@@ -197,10 +195,7 @@ export async function handleWord(
       };
     }
 
-    const response =
-      `📊 **Statistics for "${word}"**\n\n` +
-      `Status: Active\n` +
-      `Word exists in dictionary`;
+    const response = `Statistics for "${word}".`;
 
     return {
       success: true,
@@ -236,7 +231,7 @@ export async function handleShow(
     if (args.length === 0) {
       return {
         success: false,
-        error: 'Please provide a word to show. Usage: `!show <word>`',
+        error: 'Provide a word. Usage: `!show <word>`',
       };
     }
 
@@ -244,7 +239,7 @@ export async function handleShow(
     if (!word) {
       return {
         success: false,
-        error: 'Invalid word',
+        error: 'Invalid word.',
       };
     }
 
@@ -255,7 +250,7 @@ export async function handleShow(
     if (!context.postId) {
       return {
         success: false,
-        error: 'Unable to determine post context',
+        error: 'Unable to determine post context.',
       };
     }
 
@@ -319,7 +314,7 @@ export async function handleShow(
   } catch (error) {
     return {
       success: false,
-      error: 'Failed to retrieve word statistics',
+      error: 'Failed to retrieve word statistics.',
     };
   }
 }
@@ -329,21 +324,21 @@ export async function handleHelp(
   _context: CommandContext
 ): Promise<CommandResult> {
   const response =
-    `Beep boop. I can help you with the following commands:\n\n` +
-    `• \`!words\` - Show dictionary\n` +
+    `I can respond to the following commands:\n\n` +
+    `• \`!words <optional page number>\` - Show dictionary\n` +
     `  \`!words\` or \`!words 2\` - Show page 1 or specific page\n\n` +
-    `• \`!add\` - Add word to dictionary\n` +
+    `• \`!add <word>\` - Add word to dictionary\n` +
     `  \`!add dog\` - Add "dog" to dictionary\n\n` +
-    `• \`!remove\` - Remove word from dictionary\n` +
+    `• \`!remove <word>\` - Remove word from dictionary\n` +
     `  \`!remove cat\` - Remove "cat" from dictionary\n\n` +
-    `• \`!word\` - Show word statistics\n` +
+    `• \`!word <word>\` - Show word statistics\n` +
     `  \`!word meatloaf\` - Show statistics for "meatloaf"\n\n` +
-    `• \`!show\` - Show guess statistics for a word\n` +
+    `• \`!show <word>\` - Show guess statistics for a word\n` +
     `  \`!show meatloaf\` - Shows stats for "meatloaf" on this post\n\n` +
-    `• \`!score\` - Show user score\n` +
+    `• \`!score <optional username>\` - Show user score\n` +
     `  \`!score\` or \`!score username\` - Show your score or another user's\n\n` +
     `• \`!help\` - Show this help\n\n` +
-    `**Accountability:**\n` +
+    `Accountability note:\n` +
     `Users add words publicly via comments. Others can remove them. Words removed by Reddit's safety systems cannot be added back.`;
 
   return {
