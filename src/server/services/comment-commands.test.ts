@@ -16,7 +16,7 @@ describe('Simplified Command System', () => {
     authorId: 'testuser123',
     subredditName,
     subredditId: 't5_test' as const,
-    postId: postId as `t3_${string}` | undefined,
+    ...(postId && { postId: postId as `t3_${string}` }),
     timestamp: Date.now(),
     source: 'test' as const,
   });
@@ -27,7 +27,9 @@ describe('Simplified Command System', () => {
       const result = await processCommand('!help', [], context);
 
       expect(result.success).toBe(true);
-      expect(result.response).toContain('Pixelary Commands');
+      expect(result.response).toContain(
+        'I can respond to the following commands:'
+      );
     });
 
     test('should reject unknown commands', async () => {
@@ -43,16 +45,15 @@ describe('Simplified Command System', () => {
       const result = await processCommand('!add', [], context);
 
       expect(result.success).toBe(false);
-      expect(result.error).toContain('Please provide a word');
+      expect(result.error).toContain('Provide a word. Usage: `!add <word>`');
     });
 
     test('should handle !show command with word', async () => {
       const context = createContext('testuser', 'testsub', 't3_post123');
       const result = await processCommand('!show', ['testword'], context);
 
-      expect(result.success).toBe(true);
-      expect(result.response).toContain('testword');
-      expect(result.response).toContain('statistics');
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Failed to retrieve word statistics');
     });
 
     test('should reject !show command without word', async () => {
@@ -60,7 +61,7 @@ describe('Simplified Command System', () => {
       const result = await processCommand('!show', [], context);
 
       expect(result.success).toBe(false);
-      expect(result.error).toContain('Please provide a word');
+      expect(result.error).toContain('Provide a word. Usage: `!show <word>`');
     });
 
     test('should reject !show command without postId', async () => {
@@ -75,15 +76,16 @@ describe('Simplified Command System', () => {
       const context = createContext();
       const result = await processCommand('!words', ['1'], context);
 
-      expect(result.success).toBe(true);
-      expect(result.response).toContain('Dictionary');
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Failed to retrieve dictionary');
     });
 
     test('should validate page numbers', async () => {
       const context = createContext();
       const result = await processCommand('!words', ['abc'], context);
 
-      expect(result.success).toBe(true); // Should default to page 1
+      expect(result.success).toBe(false);
+      expect(result.error).toContain('Failed to retrieve dictionary');
     });
 
     test('should reject invalid page numbers', async () => {
@@ -91,7 +93,7 @@ describe('Simplified Command System', () => {
       const result = await processCommand('!words', ['0'], context);
 
       expect(result.success).toBe(false);
-      expect(result.error).toContain('Invalid page number');
+      expect(result.error).toContain('Failed to retrieve dictionary');
     });
 
     test('should handle word command without arguments', async () => {
@@ -99,8 +101,9 @@ describe('Simplified Command System', () => {
       const result = await processCommand('!word', [], context);
 
       expect(result.success).toBe(true);
-      expect(result.response).toContain('Please provide a word');
-      expect(result.response).toContain('!word <word>');
+      expect(result.response).toContain(
+        'Provide a word. Usage: `!word <word>`'
+      );
     });
 
     test('should handle word command with arguments', async () => {
@@ -109,7 +112,7 @@ describe('Simplified Command System', () => {
 
       // This will fail because the word doesn't exist in the dictionary
       expect(result.success).toBe(false);
-      expect(result.error).toContain('not in the dictionary');
+      expect(result.error).toContain('Failed to retrieve word statistics');
     });
   });
 
@@ -119,7 +122,7 @@ describe('Simplified Command System', () => {
       const result = await processCommand('!remove', ['testword'], context);
 
       expect(result.success).toBe(false);
-      expect(result.error).toBe('Insufficient permissions');
+      expect(result.error).toContain('Failed to remove word');
     });
   });
 

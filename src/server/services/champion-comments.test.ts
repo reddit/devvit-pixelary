@@ -46,8 +46,7 @@ describe('Champion Comments Service', () => {
 
       expect(redis.hSet).toHaveBeenCalledWith(
         REDIS_KEYS.championComments(postId),
-        word.toLowerCase(),
-        commentId
+        { [word.toLowerCase()]: commentId }
       );
     });
   });

@@ -11,10 +11,13 @@ import {
 } from './progression';
 import { redis, scheduler } from '@devvit/web/server';
 import { LEVELS } from '../../shared/constants';
-import { getUsername } from './redis';
+import { getUsername, REDIS_KEYS } from './redis';
 
 vi.mock('./redis', () => ({
   getUsername: vi.fn(),
+  REDIS_KEYS: {
+    scores: () => 'scores',
+  },
 }));
 
 // Mock the redis and scheduler functions directly

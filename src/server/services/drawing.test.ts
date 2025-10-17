@@ -1,8 +1,46 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+
+// Mock @devvit/web/server before importing the module
+vi.mock('@devvit/web/server', () => ({
+  redis: {
+    zScore: vi.fn(),
+    hGet: vi.fn(),
+    hSet: vi.fn(),
+    zAdd: vi.fn(),
+    zIncrBy: vi.fn(),
+    zCard: vi.fn(),
+    zRange: vi.fn(),
+  },
+  scheduler: {
+    runJob: vi.fn(),
+  },
+  realtime: {
+    send: vi.fn(),
+  },
+}));
+
+vi.mock('./progression', () => ({
+  incrementScore: vi.fn(),
+}));
+
+vi.mock('../core/post', () => ({
+  createPost: vi.fn(),
+}));
+
+vi.mock('./redis', () => ({
+  REDIS_KEYS: {
+    drawing: (postId: string) => `d:${postId}`,
+    drawingGuesses: (postId: string) => `guesses:${postId}`,
+    userAttempts: (postId: string) => `attempts:${postId}`,
+    userSolved: (postId: string) => `solves:${postId}`,
+    userSkipped: (postId: string) => `skips:${postId}`,
+    drawingsByWord: (word: string) => `d:w:${word}`,
+    scores: () => 'scores',
+  },
+}));
+
 import { submitGuess, getGuesses } from './drawing';
 import { redis } from '@devvit/web/server';
-
-vi.mock('@devvit/web/server');
 
 describe('Drawing Service', () => {
   beforeEach(() => {
