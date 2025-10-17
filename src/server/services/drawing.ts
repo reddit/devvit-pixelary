@@ -42,7 +42,7 @@ export const createDrawing = async (options: {
   // Run all operations in parallel
   await Promise.all([
     // Save post data and additional metadata to redis. Largely so we can fetch the drawing post later from other contexts.
-    await redis.hSet(REDIS_KEYS.drawing(postId), {
+    redis.hSet(REDIS_KEYS.drawing(postId), {
       type: 'drawing',
       postId,
       createdAt: post.createdAt.getTime().toString(),
@@ -54,9 +54,29 @@ export const createDrawing = async (options: {
     }),
 
     // Award points for submission
-    await incrementScore(authorId, AUTHOR_REWARD_SUBMIT),
+    incrementScore(authorId, AUTHOR_REWARD_SUBMIT),
 
-    // Schedule pinned comment job
+    // Add to list of drawings for this word
+    redis.zAdd(REDIS_KEYS.drawingsByWord(word), {
+      member: postId,
+      score: currentTime,
+    }),
+
+    // Add to all drawings list
+    redis.zAdd(REDIS_KEYS.allDrawings(), {
+      member: postId,
+      score: currentTime,
+    }),
+
+    // Add to list of drawings for this user
+    redis.zAdd(REDIS_KEYS.drawingsByUser(authorId), {
+      member: postId,
+      score: currentTime,
+    }),
+  ]);
+
+  // Schedule pinned comment job (non-blocking - don't fail if this fails)
+  try {
     await scheduler.runJob({
       name: 'NEW_DRAWING_PINNED_COMMENT',
       data: {
@@ -65,26 +85,14 @@ export const createDrawing = async (options: {
         word,
       },
       runAt: currentDate, // run immediately
-    }),
-
-    // Add to list of drawings for this word
-    await redis.zAdd(REDIS_KEYS.drawingsByWord(word), {
-      member: postId,
-      score: currentTime,
-    }),
-
-    // Add to all drawings list
-    await redis.zAdd(REDIS_KEYS.allDrawings(), {
-      member: postId,
-      score: currentTime,
-    }),
-
-    // Add to list of drawings for this user
-    await redis.zAdd(REDIS_KEYS.drawingsByUser(authorId), {
-      member: postId,
-      score: currentTime,
-    }),
-  ]);
+    });
+  } catch (error) {
+    console.error(
+      `Failed to schedule pinned comment job for post ${postId}:`,
+      error
+    );
+    // Don't throw - the drawing post should still be created even if comment fails
+  }
 
   return post;
 };

@@ -40,17 +40,17 @@ export async function handleTestScheduler(
   res: Response
 ): Promise<void> {
   try {
-    const { postId, authorUsername, word } = req.body;
-    if (!postId || !authorUsername || !word) {
+    const { postId, authorName, word } = req.body;
+    if (!postId || !authorName || !word) {
       res.status(400).json({
         status: 'error',
-        message: 'postId, authorUsername, and word required',
+        message: 'postId, authorName, and word required',
       });
       return;
     }
 
     console.log(
-      `Testing scheduler with postId: ${postId}, authorUsername: ${authorUsername}, word: ${word}`
+      `Testing scheduler with postId: ${postId}, authorName: ${authorName}, word: ${word}`
     );
 
     // Test the scheduler endpoint directly
@@ -61,7 +61,7 @@ export async function handleTestScheduler(
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ postId, authorUsername, word }),
+        body: JSON.stringify({ postId, authorName, word }),
       }
     );
 

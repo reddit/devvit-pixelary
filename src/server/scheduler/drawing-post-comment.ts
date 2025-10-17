@@ -19,7 +19,7 @@ export async function handleNewDrawingPinnedComment(
   try {
     // Extract data from the scheduler payload
     const jobData = req.body.data || req.body;
-    const { postId, authorUsername, word } = jobData;
+    const { postId, authorName, word } = jobData;
 
     // Validate required parameters
     if (!postId) {
@@ -27,13 +27,11 @@ export async function handleNewDrawingPinnedComment(
       res.status(400).json({ status: 'error', message: 'PostId is required' });
       return;
     }
-    if (!authorUsername) {
-      console.error(
-        'AuthorUsername missing in handleNewDrawingPinnedComment job'
-      );
+    if (!authorName) {
+      console.error('AuthorName missing in handleNewDrawingPinnedComment job');
       res
         .status(400)
-        .json({ status: 'error', message: 'AuthorUsername is required' });
+        .json({ status: 'error', message: 'AuthorName is required' });
       return;
     }
     if (!word) {
