@@ -20,12 +20,10 @@
   },
   "media": {},
   "forms": {
-    "postCreateForm": "/internal/form/post-create-submit",
     "postTypeForm": "/internal/form/post-type-select",
     "pinnedPostForm": "/internal/form/pinned-post-submit",
-    "drawingPostForm": "/internal/form/drawing-post-submit",
-    "editDictionaryForm": "/internal/form/dictionary-submit",
-    "bannedWordsForm": "/internal/form/banned-words-submit"
+    "wordsUpdateForm": "/internal/form/words-update",
+    "bannedWordsForm": "/internal/form/banned-words-update"
   },
   "menu": {
     "items": [
@@ -60,10 +58,10 @@
     ]
   },
   "triggers": {
-    "onAppInstall": "/internal/on-app-install",
-    "onAppUpgrade": "/internal/on-app-upgrade",
-    "onCommentCreate": "/internal/on-comment-create",
-    "onCommentDelete": "/internal/on-comment-delete"
+    "onAppInstall": "/internal/trigger/app-install",
+    "onAppUpgrade": "/internal/trigger/app-upgrade",
+    "onCommentCreate": "/internal/trigger/comment-create",
+    "onCommentDelete": "/internal/trigger/comment-delete"
   },
   "scheduler": {
     "tasks": {
@@ -78,9 +76,6 @@
       },
       "CREATE_PINNED_POST_COMMENT": {
         "endpoint": "/internal/scheduler/create-pinned-post-comment"
-      },
-      "CREATE_WEEKLY_COLLECTION": {
-        "endpoint": "/internal/scheduler/create-weekly-collection"
       }
     }
   },
