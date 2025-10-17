@@ -106,6 +106,7 @@ export const createMockPostGuesses = (
   wordCount: 1,
   guessCount: 7,
   playerCount: 3,
+  solvedCount: 1,
   ...overrides,
 });
 

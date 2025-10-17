@@ -14,8 +14,12 @@ describe('Drawing Service', () => {
       vi.mocked(redis.zScore).mockResolvedValue(undefined); // Not solved yet
       vi.mocked(redis.hGet).mockResolvedValueOnce('test'); // word
       vi.mocked(redis.hGet).mockResolvedValueOnce('t2_author123'); // authorId
-      vi.mocked(redis.zIncrBy).mockResolvedValue(1);
-      vi.mocked(redis.zAdd).mockResolvedValue(1);
+      vi.mocked(redis.zAdd).mockResolvedValue(1); // userAttempts
+      vi.mocked(redis.zIncrBy).mockResolvedValue(1); // drawingsByWord and drawingGuesses
+      vi.mocked(redis.zAdd).mockResolvedValue(1); // userSolved
+      vi.mocked(redis.zCard).mockResolvedValue(1); // playerCount
+      vi.mocked(redis.zCard).mockResolvedValue(1); // solvedCount
+      vi.mocked(redis.zRange).mockResolvedValue([{ member: 'test', score: 1 }]); // guesses
 
       const result = await submitGuess({
         postId: 't3_test123',
@@ -31,7 +35,13 @@ describe('Drawing Service', () => {
       vi.mocked(redis.zScore).mockResolvedValue(undefined); // Not solved yet
       vi.mocked(redis.hGet).mockResolvedValueOnce('correct'); // word
       vi.mocked(redis.hGet).mockResolvedValueOnce('t2_author123'); // authorId
-      vi.mocked(redis.zIncrBy).mockResolvedValue(1);
+      vi.mocked(redis.zAdd).mockResolvedValue(1); // userAttempts
+      vi.mocked(redis.zIncrBy).mockResolvedValue(1); // drawingsByWord and drawingGuesses
+      vi.mocked(redis.zCard).mockResolvedValue(1); // playerCount
+      vi.mocked(redis.zCard).mockResolvedValue(0); // solvedCount
+      vi.mocked(redis.zRange).mockResolvedValue([
+        { member: 'wrong', score: 1 },
+      ]); // guesses
 
       const result = await submitGuess({
         postId: 't3_test123',
@@ -57,10 +67,10 @@ describe('Drawing Service', () => {
 
       const result = await getGuesses('t3_test123', 10);
 
-      expect(result.guesses).toHaveLength(2);
-      expect(result.guesses[0]).toEqual({ word: 'test', count: 5, rank: 1 });
+      expect(result.guesses).toEqual({ test: 5, wrong: 2 });
+      expect(result.wordCount).toBe(2);
+      expect(result.guessCount).toBe(7);
       expect(result.playerCount).toBe(10);
-      expect(result.solvedPercentage).toBe(30);
     });
   });
 });

@@ -41,24 +41,21 @@ export async function handleNewDrawingPinnedComment(
     }
 
     // Create engaging welcome comment
-    const commentText = `🎨 **Guess the Word!**
+    const commentText = `**Welcome to Pixelary!**
 
-**How to Play:**
-• Submit your guess in the game area above
-• Earn **1 point** for each correct guess
-• **First solve** gets **10 bonus points**! 🏆
-• Author earns **1 point** per correct guess
+How to Play:
+- Submit your guess in the game area above
+- Earn points for guessing correctly
+- Draw stuff for others to guess
 
-**💬 Comment Commands:**
-• \`!add <word>\` - Add word to dictionary
-• \`!remove <word>\` - Remove word from dictionary
-• \`!words\` - Browse dictionary
-• \`!report <word>\` - Report inappropriate word
-• \`!help\` - Show all commands
+I can respond to the following commands:
+- \`!add <word>\` - Add word to dictionary
+- \`!remove <word>\` - Remove word from dictionary
+- \`!words\` - Browse dictionary
+- \`!word <word>\` - Show word statistics
+- \`!help\` - Show all commands
 
-**Current Stats:** *Live updates coming soon...*
-
-Good luck, players! 🎯`;
+Good luck, players!`;
 
     const comment = await reddit.submitComment({
       text: commentText,
@@ -123,11 +120,11 @@ export async function handleUpdateDrawingPinnedComment(
     const commentText = `📊 **Live Drawing Analytics**
 
 **🎯 Performance Metrics:**
-• **${stats.solves}** solves (${stats.solvedPercentage}% solved rate)
-• **${stats.skips}** skips (${stats.skipPercentage}% skip rate)  
-• **${stats.playerCount}** total players
-• **${stats.guessCount}** total guesses (avg ${Math.round((stats.guessCount / stats.playerCount) * 10) / 10} per player)
-• **${stats.wordCount}** unique words attempted
+- **${stats.solves}** solves (${stats.solvedPercentage}% solved rate)
+- **${stats.skips}** skips (${stats.skipPercentage}% skip rate)  
+- **${stats.playerCount}** total players
+- **${stats.guessCount}** total guesses (avg ${Math.round((stats.guessCount / stats.playerCount) * 10) / 10} per player)
+- **${stats.wordCount}** unique words attempted
 
 **📈 Difficulty Analysis:**
 ${difficultyLevel} (${difficultyScore}/10 difficulty score)
@@ -143,7 +140,6 @@ ${formatGuessList(stats.guesses, stats.guessCount)}
       postData.pinnedCommentId as `t1_${string}`
     );
     await comment.edit({ text: commentText });
-    console.log(`Successfully edited comment ${postData.pinnedCommentId}`);
 
     // Update timestamp
     await saveLastCommentUpdate(postId, Date.now());

@@ -26,7 +26,6 @@ export function GuessView({
   isLoading,
 }: GuessViewProps) {
   const [guess, setGuess] = useState('');
-  const [createComment, setCreateComment] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
   const { warning } = useToastHelpers();
 
@@ -37,9 +36,8 @@ export function GuessView({
     }
 
     try {
-      await onGuess(guess.trim().toLowerCase(), createComment);
+      await onGuess(guess.trim().toLowerCase());
       setGuess('');
-      setCreateComment(false);
 
       // Restore focus to input field after submission
       setTimeout(() => {
@@ -51,9 +49,9 @@ export function GuessView({
   };
 
   const playerCount = stats?.playerCount || 0;
-  const correctGuessCount = stats?.guessCount || 0;
+  const solvedCount = stats?.solvedCount || 0;
   const solvePercentage =
-    playerCount > 0 ? Math.round((correctGuessCount / playerCount) * 100) : 0;
+    playerCount > 0 ? Math.round((solvedCount / playerCount) * 100) : 0;
 
   return (
     <main className="absolute inset-0 flex flex-col items-center justify-evenly px-5">

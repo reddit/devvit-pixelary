@@ -25,21 +25,14 @@ export async function handleCreatePinnedPostComment(
       return;
     }
 
-    const commentText = `🎮 **Welcome to Pixelary!**
+    const commentText = `**Welcome to Pixelary!**
 
-**How to Play:**
-• Draw words in 16x16 pixel grids
-• Guess what others have drawn
-• Earn points and climb the leaderboard!
+How to Play:
+- Draw words in 16x16 pixel grids
+- Guess what others have drawn
+- Earn points and climb the leaderboard!
 
-**Quick Start:**
-• Check out recent drawing posts below
-• Submit your guesses to earn points
-• Create your own drawings to challenge others
-
-**🏆 Check the leaderboard** to see top players!
-
-Ready to play? Start guessing! 🎯`;
+Ready to play? Start guessing!`;
 
     const comment = await reddit.submitComment({
       text: commentText,

@@ -24,7 +24,7 @@ class RealtimeManager {
   private subscribers = new Map<string, Set<(stats: StatsData) => void>>();
 
   async connect(postId: string, onStatsUpdate: (stats: StatsData) => void) {
-    const channelName = `post-${postId}-guesses`;
+    const channelName = `post-${postId}`;
 
     // Add subscriber
     if (!this.subscribers.has(channelName)) {

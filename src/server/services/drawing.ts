@@ -222,13 +222,16 @@ export async function getDrawingStats(postId: T3): Promise<{
     redis.zCard(REDIS_KEYS.userAttempts(postId)),
     redis.zCard(REDIS_KEYS.userSolved(postId)),
   ]);
-  return {
+
+  const result = {
     playerCount,
     solvedPercentage:
       playerCount === 0
         ? 0
         : Math.round((solvedCount / playerCount) * 100 * 10) / 10,
   };
+
+  return result;
 }
 
 /**
@@ -322,20 +325,39 @@ export async function submitGuess(options: {
   const { postId, userId, guess } = options;
   const empty = { correct: false, points: 0 };
 
-  // Check if user already solved this post and get the word
-  const [alreadySolved, word, authorId] = await Promise.all([
-    hasCompletedDrawing(postId, userId),
+  // Check if user already solved/skipped this post and get the word
+  const [solved, skipped, word, authorId] = await Promise.all([
+    redis.zScore(REDIS_KEYS.userSolved(postId), userId),
+    redis.zScore(REDIS_KEYS.userSkipped(postId), userId),
     redis.hGet(REDIS_KEYS.drawing(postId), 'word'),
     redis.hGet(REDIS_KEYS.drawing(postId), 'authorId'),
   ]);
-  if (!word || !authorId || alreadySolved) return empty;
 
-  // Increment counters
-  const [updatedStats, _userAttempts, _wordAttempts] = await Promise.all([
-    getGuesses(postId),
+  // Check if user exists in the sets (explicit check for both null and undefined)
+  const isInSolvedSet = solved !== null && solved !== undefined;
+  const isInSkippedSet = skipped !== null && skipped !== undefined;
+
+  // Clean up inconsistent data - user shouldn't be in both solved and skipped
+  if (isInSolvedSet && isInSkippedSet) {
+    // Remove from skipped set (solved takes precedence)
+    await redis.zRem(REDIS_KEYS.userSkipped(postId), [userId]);
+  }
+
+  // Don't allow guesses if user has already solved (but allow if only skipped)
+  if (!word || !authorId || isInSolvedSet) {
+    return empty;
+  }
+
+  // Increment counters and store the guess
+  await Promise.all([
+    // Always increment user attempts (zIncrBy will add if not exists, increment if exists)
     redis.zIncrBy(REDIS_KEYS.userAttempts(postId), userId, 1),
     redis.zIncrBy(REDIS_KEYS.drawingsByWord(word), postId, 1),
+    redis.zIncrBy(REDIS_KEYS.drawingGuesses(postId), guess, 1),
   ]);
+
+  // Get updated stats after all Redis operations complete
+  const updatedStats = await getGuesses(postId);
 
   // Check if guess is correct (case-insensitive)
   const isCorrect = guess.toLowerCase().trim() === word.toLowerCase().trim();
@@ -343,7 +365,6 @@ export async function submitGuess(options: {
 
   if (!isCorrect) {
     // Broadcast guess event to all clients watching this post
-    // Get updated stats to include in the message
     await realtime.send(channelName, {
       type: 'guess_submitted',
       postId,
@@ -364,33 +385,36 @@ export async function submitGuess(options: {
 
   await Promise.all([
     // Mark as solved
-    await redis.zAdd(REDIS_KEYS.userSolved(postId), {
+    redis.zAdd(REDIS_KEYS.userSolved(postId), {
       member: userId,
       score: Date.now(),
     }),
 
-    // Get updated stats to include in the message
-    await realtime.send(channelName, {
-      type: 'guess_submitted',
-      postId,
-      correct: true,
-      timestamp: Date.now(),
-      stats: updatedStats,
-    }),
-
     // Award points
-    await incrementScore(userId, GUESSER_REWARD_SOLVE),
+    incrementScore(userId, GUESSER_REWARD_SOLVE),
 
     // Award author points
-    await incrementScore(parseT2(authorId), AUTHOR_REWARD_CORRECT_GUESS),
+    incrementScore(parseT2(authorId), AUTHOR_REWARD_CORRECT_GUESS),
 
     // Schedule debounced update (30s)
-    await scheduler.runJob({
+    scheduler.runJob({
       name: 'UPDATE_DRAWING_PINNED_COMMENT',
       data: { postId },
       runAt: new Date(now + THIRTY_SECONDS),
     }),
   ]);
+
+  // Get updated stats after all Redis operations complete
+  const finalStats = await getGuesses(postId);
+
+  // Send realtime message with fresh stats
+  await realtime.send(channelName, {
+    type: 'guess_submitted',
+    postId,
+    correct: true,
+    timestamp: Date.now(),
+    stats: finalStats,
+  });
 
   return {
     correct: true,
@@ -409,31 +433,47 @@ export async function getGuesses(
   postId: T3,
   limit: number = 10
 ): Promise<{
-  guesses: WordGuessEntry[];
+  guesses: Record<string, number>;
+  wordCount: number;
+  guessCount: number;
   playerCount: number;
-  solvedPercentage: number;
+  solvedCount: number;
 }> {
-  const [guesses, stats] = await Promise.all([
+  const [guesses, stats, solvedCount] = await Promise.all([
     redis
       .zRange(REDIS_KEYS.drawingGuesses(postId), 0, limit - 1, {
         reverse: true,
         by: 'rank',
       })
       .then((guesses) =>
-        guesses.map((guess, index) => ({
-          word: guess.member,
-          count: guess.score,
-          rank: index + 1,
-        }))
+        guesses.reduce(
+          (acc, guess) => {
+            acc[guess.member] = guess.score;
+            return acc;
+          },
+          {} as Record<string, number>
+        )
       ),
     getDrawingStats(postId),
+    redis.zCard(REDIS_KEYS.userSolved(postId)),
   ]);
 
-  return {
+  // Calculate total guess count from the guesses object
+  const guessCount = Object.values(guesses).reduce(
+    (sum, count) => sum + count,
+    0
+  );
+  const wordCount = Object.keys(guesses).length;
+
+  const result = {
     guesses,
+    wordCount,
+    guessCount,
     playerCount: stats.playerCount,
-    solvedPercentage: stats.solvedPercentage,
+    solvedCount,
   };
+
+  return result;
 }
 
 export type WordGuessEntry = {
@@ -458,24 +498,17 @@ export async function getDrawingCommentData(postId: T3): Promise<{
   playerCount: number;
   guesses: { word: string; count: number }[];
 }> {
-  const [
-    playerCount,
-    solvedCount,
-    skippedCount,
-    wordCount,
-    guessCount,
-    guesses,
-  ] = await Promise.all([
-    redis.zCard(REDIS_KEYS.userAttempts(postId)),
-    redis.zCard(REDIS_KEYS.userSolved(postId)),
-    redis.zCard(REDIS_KEYS.userSkipped(postId)),
-    redis.zCard(REDIS_KEYS.drawingGuesses(postId)),
-    redis.hGet(REDIS_KEYS.drawing(postId), 'guessCount'),
-    redis.zRange(REDIS_KEYS.drawingGuesses(postId), 0, -1, {
-      reverse: true,
-      by: 'rank',
-    }),
-  ]);
+  const [playerCount, solvedCount, skippedCount, wordCount, guesses] =
+    await Promise.all([
+      redis.zCard(REDIS_KEYS.userAttempts(postId)),
+      redis.zCard(REDIS_KEYS.userSolved(postId)),
+      redis.zCard(REDIS_KEYS.userSkipped(postId)),
+      redis.zCard(REDIS_KEYS.drawingGuesses(postId)),
+      redis.zRange(REDIS_KEYS.drawingGuesses(postId), 0, -1, {
+        reverse: true,
+        by: 'rank',
+      }),
+    ]);
 
   const solvedPercentage =
     playerCount === 0
@@ -492,13 +525,16 @@ export async function getDrawingCommentData(postId: T3): Promise<{
     count: guess.score,
   }));
 
+  // Calculate total guess count from individual guesses
+  const guessCount = guessesParsed.reduce((sum, guess) => sum + guess.count, 0);
+
   return {
     solves: solvedCount,
     solvedPercentage,
     skips: skippedCount,
     skipPercentage,
     wordCount,
-    guessCount: guessCount ? parseInt(guessCount) : 0,
+    guessCount,
     playerCount,
     guesses: guessesParsed,
   };

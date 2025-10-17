@@ -147,7 +147,8 @@ export const appRouter = t.router({
         .input(z.object({ postId: z.string() }))
         .query(async ({ input }) => {
           const postId = parseT3(input.postId);
-          return await getGuesses(postId);
+          const result = await getGuesses(postId);
+          return result;
         }),
 
       skip: t.procedure

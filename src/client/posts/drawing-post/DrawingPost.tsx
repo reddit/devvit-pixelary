@@ -115,8 +115,10 @@ export const DrawingPost = ({ postData: propPostData }: DrawingPostProps) => {
     }
   }, [currentState]);
 
-  const handleGuess = async (guess: string, createComment: boolean) => {
-    if (!currentPostId || !word) return;
+  const handleGuess = async (guess: string) => {
+    if (!currentPostId || !word) {
+      return;
+    }
 
     // Show immediate feedback
     const isCorrect = guess.toLowerCase().trim() === word.toLowerCase();
@@ -130,7 +132,6 @@ export const DrawingPost = ({ postData: propPostData }: DrawingPostProps) => {
       const result = await submitGuess.mutateAsync({
         postId: currentPostId,
         guess,
-        createComment,
       });
 
       // Only change state after server confirms
