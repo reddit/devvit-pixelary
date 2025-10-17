@@ -195,6 +195,21 @@ export const appRouter = t.router({
           return await getUserDrawings(ctx.userId, input.limit);
         }),
 
+      getRank: t.procedure.query(async ({ ctx }) => {
+        if (!ctx.userId) throw new Error('Must be logged in');
+
+        const [score, rank] = await Promise.all([
+          getScore(ctx.userId),
+          getRank(ctx.userId),
+        ]);
+
+        return {
+          rank,
+          score,
+          username: ctx.username ?? '',
+        };
+      }),
+
       isModerator: t.procedure.query(async ({ ctx }) => {
         if (!ctx.username || !ctx.subredditName) {
           return false;
