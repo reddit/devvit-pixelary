@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@components/Button';
 import { PixelSymbol } from '@components/PixelSymbol';
-import { PIXELARY_CONFIG } from '@shared/constants';
+import { DRAWING_COLORS } from '@shared/constants';
 import { PixelFont } from '@components/PixelFont';
 import { DrawingData, DrawingUtils } from '@shared/schema/drawing';
 import { getContrastColor } from '@shared/utils/color';
@@ -271,7 +271,7 @@ export function DrawStep(props: DrawStepProps) {
 
       {/* Color Palette */}
       <div className="flex flex-row gap-2 items-center justify-center">
-        {PIXELARY_CONFIG.colors.map((color) => (
+        {DRAWING_COLORS.map((color) => (
           <ColorSwatch
             key={color}
             onSelect={() => setCurrentColor(color)}

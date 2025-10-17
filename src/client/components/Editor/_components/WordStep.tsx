@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { PIXELARY_CONFIG } from '../../../../shared/constants';
+import { CARD_DRAW_DURATION } from '../../../../shared/constants';
 import type { CandidateWord } from '../../../../shared/schema/pixelary';
 import { PixelFont } from '../../PixelFont';
 import { PixelSymbol } from '../../PixelSymbol';
@@ -44,7 +44,7 @@ export function WordStep(props: WordStepProps) {
 
   // Auto-select effect
   useEffect(() => {
-    const remainingTime = PIXELARY_CONFIG.cardDrawDuration * 1000 - elapsedTime;
+    const remainingTime = CARD_DRAW_DURATION * 1000 - elapsedTime;
     if (remainingTime <= 0 && candidates.length > 0) {
       selectCandidate(candidates[0]!);
     }
@@ -53,7 +53,7 @@ export function WordStep(props: WordStepProps) {
   // Derived state
   const secondsLeft = Math.max(
     0,
-    Math.round(PIXELARY_CONFIG.cardDrawDuration - elapsedTime / 1000)
+    Math.round(CARD_DRAW_DURATION - elapsedTime / 1000)
   );
 
   return (

@@ -3,7 +3,7 @@ import { WordStep } from './_components/WordStep';
 import { DrawStep } from './_components/DrawStep';
 import { ReviewStep } from './_components/ReviewStep';
 import { trpc } from '../../trpc/client';
-import { LEVELS, PIXELARY_CONFIG } from '../../../shared/constants';
+import { LEVELS, DRAWING_DURATION } from '../../../shared/constants';
 import type { Level } from '../../../shared/constants';
 import type { CandidateWord } from '../../../shared/schema/pixelary';
 import { DrawingData, DrawingUtils } from '../../../shared/schema/drawing';
@@ -17,7 +17,7 @@ type Step = 'word' | 'draw' | 'review';
 export function DrawingEditor({ onClose }: DrawingEditorProps) {
   // State management
   const [step, setStep] = useState<Step>('word');
-  const [time, setTime] = useState<number>(PIXELARY_CONFIG.drawingDuration);
+  const [time, setTime] = useState<number>(DRAWING_DURATION);
   const [candidate, setCandidate] = useState<CandidateWord | null>(null);
   const [drawing, setDrawing] = useState<DrawingData>(
     DrawingUtils.createBlank()
@@ -34,7 +34,7 @@ export function DrawingEditor({ onClose }: DrawingEditorProps) {
         : null;
 
       if (userLevel) {
-        setTime(PIXELARY_CONFIG.drawingDuration + userLevel.extraTime);
+        setTime(DRAWING_DURATION + userLevel.extraTime);
       }
     }
   }, [userProfile]);

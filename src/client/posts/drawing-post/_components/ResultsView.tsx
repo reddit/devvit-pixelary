@@ -4,7 +4,7 @@ import { Drawing } from '@components/Drawing';
 import { Lightbox } from '@components/Lightbox';
 import { LevelProgressAttachment } from '@components/LevelProgressAttachment';
 import { trpc } from '../../../trpc/client';
-import { abbreviateNumber } from '@shared/utils/math';
+import { abbreviateNumber } from '@shared/utils/numbers';
 import { DrawingData } from '../../../../shared/schema/drawing';
 import { PixelFont } from '@components/PixelFont';
 import { obfuscateString } from '@shared/utils/string';
