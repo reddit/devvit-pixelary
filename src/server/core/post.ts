@@ -18,6 +18,10 @@ export async function createPost(
   }
 
   const post = await reddit.submitCustomPost({
+    userGeneratedContent: {
+      text: 'Pixelary',
+      // HACK: This does not pass the actual UGC. Will need to investigate generating an image to pass here instead.
+    },
     splash: {
       appDisplayName: 'Pixelary',
       backgroundUri: 'transparent.png', // HACK: Avoids default pattern

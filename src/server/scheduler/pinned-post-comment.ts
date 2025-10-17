@@ -12,7 +12,9 @@ export async function handleCreatePinnedPostComment(
   res: Response
 ): Promise<void> {
   try {
-    const { postId } = req.body;
+    // Extract data from the scheduler payload
+    const jobData = req.body.data || req.body;
+    const { postId } = jobData;
 
     // Validate postId
     if (!postId) {
