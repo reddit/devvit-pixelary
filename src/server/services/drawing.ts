@@ -267,6 +267,63 @@ export async function saveLastCommentUpdate(
 }
 
 /**
+ * Get the next scheduled job ID for a drawing post
+ * @param postId - The ID of the drawing post to get the scheduled job ID for
+ * @returns The scheduled job ID, or null if none is scheduled
+ */
+export async function getNextScheduledJobId(
+  postId: T3
+): Promise<string | null> {
+  const key = REDIS_KEYS.drawing(postId);
+  const result = await redis.hGet(key, 'nextScheduledJobId');
+  return result || null;
+}
+
+/**
+ * Save the next scheduled job ID for a drawing post
+ * @param postId - The ID of the drawing post to save the scheduled job ID for
+ * @param jobId - The job ID of the scheduled update
+ */
+export async function saveNextScheduledJobId(
+  postId: T3,
+  jobId: string
+): Promise<void> {
+  const key = REDIS_KEYS.drawing(postId);
+  await redis.hSet(key, {
+    nextScheduledJobId: jobId,
+  });
+}
+
+/**
+ * Clear the next scheduled job ID for a drawing post
+ * @param postId - The ID of the drawing post to clear the scheduled job ID for
+ */
+export async function clearNextScheduledJobId(postId: T3): Promise<void> {
+  const key = REDIS_KEYS.drawing(postId);
+  await redis.hDel(key, ['nextScheduledJobId']);
+}
+
+/**
+ * Schedule a comment update job and save its ID
+ * @param postId - The ID of the drawing post to schedule an update for
+ * @param runAt - When to run the update job
+ * @returns The job ID of the scheduled update
+ */
+export async function scheduleCommentUpdate(
+  postId: T3,
+  runAt: Date
+): Promise<string> {
+  const jobId = await scheduler.runJob({
+    name: 'UPDATE_DRAWING_PINNED_COMMENT',
+    data: { postId },
+    runAt,
+  });
+
+  await saveNextScheduledJobId(postId, jobId);
+  return jobId;
+}
+
+/**
  * Get drawing post IDs for a specific user
  * @param userId - The user ID to get drawings for
  * @param limit - Maximum number of drawings to return (default: 20)
@@ -363,6 +420,56 @@ export async function submitGuess(options: {
   const isCorrect = guess.toLowerCase().trim() === word.toLowerCase().trim();
   const channelName = `post-${postId}`;
 
+  // Handle comment update cooldown logic for ALL guesses (not just correct ones)
+  const now = Date.now();
+  const ONE_MINUTE = 60 * 1000;
+
+  const [lastUpdate, nextJobId] = await Promise.all([
+    redis.hGet(REDIS_KEYS.drawing(postId), 'lastCommentUpdate'),
+    redis.hGet(REDIS_KEYS.drawing(postId), 'nextScheduledJobId'),
+  ]);
+
+  const lastUpdateTime = lastUpdate ? parseInt(lastUpdate) : 0;
+  const timeSinceLastUpdate = now - lastUpdateTime;
+
+  if (timeSinceLastUpdate >= ONE_MINUTE) {
+    // Cooldown expired - update immediately
+    // Cancel any pending job
+    if (nextJobId) {
+      try {
+        await scheduler.cancelJob(nextJobId);
+        await clearNextScheduledJobId(postId);
+      } catch (error) {
+        console.error(
+          `[COMMENT_UPDATE] Failed to cancel job ${nextJobId} for post ${postId}:`,
+          error
+        );
+      }
+    }
+
+    // Schedule immediate update
+    try {
+      await scheduleCommentUpdate(postId, new Date(now));
+    } catch (error) {
+      console.error(
+        `[COMMENT_UPDATE] Failed to schedule immediate update for post ${postId}:`,
+        error
+      );
+    }
+  } else if (!nextJobId) {
+    // Within cooldown, no job scheduled - schedule one
+    const nextUpdateTime = lastUpdateTime + ONE_MINUTE;
+    try {
+      await scheduleCommentUpdate(postId, new Date(nextUpdateTime));
+    } catch (error) {
+      console.error(
+        `[COMMENT_UPDATE] Failed to schedule future update for post ${postId}:`,
+        error
+      );
+    }
+  }
+  // else: Within cooldown AND job already scheduled - do nothing
+
   if (!isCorrect) {
     // Broadcast guess event to all clients watching this post
     await realtime.send(channelName, {
@@ -379,10 +486,7 @@ export async function submitGuess(options: {
     };
   }
 
-  // Schedule smart comment update
-  const now = Date.now();
-  const THIRTY_SECONDS = 30 * 1000;
-
+  // Handle correct guess - mark as solved and award points
   await Promise.all([
     // Mark as solved
     redis.zAdd(REDIS_KEYS.userSolved(postId), {
@@ -395,13 +499,6 @@ export async function submitGuess(options: {
 
     // Award author points
     incrementScore(parseT2(authorId), AUTHOR_REWARD_CORRECT_GUESS),
-
-    // Schedule debounced update (30s)
-    scheduler.runJob({
-      name: 'UPDATE_DRAWING_PINNED_COMMENT',
-      data: { postId },
-      runAt: new Date(now + THIRTY_SECONDS),
-    }),
   ]);
 
   // Get updated stats after all Redis operations complete

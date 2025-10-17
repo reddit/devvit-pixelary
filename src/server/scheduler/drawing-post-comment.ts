@@ -5,6 +5,7 @@ import {
   getDrawingCommentData,
   saveLastCommentUpdate,
   savePinnedCommentId,
+  clearNextScheduledJobId,
 } from '../services/drawing';
 
 /**
@@ -143,6 +144,10 @@ ${formatGuessList(stats.guesses, stats.guessCount)}
 
     // Update timestamp
     await saveLastCommentUpdate(postId, Date.now());
+
+    // Clear the scheduled job ID since we've executed the update
+    await clearNextScheduledJobId(postId);
+
     res.json({ status: 'success' });
   } catch (error) {
     console.error(`Error in update drawing pinned comment job: ${error}`);
