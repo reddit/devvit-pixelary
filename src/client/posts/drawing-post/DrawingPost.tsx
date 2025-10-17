@@ -31,11 +31,7 @@ export const DrawingPost = ({ postData: propPostData }: DrawingPostProps) => {
 
   // Initialize state based on immediate author check to prevent flash
   const getInitialState = (): DrawingState => {
-    if (
-      postData &&
-      context.userId &&
-      postData.authorUserId === context.userId
-    ) {
+    if (postData && context.userId && postData.authorId === context.userId) {
       return 'author';
     }
     return 'unsolved';
@@ -95,13 +91,9 @@ export const DrawingPost = ({ postData: propPostData }: DrawingPostProps) => {
     if (userProfile && postData) {
       // Check if current user is the author of this post using context.userId directly
       const currentUserId = context.userId;
-      const postAuthorUserId = postData.authorUserId;
+      const postAuthorId = postData.authorId;
 
-      if (
-        currentUserId &&
-        postAuthorUserId &&
-        currentUserId === postAuthorUserId
-      ) {
+      if (currentUserId && postAuthorId && currentUserId === postAuthorId) {
         setCurrentState('author');
       } else {
         // Check user's server state

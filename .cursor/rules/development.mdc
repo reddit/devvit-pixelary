@@ -5,3 +5,4 @@ alwaysApply: true
 ---
 
 - You can assume that the dev server (npm run dev) is already running.
+- Use "npm run format" to format code

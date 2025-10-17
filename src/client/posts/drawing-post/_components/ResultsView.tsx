@@ -78,9 +78,6 @@ export function ResultsView({
     }
   }, [earnedPoints, success, userProfile]);
 
-  const { data: featuredCommunity, error: featuredCommunityError } =
-    trpc.app.dictionary.featured.get.useQuery();
-
   const guesses = stats?.guesses || {};
   const guessCount = stats?.guessCount || 0;
   const playerCount = stats?.playerCount || 0;
@@ -90,11 +87,6 @@ export function ResultsView({
     .filter(([, count]) => typeof count === 'number' && count > 0)
     .sort(([, a], [, b]) => (b as number) - (a as number))
     .slice(0, 5);
-
-  // Debug logging
-  if (featuredCommunityError) {
-    console.error('Featured community query error:', featuredCommunityError);
-  }
 
   // Rendering flags
   const showTag =
@@ -122,13 +114,7 @@ export function ResultsView({
           {showTag && (
             <div className="flex items-center gap-2 text-[var(--color-brand-secondary)]">
               <PixelSymbol type="clock" />
-              <PixelFont>
-                {`${dictionaryName} ${
-                  dictionaryName?.startsWith('r/') && featuredCommunity
-                    ? 'takeover'
-                    : 'event'
-                }`}
-              </PixelFont>
+              <PixelFont>{`${dictionaryName} event`}</PixelFont>
             </div>
           )}
         </div>

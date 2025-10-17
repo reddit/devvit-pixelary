@@ -12,7 +12,6 @@ type MenuProps = {
   onLeaderboard: () => void;
   onHowToPlay: () => void;
   onLevelClick: () => void;
-  onReportedWords: () => void;
   isModerator: boolean;
 };
 
@@ -23,7 +22,6 @@ export function Menu(props: MenuProps) {
     onLeaderboard,
     onHowToPlay,
     onLevelClick,
-    onReportedWords,
     isModerator,
   } = props;
 
@@ -69,12 +67,6 @@ export function Menu(props: MenuProps) {
         <Button onClick={onHowToPlay} size="medium" variant="secondary">
           How to play
         </Button>
-
-        {isModerator && (
-          <Button onClick={onReportedWords} size="medium" variant="secondary">
-            Reported Words
-          </Button>
-        )}
       </nav>
 
       {/* Experience Bar - Clickable */}

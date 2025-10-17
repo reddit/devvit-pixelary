@@ -5,7 +5,6 @@ import { Leaderboard } from './_components/Leaderboard';
 import { HowToPlay } from './_components/HowToPlay';
 import { LevelDetails } from './_components/LevelDetails';
 import { Menu } from './_components/Menu';
-import { ReportedWords } from './_components/ReportedWords';
 import { trpc } from '../../trpc/client';
 
 type Page =
@@ -14,8 +13,7 @@ type Page =
   | 'my-drawings'
   | 'leaderboard'
   | 'how-to-play'
-  | 'level-details'
-  | 'reported-words';
+  | 'level-details';
 
 export function PinnedPost() {
   const [page, setPage] = useState<Page>('menu');
@@ -39,7 +37,6 @@ export function PinnedPost() {
           onLeaderboard={() => goToPage('leaderboard')}
           onHowToPlay={() => goToPage('how-to-play')}
           onLevelClick={() => goToPage('level-details')}
-          onReportedWords={() => goToPage('reported-words')}
           isModerator={isModerator}
         />
       );
@@ -53,8 +50,6 @@ export function PinnedPost() {
       return <HowToPlay onClose={handleClose} />;
     case 'level-details':
       return <LevelDetails onClose={handleClose} />;
-    case 'reported-words':
-      return <ReportedWords onClose={handleClose} />;
     default:
       return null;
   }
