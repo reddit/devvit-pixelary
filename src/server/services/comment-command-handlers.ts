@@ -293,20 +293,17 @@ export async function handleShow(
     await setChampionComment(context.postId, normalizedWord, context.commentId);
 
     // Build response
-    let response = `📊 **"${normalizedWord}"** statistics:\n\n`;
-    response += `• **${count}** guesses (${percentage}% of total)\n`;
+    let response = `Guess made ${count} times (${percentage}%) so far.`;
 
     if (isInDictionary) {
-      response += `• ✅ In dictionary\n`;
+      response += ` In dictionary.`;
     } else {
-      response += `• ⚠️ Not in dictionary\n`;
+      if (isBanned) {
+        response += ` Banned from dictionary.`;
+      } else {
+        response += ` Not in dictionary.`;
+      }
     }
-
-    if (isBanned) {
-      response += `• ❌ Banned word\n`;
-    }
-
-    response += `\n*This comment serves as a "champion" for this word. If removed by Reddit's safety systems, the word will be banned.*`;
 
     return {
       success: true,
