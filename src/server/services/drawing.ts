@@ -3,7 +3,13 @@ import { incrementScore } from './progression';
 import type { DrawingPostDataExtended } from '../../shared/schema/pixelary';
 import { createPost } from '../core/post';
 import type { DrawingData } from '../../shared/schema/drawing';
-import { parseT2, type T1, type T2, type T3 } from '../../shared/types';
+import {
+  parseT2,
+  parseT3,
+  type T1,
+  type T2,
+  type T3,
+} from '../../shared/types';
 import {
   AUTHOR_REWARD_CORRECT_GUESS,
   AUTHOR_REWARD_SUBMIT,
@@ -255,6 +261,26 @@ export async function saveLastCommentUpdate(
   await redis.hSet(key, {
     lastCommentUpdate: updatedAt.toString(),
   });
+}
+
+/**
+ * Get drawing post IDs for a specific user
+ * @param userId - The user ID to get drawings for
+ * @param limit - Maximum number of drawings to return (default: 20)
+ * @returns Array of drawing post IDs
+ */
+export async function getUserDrawings(
+  userId: T2,
+  limit: number = 20
+): Promise<T3[]> {
+  const drawingIds = await redis.zRange(
+    REDIS_KEYS.drawingsByUser(userId),
+    0,
+    limit - 1,
+    { reverse: true, by: 'rank' }
+  );
+
+  return drawingIds.map((entry) => parseT3(entry.member));
 }
 
 /**

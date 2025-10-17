@@ -49,10 +49,10 @@ export function MyDrawings({ onClose }: MyDrawingsProps) {
       {/* Drawing Tiles */}
       {drawings.length > 0 && !isLoading && (
         <div className="flex w-full h-full flex-row gap-3 flex-wrap items-start justify-center">
-          {drawings.map((drawing: { postId: string; data: DrawingData }) => (
+          {drawings.map((drawing) => (
             <Drawing
               key={drawing.postId}
-              data={drawing.data}
+              data={drawing.drawing}
               size={88}
               onClick={() => {
                 // Navigate to drawing post

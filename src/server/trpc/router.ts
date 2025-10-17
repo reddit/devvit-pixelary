@@ -16,6 +16,7 @@ import {
   getDrawing,
   getDrawings,
   getGuesses,
+  getUserDrawings,
 } from '../services/drawing';
 import {
   getLeaderboard,
@@ -183,6 +184,15 @@ export const appRouter = t.router({
             skipped: false, // TODO: implement based on postId
             guessCount: 0, // TODO: implement
           };
+        }),
+
+      getDrawings: t.procedure
+        .input(
+          z.object({ limit: z.number().int().min(1).max(100).default(20) })
+        )
+        .query(async ({ ctx, input }) => {
+          if (!ctx.userId) throw new Error('Must be logged in');
+          return await getUserDrawings(ctx.userId, input.limit);
         }),
 
       isModerator: t.procedure.query(async ({ ctx }) => {
