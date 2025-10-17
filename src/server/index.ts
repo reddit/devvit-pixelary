@@ -24,7 +24,6 @@ import {
 import {
   handleNewDrawingPinnedComment,
   handleUpdateDrawingPinnedComment,
-  handleFirstSolveComment,
   handleUserLevelUp,
   handleCreatePinnedPostComment,
 } from './scheduler';
@@ -71,7 +70,6 @@ router.post(
   '/internal/scheduler/update-drawing-pinned-comment',
   handleUpdateDrawingPinnedComment
 );
-router.post('/internal/scheduler/first-solve-comment', handleFirstSolveComment);
 router.post('/internal/scheduler/user-level-up', handleUserLevelUp);
 router.post(
   '/internal/scheduler/create-pinned-post-comment',

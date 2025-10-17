@@ -73,9 +73,6 @@
       "UPDATE_DRAWING_PINNED_COMMENT": {
         "endpoint": "/internal/scheduler/update-drawing-pinned-comment"
       },
-      "FIRST_SOLVE_COMMENT": {
-        "endpoint": "/internal/scheduler/first-solve-comment"
-      },
       "USER_LEVEL_UP": {
         "endpoint": "/internal/scheduler/user-level-up"
       },

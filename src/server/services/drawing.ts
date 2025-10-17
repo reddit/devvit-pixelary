@@ -434,3 +434,65 @@ export type WordGuessEntry = {
   count: number;
   rank: number;
 };
+
+/**
+ * Get the comment data for a drawing post
+ * @param postId - The ID of the drawing post to get the comment data for
+ * @returns The comment data for the drawing post
+ */
+
+export async function getDrawingCommentData(postId: T3): Promise<{
+  solves: number;
+  solvedPercentage: number;
+  skips: number;
+  skipPercentage: number;
+  wordCount: number;
+  guessCount: number;
+  playerCount: number;
+  guesses: { word: string; count: number }[];
+}> {
+  const [
+    playerCount,
+    solvedCount,
+    skippedCount,
+    wordCount,
+    guessCount,
+    guesses,
+  ] = await Promise.all([
+    redis.zCard(attemptsForDrawingKey(postId)),
+    redis.zCard(solvesForDrawingKey(postId)),
+    redis.zCard(skipsForDrawingKey(postId)),
+    redis.zCard(guessesForDrawingKey(postId)),
+    redis.hGet(drawingKey(postId), 'guessCount'),
+    redis.zRange(guessesForDrawingKey(postId), 0, -1, {
+      reverse: true,
+      by: 'rank',
+    }),
+  ]);
+
+  const solvedPercentage =
+    playerCount === 0
+      ? 0
+      : Math.round((solvedCount / playerCount) * 100 * 10) / 10;
+
+  const skipPercentage =
+    playerCount === 0
+      ? 0
+      : Math.round((skippedCount / playerCount) * 100 * 10) / 10;
+
+  const guessesParsed = guesses.map((guess) => ({
+    word: guess.member,
+    count: guess.score,
+  }));
+
+  return {
+    solves: solvedCount,
+    solvedPercentage,
+    skips: skippedCount,
+    skipPercentage,
+    wordCount,
+    guessCount: guessCount ? parseInt(guessCount) : 0,
+    playerCount,
+    guesses: guessesParsed,
+  };
+}
