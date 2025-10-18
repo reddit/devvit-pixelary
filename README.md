@@ -1,83 +1,56 @@
-# Pixelary (Devvit Web + tRPC)
+# Pixelary
 
-## Develop
+Pixelary is a community drawing and guessing game where players compete to earn
+points, unlock rewards, and rise up the leaderboard.
 
-- Install deps: `npm install`
-- Playtest: `npm run dev` (builds client/server and runs `devvit playtest`)
-- Open UI locally: `npm run dev:vite` (serves client at port 7474)
+## How It Works
 
-## Deploy
+**Drawers**
 
-- `npm run launch` (build, upload, publish)
+- 10 points for posting a drawing
+- 1 point for each correct guess made by others
 
-## Architecture
+**Guessers**
 
-- Client: React + Canvas in `src/client/`
-- Server: Express + tRPC in `src/server/`
-- Shared: Zod schemas/types and words in `src/shared/`
+- 2 points for each correct guess
+- 10 bonus points for being first to guess correctly
 
-### Endpoints (tRPC)
+## Progression System
 
-- `system.ping`, `session.init`
-- `drawing.{upsert,get,clear}`
-- `progress.submit`, `leaderboard.top`
-- `stats.get`, `presence.ping`
-- `game.{start,status,finish}`, `history.get`
-- `config.update`
+Levels follow powers of two, with each level taking progressively longer to
+reach. As you level up, unlock exciting perks:
 
-### Storage (Redis)
+- Extra Drawing Time (+3 seconds per level)
+- Exclusive User Flair
+- More rewards coming soon!
 
-- `post:{postId}:config` (cache), `postdata` (source-of-truth)
-- `post:{postId}:drawing:{username}` (hash + chunked parts)
-- `post:{postId}:leaderboard` (zset), `post:{postId}:stats` (hash)
-- `post:{postId}:presence` (zset), `post:{postId}:users` (zset)
-- `post:{postId}:game:{username}` (hash), `post:{postId}:history:{username}`
-  (zset)
+Track your progress with the progress bar in your community's pinned post.
 
-### Realtime
+## Installation
 
-- Presence channel `presence:{postId}`; client subscribes, server publishes
+1. Visit [Reddit Developers](https://developers.reddit.com/)
+2. Create a Reddit account and connect it to Reddit Developers
+3. Install Pixelary in your subreddit
+4. Configure your game settings and dictionary
 
-## Testing
+## Moderation Features
 
-- Run tests: `npm run type-check && npm run lint && vitest`
-- Client tests: `src/client/utils/*.test.ts`
-- Server tests: `src/server/services/*.test.ts`,
-  `src/server/trpc/router.test.ts`
+- Dictionary management for custom word lists
+- Banned words filtering
+- User progression tracking
+- Community leaderboards
 
-## Devvit React Starter
+## Community
 
-A starter to build web applications on Reddit's developer platform
+- Join the discussion: [r/Pixelary](https://reddit.com/r/Pixelary)
+- View source code:
+  [GitHub Repository](https://github.com/reddit/devvit-pixelary)
 
-- [Devvit](https://developers.reddit.com/): A way to build and deploy immersive
-  games on Reddit
-- [Vite](https://vite.dev/): For compiling the webView
-- [React](https://react.dev/): For UI
-- [Express](https://expressjs.com/): For backend logic
-- [Tailwind](https://tailwindcss.com/): For styles
-- [Typescript](https://www.typescriptlang.org/): For type safety
+## Support
 
-## Getting Started
+For technical issues or feature requests, please visit our community or open an
+issue on GitHub.
 
-> Make sure you have Node 22 downloaded on your machine before running!
+---
 
-1. Run `npm create devvit@latest --template=react`
-2. Go through the installation wizard. You will need to create a Reddit account
-   and connect it to Reddit developers
-3. Copy the command on the success page into your terminal
-
-## Commands
-
-- `npm run dev`: Starts a development server where you can develop your
-  application live on Reddit.
-- `npm run build`: Builds your client and server projects
-- `npm run deploy`: Uploads a new version of your app
-- `npm run launch`: Publishes your app for review
-- `npm run login`: Logs your CLI into Reddit
-- `npm run check`: Type checks, lints, and prettifies your app
-
-## Cursor Integration
-
-This template comes with a pre-configured cursor environment. To get started,
-[download cursor](https://www.cursor.com/downloads) and enable the `devvit-mcp`
-when prompted.
+_May the best artist win!_
