@@ -111,11 +111,16 @@ export async function handleUpdateDrawingPinnedComment(
             ? '🟠 Hard'
             : '🔴 Expert';
 
+    const difficultySection =
+      stats.guessCount >= 100
+        ? `Difficulty: ${difficultyLevel} (${difficultyScore}/10)
+
+`
+        : '';
+
     const commentText = `Pixelary is a community drawing game. Submit your guess in the post above!
 
-Difficulty: ${difficultyLevel} (${difficultyScore}/10)
-
-Live stats:
+${difficultySection}Live stats:
 - ${stats.playerCount} unique players guessed
 - ${stats.guessCount} total guesses (avg ${Math.round((stats.guessCount / stats.playerCount) * 10) / 10} per player)
 - ${stats.wordCount} unique words guessed
