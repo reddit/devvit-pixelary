@@ -50,6 +50,27 @@ export function ResultsView({
     { enabled: !!postId }
   );
 
+  // Mutation for revealing guesses
+  const revealGuess = trpc.app.post.revealGuess.useMutation();
+
+  const handleGuessRowClick = async (guess: string) => {
+    try {
+      // Fire event for all users, server will decide if they get the reveal
+      const normalizedGuess = titleCase(guess.trim());
+      const result = await revealGuess.mutateAsync({
+        postId: postId || '',
+        guess: normalizedGuess,
+      });
+
+      // Show toast if server revealed the guess
+      if (result.revealed) {
+        success(normalizedGuess, { duration: 2000 });
+      }
+    } catch (error) {
+      // Server will handle permission checks, so we can ignore errors silently
+    }
+  };
+
   // Early return if essential data is missing
   if (!drawing || !word) {
     return (
@@ -156,6 +177,7 @@ export function ResultsView({
                   count={count}
                   percentage={percentage}
                   allowedWords={allowedWords}
+                  onGuessClick={handleGuessRowClick}
                 />
               );
             }
@@ -190,6 +212,7 @@ interface GuessRowProps {
   percentage?: number;
   obfuscate?: boolean;
   allowedWords?: string[];
+  onGuessClick?: (guess: string) => void;
 }
 
 function GuessRow(props: GuessRowProps) {
@@ -199,6 +222,7 @@ function GuessRow(props: GuessRowProps) {
     percentage,
     obfuscate = false,
     allowedWords = [],
+    onGuessClick,
   } = props;
 
   // Check if this is an empty row (no data provided)
@@ -213,8 +237,17 @@ function GuessRow(props: GuessRowProps) {
   );
   const shouldObfuscate = obfuscate || !isAllowed;
 
+  const handleClick = () => {
+    if (onGuessClick && guess) {
+      onGuessClick(guess);
+    }
+  };
+
   return (
-    <div className="flex items-center gap-3 px-3 justify-between w-full h-1/5 bg-white/25 relative">
+    <div
+      className="flex items-center gap-3 px-3 justify-between w-full h-1/5 bg-white/25 relative"
+      onClick={handleClick}
+    >
       <div
         className={`absolute inset-y-0 left-0 bg-white transition-all duration-300 ${
           shouldObfuscate ? 'text-[var(--color-brand-secondary)]' : ''

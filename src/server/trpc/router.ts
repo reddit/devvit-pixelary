@@ -25,8 +25,8 @@ import {
   getRank,
   getUserLevel,
 } from '../services/progression';
+import { isAdmin, isModerator } from '../services/redis';
 import { DrawingDataSchema } from '../../shared/schema/pixelary';
-import { reddit, redis } from '@devvit/web/server';
 
 const t = initTRPC.context<Context>().create();
 
@@ -128,6 +128,35 @@ export const appRouter = t.router({
           const postId = parseT3(input.postId);
           return await getAllowedWords(ctx.subredditName, postId);
         }),
+
+      revealGuess: t.procedure
+        .input(
+          z.object({
+            postId: z.string(),
+            guess: z.string(),
+          })
+        )
+        .mutation(async ({ ctx, input }) => {
+          if (!ctx.userId) throw new Error('Must be logged in');
+
+          // Check if user is admin or moderator
+          const userIsAdmin = await isAdmin(ctx.userId);
+          const userIsModerator = ctx.subredditName
+            ? await isModerator(ctx.userId, ctx.subredditName)
+            : false;
+
+          if (!userIsAdmin && !userIsModerator) {
+            // Silently ignore the request for non-privileged users
+            return { success: false, revealed: false };
+          }
+
+          // Return the guess for privileged users
+          return {
+            success: true,
+            revealed: true,
+            guess: input.guess,
+          };
+        }),
     }),
 
     // Guess endpoints
@@ -221,37 +250,30 @@ export const appRouter = t.router({
       }),
 
       isModerator: t.procedure.query(async ({ ctx }) => {
-        if (!ctx.username || !ctx.subredditName) {
+        if (!ctx.userId || !ctx.subredditName) {
           return false;
         }
 
-        const cacheKey = `mod:${ctx.username}:${ctx.subredditName}`;
+        return await isModerator(ctx.userId, ctx.subredditName);
+      }),
 
-        // Check cache first
-        const cached = await redis.get(cacheKey);
-        if (cached !== null) {
-          return cached === 'true';
-        }
-
-        // Check with Reddit API
-        try {
-          const moderators = await reddit.getModerators({
-            subredditName: ctx.subredditName,
-          });
-          const moderatorList = await moderators.all();
-          const isModerator = moderatorList.some(
-            (mod: { username: string }) => mod.username === ctx.username
-          );
-
-          // Cache result for 5 minutes
-          await redis.set(cacheKey, isModerator.toString());
-          await redis.expire(cacheKey, 300);
-
-          return isModerator;
-        } catch (error) {
-          console.error('Failed to check moderator permission:', error);
+      isModeratorOrAdmin: t.procedure.query(async ({ ctx }) => {
+        if (!ctx.userId) {
           return false;
         }
+
+        // Check if user is admin first
+        const userIsAdmin = await isAdmin(ctx.userId);
+        if (userIsAdmin) {
+          return true;
+        }
+
+        // Check if user is moderator
+        if (!ctx.subredditName) {
+          return false;
+        }
+
+        return await isModerator(ctx.userId, ctx.subredditName);
       }),
     }),
 
