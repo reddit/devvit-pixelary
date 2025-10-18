@@ -2,7 +2,7 @@ import { Button } from '../../../components/Button';
 import { trpc } from '../../../trpc/client';
 import { PixelFont } from '../../../components/PixelFont';
 import { IconButton } from '../../../components/IconButton';
-import { PaginatedDrawingTiles } from '../../../components/PaginatedDrawingTiles';
+import { PaginatedDrawingGrid } from '../../../components/PaginatedDrawingGrid';
 import { navigateTo } from '@devvit/web/client';
 import { context } from '@devvit/web/client';
 
@@ -25,7 +25,7 @@ export function MyDrawings({ onClose }: MyDrawingsProps) {
       </header>
 
       {/* Loading and Drawing Tiles */}
-      <PaginatedDrawingTiles
+      <PaginatedDrawingGrid
         drawings={drawings}
         onDrawingClick={(postId) => {
           // Navigate to drawing post

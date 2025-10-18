@@ -19,7 +19,7 @@ export function Counter({
   );
   const [isAnimating, setIsAnimating] = useState(false);
   const [isIncreasing, setIsIncreasing] = useState(true); // Track direction
-  const animationTimeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
+  const animationTimeoutRef = useRef<number | undefined>(undefined);
 
   useEffect(() => {
     const newValue = value ?? fallback;
@@ -37,7 +37,7 @@ export function Counter({
       setIsAnimating(true);
 
       // Clean up previous value after animation completes
-      animationTimeoutRef.current = setTimeout(() => {
+      animationTimeoutRef.current = window.setTimeout(() => {
         setPreviousValue(null);
         setIsAnimating(false);
       }, 400); // Match animation duration

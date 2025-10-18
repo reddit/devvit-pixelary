@@ -4,17 +4,17 @@ import { IconButton } from './IconButton';
 import { PixelFont } from './PixelFont';
 import { DrawingData } from '../../shared/schema/drawing';
 
-export interface PaginatedDrawingTilesProps {
+export interface PaginatedDrawingGridProps {
   drawings: Array<{ postId: string; drawing: DrawingData }>;
   onDrawingClick: (postId: string) => void;
   isLoading?: boolean;
 }
 
-export function PaginatedDrawingTiles({
+export function PaginatedDrawingGrid({
   drawings,
   onDrawingClick,
   isLoading = false,
-}: PaginatedDrawingTilesProps) {
+}: PaginatedDrawingGridProps) {
   const [currentPage, setCurrentPage] = useState(1);
   const [tilesPerRow, setTilesPerRow] = useState(3);
   const [tilesPerPage, setTilesPerPage] = useState(12);
