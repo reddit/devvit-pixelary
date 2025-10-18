@@ -1,5 +1,6 @@
 import { Level, LEVELS } from '../../../../shared/constants';
 import { PixelFont } from '../../../components/PixelFont';
+import { Counter } from '../../../components/Counter';
 import { Button } from '../../../components/Button';
 import { Logo } from '../../../components/Logo';
 import { PixelSymbol } from '../../../components/PixelSymbol';
@@ -75,7 +76,8 @@ export function Menu(props: MenuProps) {
         className="hover:opacity-70 transition-opacity cursor-pointer flex flex-col items-center justify-center gap-2"
       >
         <div className="flex relative">
-          <PixelFont scale={2}>{`Level ${userLevel?.rank ?? '?'}`}</PixelFont>
+          <PixelFont scale={2}>Level </PixelFont>
+          <Counter value={userLevel?.rank} scale={2} />
           <div className="absolute -right-5">
             <PixelSymbol
               type="arrow-right"
