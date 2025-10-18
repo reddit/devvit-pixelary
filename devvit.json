@@ -61,6 +61,13 @@
         "location": "post",
         "forUserType": "moderator",
         "endpoint": "/internal/menu/update-comment"
+      },
+      {
+        "label": "[Pixelary] Set My Flair",
+        "description": "Update your user flair based on your current level",
+        "location": "subreddit",
+        "forUserType": "user",
+        "endpoint": "/internal/menu/set-my-flair"
       }
     ]
   },

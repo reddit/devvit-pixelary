@@ -10,6 +10,7 @@ import {
   handleEditDictionary,
   handleBannedWords,
   handleRevealWord,
+  handleSetMyFlair,
   handleUpdateComment,
 } from './menu-actions';
 
@@ -85,6 +86,7 @@ router.post('/internal/menu/post-create', handlePostCreate);
 router.post('/internal/menu/edit-dictionary', handleEditDictionary);
 router.post('/internal/menu/banned-words', handleBannedWords);
 router.post('/internal/menu/reveal-word', handleRevealWord);
+router.post('/internal/menu/set-my-flair', handleSetMyFlair);
 router.post('/internal/menu/update-comment', handleUpdateComment);
 
 // ============================================================================

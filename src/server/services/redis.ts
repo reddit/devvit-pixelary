@@ -37,6 +37,12 @@ export const REDIS_KEYS = {
 
   // Champion comments for !show command
   championComments: (postId: T3) => `champions:${postId}`,
+
+  // Flair templates
+  flairTemplates: {
+    user: (levelRank: number) => `flair:user:${levelRank}`,
+    post: (difficulty: string) => `flair:post:${difficulty}`,
+  },
 };
 
 const USERNAME_TTL = 30 * 24 * 60 * 60; // 30 days.

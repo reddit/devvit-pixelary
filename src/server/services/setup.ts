@@ -1,4 +1,5 @@
 import { initializeDictionary } from './dictionary';
+import { ensureFlairTemplates } from '../core/flair';
 
 /**
  * Setup Pixelary in a subreddit.
@@ -8,4 +9,15 @@ import { initializeDictionary } from './dictionary';
 
 export async function setupPixelary(subredditName: string): Promise<void> {
   await initializeDictionary(subredditName);
+
+  // Setup flair templates (non-blocking)
+  try {
+    await ensureFlairTemplates(subredditName);
+  } catch (error) {
+    console.error(
+      `Error setting up flair system for r/${subredditName}:`,
+      error
+    );
+    // Don't throw - flair setup should not block app installation
+  }
 }

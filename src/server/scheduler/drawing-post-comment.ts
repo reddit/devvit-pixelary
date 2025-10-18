@@ -1,4 +1,4 @@
-import { reddit } from '@devvit/web/server';
+import { reddit, context } from '@devvit/web/server';
 import type { Request, Response } from 'express';
 import {
   getDrawing,
@@ -8,6 +8,7 @@ import {
   savePinnedCommentId,
   clearNextScheduledJobId,
 } from '../services/drawing';
+import { setPostFlair, getDifficultyFromStats } from '../core/flair';
 
 /**
  * Job handler for creating a new drawing pinned comment
@@ -103,6 +104,22 @@ export async function handleUpdateDrawingPinnedComment(
 
     // Clear the scheduled job ID since we've executed the update
     await clearNextScheduledJobId(postId);
+
+    // Set difficulty flair if threshold is met (non-blocking)
+    try {
+      if (stats && stats.guessCount >= 100) {
+        const difficulty = getDifficultyFromStats(stats);
+        if (difficulty) {
+          await setPostFlair(postId, context.subredditName, difficulty);
+        }
+      }
+    } catch (error) {
+      console.error(
+        `Error setting difficulty flair for post ${postId}:`,
+        error
+      );
+      // Don't fail the job if flair setting fails
+    }
 
     res.json({ status: 'success' });
   } catch (error) {

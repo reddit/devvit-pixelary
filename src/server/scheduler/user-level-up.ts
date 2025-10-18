@@ -1,5 +1,7 @@
 import type { Request, Response } from 'express';
-//import { getLevelByScore, getScore } from '../services/progression';
+import { context } from '@devvit/web/server';
+import { getLevelByScore, getScore } from '../services/progression';
+import { setUserFlair } from '../core/flair';
 
 export async function handleUserLevelUp(
   req: Request,
@@ -16,12 +18,18 @@ export async function handleUserLevelUp(
       return;
     }
 
-    // const score = await getScore(userId);
-    // const level = getLevelByScore(score);
+    const score = await getScore(userId);
+    const level = getLevelByScore(score);
 
-    // TODO: Set user flair
+    // Set user flair (non-blocking)
+    try {
+      await setUserFlair(userId, context.subredditName, level);
+    } catch (error) {
+      console.error(`Error setting user flair for ${userId}:`, error);
+      // Don't fail the job if flair setting fails
+    }
+
     // TODO: Send DM to user
-
     // const message =
     //   `🎉 Congratulations! You've leveled up to **${level.name}** (Level ${level.rank})!\n\n` +
     //   `You now have ${level.extraTime} extra seconds when drawing!\n\n` +

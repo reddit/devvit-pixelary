@@ -1,8 +1,9 @@
-import { redis, scheduler, realtime } from '@devvit/web/server';
+import { redis, scheduler, realtime, context } from '@devvit/web/server';
 import { incrementScore } from './progression';
 import { titleCase } from '../../shared/utils/string';
 import type { DrawingPostDataExtended } from '../../shared/schema/pixelary';
 import { createPost } from '../core/post';
+import { setPostFlair } from '../core/flair';
 import type { DrawingData } from '../../shared/schema/drawing';
 import {
   parseT2,
@@ -99,6 +100,14 @@ export const createDrawing = async (options: {
       error
     );
     // Don't throw - the drawing post should still be created even if comment fails
+  }
+
+  // Set "Unranked" flair on new post (non-blocking)
+  try {
+    await setPostFlair(postId, context.subredditName, 'unranked');
+  } catch (error) {
+    console.error(`Failed to set flair for post ${postId}:`, error);
+    // Don't throw - flair setting should not block post creation
   }
 
   return post;
