@@ -11,30 +11,9 @@ export interface MyDrawingsProps {
 }
 
 export function MyDrawings({ onClose }: MyDrawingsProps) {
-  const { data: drawingIds = [], isLoading: isLoadingIds } =
-    trpc.app.user.getDrawings.useQuery({ limit: 20 });
-  const { data: drawings = [], isLoading: isLoadingDrawings } =
-    trpc.app.post.getDrawings.useQuery(
-      { postIds: drawingIds },
-      { enabled: drawingIds.length > 0 }
-    );
-
-  const isLoading = isLoadingIds || isLoadingDrawings;
-
-  // if (isLoading) {
-  //   return (
-  //     <div className="p-6">
-  //       <div className="mb-6">
-  //         <h2 className="font-pixel text-pixel-text-scale-3">My Drawings</h2>
-  //       </div>
-  //       <div className="grid grid-cols-2 gap-4">
-  //         {Array.from({ length: 6 }).map((_, i) => (
-  //           <Skeleton key={i} width={144} height={144} />
-  //         ))}
-  //       </div>
-  //     </div>
-  //   );
-  // }
+  const { data: drawings = [], isLoading } = trpc.app.user.getDrawings.useQuery(
+    { limit: 20 }
+  );
 
   return (
     <main className="fixed inset-0 flex flex-col p-4 gap-4">
@@ -44,6 +23,18 @@ export function MyDrawings({ onClose }: MyDrawingsProps) {
 
         <IconButton onClick={onClose} symbol="X" />
       </header>
+
+      {/* Skeleton Loading State */}
+      {isLoading && (
+        <div className="flex w-full h-full flex-row gap-3 flex-wrap items-start justify-center">
+          {Array.from({ length: 6 }).map((_, i) => (
+            <div
+              key={i}
+              className="w-[88px] h-[88px] bg-gray-200 animate-pulse rounded"
+            />
+          ))}
+        </div>
+      )}
 
       {/* Drawing Tiles */}
       {drawings.length > 0 && !isLoading && (

@@ -20,6 +20,15 @@ export function PinnedPost() {
 
   const { data: isModerator = false } = trpc.app.user.isModerator.useQuery();
 
+  // Prefetch drawings optimistically for maximum performance
+  trpc.app.user.getDrawings.useQuery(
+    { limit: 20 },
+    {
+      staleTime: 60000, // Cache for 1 minute
+      refetchOnWindowFocus: false, // Don't refetch on window focus
+    }
+  );
+
   function handleClose() {
     setPage('menu');
   }

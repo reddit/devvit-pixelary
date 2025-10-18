@@ -17,7 +17,7 @@ import {
   getDrawing,
   getDrawings,
   getGuesses,
-  getUserDrawings,
+  getUserDrawingsWithData,
 } from '../services/drawing';
 import {
   getLeaderboard,
@@ -231,7 +231,7 @@ export const appRouter = t.router({
         )
         .query(async ({ ctx, input }) => {
           if (!ctx.userId) throw new Error('Must be logged in');
-          return await getUserDrawings(ctx.userId, input.limit);
+          return await getUserDrawingsWithData(ctx.userId, input.limit);
         }),
 
       getRank: t.procedure.query(async ({ ctx }) => {

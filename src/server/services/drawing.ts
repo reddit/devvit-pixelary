@@ -353,6 +353,51 @@ export async function getUserDrawings(
   return drawingIds.map((entry) => parseT3(entry.member));
 }
 
+export async function getUserDrawingsWithData(
+  userId: T2,
+  limit: number = 20
+): Promise<DrawingPostDataExtended[]> {
+  // Get drawing IDs
+  const drawingIds = await redis.zRange(
+    REDIS_KEYS.drawingsByUser(userId),
+    0,
+    limit - 1,
+    { reverse: true, by: 'rank' }
+  );
+
+  const postIds = drawingIds.map((entry) => parseT3(entry.member));
+
+  if (postIds.length === 0) return [];
+
+  // Fetch all drawing data in parallel for maximum performance
+  const drawingPromises = postIds.map(async (postId) => {
+    const drawingData = await redis.hGetAll(REDIS_KEYS.drawing(postId));
+    return { postId, drawingData };
+  });
+
+  const results = await Promise.all(drawingPromises);
+
+  // Process results and filter out nulls
+  const drawings: DrawingPostDataExtended[] = [];
+
+  for (const { postId, drawingData } of results) {
+    if (drawingData.type === 'drawing' && drawingData.drawing) {
+      drawings.push({
+        postId,
+        type: 'drawing',
+        createdAt: new Date(parseInt(drawingData.createdAt)),
+        word: drawingData.word,
+        dictionary: drawingData.dictionary,
+        drawing: JSON.parse(drawingData.drawing),
+        authorId: drawingData.authorId as T2,
+        authorName: drawingData.authorName,
+      });
+    }
+  }
+
+  return drawings;
+}
+
 /**
  * Check if a user has completed a drawing. Completed means they have solved or skipped the drawing.
  * @param postId - The post ID of the drawing to check
