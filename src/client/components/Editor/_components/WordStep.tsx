@@ -75,14 +75,34 @@ export function WordStep(props: WordStepProps) {
 
       {/* Timer */}
       <div className="flex flex-row items-center justify-center gap-4">
-        <PixelSymbol scale={3} type="arrow-right" className="text-blue-500" />
+        <PixelSymbol
+          scale={3}
+          type="arrow-right"
+          className={
+            secondsLeft > 2
+              ? 'text-[var(--color-brand-tertiary)]'
+              : 'text-[var(--color-brand-orangered)]'
+          }
+        />
         <PixelFont
           scale={3}
-          className={secondsLeft > 2 ? 'text-black' : 'text-orange-500'}
+          className={
+            secondsLeft > 2
+              ? 'text-[var(--color-brand-primary)]'
+              : 'text-[var(--color-brand-orangered)]'
+          }
         >
           {secondsLeft.toString()}
         </PixelFont>
-        <PixelSymbol scale={3} type="arrow-left" className="text-blue-500" />
+        <PixelSymbol
+          scale={3}
+          type="arrow-left"
+          className={
+            secondsLeft > 2
+              ? 'text-[var(--color-brand-tertiary)]'
+              : 'text-[var(--color-brand-orangered)]'
+          }
+        />
       </div>
 
       {/* Refresh Button */}
@@ -90,7 +110,11 @@ export function WordStep(props: WordStepProps) {
         onClick={() => refreshCandidates()}
         className="flex items-center hover:opacity-70 transition-opacity p-6 fixed right-0 bottom-0 cursor-pointer"
       >
-        <PixelSymbol scale={3} type="undo" className="text-slate-600" />
+        <PixelSymbol
+          scale={3}
+          type="undo"
+          className="text-[var(--color-brand-secondary)]"
+        />
       </button>
     </main>
   );
