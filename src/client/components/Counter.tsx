@@ -18,6 +18,7 @@ export function Counter({
     null
   );
   const [isAnimating, setIsAnimating] = useState(false);
+  const [isIncreasing, setIsIncreasing] = useState(true); // Track direction
   const animationTimeoutRef = useRef<NodeJS.Timeout>();
 
   useEffect(() => {
@@ -27,6 +28,9 @@ export function Counter({
       if (animationTimeoutRef.current) {
         clearTimeout(animationTimeoutRef.current);
       }
+
+      // Determine direction
+      setIsIncreasing(newValue > currentValue);
 
       setPreviousValue(currentValue);
       setCurrentValue(newValue);
@@ -66,7 +70,11 @@ export function Counter({
     display: 'flex',
     flexDirection: 'column',
     transition: 'transform 0.4s ease-out',
-    transform: isAnimating ? `translateY(-${fontHeight}px)` : 'translateY(0px)',
+    transform: isAnimating
+      ? isIncreasing
+        ? `translateY(-${fontHeight}px)`
+        : `translateY(${fontHeight}px)`
+      : 'translateY(0px)',
   };
 
   return (
