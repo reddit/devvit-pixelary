@@ -382,15 +382,17 @@ export async function getUserDrawingsWithData(
 
   for (const { postId, drawingData } of results) {
     if (drawingData.type === 'drawing' && drawingData.drawing) {
+      const stats = await getDrawingStats(postId);
       drawings.push({
         postId,
         type: 'drawing',
-        createdAt: new Date(parseInt(drawingData.createdAt)),
-        word: drawingData.word,
-        dictionary: drawingData.dictionary,
-        drawing: JSON.parse(drawingData.drawing),
+        word: drawingData.word || '',
+        dictionary: drawingData.dictionary || '',
+        drawing: JSON.parse(drawingData.drawing || '{}'),
         authorId: drawingData.authorId as T2,
-        authorName: drawingData.authorName,
+        authorName: drawingData.authorName || '',
+        playerCount: stats.playerCount,
+        solvedPercentage: stats.solvedPercentage,
       });
     }
   }
