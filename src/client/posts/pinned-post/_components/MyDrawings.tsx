@@ -1,8 +1,8 @@
 import { Button } from '../../../components/Button';
 import { trpc } from '../../../trpc/client';
-import { Drawing } from '../../../components/Drawing';
 import { PixelFont } from '../../../components/PixelFont';
 import { IconButton } from '../../../components/IconButton';
+import { PaginatedDrawingTiles } from '../../../components/PaginatedDrawingTiles';
 import { navigateTo } from '@devvit/web/client';
 import { context } from '@devvit/web/client';
 
@@ -24,52 +24,37 @@ export function MyDrawings({ onClose }: MyDrawingsProps) {
         <IconButton onClick={onClose} symbol="X" />
       </header>
 
-      {/* Skeleton Loading State */}
-      {isLoading && (
-        <div className="flex w-full h-full flex-row gap-3 flex-wrap items-start justify-center">
-          {Array.from({ length: 6 }).map((_, i) => (
-            <div
-              key={i}
-              className="w-[88px] h-[88px] bg-gray-200 animate-pulse rounded"
-            />
-          ))}
-        </div>
-      )}
-
-      {/* Drawing Tiles */}
-      {drawings.length > 0 && !isLoading && (
-        <div className="flex w-full h-full flex-row gap-3 flex-wrap items-start justify-center">
-          {drawings.map((drawing) => (
-            <Drawing
-              key={drawing.postId}
-              data={drawing.drawing}
-              size={88}
-              onClick={() => {
-                // Navigate to drawing post
-                const subredditName = context.subredditName;
-                if (subredditName) {
-                  navigateTo(
-                    `https://reddit.com/r/${subredditName}/comments/${drawing.postId}`
-                  );
-                }
-              }}
-            />
-          ))}
-        </div>
-      )}
+      {/* Loading and Drawing Tiles */}
+      <PaginatedDrawingTiles
+        drawings={drawings}
+        onDrawingClick={(postId) => {
+          // Navigate to drawing post
+          const subredditName = context.subredditName;
+          if (subredditName) {
+            navigateTo(
+              `https://reddit.com/r/${subredditName}/comments/${postId}`
+            );
+          }
+        }}
+        isLoading={isLoading}
+      />
 
       {/* Empty state */}
       {drawings.length === 0 && !isLoading && (
-        <div className="p-6 text-center">
-          <div className="mb-6">
-            <h2 className="font-pixel text-pixel-text-scale-3">My Drawings</h2>
+        <div className="flex-1 flex items-center justify-center">
+          <div className="p-6 text-center">
+            <div className="mb-6">
+              <h2 className="font-pixel text-pixel-text-scale-3">
+                My Drawings
+              </h2>
+            </div>
+            <div className="mb-6">
+              <p className="font-pixel text-gray-600">
+                You haven't created any drawings yet.
+              </p>
+            </div>
+            <Button onClick={onClose}>Start Drawing</Button>
           </div>
-          <div className="mb-6">
-            <p className="font-pixel text-gray-600">
-              You haven't created any drawings yet.
-            </p>
-          </div>
-          <Button onClick={onClose}>Start Drawing</Button>
         </div>
       )}
     </main>
