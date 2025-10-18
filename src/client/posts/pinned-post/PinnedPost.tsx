@@ -29,6 +29,15 @@ export function PinnedPost() {
     }
   );
 
+  // Prefetch leaderboard data for instant loading
+  trpc.app.leaderboard.getTop.useQuery(
+    { limit: 10 },
+    {
+      staleTime: 60000, // Cache for 1 minute
+      refetchOnWindowFocus: false, // Don't refetch on window focus
+    }
+  );
+
   function handleClose() {
     setPage('menu');
   }

@@ -14,37 +14,34 @@ export function Leaderboard({ onClose }: LeaderboardProps) {
     trpc.app.leaderboard.getTop.useQuery({ limit: 10 });
   const { data: userRank } = trpc.app.user.getRank.useQuery();
 
-  if (isLoading) {
-    return (
-      <div className="p-6">
-        <div className="mb-6">
-          <h2 className="font-pixel text-pixel-text-scale-3">Leaderboard</h2>
-        </div>
-        <div className="space-y-2"></div>
-      </div>
-    );
-  }
-
   return (
     <CardLayout title="Leaderboard" onClose={onClose}>
       {/* Top 10 */}
       <div className="h-full w-full flex flex-col">
-        {leaderboard.map((player: LeaderboardEntry, index: number) => (
-          <LeaderboardRow
-            key={index}
-            rank={index + 1}
-            username={player.username}
-            score={player.score}
-          />
-        ))}
-        {/* Current User */}
-        {userRank && userRank.rank > 0 && (
-          <LeaderboardRow
-            rank={userRank.rank}
-            username={userRank.username}
-            score={userRank.score}
-            className="border-t-2 border-t-[var(--color-brand-tertiary)]"
-          />
+        {isLoading && leaderboard.length === 0 ? (
+          <div className="flex items-center justify-center h-full">
+            <PixelFont>Loading...</PixelFont>
+          </div>
+        ) : (
+          <>
+            {leaderboard.map((player: LeaderboardEntry, index: number) => (
+              <LeaderboardRow
+                key={index}
+                rank={index + 1}
+                username={player.username}
+                score={player.score}
+              />
+            ))}
+            {/* Current User - only show if not in top N */}
+            {userRank && userRank.rank > leaderboard.length && (
+              <LeaderboardRow
+                rank={userRank.rank}
+                username={userRank.username}
+                score={userRank.score}
+                className="border-t-2 border-t-[var(--color-brand-tertiary)]"
+              />
+            )}
+          </>
         )}
       </div>
     </CardLayout>
