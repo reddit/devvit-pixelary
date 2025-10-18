@@ -10,6 +10,7 @@ import {
   handleEditDictionary,
   handleBannedWords,
   handleRevealWord,
+  handleUpdateComment,
 } from './menu-actions';
 
 // Import form handlers
@@ -84,6 +85,7 @@ router.post('/internal/menu/post-create', handlePostCreate);
 router.post('/internal/menu/edit-dictionary', handleEditDictionary);
 router.post('/internal/menu/banned-words', handleBannedWords);
 router.post('/internal/menu/reveal-word', handleRevealWord);
+router.post('/internal/menu/update-comment', handleUpdateComment);
 
 // ============================================================================
 // FORM HANDLERS

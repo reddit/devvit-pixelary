@@ -643,3 +643,98 @@ export async function getDrawingCommentData(postId: T3): Promise<{
     guesses: guessesParsed,
   };
 }
+
+type DrawingCommentStats = {
+  playerCount: number;
+  guessCount: number;
+  wordCount: number;
+  skips: number;
+  skipPercentage: number;
+  solves: number;
+  solvedPercentage: number;
+};
+
+type CommentSection = {
+  content: string;
+  condition?: (stats: DrawingCommentStats) => boolean;
+};
+
+/**
+ * Generate comment text for drawing posts using modular sections
+ * @param stats - Optional stats data for conditional sections
+ * @returns The formatted comment text
+ */
+export function generateDrawingCommentText(
+  stats?: DrawingCommentStats
+): string {
+  const sections: CommentSection[] = [
+    {
+      content: `Pixelary is a community drawing game. Submit your guess in the post above!`,
+    },
+    {
+      content: generateDifficultySection(stats),
+      condition: (stats) => stats.guessCount >= 100,
+    },
+    {
+      content: generateLiveStatsSection(stats),
+      condition: () => !!stats,
+    },
+    {
+      content: `Comment commands:
+- \`!words\` - See dictionary
+- \`!add <word>\` - Add word to dictionary
+- \`!show <word>\` - Check guess stats
+- \`!help\` - All commands`,
+    },
+    {
+      content: `Good luck and thanks for playing!`,
+    },
+  ];
+
+  return sections
+    .filter(
+      (section) => !section.condition || (stats && section.condition(stats))
+    )
+    .map((section) => section.content)
+    .join('\n\n');
+}
+
+function generateDifficultySection(
+  stats: DrawingCommentStats | undefined
+): string {
+  if (!stats) return '';
+
+  const difficultyScore =
+    stats.playerCount > 0
+      ? Math.round((stats.guessCount / stats.playerCount) * 10) / 10
+      : 0;
+
+  const difficultyLevel =
+    difficultyScore < 2
+      ? '🟢 Easy'
+      : difficultyScore < 4
+        ? '🟡 Medium'
+        : difficultyScore < 6
+          ? '🟠 Hard'
+          : '🔴 Expert';
+
+  return `Difficulty: ${difficultyLevel} (${difficultyScore}/10)`;
+}
+
+function generateLiveStatsSection(
+  stats: DrawingCommentStats | undefined
+): string {
+  if (!stats) return '';
+
+  const avgGuessesPerPlayer =
+    stats.playerCount > 0
+      ? Math.round((stats.guessCount / stats.playerCount) * 10) / 10
+      : 0;
+
+  return `Live stats:
+- ${stats.playerCount} unique players guessed
+- ${stats.guessCount} total guesses (avg ${avgGuessesPerPlayer} per player)
+- ${stats.wordCount} unique words guessed
+- ${stats.skips} skips (${stats.skipPercentage}% skip rate)
+- ${stats.solves} solves (${stats.solvedPercentage}% solved rate)`;
+}

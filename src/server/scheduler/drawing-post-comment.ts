@@ -3,6 +3,7 @@ import type { Request, Response } from 'express';
 import {
   getDrawing,
   getDrawingCommentData,
+  generateDrawingCommentText,
   saveLastCommentUpdate,
   savePinnedCommentId,
   clearNextScheduledJobId,
@@ -41,15 +42,7 @@ export async function handleNewDrawingPinnedComment(
       return;
     }
 
-    const commentText = `Pixelary is a community drawing game. Submit your guess in the post above!
-
-Comment commands:
-- \`!words\` - See dictionary
-- \`!add <word>\` - Add word to dictionary
-- \`!show <word>\` - Check guess stats
-- \`!help\` - All commands
-
-Good luck and thanks for playing!`;
+    const commentText = generateDrawingCommentText();
 
     const comment = await reddit.submitComment({
       text: commentText,
@@ -96,44 +89,7 @@ export async function handleUpdateDrawingPinnedComment(
     }
 
     const stats = await getDrawingCommentData(postId);
-
-    // Calculate difficulty metrics
-    const difficultyScore =
-      stats.playerCount > 0
-        ? Math.round((stats.guessCount / stats.playerCount) * 10) / 10
-        : 0;
-    const difficultyLevel =
-      difficultyScore < 2
-        ? '🟢 Easy'
-        : difficultyScore < 4
-          ? '🟡 Medium'
-          : difficultyScore < 6
-            ? '🟠 Hard'
-            : '🔴 Expert';
-
-    const difficultySection =
-      stats.guessCount >= 100
-        ? `Difficulty: ${difficultyLevel} (${difficultyScore}/10)
-
-`
-        : '';
-
-    const commentText = `Pixelary is a community drawing game. Submit your guess in the post above!
-
-${difficultySection}Live stats:
-- ${stats.playerCount} unique players guessed
-- ${stats.guessCount} total guesses (avg ${Math.round((stats.guessCount / stats.playerCount) * 10) / 10} per player)
-- ${stats.wordCount} unique words guessed
-- ${stats.skips} skips (${stats.skipPercentage}% skip rate)
-- ${stats.solves} solves (${stats.solvedPercentage}% solved rate)
-
-Comment commands:
-- \`!words\` - See dictionary
-- \`!add <word>\` - Add word to dictionary
-- \`!show <word>\` - Check guess stats
-- \`!help\` - All commands
-
-Good luck and thanks for playing!`;
+    const commentText = generateDrawingCommentText(stats);
 
     // Update or create comment
     // Get the existing comment and edit it with new content

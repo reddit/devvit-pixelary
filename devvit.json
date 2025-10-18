@@ -54,6 +54,13 @@
         "location": "post",
         "forUserType": "moderator",
         "endpoint": "/internal/menu/reveal-word"
+      },
+      {
+        "label": "[Pixelary] Update Comment",
+        "description": "Update pinned comment with latest stats",
+        "location": "post",
+        "forUserType": "moderator",
+        "endpoint": "/internal/menu/update-comment"
       }
     ]
   },
