@@ -24,7 +24,13 @@ export async function setChampionComment(
   commentId: string
 ): Promise<void> {
   const key = REDIS_KEYS.championComments(postId);
+  const reverseKey = REDIS_KEYS.championCommentReverse(commentId);
+
+  // Set forward mapping (word -> commentId)
   await redis.hSet(key, { [word.toLowerCase()]: commentId });
+
+  // Set reverse mapping (commentId -> {postId, word})
+  await redis.set(reverseKey, JSON.stringify({ postId, word }));
 }
 
 /**
@@ -39,7 +45,7 @@ export async function getChampionComment(
 ): Promise<string | null> {
   const key = REDIS_KEYS.championComments(postId);
   const commentId = await redis.hGet(key, word.toLowerCase());
-  return commentId;
+  return commentId ?? null;
 }
 
 /**
@@ -52,7 +58,18 @@ export async function removeChampionComment(
   word: string
 ): Promise<void> {
   const key = REDIS_KEYS.championComments(postId);
-  await redis.hDel(key, word.toLowerCase());
+
+  // Get commentId from forward mapping before deleting
+  const commentId = await redis.hGet(key, word.toLowerCase());
+
+  // Delete forward mapping
+  await redis.hDel(key, [word.toLowerCase()]);
+
+  // Delete reverse mapping if commentId exists
+  if (commentId) {
+    const reverseKey = REDIS_KEYS.championCommentReverse(commentId);
+    await redis.del(reverseKey);
+  }
 }
 
 /**
@@ -95,24 +112,16 @@ export async function isWordBanned(
 export async function findChampionCommentByCommentId(
   commentId: string
 ): Promise<{ postId: T3; word: string } | null> {
-  // Note: This is a simple implementation that scans all champion comment keys
-  // In a production system with many posts, you might want to maintain a reverse index
-  // For now, we'll implement a basic scan approach
+  const reverseKey = REDIS_KEYS.championCommentReverse(commentId);
+  const data = await redis.get(reverseKey);
 
-  // Get all keys that match the champion comments pattern
-  const pattern = 'champions:*';
-  const keys = await redis.keys(pattern);
-
-  for (const key of keys) {
-    const championData = await redis.hGetAll(key);
-    for (const [word, storedCommentId] of Object.entries(championData)) {
-      if (storedCommentId === commentId) {
-        // Extract postId from key (format: champions:t3_xxxxx)
-        const postId = key.replace('champions:', '') as T3;
-        return { postId, word };
-      }
-    }
+  if (!data) {
+    return null;
   }
 
-  return null;
+  try {
+    return JSON.parse(data) as { postId: T3; word: string };
+  } catch {
+    return null;
+  }
 }

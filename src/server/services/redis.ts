@@ -37,6 +37,7 @@ export const REDIS_KEYS = {
 
   // Champion comments for !show command
   championComments: (postId: T3) => `champions:${postId}`,
+  championCommentReverse: (commentId: string) => `champion:rev:${commentId}`,
 
   // Flair templates
   flairTemplates: {

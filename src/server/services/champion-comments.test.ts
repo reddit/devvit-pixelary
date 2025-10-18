@@ -7,6 +7,9 @@ vi.mock('@devvit/web/server', () => ({
     hGet: vi.fn(),
     hDel: vi.fn(),
     hGetAll: vi.fn(),
+    set: vi.fn(),
+    get: vi.fn(),
+    del: vi.fn(),
     keys: vi.fn(),
   },
 }));
@@ -41,12 +44,17 @@ describe('Champion Comments Service', () => {
   describe('setChampionComment', () => {
     it('should store champion comment reference', async () => {
       vi.mocked(redis.hSet).mockResolvedValue(1);
+      vi.mocked(redis.set).mockResolvedValue('OK');
 
       await setChampionComment(postId, word, commentId);
 
       expect(redis.hSet).toHaveBeenCalledWith(
         REDIS_KEYS.championComments(postId),
         { [word.toLowerCase()]: commentId }
+      );
+      expect(redis.set).toHaveBeenCalledWith(
+        REDIS_KEYS.championCommentReverse(commentId),
+        JSON.stringify({ postId, word })
       );
     });
   });
@@ -75,13 +83,22 @@ describe('Champion Comments Service', () => {
 
   describe('removeChampionComment', () => {
     it('should remove champion comment reference', async () => {
+      vi.mocked(redis.hGet).mockResolvedValue(commentId);
       vi.mocked(redis.hDel).mockResolvedValue(1);
+      vi.mocked(redis.del).mockResolvedValue(1);
 
       await removeChampionComment(postId, word);
 
-      expect(redis.hDel).toHaveBeenCalledWith(
+      expect(redis.hGet).toHaveBeenCalledWith(
         REDIS_KEYS.championComments(postId),
         word.toLowerCase()
+      );
+      expect(redis.hDel).toHaveBeenCalledWith(
+        REDIS_KEYS.championComments(postId),
+        [word.toLowerCase()]
+      );
+      expect(redis.del).toHaveBeenCalledWith(
+        REDIS_KEYS.championCommentReverse(commentId)
       );
     });
   });
@@ -105,16 +122,14 @@ describe('Champion Comments Service', () => {
 
   describe('findChampionCommentByCommentId', () => {
     it('should find champion comment by comment ID', async () => {
-      vi.mocked(redis.keys).mockResolvedValue([
-        'champions:t3_post1',
-        'champions:t3_post2',
-      ]);
-      vi.mocked(redis.hGetAll)
-        .mockResolvedValueOnce({ 'word1': 'comment1', 'word2': commentId })
-        .mockResolvedValueOnce({ 'word3': 'comment3' });
+      const reverseData = JSON.stringify({ postId: 't3_post1', word: 'word2' });
+      vi.mocked(redis.get).mockResolvedValue(reverseData);
 
       const result = await findChampionCommentByCommentId(commentId);
 
+      expect(redis.get).toHaveBeenCalledWith(
+        REDIS_KEYS.championCommentReverse(commentId)
+      );
       expect(result).toEqual({
         postId: 't3_post1',
         word: 'word2',
@@ -122,11 +137,13 @@ describe('Champion Comments Service', () => {
     });
 
     it('should return null if champion comment not found', async () => {
-      vi.mocked(redis.keys).mockResolvedValue(['champions:t3_post1']);
-      vi.mocked(redis.hGetAll).mockResolvedValue({ 'word1': 'comment1' });
+      vi.mocked(redis.get).mockResolvedValue(null);
 
       const result = await findChampionCommentByCommentId('nonexistent');
 
+      expect(redis.get).toHaveBeenCalledWith(
+        REDIS_KEYS.championCommentReverse('nonexistent')
+      );
       expect(result).toBeNull();
     });
   });
