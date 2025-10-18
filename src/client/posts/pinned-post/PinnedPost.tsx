@@ -18,8 +18,6 @@ type Page =
 export function PinnedPost() {
   const [page, setPage] = useState<Page>('menu');
 
-  const { data: isModerator = false } = trpc.app.user.isModerator.useQuery();
-
   // Prefetch drawings optimistically for maximum performance
   trpc.app.user.getDrawings.useQuery(
     { limit: 20 },
@@ -55,7 +53,6 @@ export function PinnedPost() {
           onLeaderboard={() => goToPage('leaderboard')}
           onHowToPlay={() => goToPage('how-to-play')}
           onLevelClick={() => goToPage('level-details')}
-          isModerator={isModerator}
         />
       );
     case 'drawing':

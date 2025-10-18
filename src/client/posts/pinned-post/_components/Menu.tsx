@@ -1,4 +1,5 @@
-import { Level, LEVELS } from '../../../../shared/constants';
+import { LEVELS } from '../../../../shared/constants';
+import type { Level } from '../../../../shared/types';
 import { PixelFont } from '../../../components/PixelFont';
 import { Counter } from '../../../components/Counter';
 import { Button } from '../../../components/Button';
@@ -13,18 +14,11 @@ type MenuProps = {
   onLeaderboard: () => void;
   onHowToPlay: () => void;
   onLevelClick: () => void;
-  isModerator: boolean;
 };
 
 export function Menu(props: MenuProps) {
-  const {
-    onDraw,
-    onMyDrawings,
-    onLeaderboard,
-    onHowToPlay,
-    onLevelClick,
-    isModerator,
-  } = props;
+  const { onDraw, onMyDrawings, onLeaderboard, onHowToPlay, onLevelClick } =
+    props;
 
   const { data: userProfile } = trpc.app.user.getProfile.useQuery(undefined, {
     enabled: true,
@@ -73,12 +67,12 @@ export function Menu(props: MenuProps) {
       {/* Experience Bar - Clickable */}
       <button
         onClick={onLevelClick}
-        className="hover:opacity-70 transition-opacity cursor-pointer flex flex-col items-center justify-center gap-2"
+        className="level-button hover:opacity-70 transition-opacity cursor-pointer flex flex-col items-center justify-center gap-2"
       >
         <div className="flex relative">
           <PixelFont scale={2}>Level </PixelFont>
           <Counter value={userLevel?.rank} scale={2} />
-          <div className="absolute -right-5">
+          <div className="absolute -right-5 level-arrow">
             <PixelSymbol
               type="arrow-right"
               scale={2}
