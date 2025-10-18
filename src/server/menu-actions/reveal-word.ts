@@ -1,4 +1,5 @@
 import type { Request, Response } from 'express';
+import { context } from '@devvit/web/server';
 import { getDrawing } from '../services/drawing';
 
 /**
@@ -6,16 +7,15 @@ import { getDrawing } from '../services/drawing';
  * Shows the word for a drawing post
  */
 export async function handleRevealWord(
-  req: Request,
+  _req: Request,
   res: Response
 ): Promise<void> {
   try {
-    const { postId } = req.body;
+    const postId = context.postId;
 
     if (!postId) {
       res.status(400).json({
-        status: 'error',
-        message: 'Post ID is required',
+        showToast: 'Post ID is required',
       });
       return;
     }
@@ -23,9 +23,8 @@ export async function handleRevealWord(
     const drawing = await getDrawing(postId);
 
     if (!drawing) {
-      res.status(404).json({
-        status: 'error',
-        message: 'Drawing post not found',
+      res.json({
+        showToast: 'Not a drawing post',
       });
       return;
     }
@@ -35,9 +34,8 @@ export async function handleRevealWord(
     });
   } catch (error) {
     console.error(`Error revealing word: ${error}`);
-    res.status(400).json({
-      status: 'error',
-      message: 'Failed to reveal word',
+    res.status(500).json({
+      showToast: 'Failed to reveal word',
     });
   }
 }
