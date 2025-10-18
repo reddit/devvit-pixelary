@@ -1,19 +1,33 @@
 import { defineConfig } from 'vitest/config';
+import react from '@vitejs/plugin-react';
+import path from 'path';
 
 export default defineConfig({
+  plugins: [react()],
   test: {
     globals: true,
-    environment: 'node',
-    include: ['src/**/*.test.ts', 'src/**/*.test.tsx'],
     exclude: ['node_modules', 'dist'],
-    // Use jsdom for client tests
-    environmentMatchGlobs: [
-      ['src/client/**/*.test.tsx', 'jsdom'],
-      ['src/client/**/*.test.ts', 'jsdom'],
-    ],
+    environment: 'jsdom',
+    setupFiles: ['src/client/test-setup.ts'],
+    testTimeout: 10000,
+    hookTimeout: 10000,
+    mockReset: true,
+    restoreMocks: true,
+    clearMocks: true,
+    isolate: true,
+    pool: 'threads',
+    resolve: {
+      alias: {
+        '@src': path.resolve(__dirname, './src'),
+        '@components': path.resolve(__dirname, './src/client/components'),
+        '@utils': path.resolve(__dirname, './src/client/utils'),
+        '@hooks': path.resolve(__dirname, './src/client/hooks'),
+        '@shared': path.resolve(__dirname, './src/shared'),
+      },
+    },
     coverage: {
       provider: 'v8',
-      reporter: ['text', 'json-summary'],
+      reporter: ['text', 'json-summary', 'html'],
       reportsDirectory: '.coverage',
       exclude: [
         'node_modules/',
@@ -24,6 +38,8 @@ export default defineConfig({
         '**/*.d.ts',
         'src/client/index.tsx',
         'src/server/index.ts',
+        '**/test-setup.ts',
+        '**/*.config.ts',
       ],
       all: true,
       thresholds: {
@@ -33,10 +49,5 @@ export default defineConfig({
         statements: 70,
       },
     },
-    testTimeout: 10000,
-    hookTimeout: 10000,
-    mockReset: true,
-    restoreMocks: true,
-    clearMocks: true,
   },
 });

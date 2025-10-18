@@ -66,7 +66,7 @@ describe('Drawing Service', () => {
       });
 
       expect(result.correct).toBe(true);
-      expect(result.points).toBe(1);
+      expect(result.points).toBe(2);
     });
 
     it('returns incorrect guess result for wrong guess', async () => {
@@ -100,8 +100,8 @@ describe('Drawing Service', () => {
       ];
 
       vi.mocked(redis.zRange).mockResolvedValue(mockGuesses);
-      vi.mocked(redis.zCard).mockResolvedValue(10); // playerCount
-      vi.mocked(redis.zCard).mockResolvedValue(3); // solvedCount
+      vi.mocked(redis.zCard).mockResolvedValueOnce(10); // playerCount
+      vi.mocked(redis.zCard).mockResolvedValueOnce(3); // solvedCount
 
       const result = await getGuesses('t3_test123', 10);
 

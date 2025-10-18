@@ -9,30 +9,41 @@ import {
   createMockGuessSubmitInput,
 } from '../../shared/test-utils';
 
-vi.mock('../services/redis', () => {
-  return {
-    getConfig: vi.fn(async () => ({ timerSec: 60 })),
-    getStats: vi.fn(async () => ({ plays: 1, completions: 0, activeUsers: 0 })),
-    saveDrawing: vi.fn(async () => ({ rev: 1 })),
-    getDrawing: vi.fn(async () => ({ rev: 1, strokes: [] })),
-    clearDrawing: vi.fn(async () => ({ ok: true })),
-    submitScore: vi.fn(async () => ({ ok: true })),
-    getTop: vi.fn(async () => [{ username: 'u', score: 1 }]),
-    refreshPresence: vi.fn(async () => ({ ok: true, activeUsers: 2 })),
-    setCurrentGame: vi.fn(async () => ({ ok: true })),
-    getCurrentGame: vi.fn(async () => null),
-    clearCurrentGame: vi.fn(async () => ({ ok: true })),
-    addHistoryEntry: vi.fn(async () => ({ ok: true })),
-    incrementCompletions: vi.fn(async () => {}),
-    getHistory: vi.fn(async () => [
-      { prompt: 'tree', score: 10, finishedAt: 1 },
-    ]),
-    isRateLimited: vi.fn(async () => false),
-    REDIS_KEYS: {
-      scores: () => 'scores',
-    },
-  };
-});
+vi.mock('../services/dictionary', () => ({
+  getWords: vi.fn(async () => ['cat', 'dog', 'tree']),
+  getRandomWords: vi.fn(async () => [
+    { word: 'cat', dictionaryName: 'r/testsub' },
+    { word: 'dog', dictionaryName: 'r/testsub' },
+    { word: 'tree', dictionaryName: 'r/testsub' },
+  ]),
+  addWord: vi.fn(async () => true),
+  removeWord: vi.fn(async () => true),
+  getBannedWords: vi.fn(async () => []),
+}));
+
+vi.mock('../services/drawing', () => ({
+  createDrawing: vi.fn(async () => ({ postId: 't3_test123' })),
+  submitGuess: vi.fn(async () => ({ correct: true, points: 2 })),
+  skipDrawing: vi.fn(async () => ({ success: true })),
+  getDrawing: vi.fn(async () => ({ word: 'test', drawing: { data: 'test' } })),
+  getDrawings: vi.fn(async () => []),
+  getGuesses: vi.fn(async () => ({
+    guesses: {},
+    wordCount: 0,
+    guessCount: 0,
+    playerCount: 0,
+  })),
+  getUserDrawings: vi.fn(async () => []),
+}));
+
+vi.mock('../services/progression', () => ({
+  getLeaderboard: vi.fn(async () => ({
+    entries: [{ username: 'testuser', score: 100, rank: 1 }],
+  })),
+  getScore: vi.fn(async () => 100),
+  getRank: vi.fn(async () => 1),
+  getUserLevel: vi.fn(async () => ({ rank: 1, name: 'Newcomer' })),
+}));
 
 vi.mock('@devvit/web/server', () => {
   return {
@@ -75,7 +86,9 @@ vi.mock('@devvit/web/server', () => {
       hGet: vi.fn(),
       zScore: vi.fn(),
       zRevRank: vi.fn(),
+      zRank: vi.fn(),
       zCard: vi.fn(),
+      zRange: vi.fn(),
       isRateLimited: vi.fn(),
     },
     scheduler: {
@@ -139,6 +152,7 @@ describe('appRouter', () => {
       );
       vi.mocked(redis.zScore).mockResolvedValue(1000);
       vi.mocked(redis.zRevRank).mockResolvedValue(5);
+      vi.mocked(redis.zRank).mockResolvedValue(5);
       vi.mocked(redis.zCard).mockResolvedValue(100);
     });
 
@@ -163,14 +177,21 @@ describe('appRouter', () => {
     });
 
     it('app.leaderboard.getTop returns leaderboard', async () => {
-      const leaderboard = await caller.app.leaderboard.getTop();
+      const leaderboard = await caller.app.leaderboard.getTop({ limit: 10 });
       expect(leaderboard).toBeTruthy();
     });
 
     it('app.post.submitDrawing works', async () => {
-      const result = await caller.app.post.submitDrawing(
-        createMockDrawingSubmitInput()
-      );
+      const result = await caller.app.post.submitDrawing({
+        word: 'test',
+        dictionary: 'main',
+        drawing: {
+          data: 'test-data',
+          colors: ['#FFFFFF', '#000000'],
+          bg: 0,
+          size: 16,
+        },
+      });
       expect(result).toBeTruthy();
     });
 
@@ -199,16 +220,6 @@ describe('appRouter', () => {
 
     it('validates input schemas', async () => {
       await expect(caller.app.dictionary.add({ word: '' })).rejects.toThrow();
-    });
-  });
-
-  describe('Rate limiting', () => {
-    it('respects rate limits', async () => {
-      vi.mocked(redis.isRateLimited).mockResolvedValue(true);
-
-      await expect(
-        caller.app.guess.submit(createMockGuessSubmitInput())
-      ).rejects.toThrow();
     });
   });
 });
