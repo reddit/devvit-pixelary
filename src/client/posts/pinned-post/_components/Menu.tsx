@@ -27,7 +27,7 @@ export function Menu(props: MenuProps) {
   // Track menu view on mount
   useEffect(() => {
     track('view_menu');
-  }, [track]);
+  }, []);
 
   const { data: userProfile } = trpc.app.user.getProfile.useQuery(undefined, {
     enabled: true,

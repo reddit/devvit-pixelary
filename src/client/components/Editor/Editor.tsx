@@ -29,7 +29,7 @@ export function DrawingEditor({ onClose }: DrawingEditorProps) {
   // Track editor view on mount
   useEffect(() => {
     track('view_editor');
-  }, [track]);
+  }, []);
 
   // tRPC hooks
   const { data: userProfile } = trpc.app.user.getProfile.useQuery();

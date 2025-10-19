@@ -23,7 +23,7 @@ export function WordStep(props: WordStepProps) {
   // Track word step view on mount
   useEffect(() => {
     track('view_word_step');
-  }, [track]);
+  }, []);
 
   // tRPC hooks
   const {

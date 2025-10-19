@@ -18,7 +18,7 @@ export function MyDrawings({ onClose }: MyDrawingsProps) {
   // Track my drawings view on mount
   useEffect(() => {
     track('view_my_drawings');
-  }, [track]);
+  }, []);
   const { data: drawings = [], isLoading } = trpc.app.user.getDrawings.useQuery(
     { limit: 20 }
   );

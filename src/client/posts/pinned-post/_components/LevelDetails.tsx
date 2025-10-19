@@ -16,7 +16,7 @@ export function LevelDetails({ onClose }: LevelDetailsProps) {
   // Track level details view on mount
   useEffect(() => {
     track('view_level_details');
-  }, [track]);
+  }, []);
   // Get user profile to show their actual progress
   const { data: userProfile } = trpc.app.user.getProfile.useQuery(undefined, {
     enabled: true,
@@ -92,7 +92,6 @@ export function LevelDetails({ onClose }: LevelDetailsProps) {
             symbol="X"
             onClick={onClose}
             telemetryEvent="click_close_level_details"
-            
           />
         </header>
 
@@ -154,14 +153,12 @@ export function LevelDetails({ onClose }: LevelDetailsProps) {
             onClick={prevLevel}
             disabled={currentLevelIndex === 0}
             telemetryEvent="click_level_prev"
-            
           />
           <IconButton
             symbol="arrow-right"
             onClick={nextLevel}
             disabled={currentLevelIndex === LEVELS.length - 1}
             telemetryEvent="click_level_next"
-            
           />
         </nav>
       </div>

@@ -70,6 +70,20 @@
         "location": "subreddit",
         "forUserType": "user",
         "endpoint": "/internal/menu/set-my-flair"
+      },
+      {
+        "label": "[Pixelary] Log Daily Telemetry",
+        "description": "Logs the telemetry Redis key for today",
+        "location": "subreddit",
+        "forUserType": "moderator",
+        "endpoint": "/internal/menu/log-daily-telemetry"
+      },
+      {
+        "label": "[Pixelary] Clear Daily Telemetry",
+        "description": "Clears the telemetry data for today",
+        "location": "subreddit",
+        "forUserType": "moderator",
+        "endpoint": "/internal/menu/clear-daily-telemetry"
       }
     ]
   },

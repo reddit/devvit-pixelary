@@ -6,6 +6,9 @@ import { REDIS_KEYS } from './redis';
  * Uses Redis hash per day with postType:eventType fields
  */
 
+// Telemetry data retention period (30 days in seconds)
+const TELEMETRY_TTL_SECONDS = 30 * 24 * 60 * 60;
+
 /**
  * Generate a date key in YYYY-MM-DD format for telemetry
  * @param date - Optional date, defaults to today
@@ -94,7 +97,7 @@ export async function trackEvent(
     const count = await redis.hIncrBy(key, field, 1);
     // Set TTL to 30 days only if this is a new field (count = 1)
     if (count === 1) {
-      await redis.expire(key, 30 * 24 * 60 * 60);
+      await redis.expire(key, TELEMETRY_TTL_SECONDS);
     }
   } catch (error) {
     // Silently fail - telemetry should never break the app
@@ -208,6 +211,29 @@ export async function calculateCTR(
     return views > 0 ? clicks / views : 0;
   } catch (error) {
     console.warn('Failed to calculate CTR:', error);
+    return 0;
+  }
+}
+
+/**
+ * Clear telemetry data for a specific date
+ * Returns the number of records that were deleted
+ */
+export async function clearTelemetryData(date?: string): Promise<number> {
+  const targetDate = date ?? getTelemetryDateKey();
+  const key = REDIS_KEYS.telemetry(targetDate);
+
+  try {
+    // Get count before deletion for logging
+    const hash = await redis.hGetAll(key);
+    const recordCount = Object.keys(hash).length;
+
+    // Delete the entire hash
+    await redis.del(key);
+
+    return recordCount;
+  } catch (error) {
+    console.warn('Failed to clear telemetry data:', error);
     return 0;
   }
 }

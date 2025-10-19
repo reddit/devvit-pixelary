@@ -25,7 +25,7 @@ export function DrawStep(props: DrawStepProps) {
   // Track draw step view on mount
   useEffect(() => {
     track('view_draw_step');
-  }, [track]);
+  }, []);
 
   // Canvas state
   const canvasRef = useRef<HTMLCanvasElement>(null);

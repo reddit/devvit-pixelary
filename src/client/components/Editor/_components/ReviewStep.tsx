@@ -31,7 +31,7 @@ export function ReviewStep(props: ReviewStepProps) {
   // Track review step view on mount
   useEffect(() => {
     track('view_review_step');
-  }, [track]);
+  }, []);
   const submitDrawing = trpc.app.post.submitDrawing.useMutation({
     onSuccess: () => {
       // Invalidate relevant queries

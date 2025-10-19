@@ -12,6 +12,8 @@ import {
   handleRevealWord,
   handleSetMyFlair,
   handleUpdateComment,
+  handleLogTelemetryKey,
+  handleClearDailyTelemetry,
 } from './menu-actions';
 
 // Import form handlers
@@ -88,6 +90,8 @@ router.post('/internal/menu/banned-words', handleBannedWords);
 router.post('/internal/menu/reveal-word', handleRevealWord);
 router.post('/internal/menu/set-my-flair', handleSetMyFlair);
 router.post('/internal/menu/update-comment', handleUpdateComment);
+router.post('/internal/menu/log-daily-telemetry', handleLogTelemetryKey);
+router.post('/internal/menu/clear-daily-telemetry', handleClearDailyTelemetry);
 
 // ============================================================================
 // FORM HANDLERS

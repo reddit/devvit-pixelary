@@ -13,7 +13,7 @@ export function HowToPlay({ onClose }: HowToPlayProps) {
   // Track how to play view on mount
   useEffect(() => {
     track('view_how_to_play');
-  }, [track]);
+  }, []);
   return (
     <CardLayout title="How to play" onClose={onClose}>
       <PixelFont scale={3}>Draw words</PixelFont>

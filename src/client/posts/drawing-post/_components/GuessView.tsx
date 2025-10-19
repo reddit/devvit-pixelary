@@ -34,7 +34,7 @@ export function GuessView({
   // Track guess view on mount
   useEffect(() => {
     void track('view_guess');
-  }, [track]);
+  }, []);
 
   const handleGuessSubmit = async () => {
     if (!guess.trim()) {

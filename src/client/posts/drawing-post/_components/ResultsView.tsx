@@ -46,7 +46,7 @@ export function ResultsView({
   // Track results view on mount
   useEffect(() => {
     track('view_results');
-  }, [track]);
+  }, []);
 
   // Get current user profile for level progress calculation
   const { data: userProfile } = trpc.app.user.getProfile.useQuery();
