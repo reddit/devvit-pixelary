@@ -10,8 +10,7 @@ import type { DrawingPostDataExtended } from '../shared/schema';
 import './index.css';
 import { Background } from './components/Background';
 import { ToastProvider } from './components/ToastManager';
-import { ToastErrorBoundary } from './components/ToastErrorBoundary';
-import { RootErrorBoundary } from './components/RootErrorBoundary';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 const queryClient = new QueryClient();
 const trpcClient = trpc.createClient({
@@ -22,20 +21,13 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
   return (
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
-        <ToastErrorBoundary
-          onError={(error, errorInfo) => {
-            console.error('Toast system error:', error, errorInfo);
-            // Could send to error tracking service here
-          }}
+        <ToastProvider
+          maxToasts={5}
+          defaultPosition="top-right"
+          defaultDuration={4000}
         >
-          <ToastProvider
-            maxToasts={5}
-            defaultPosition="top-right"
-            defaultDuration={4000}
-          >
-            {children}
-          </ToastProvider>
-        </ToastErrorBoundary>
+          {children}
+        </ToastProvider>
       </QueryClientProvider>
     </trpc.Provider>
   );
@@ -96,9 +88,9 @@ const App = () => {
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <RootErrorBoundary
+    <ErrorBoundary
       onError={(error, errorInfo) => {
-        console.error('Root Error Boundary caught error:', error, errorInfo);
+        console.error('Error Boundary caught error:', error, errorInfo);
         // Could send to error tracking service here
       }}
     >
@@ -106,6 +98,6 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <Background />
         <App />
       </Providers>
-    </RootErrorBoundary>
+    </ErrorBoundary>
   </React.StrictMode>
 );

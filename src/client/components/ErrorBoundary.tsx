@@ -2,13 +2,13 @@ import React, { Component, ErrorInfo, ReactNode } from 'react';
 import { PixelFont } from './PixelFont';
 import { Button } from './Button';
 
-interface RootErrorBoundaryState {
+interface ErrorBoundaryState {
   hasError: boolean;
   error?: Error;
   errorInfo?: ErrorInfo;
 }
 
-interface RootErrorBoundaryProps {
+interface ErrorBoundaryProps {
   children: ReactNode;
   onError?: (error: Error, errorInfo: ErrorInfo) => void;
 }
@@ -17,21 +17,21 @@ interface RootErrorBoundaryProps {
  * Root-level error boundary that catches all unhandled React errors
  * Displays a full-page error screen with pixel art styling
  */
-export class RootErrorBoundary extends Component<
-  RootErrorBoundaryProps,
-  RootErrorBoundaryState
+export class ErrorBoundary extends Component<
+  ErrorBoundaryProps,
+  ErrorBoundaryState
 > {
-  constructor(props: RootErrorBoundaryProps) {
+  constructor(props: ErrorBoundaryProps) {
     super(props);
     this.state = { hasError: false };
   }
 
-  static getDerivedStateFromError(error: Error): RootErrorBoundaryState {
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
     return { hasError: true, error };
   }
 
   override componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    console.error('🚨 Root Error Boundary caught an error:', error, errorInfo);
+    console.error('🚨 Error Boundary caught an error:', error, errorInfo);
     this.setState({ errorInfo });
     this.props.onError?.(error, errorInfo);
   }
