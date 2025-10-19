@@ -109,26 +109,3 @@ export function PixelFont({
     </svg>
   );
 }
-
-// Utility hook for font metrics
-export function usePixelFontMetrics(
-  text: string,
-  scale: number = 2,
-  gap: number = 1
-) {
-  return useMemo(() => {
-    const width = getStringWidth(text, gap);
-    const height = getFontHeight();
-
-    return {
-      width: width * scale,
-      height: height * scale,
-      baseWidth: width,
-      baseHeight: height,
-      characterCount: text.length,
-      supportedCharacters: text
-        .split('')
-        .filter((char) => getGlyph(char) !== null),
-    };
-  }, [text, scale, gap]);
-}

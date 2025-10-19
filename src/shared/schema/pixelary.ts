@@ -43,18 +43,6 @@ export const GuessResultSchema = z.object({
 });
 export type GuessResult = z.infer<typeof GuessResultSchema>;
 
-export const CollectionDataSchema = z.object({
-  postId: z.string(),
-  data: z.object({
-    data: z.string(),
-    colors: z.array(z.string()).max(256),
-    bg: z.number().int().min(0),
-    size: z.number().int().min(1).max(64).default(16),
-  }),
-  authorUsername: z.string(),
-});
-export type CollectionData = z.infer<typeof CollectionDataSchema>;
-
 export const PostGuessesSchema = z.object({
   guesses: z.record(z.string(), z.number().int()),
   wordCount: z.number().int(),
@@ -73,50 +61,6 @@ export const UserDataSchema = z.object({
   guessCount: z.number().int(),
 });
 export type UserData = z.infer<typeof UserDataSchema>;
-
-export const WordSelectionEventSchema = z.object({
-  userId: z.string(),
-  postId: z.string(),
-  options: z.array(CandidateWordSchema),
-  word: z.string().optional(),
-  type: z.enum(['refresh', 'manual', 'auto']),
-});
-export type WordSelectionEvent = z.infer<typeof WordSelectionEventSchema>;
-
-// Word Metadata Types
-export const WordReportSchema = z.object({
-  username: z.string(),
-  reason: z.string().optional(),
-  timestamp: z.number().int(),
-});
-export type WordReport = z.infer<typeof WordReportSchema>;
-
-export const WordStatsSchema = z.object({
-  exposures: z.number().int(), // Times shown in word selection
-  picks: z.number().int(), // Times selected by users
-  submissions: z.number().int(), // Times a drawing was submitted
-  guesses: z.number().int(), // Total guess attempts
-  solves: z.number().int(), // Total successful solves
-});
-export type WordStats = z.infer<typeof WordStatsSchema>;
-
-export const WordMetadataSchema = z.object({
-  word: z.string(),
-  addedBy: z.string(),
-  addedAt: z.number().int(),
-  commentId: z.string(), // The !add comment ID for tracking
-  reports: z.array(WordReportSchema),
-  stats: WordStatsSchema,
-});
-export type WordMetadata = z.infer<typeof WordMetadataSchema>;
-
-export const WordCommandCommentSchema = z.object({
-  command: z.string(),
-  word: z.string(),
-  author: z.string(),
-  timestamp: z.number().int(),
-});
-export type WordCommandComment = z.infer<typeof WordCommandCommentSchema>;
 
 // Drawing Post Data
 export const DrawingDataSchema = z.object({
@@ -184,13 +128,6 @@ export const DictionaryRemoveInputSchema = z.object({
 });
 export type DictionaryRemoveInput = z.infer<typeof DictionaryRemoveInputSchema>;
 
-export const FeaturedCommunityInputSchema = z.object({
-  subredditName: z.string(),
-});
-export type FeaturedCommunityInput = z.infer<
-  typeof FeaturedCommunityInputSchema
->;
-
 export const UserDrawingsInputSchema = z.object({
   limit: z.number().int().min(1).max(100).default(20),
 });
@@ -210,21 +147,3 @@ export const PostDataInputSchema = z.object({
   postId: z.string(),
 });
 export type PostDataInput = z.infer<typeof PostDataInputSchema>;
-
-export const WordSelectionLogInputSchema = z.object({
-  postId: z.string(),
-  options: z.array(CandidateWordSchema),
-  word: z.string().optional(),
-  type: z.enum(['refresh', 'manual', 'auto']),
-});
-export type WordSelectionLogInput = z.infer<typeof WordSelectionLogInputSchema>;
-
-// Realtime Message Types
-export const GuessRealtimeMessageSchema = z.object({
-  type: z.literal('guess_submitted'),
-  postId: z.string(),
-  correct: z.boolean(),
-  isFirstSolve: z.boolean().optional(),
-  timestamp: z.number().int(),
-});
-export type GuessRealtimeMessage = z.infer<typeof GuessRealtimeMessageSchema>;

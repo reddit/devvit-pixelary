@@ -5,43 +5,18 @@ import type {
   Dictionary,
   UserProfile,
   GuessResult,
-  CollectionData,
   PostGuesses,
   UserData,
-  WordSelectionEvent,
   DrawingPostDataExtended,
   DrawingSubmitInput,
   GuessSubmitInput,
   DictionaryAddInput,
   DictionaryRemoveInput,
-  FeaturedCommunityInput,
   UserDrawingsInput,
   LeaderboardInput,
   GuessStatsInput,
   PostDataInput,
-  WordSelectionLogInput,
 } from './schema/pixelary';
-
-// Zod schema test helpers
-export const expectZodValidation = <T>(
-  schema: z.ZodSchema<T>,
-  validData: T,
-  invalidData: unknown
-) => {
-  return {
-    valid: () => {
-      const result = schema.safeParse(validData);
-      expect(result.success).toBe(true);
-      if (result.success) {
-        expect(result.data).toEqual(validData);
-      }
-    },
-    invalid: () => {
-      const result = schema.safeParse(invalidData);
-      expect(result.success).toBe(false);
-    },
-  };
-};
 
 // Mock data generators
 export const createMockCandidateWord = (
@@ -85,20 +60,6 @@ export const createMockGuessResult = (
   ...overrides,
 });
 
-export const createMockCollectionData = (
-  overrides: Partial<CollectionData> = {}
-): CollectionData => ({
-  postId: 't3_test123',
-  data: {
-    data: 'test-data',
-    colors: ['#FFFFFF', '#000000'],
-    bg: 0,
-    size: 16,
-  },
-  authorUsername: 'testuser',
-  ...overrides,
-});
-
 export const createMockPostGuesses = (
   overrides: Partial<PostGuesses> = {}
 ): PostGuesses => ({
@@ -119,17 +80,6 @@ export const createMockUserData = (
   levelRank: 1,
   levelName: 'Newcomer',
   guessCount: 0,
-  ...overrides,
-});
-
-export const createMockWordSelectionEvent = (
-  overrides: Partial<WordSelectionEvent> = {}
-): WordSelectionEvent => ({
-  userId: 'testuser123',
-  postId: 't3_test123',
-  options: [createMockCandidateWord()],
-  word: 'test',
-  type: 'manual',
   ...overrides,
 });
 
@@ -191,13 +141,6 @@ export const createMockDictionaryRemoveInput = (
   ...overrides,
 });
 
-export const createMockFeaturedCommunityInput = (
-  overrides: Partial<FeaturedCommunityInput> = {}
-): FeaturedCommunityInput => ({
-  subredditName: 'testsubreddit',
-  ...overrides,
-});
-
 export const createMockUserDrawingsInput = (
   overrides: Partial<UserDrawingsInput> = {}
 ): UserDrawingsInput => ({
@@ -226,35 +169,6 @@ export const createMockPostDataInput = (
   ...overrides,
 });
 
-export const createMockWordSelectionLogInput = (
-  overrides: Partial<WordSelectionLogInput> = {}
-): WordSelectionLogInput => ({
-  postId: 't3_test123',
-  options: [createMockCandidateWord()],
-  word: 'test',
-  type: 'manual',
-  ...overrides,
-});
-
-// Test data arrays
-export const createMockCandidateWords = (count: number = 3): CandidateWord[] =>
-  Array.from({ length: count }, (_, i) =>
-    createMockCandidateWord({
-      word: `word${i + 1}`,
-      dictionaryName: i === 0 ? 'main' : 'special',
-    })
-  );
-
-export const createMockDrawingData = (size: number = 256): number[] =>
-  Array.from({ length: size }, (_, i) => i % 4); // Simple pattern
-
-export const createMockLeaderboardEntries = (count: number = 10) =>
-  Array.from({ length: count }, (_, i) => ({
-    username: `user${i + 1}`,
-    score: (count - i) * 100,
-    rank: i + 1,
-  }));
-
 // Utility functions for testing
 export const expectValidZodSchema = <T>(schema: z.ZodSchema<T>, data: T) => {
   const result = schema.safeParse(data);
@@ -270,17 +184,3 @@ export const expectInvalidZodSchema = <T>(
   expect(result.success).toBe(false);
   return result.success ? null : result.error;
 };
-
-// Mock pixel data generators
-export const createBlankPixelData = (size: number = 256): number[] =>
-  new Array(size).fill(-1);
-
-export const createRandomPixelData = (size: number = 256): number[] =>
-  Array.from({ length: size }, () => Math.floor(Math.random() * 4));
-
-export const createPatternPixelData = (size: number = 256): number[] =>
-  Array.from({ length: size }, (_, i) => {
-    const x = i % 16;
-    const y = Math.floor(i / 16);
-    return (x + y) % 4;
-  });

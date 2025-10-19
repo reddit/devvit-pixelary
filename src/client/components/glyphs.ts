@@ -9,13 +9,6 @@ export interface PixelGlyph {
   height: number;
 }
 
-export interface PixelFontConfig {
-  name: string;
-  version: string;
-  baseHeight: number;
-  glyphs: Record<string, PixelGlyph>;
-}
-
 // Import the glyph data from the old pixelary system
 const glyphData = {
   '0': {
@@ -318,17 +311,6 @@ const glyphData = {
     'width': 6,
     'height': 7,
   },
-  'arrow-up': {
-    'path': 'M0 4L8.74228e-08 2H1V1H2V0H3V1H4V2H5V4H4V3H3V6H2L2 3H1V4L0 4Z',
-    'width': 5,
-    'height': 7,
-  },
-  'arrow-down': {
-    'path':
-      'M0 2L8.74228e-08 4H1V5H2V6H3V5H4V4H5V2L4 2V3H3V0L2 4.37112e-08L2 3H1V2L0 2Z',
-    'width': 5,
-    'height': 7,
-  },
   'checkmark': {
     'path': 'M6 0H7V2H6V3H5V4H4V5H3V6H2V5H1V4H0V3H2V4H3V3H4V2H5V1H6V0Z',
     'width': 7,
@@ -354,26 +336,7 @@ const glyphData = {
     'width': 5,
     'height': 7,
   },
-  'redo': {
-    'path': 'M1 6H4V5H1V2H3V3H2V4H5V1H4V2H3V1H1V2H0V5H1V6Z',
-    'width': 5,
-    'height': 7,
-  },
-  'tag': {
-    'path':
-      'M6 4H4V6H2V8H0V12H2V14H6V12H8V10H10V8H12V6H14V0H8V2H6V4ZM10 2H12V4H10V2Z',
-    'width': 7,
-    'height': 7,
-  },
-  '•': { 'path': 'M3 1H1V2H0V4H1V5H3V4H4V2H3V1Z', 'width': 4, 'height': 7 },
 } as const;
-
-export const PIXEL_FONT_CONFIG: PixelFontConfig = {
-  name: 'Pixelary',
-  version: '2.0.0',
-  baseHeight: 7,
-  glyphs: glyphData,
-};
 
 export type SupportedGlyph = keyof typeof glyphData;
 
@@ -381,14 +344,7 @@ export type SupportedGlyph = keyof typeof glyphData;
  * Get a glyph by character
  */
 export function getGlyph(char: string): PixelGlyph | null {
-  return PIXEL_FONT_CONFIG.glyphs[char] || null;
-}
-
-/**
- * Check if a character is supported
- */
-export function isGlyphSupported(char: string): char is SupportedGlyph {
-  return char in PIXEL_FONT_CONFIG.glyphs;
+  return glyphData[char as keyof typeof glyphData] || null;
 }
 
 /**
@@ -419,5 +375,5 @@ export function getStringWidth(text: string, gap: number = 1): number {
  * Get the height of the font
  */
 export function getFontHeight(): number {
-  return PIXEL_FONT_CONFIG.baseHeight;
+  return 7; // Base height for pixel font
 }

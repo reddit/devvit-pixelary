@@ -23,7 +23,7 @@ interface PixelInputProps {
   showClearButton?: boolean;
 }
 
-export interface PixelInputRef {
+interface PixelInputRef {
   focus: () => void;
   blur: () => void;
 }

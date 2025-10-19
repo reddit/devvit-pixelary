@@ -15,14 +15,3 @@ export function getLevelByScore(score: number = 0) {
   });
   return level ?? defaultLevel;
 }
-
-/**
- * Get level by rank using array find. Returns null if level not found.
- */
-
-export function getLevelByRank(rank: number): Level | null {
-  const level = LEVELS.find((level) => level.rank === rank) as
-    | Level
-    | undefined;
-  return level ?? null;
-}

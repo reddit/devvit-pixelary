@@ -208,17 +208,6 @@ export async function skipDrawing(postId: T3, userId: T2): Promise<void> {
 }
 
 /**
- * Get the number of players who have attempted to solve a drawing
- * @param postId - The ID of the drawing post to get the player count for
- * @returns The number of players who have solved and skipped the drawing
- */
-
-export async function getPlayerCount(postId: T3): Promise<number> {
-  const key = REDIS_KEYS.userAttempts(postId);
-  return await redis.zCard(key);
-}
-
-/**
  * Get the solved percentage and player count for a drawing post
  * @param postId - The ID of the drawing post to get the solved percentage for
  * @returns The solved percentage and player count for the drawing post
@@ -635,12 +624,6 @@ export async function getGuesses(
 
   return result;
 }
-
-export type WordGuessEntry = {
-  word: string;
-  count: number;
-  rank: number;
-};
 
 /**
  * Get the comment data for a drawing post

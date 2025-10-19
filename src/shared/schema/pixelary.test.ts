@@ -4,21 +4,17 @@ import {
   DictionarySchema,
   UserProfileSchema,
   GuessResultSchema,
-  CollectionDataSchema,
   PostGuessesSchema,
   UserDataSchema,
-  WordSelectionEventSchema,
   DrawingPostDataExtendedSchema,
   DrawingSubmitInputSchema,
   GuessSubmitInputSchema,
   DictionaryAddInputSchema,
   DictionaryRemoveInputSchema,
-  FeaturedCommunityInputSchema,
   UserDrawingsInputSchema,
   LeaderboardInputSchema,
   GuessStatsInputSchema,
   PostDataInputSchema,
-  WordSelectionLogInputSchema,
 } from '../schema/pixelary';
 import {
   expectValidZodSchema,
@@ -27,21 +23,17 @@ import {
   createMockDictionary,
   createMockUserProfile,
   createMockGuessResult,
-  createMockCollectionData,
   createMockPostGuesses,
   createMockUserData,
-  createMockWordSelectionEvent,
   createMockDrawingPostDataExtended,
   createMockDrawingSubmitInput,
   createMockGuessSubmitInput,
   createMockDictionaryAddInput,
   createMockDictionaryRemoveInput,
-  createMockFeaturedCommunityInput,
   createMockUserDrawingsInput,
   createMockLeaderboardInput,
   createMockGuessStatsInput,
   createMockPostDataInput,
-  createMockWordSelectionLogInput,
 } from '../test-utils';
 
 describe('Pixelary Schema Validation', () => {
@@ -123,32 +115,6 @@ describe('Pixelary Schema Validation', () => {
     });
   });
 
-  describe('CollectionDataSchema', () => {
-    it('validates correct collection data', () => {
-      const validData = createMockCollectionData();
-      expectValidZodSchema(CollectionDataSchema, validData);
-    });
-
-    it('rejects invalid postId', () => {
-      const invalidData = createMockCollectionData({ postId: 123 as never });
-      expectInvalidZodSchema(CollectionDataSchema, invalidData);
-    });
-
-    it('rejects non-array data', () => {
-      const invalidData = createMockCollectionData({
-        data: 'not an array' as never,
-      });
-      expectInvalidZodSchema(CollectionDataSchema, invalidData);
-    });
-
-    it('rejects invalid authorUsername', () => {
-      const invalidData = createMockCollectionData({
-        authorUsername: 123 as never,
-      });
-      expectInvalidZodSchema(CollectionDataSchema, invalidData);
-    });
-  });
-
   describe('PostGuessesSchema', () => {
     it('validates correct post guesses', () => {
       const validData = createMockPostGuesses();
@@ -182,27 +148,6 @@ describe('Pixelary Schema Validation', () => {
     it('accepts negative score', () => {
       const validData = createMockUserData({ score: -1 });
       expectValidZodSchema(UserDataSchema, validData);
-    });
-  });
-
-  describe('WordSelectionEventSchema', () => {
-    it('validates correct word selection event', () => {
-      const validData = createMockWordSelectionEvent();
-      expectValidZodSchema(WordSelectionEventSchema, validData);
-    });
-
-    it('rejects invalid userId', () => {
-      const invalidData = createMockWordSelectionEvent({
-        userId: 123 as never,
-      });
-      expectInvalidZodSchema(WordSelectionEventSchema, invalidData);
-    });
-
-    it('rejects invalid selection type', () => {
-      const invalidData = createMockWordSelectionEvent({
-        type: 'invalid' as never,
-      });
-      expectInvalidZodSchema(WordSelectionEventSchema, invalidData);
     });
   });
 
@@ -248,11 +193,6 @@ describe('Pixelary Schema Validation', () => {
       expectValidZodSchema(DictionaryRemoveInputSchema, validData);
     });
 
-    it('validates FeaturedCommunityInputSchema', () => {
-      const validData = createMockFeaturedCommunityInput();
-      expectValidZodSchema(FeaturedCommunityInputSchema, validData);
-    });
-
     it('validates UserDrawingsInputSchema', () => {
       const validData = createMockUserDrawingsInput();
       expectValidZodSchema(UserDrawingsInputSchema, validData);
@@ -271,11 +211,6 @@ describe('Pixelary Schema Validation', () => {
     it('validates PostDataInputSchema', () => {
       const validData = createMockPostDataInput();
       expectValidZodSchema(PostDataInputSchema, validData);
-    });
-
-    it('validates WordSelectionLogInputSchema', () => {
-      const validData = createMockWordSelectionLogInput();
-      expectValidZodSchema(WordSelectionLogInputSchema, validData);
     });
   });
 

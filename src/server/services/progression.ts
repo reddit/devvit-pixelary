@@ -8,13 +8,6 @@ import { parseT2, type T2, type Level } from '../../shared/types';
  * Handles user scores, levels, and leaderboard operations
  */
 
-export interface ScoresEntry {
-  username: string;
-  userId: T2;
-  score: number;
-  rank: number;
-}
-
 /**
  * Get the leaderboard
  * @param limit - The number of entries to return
@@ -27,7 +20,12 @@ export async function getLeaderboard(options?: {
   reverse?: boolean;
   by?: 'rank' | 'score' | 'lex';
 }): Promise<{
-  entries: ScoresEntry[];
+  entries: Array<{
+    username: string;
+    userId: T2;
+    score: number;
+    rank: number;
+  }>;
   nextCursor: number;
 }> {
   const { cursor = 0, limit = 10, reverse = true, by = 'rank' } = options ?? {};
@@ -139,10 +137,6 @@ export function getLevelByScore(score: number): Level {
   return LEVELS[LEVELS.length - 1]!;
 }
 
-export function getLevel(rank: number): Level | null {
-  return LEVELS.find((level) => level.rank === rank) ?? null;
-}
-
 export function getUserLevel(score: number): Level {
   return getLevelByScore(score);
 }
@@ -159,25 +153,3 @@ export async function getRank(userId: T2): Promise<number> {
 }
 
 // Utility function for calculating level progress percentage
-export function getLevelProgress(score: number): {
-  currentLevel: Level;
-  nextLevel: Level | null;
-  progress: number;
-} {
-  const currentLevel = getLevelByScore(score);
-  const currentIndex = LEVELS.findIndex(
-    (level) => level.rank === currentLevel.rank
-  );
-  const nextLevel =
-    currentIndex < LEVELS.length - 1 ? LEVELS[currentIndex + 1]! : null;
-
-  const progress = nextLevel
-    ? ((score - currentLevel.min) / (nextLevel.min - currentLevel.min)) * 100
-    : 100;
-
-  return {
-    currentLevel,
-    nextLevel,
-    progress: Math.min(Math.max(progress, 0), 100),
-  };
-}

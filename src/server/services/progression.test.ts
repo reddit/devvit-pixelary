@@ -4,10 +4,8 @@ import {
   getScore,
   incrementScore,
   getLevelByScore,
-  getLevel,
   getUserLevel,
   getRank,
-  getLevelProgress,
 } from './progression';
 import { redis, scheduler } from '@devvit/web/server';
 import { LEVELS } from '../../shared/constants';
@@ -168,22 +166,6 @@ describe('Leaderboard Service', () => {
     });
   });
 
-  describe('getLevel', () => {
-    it('returns correct level by rank', () => {
-      const level1 = getLevel(1);
-      const level2 = getLevel(2);
-
-      expect(level1?.rank).toBe(1);
-      expect(level2?.rank).toBe(2);
-    });
-
-    it('returns undefined for invalid rank', () => {
-      expect(getLevel(0)).toBeNull();
-      expect(getLevel(999)).toBeNull();
-      expect(getLevel(-1)).toBeNull();
-    });
-  });
-
   describe('getUserLevel', () => {
     it('returns user level for score', () => {
       const level = getUserLevel(2);
@@ -206,34 +188,6 @@ describe('Leaderboard Service', () => {
       const rank = await getRank('t2_nonexistent');
 
       expect(rank).toBe(-1);
-    });
-  });
-
-  describe('getLevelProgress', () => {
-    it('returns level progress', () => {
-      const progress = getLevelProgress(3);
-
-      expect(progress.currentLevel.rank).toBe(2);
-      expect(progress.nextLevel).toBeTruthy();
-      expect(progress.progress).toBeGreaterThan(0);
-      expect(progress.progress).toBeLessThanOrEqual(100);
-    });
-
-    it('handles max level', () => {
-      const maxScore = LEVELS[LEVELS.length - 1]!.max + 1000;
-      const progress = getLevelProgress(maxScore);
-
-      expect(progress.currentLevel.rank).toBe(LEVELS[LEVELS.length - 1]!.rank);
-      expect(progress.nextLevel).toBeNull();
-      expect(progress.progress).toBe(100);
-    });
-
-    it('handles level 1', () => {
-      const progress = getLevelProgress(1);
-
-      expect(progress.currentLevel.rank).toBe(1);
-      expect(progress.nextLevel).toBeTruthy();
-      expect(progress.progress).toBeGreaterThan(0);
     });
   });
 });
