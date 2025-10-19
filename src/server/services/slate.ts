@@ -132,19 +132,10 @@ export async function trackSlateAction(
   action: 'impression' | 'click' | 'publish',
   word?: string
 ): Promise<void> {
-  console.log('trackSlateAction called:', {
-    subredditName,
-    slateId,
-    action,
-    word,
-  });
-
   try {
     if (action === 'impression') {
-      console.log('Tracking impression for slate:', { subredditName, slateId });
       // Track impression for all words in slate
       const slateData = await getSlateData(slateId);
-      console.log('Retrieved slate data:', { slateData, slateId });
 
       if (!slateData) {
         console.warn('No slate data found for impression tracking:', {
@@ -156,40 +147,21 @@ export async function trackSlateAction(
 
       const promises = slateData.words.map(async (w) => {
         const metricsKey = REDIS_KEYS.wordMetrics(w);
-        console.log('Incrementing impressions for word:', {
-          word: w,
-          metricsKey,
-        });
         await redis.hIncrBy(metricsKey, 'impressions', 1);
         await redis.expire(metricsKey, 30 * 24 * 60 * 60); // 30 days TTL
       });
 
       await Promise.all(promises);
-      console.log('Impression tracking completed for slate:', {
-        subredditName,
-        slateId,
-        wordCount: slateData.words.length,
-      });
     } else if (action === 'click' && word) {
-      console.log('Tracking click for word:', { subredditName, word });
       // Track click for specific word
       const metricsKey = REDIS_KEYS.wordMetrics(word);
       await redis.hIncrBy(metricsKey, 'clicks', 1);
       await redis.expire(metricsKey, 30 * 24 * 60 * 60);
-      console.log('Click tracking completed for word:', {
-        subredditName,
-        word,
-      });
     } else if (action === 'publish' && word) {
-      console.log('Tracking publish for word:', { subredditName, word });
       // Track publish for specific word
       const metricsKey = REDIS_KEYS.wordMetrics(word);
       await redis.hIncrBy(metricsKey, 'publishes', 1);
       await redis.expire(metricsKey, 30 * 24 * 60 * 60);
-      console.log('Publish tracking completed for word:', {
-        subredditName,
-        word,
-      });
     } else {
       console.warn('Invalid slate action or missing word:', { action, word });
     }

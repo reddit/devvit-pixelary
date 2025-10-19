@@ -51,14 +51,6 @@ export function SlateProvider({ children }: { children: React.ReactNode }) {
             word,
           },
           {
-            onSuccess: (result) => {
-              console.log('Slate action tracked successfully:', {
-                slateId,
-                action,
-                word,
-                result,
-              });
-            },
             onError: (error) => {
               console.error('Failed to track slate action:', {
                 error,
