@@ -39,6 +39,9 @@ export const REDIS_KEYS = {
   championComments: (postId: T3) => `champions:${postId}`,
   championCommentReverse: (commentId: string) => `champion:rev:${commentId}`,
 
+  // Pinned post comment storage
+  pinnedPost: (postId: T3) => `pinned:${postId}`,
+
   // Flair templates
   flairTemplates: {
     user: (levelRank: number) => `flair:user:${levelRank}`,

@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
-import { createPost } from '../core/post';
-import { context, scheduler } from '@devvit/web/server';
+import { context } from '@devvit/web/server';
+import { createPinnedPost } from '../services/pinned-post';
 
 /**
  * Form handler for pinned post submission
@@ -24,23 +24,11 @@ export async function handlePinnedPostSubmit(
       return;
     }
 
-    // Create a new post unit
-    const post = await createPost(title, {
-      type: 'pinned',
-    });
-
-    // Pin the new post
-    await post.sticky(1);
-
-    // Schedule pinned comment creation
-    await scheduler.runJob({
-      name: 'CREATE_PINNED_POST_COMMENT',
-      data: { postId: post.id },
-      runAt: new Date(), // Run immediately
-    });
+    // Create the pinned post using the service
+    const postId = await createPinnedPost(title);
 
     res.json({
-      navigateTo: `https://reddit.com/r/${context.subredditName}/comments/${post.id}`,
+      navigateTo: `https://reddit.com/r/${context.subredditName}/comments/${postId}`,
     });
   } catch (error) {
     console.error(`Error creating pinned post: ${error}`);

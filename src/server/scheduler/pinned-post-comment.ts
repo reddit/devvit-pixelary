@@ -1,6 +1,7 @@
 import type { Request, Response } from 'express';
-import { reddit } from '@devvit/web/server';
 import type { T3 } from '../../shared/types';
+import { parseT3 } from '../../shared/types';
+import { createPinnedPostComment } from '../services/pinned-post';
 
 /**
  * Job handler for creating pinned post comment
@@ -14,33 +15,24 @@ export async function handleCreatePinnedPostComment(
   try {
     // Extract data from the scheduler payload
     const jobData = req.body.data || req.body;
-    const { postId } = jobData;
 
-    // Validate postId
-    if (!postId) {
+    // Validate and parse postId as T3
+    let postId: T3;
+    try {
+      postId = parseT3(jobData.postId);
+    } catch (error) {
       console.error(
-        'PostId is undefined or empty in handleCreatePinnedPostComment'
+        `Invalid postId in handleCreatePinnedPostComment: ${jobData.postId} - ${error}`
       );
-      res.status(400).json({ status: 'error', message: 'PostId is required' });
+      res.status(400).json({
+        status: 'error',
+        message: 'PostId is required and must be a valid T3 ID',
+      });
       return;
     }
 
-    const commentText = `**Welcome to Pixelary!**
-
-How to Play:
-- Draw words in 16x16 pixel grids
-- Guess what others have drawn
-- Earn points and climb the leaderboard!
-
-Ready to play? Start guessing!`;
-
-    const comment = await reddit.submitComment({
-      text: commentText,
-      id: postId as T3,
-    });
-
-    // Pin the comment
-    await comment.distinguish(true);
+    // Create the pinned comment
+    await createPinnedPostComment(postId);
     res.json({ status: 'success' });
   } catch (error) {
     console.error(`Error in handleCreatePinnedPostComment job: ${error}`);

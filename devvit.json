@@ -56,7 +56,7 @@
         "endpoint": "/internal/menu/reveal-word"
       },
       {
-        "label": "[Pixelary] Update Comment",
+        "label": "[Pixelary] Update Pinned Comment",
         "description": "Update pinned comment with latest stats",
         "location": "post",
         "forUserType": "moderator",

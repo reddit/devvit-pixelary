@@ -1,4 +1,10 @@
-import { redis, scheduler, realtime, context } from '@devvit/web/server';
+import {
+  redis,
+  scheduler,
+  realtime,
+  context,
+  reddit,
+} from '@devvit/web/server';
 import { incrementScore } from './progression';
 import { titleCase } from '../../shared/utils/string';
 import type { DrawingPostDataExtended } from '../../shared/schema/pixelary';
@@ -254,6 +260,23 @@ export async function savePinnedCommentId(
  * @param postId - The ID of the drawing post to save the last comment update timestamp for
  * @param timestamp - The timestamp of the last comment update
  */
+
+/**
+ * Get the pinned comment ID for any post type (drawing or pinned)
+ * @param postId - The ID of the post to get the pinned comment ID for
+ * @returns The pinned comment ID if it exists, null otherwise
+ */
+export async function getPostPinnedCommentId(postId: T3): Promise<T1 | null> {
+  // First check if it's a drawing post
+  const drawingData = await getDrawing(postId);
+  if (drawingData?.pinnedCommentId) {
+    return drawingData.pinnedCommentId as T1;
+  }
+
+  // If not a drawing post, check if it's a pinned post
+  const { getPinnedPostCommentId } = await import('./pinned-post');
+  return await getPinnedPostCommentId(postId);
+}
 
 export async function saveLastCommentUpdate(
   postId: T3,
@@ -697,6 +720,55 @@ type CommentSection = {
   content: string;
   condition?: (stats: DrawingCommentStats) => boolean;
 };
+
+/**
+ * Create a pinned comment for a drawing post
+ * @param postId - The ID of the drawing post to create a comment for
+ * @returns The created comment ID
+ */
+export async function createDrawingPostComment(postId: T3): Promise<T1> {
+  const commentText = generateDrawingCommentText();
+
+  const comment = await reddit.submitComment({
+    text: commentText,
+    id: postId,
+  });
+
+  // Pin the comment and save ID
+  await comment.distinguish(true);
+  await savePinnedCommentId(postId, comment.id);
+  await saveLastCommentUpdate(postId, Date.now());
+
+  return comment.id;
+}
+
+/**
+ * Update a pinned comment for a drawing post with live stats
+ * @param postId - The ID of the drawing post to update the comment for
+ * @returns Promise that resolves when the comment is updated
+ */
+export async function updateDrawingPostComment(postId: T3): Promise<void> {
+  // Get post data and stats
+  const postData = await getDrawing(postId);
+  if (!postData) {
+    throw new Error(`Post data not found for ${postId}`);
+  }
+
+  const stats = await getDrawingCommentData(postId);
+  const commentText = generateDrawingCommentText(stats);
+
+  // Update the comment
+  const comment = await reddit.getCommentById(
+    postData.pinnedCommentId as `t1_${string}`
+  );
+  await comment.edit({ text: commentText });
+
+  // Update timestamp
+  await saveLastCommentUpdate(postId, Date.now());
+
+  // Clear the scheduled job ID since we've executed the update
+  await clearNextScheduledJobId(postId);
+}
 
 /**
  * Generate comment text for drawing posts using modular sections

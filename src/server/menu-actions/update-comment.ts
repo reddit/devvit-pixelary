@@ -4,12 +4,14 @@ import {
   getDrawing,
   getDrawingCommentData,
   generateDrawingCommentText,
+  getPostPinnedCommentId,
   saveLastCommentUpdate,
   clearNextScheduledJobId,
 } from '../services/drawing';
+import { updatePinnedPostComment } from '../services/pinned-post';
 
 /**
- * Menu action handler for updating drawing post comments
+ * Menu action handler for updating pinned comments on both drawing and pinned posts
  * Moderator access is enforced by Devvit configuration
  */
 export async function handleUpdateComment(
@@ -26,31 +28,40 @@ export async function handleUpdateComment(
       return;
     }
 
-    // Get post data to check if it's a drawing post
-    const postData = await getDrawing(postId);
-    if (!postData) {
-      // No-op for non-drawing posts
+    // Get the pinned comment ID for this post (works for both drawing and pinned posts)
+    const pinnedCommentId = await getPostPinnedCommentId(postId);
+    if (!pinnedCommentId) {
       res.json({
-        showToast: 'Not a drawing post',
+        showToast: 'No pinned comment found for this post',
       });
       return;
     }
 
-    // Get current stats and generate comment text
-    const stats = await getDrawingCommentData(postId);
-    const commentText = generateDrawingCommentText(stats);
+    // Determine post type and update accordingly
+    const postData = await getDrawing(postId);
 
-    // Update the pinned comment
-    const comment = await reddit.getCommentById(
-      postData.pinnedCommentId as `t1_${string}`
-    );
-    await comment.edit({ text: commentText });
+    if (postData) {
+      // It's a drawing post - generate dynamic comment with stats
+      const stats = await getDrawingCommentData(postId);
+      const commentText = generateDrawingCommentText(stats);
 
-    // Update timestamp and clear any scheduled jobs
-    await Promise.all([
-      saveLastCommentUpdate(postId, Date.now()),
-      clearNextScheduledJobId(postId),
-    ]);
+      // Update the pinned comment
+      const comment = await reddit.getCommentById(
+        pinnedCommentId as `t1_${string}`
+      );
+      await comment.edit({ text: commentText });
+    } else {
+      // It's a pinned post - use the dedicated update method
+      await updatePinnedPostComment(postId);
+    }
+
+    // Update timestamp and clear any scheduled jobs (only for drawing posts)
+    if (postData) {
+      await Promise.all([
+        saveLastCommentUpdate(postId, Date.now()),
+        clearNextScheduledJobId(postId),
+      ]);
+    }
 
     res.json({
       showToast: 'Updated!',

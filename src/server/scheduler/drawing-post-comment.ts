@@ -1,12 +1,11 @@
-import { reddit, context } from '@devvit/web/server';
+import { context } from '@devvit/web/server';
 import type { Request, Response } from 'express';
+import type { T3 } from '../../shared/types';
+import { parseT3 } from '../../shared/types';
 import {
-  getDrawing,
+  createDrawingPostComment,
+  updateDrawingPostComment,
   getDrawingCommentData,
-  generateDrawingCommentText,
-  saveLastCommentUpdate,
-  savePinnedCommentId,
-  clearNextScheduledJobId,
 } from '../services/drawing';
 import { setPostFlair, getDifficultyFromStats } from '../core/flair';
 
@@ -22,39 +21,25 @@ export async function handleNewDrawingPinnedComment(
   try {
     // Extract data from the scheduler payload
     const jobData = req.body.data || req.body;
-    const { postId, authorName, word } = jobData;
+    const { postId } = jobData;
 
-    // Validate required parameters
-    if (!postId) {
-      console.error('PostId missing in handleNewDrawingPinnedComment job');
-      res.status(400).json({ status: 'error', message: 'PostId is required' });
-      return;
-    }
-    if (!authorName) {
-      console.error('AuthorName missing in handleNewDrawingPinnedComment job');
-      res
-        .status(400)
-        .json({ status: 'error', message: 'AuthorName is required' });
-      return;
-    }
-    if (!word) {
-      console.error('Word missing in handleNewDrawingPinnedComment job');
-      res.status(400).json({ status: 'error', message: 'Word is required' });
+    // Validate and parse postId as T3
+    let validatedPostId: T3;
+    try {
+      validatedPostId = parseT3(postId);
+    } catch (error) {
+      console.error(
+        `Invalid postId in handleNewDrawingPinnedComment: ${postId} - ${error}`
+      );
+      res.status(400).json({
+        status: 'error',
+        message: 'PostId is required and must be a valid T3 ID',
+      });
       return;
     }
 
-    const commentText = generateDrawingCommentText();
-
-    const comment = await reddit.submitComment({
-      text: commentText,
-      id: postId as `t3_${string}`,
-    });
-
-    // Pin the comment and save ID
-    await comment.distinguish(true);
-    await savePinnedCommentId(postId, comment.id);
-    await saveLastCommentUpdate(postId, Date.now());
-
+    // Create the pinned comment
+    await createDrawingPostComment(validatedPostId);
     res.json({ status: 'success' });
   } catch (error) {
     console.error(`Error in new drawing pinned comment job: ${error}`);
@@ -72,41 +57,30 @@ export async function handleUpdateDrawingPinnedComment(
   res: Response
 ): Promise<void> {
   try {
+    // Extract data from the scheduler payload
     const jobData = req.body.data || req.body;
-    const { postId } = jobData;
 
-    if (!postId) {
-      console.error('PostId is missing from request body:', req.body);
-      res.status(400).json({ status: 'error', message: 'PostId is required' });
+    // Validate and parse postId as T3
+    let postId: T3;
+    try {
+      postId = parseT3(jobData.postId);
+    } catch (error) {
+      console.error(
+        `Invalid postId in handleUpdateDrawingPinnedComment: ${jobData.postId} - ${error}`
+      );
+      res.status(400).json({
+        status: 'error',
+        message: 'PostId is required and must be a valid T3 ID',
+      });
       return;
     }
 
-    // Get post data and stats
-    const postData = await getDrawing(postId);
-    if (!postData) {
-      console.error(`Post data not found for ${postId}`);
-      res.status(400).json({ status: 'error', message: 'Post data not found' });
-      return;
-    }
-
-    const stats = await getDrawingCommentData(postId);
-    const commentText = generateDrawingCommentText(stats);
-
-    // Update or create comment
-    // Get the existing comment and edit it with new content
-    const comment = await reddit.getCommentById(
-      postData.pinnedCommentId as `t1_${string}`
-    );
-    await comment.edit({ text: commentText });
-
-    // Update timestamp
-    await saveLastCommentUpdate(postId, Date.now());
-
-    // Clear the scheduled job ID since we've executed the update
-    await clearNextScheduledJobId(postId);
+    // Update the pinned comment
+    await updateDrawingPostComment(postId);
 
     // Set difficulty flair if threshold is met (non-blocking)
     try {
+      const stats = await getDrawingCommentData(postId);
       if (stats && stats.guessCount >= 100) {
         const difficulty = getDifficultyFromStats(stats);
         if (difficulty) {
