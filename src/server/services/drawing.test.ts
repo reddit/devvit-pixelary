@@ -32,10 +32,10 @@ vi.mock('./redis', () => ({
   REDIS_KEYS: {
     drawing: (postId: string) => `d:${postId}`,
     drawingGuesses: (postId: string) => `guesses:${postId}`,
-    userAttempts: (postId: string) => `attempts:${postId}`,
-    userSolved: (postId: string) => `solves:${postId}`,
-    userSkipped: (postId: string) => `skips:${postId}`,
-    drawingsByWord: (word: string) => `d:w:${word}`,
+    drawingAttempts: (postId: string) => `attempts:${postId}`,
+    drawingSolves: (postId: string) => `solves:${postId}`,
+    drawingSkips: (postId: string) => `skips:${postId}`,
+    wordDrawings: (word: string) => `d:w:${word}`,
     scores: () => 'scores',
   },
 }));
@@ -53,9 +53,9 @@ describe('Drawing Service', () => {
       vi.mocked(redis.zScore).mockResolvedValue(undefined); // Not solved yet
       vi.mocked(redis.hGet).mockResolvedValueOnce('test'); // word
       vi.mocked(redis.hGet).mockResolvedValueOnce('t2_author123'); // authorId
-      vi.mocked(redis.zAdd).mockResolvedValue(1); // userAttempts
-      vi.mocked(redis.zIncrBy).mockResolvedValue(1); // drawingsByWord and drawingGuesses
-      vi.mocked(redis.zAdd).mockResolvedValue(1); // userSolved
+      vi.mocked(redis.zAdd).mockResolvedValue(1); // drawingAttempts
+      vi.mocked(redis.zIncrBy).mockResolvedValue(1); // wordDrawings and drawingGuesses
+      vi.mocked(redis.zAdd).mockResolvedValue(1); // drawingSolves
       vi.mocked(redis.zCard).mockResolvedValue(1); // playerCount
       vi.mocked(redis.zCard).mockResolvedValue(1); // solvedCount
       vi.mocked(redis.zRange).mockResolvedValue([{ member: 'test', score: 1 }]); // guesses
@@ -74,8 +74,8 @@ describe('Drawing Service', () => {
       vi.mocked(redis.zScore).mockResolvedValue(undefined); // Not solved yet
       vi.mocked(redis.hGet).mockResolvedValueOnce('correct'); // word
       vi.mocked(redis.hGet).mockResolvedValueOnce('t2_author123'); // authorId
-      vi.mocked(redis.zAdd).mockResolvedValue(1); // userAttempts
-      vi.mocked(redis.zIncrBy).mockResolvedValue(1); // drawingsByWord and drawingGuesses
+      vi.mocked(redis.zAdd).mockResolvedValue(1); // drawingAttempts
+      vi.mocked(redis.zIncrBy).mockResolvedValue(1); // wordDrawings and drawingGuesses
       vi.mocked(redis.zCard).mockResolvedValue(1); // playerCount
       vi.mocked(redis.zCard).mockResolvedValue(0); // solvedCount
       vi.mocked(redis.zRange).mockResolvedValue([

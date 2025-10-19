@@ -1,7 +1,8 @@
 import { initTRPC } from '@trpc/server';
 import type { Context } from './context';
 import { z } from 'zod';
-import { parseT3 } from '../../shared/types';
+import type { T3 } from '@devvit/shared-types/tid.js';
+import { isT3, assertT3 } from '@devvit/shared-types/tid.js';
 import {
   getWords,
   addWord,
@@ -43,7 +44,7 @@ export const appRouter = t.router({
     dictionary: t.router({
       get: t.procedure.query(async ({ ctx }) => {
         if (!ctx.subredditName) throw new Error('Subreddit not found');
-        return await getWords(ctx.subredditName);
+        return await getWords();
       }),
 
       add: t.procedure
@@ -61,7 +62,7 @@ export const appRouter = t.router({
         .input(z.object({ word: z.string().min(1).max(50) }))
         .mutation(async ({ ctx, input }) => {
           if (!ctx.subredditName) throw new Error('Subreddit not found');
-          const success = await removeWord(ctx.subredditName, input.word);
+          const success = await removeWord(input.word);
           if (!success) {
             throw new Error('Failed to remove word or word not found');
           }
@@ -84,14 +85,16 @@ export const appRouter = t.router({
       getDrawing: t.procedure
         .input(z.object({ postId: z.string() }))
         .query(async ({ input }) => {
-          const postId = parseT3(input.postId);
+          assertT3(input.postId);
+          const postId = input.postId;
           return await getDrawing(postId);
         }),
 
       getDrawings: t.procedure
         .input(z.object({ postIds: z.array(z.string()) }))
         .query(async ({ input }) => {
-          const postIds = input.postIds.map((id) => parseT3(id));
+          input.postIds.forEach(assertT3);
+          const postIds = input.postIds.map((id) => id);
           return await getDrawings(postIds);
         }),
 
@@ -104,32 +107,74 @@ export const appRouter = t.router({
           })
         )
         .mutation(async ({ ctx, input }) => {
-          if (!ctx.userId || !ctx.username)
-            throw new Error('Must be logged in');
-          if (!ctx.subredditId) throw new Error('Subreddit not found');
-
-          const post = await createDrawing({
+          console.log('Drawing submission started:', {
+            userId: ctx.userId,
+            username: ctx.username,
+            subredditId: ctx.subredditId,
+            subredditName: ctx.subredditName,
             word: input.word,
             dictionary: input.dictionary,
-            drawing: input.drawing,
-            authorName: ctx.username,
-            authorId: ctx.userId,
+            drawingSize: input.drawing.size,
+            drawingColors: input.drawing.colors.length,
+            drawingDataLength: input.drawing.data.length,
           });
 
-          return {
-            success: true,
-            postId: post.id,
-            navigateTo: `https://reddit.com/r/${ctx.subredditName}/comments/${post.id}`,
-          };
+          if (!ctx.userId || !ctx.username) {
+            console.error('Drawing submission failed: User not logged in', {
+              userId: ctx.userId,
+              username: ctx.username,
+            });
+            throw new Error('Must be logged in');
+          }
+          if (!ctx.subredditId) {
+            console.error('Drawing submission failed: Subreddit not found', {
+              subredditId: ctx.subredditId,
+              subredditName: ctx.subredditName,
+            });
+            throw new Error('Subreddit not found');
+          }
+
+          try {
+            console.log('Creating drawing with createDrawing function');
+            const post = await createDrawing({
+              word: input.word,
+              dictionary: input.dictionary,
+              drawing: input.drawing,
+              authorName: ctx.username,
+              authorId: ctx.userId,
+            });
+
+            console.log('Drawing created successfully:', {
+              postId: post.id,
+              navigateTo: `https://reddit.com/r/${ctx.subredditName}/comments/${post.id}`,
+            });
+
+            return {
+              success: true,
+              postId: post.id,
+              navigateTo: `https://reddit.com/r/${ctx.subredditName}/comments/${post.id}`,
+            };
+          } catch (error) {
+            console.error('Drawing creation failed:', {
+              error,
+              errorMessage:
+                error instanceof Error ? error.message : String(error),
+              errorStack: error instanceof Error ? error.stack : undefined,
+              word: input.word,
+              dictionary: input.dictionary,
+              userId: ctx.userId,
+              username: ctx.username,
+              subredditId: ctx.subredditId,
+              subredditName: ctx.subredditName,
+            });
+            throw error;
+          }
         }),
 
-      getAllowedWords: t.procedure
-        .input(z.object({ postId: z.string() }))
-        .query(async ({ ctx, input }) => {
-          if (!ctx.subredditName) throw new Error('Subreddit not found');
-          const postId = parseT3(input.postId);
-          return await getAllowedWords(ctx.subredditName, postId);
-        }),
+      getAllowedWords: t.procedure.query(async ({ ctx }) => {
+        if (!ctx.subredditName) throw new Error('Subreddit not found');
+        return await getAllowedWords(ctx.subredditName);
+      }),
 
       revealGuess: t.procedure
         .input(
@@ -172,7 +217,8 @@ export const appRouter = t.router({
         )
         .mutation(async ({ ctx, input }) => {
           if (!ctx.userId) throw new Error('Must be logged in');
-          const postId = parseT3(input.postId);
+          assertT3(input.postId);
+          const postId = input.postId;
 
           const result = await submitGuess({
             postId,
@@ -186,7 +232,8 @@ export const appRouter = t.router({
       getStats: t.procedure
         .input(z.object({ postId: z.string() }))
         .query(async ({ input }) => {
-          const postId = parseT3(input.postId);
+          assertT3(input.postId);
+          const postId = input.postId;
           const result = await getGuesses(postId);
           return result;
         }),
@@ -195,7 +242,8 @@ export const appRouter = t.router({
         .input(z.object({ postId: z.string() }))
         .mutation(async ({ ctx, input }) => {
           if (!ctx.userId) throw new Error('Must be logged in to skip post');
-          const postId = parseT3(input.postId);
+          assertT3(input.postId);
+          const postId = input.postId;
           await skipDrawing(postId, ctx.userId);
           return { success: true };
         }),
@@ -324,15 +372,47 @@ export const appRouter = t.router({
           })
         )
         .mutation(async ({ ctx, input }) => {
-          if (!ctx.subredditName) throw new Error('Subreddit not found');
+          console.log('Slate action tracking started:', {
+            subredditName: ctx.subredditName,
+            slateId: input.slateId,
+            action: input.action,
+            word: input.word,
+          });
+
+          if (!ctx.subredditName) {
+            console.error('Slate action tracking failed: Subreddit not found', {
+              subredditName: ctx.subredditName,
+              slateId: input.slateId,
+              action: input.action,
+              word: input.word,
+            });
+            throw new Error('Subreddit not found');
+          }
 
           trackSlateAction(
             ctx.subredditName,
             input.slateId,
             input.action,
             input.word
-          ).catch(() => {
+          ).catch((error) => {
+            console.error('Slate action tracking failed:', {
+              error,
+              errorMessage:
+                error instanceof Error ? error.message : String(error),
+              errorStack: error instanceof Error ? error.stack : undefined,
+              subredditName: ctx.subredditName,
+              slateId: input.slateId,
+              action: input.action,
+              word: input.word,
+            });
             // Silently ignore errors - telemetry should never break the app
+          });
+
+          console.log('Slate action tracking completed:', {
+            subredditName: ctx.subredditName,
+            slateId: input.slateId,
+            action: input.action,
+            word: input.word,
           });
 
           return { ok: true };

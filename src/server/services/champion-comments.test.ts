@@ -33,7 +33,7 @@ import { REDIS_KEYS } from './redis';
 import { banWord } from './dictionary';
 
 describe('Champion Comments Service', () => {
-  const postId = 't3_test123' as const;
+  const subredditName = 'testsub';
   const word = 'testword';
   const commentId = 't1_comment123';
 
@@ -43,39 +43,45 @@ describe('Champion Comments Service', () => {
 
   describe('setChampionComment', () => {
     it('should store champion comment reference', async () => {
-      vi.mocked(redis.hSet).mockResolvedValue(1);
+      vi.mocked(redis.get).mockResolvedValueOnce('[]'); // getAllChampionWords returns empty array
       vi.mocked(redis.set).mockResolvedValue('OK');
 
-      await setChampionComment(postId, word, commentId);
+      await setChampionComment(subredditName, word, commentId);
 
-      expect(redis.hSet).toHaveBeenCalledWith(
-        REDIS_KEYS.championComments(postId),
-        { [word.toLowerCase()]: commentId }
+      expect(redis.get).toHaveBeenCalledWith(
+        REDIS_KEYS.wordsChampioned(subredditName)
       );
       expect(redis.set).toHaveBeenCalledWith(
-        REDIS_KEYS.championCommentReverse(commentId),
-        JSON.stringify({ postId, word })
+        REDIS_KEYS.wordsChampioned(subredditName),
+        JSON.stringify([word.toLowerCase()])
+      );
+      expect(redis.set).toHaveBeenCalledWith(
+        REDIS_KEYS.wordChampion(word.toLowerCase()),
+        commentId
+      );
+      expect(redis.set).toHaveBeenCalledWith(
+        REDIS_KEYS.championWord(commentId),
+        JSON.stringify({ subredditName, word })
       );
     });
   });
 
   describe('getChampionComment', () => {
     it('should retrieve champion comment ID', async () => {
-      vi.mocked(redis.hGet).mockResolvedValue(commentId);
+      vi.mocked(redis.get).mockResolvedValue(commentId);
 
-      const result = await getChampionComment(postId, word);
+      const result = await getChampionComment(word);
 
-      expect(redis.hGet).toHaveBeenCalledWith(
-        REDIS_KEYS.championComments(postId),
-        word.toLowerCase()
+      expect(redis.get).toHaveBeenCalledWith(
+        REDIS_KEYS.wordChampion(word.toLowerCase())
       );
       expect(result).toBe(commentId);
     });
 
     it('should return null if no champion comment exists', async () => {
-      vi.mocked(redis.hGet).mockResolvedValue(null);
+      vi.mocked(redis.get).mockResolvedValue(null);
 
-      const result = await getChampionComment(postId, word);
+      const result = await getChampionComment(word);
 
       expect(result).toBeNull();
     });
@@ -83,55 +89,70 @@ describe('Champion Comments Service', () => {
 
   describe('removeChampionComment', () => {
     it('should remove champion comment reference', async () => {
-      vi.mocked(redis.hGet).mockResolvedValue(commentId);
-      vi.mocked(redis.hDel).mockResolvedValue(1);
+      vi.mocked(redis.get)
+        .mockResolvedValueOnce(commentId) // get commentId
+        .mockResolvedValueOnce(JSON.stringify([word.toLowerCase()])); // getAllChampionWords
+      vi.mocked(redis.set).mockResolvedValue('OK');
       vi.mocked(redis.del).mockResolvedValue(1);
 
-      await removeChampionComment(postId, word);
+      await removeChampionComment(subredditName, word);
 
-      expect(redis.hGet).toHaveBeenCalledWith(
-        REDIS_KEYS.championComments(postId),
-        word.toLowerCase()
+      expect(redis.get).toHaveBeenCalledWith(
+        REDIS_KEYS.wordChampion(word.toLowerCase())
       );
-      expect(redis.hDel).toHaveBeenCalledWith(
-        REDIS_KEYS.championComments(postId),
-        [word.toLowerCase()]
+      expect(redis.get).toHaveBeenCalledWith(
+        REDIS_KEYS.wordsChampioned(subredditName)
+      );
+      expect(redis.set).toHaveBeenCalledWith(
+        REDIS_KEYS.wordsChampioned(subredditName),
+        JSON.stringify([])
       );
       expect(redis.del).toHaveBeenCalledWith(
-        REDIS_KEYS.championCommentReverse(commentId)
+        REDIS_KEYS.wordChampion(word.toLowerCase())
+      );
+      expect(redis.del).toHaveBeenCalledWith(
+        REDIS_KEYS.championWord(commentId)
       );
     });
   });
 
   describe('getAllChampionWords', () => {
-    it('should return all champion words for a post', async () => {
-      const championData = {
-        'word1': 'comment1',
-        'word2': 'comment2',
-      };
-      vi.mocked(redis.hGetAll).mockResolvedValue(championData);
+    it('should return all champion words for a subreddit', async () => {
+      const wordsChampioned = ['word1', 'word2'];
+      vi.mocked(redis.get).mockResolvedValue(JSON.stringify(wordsChampioned));
 
-      const result = await getAllChampionWords(postId);
+      const result = await getAllChampionWords(subredditName);
 
-      expect(redis.hGetAll).toHaveBeenCalledWith(
-        REDIS_KEYS.championComments(postId)
+      expect(redis.get).toHaveBeenCalledWith(
+        REDIS_KEYS.wordsChampioned(subredditName)
       );
-      expect(result).toEqual(['word1', 'word2']);
+      expect(result).toEqual(wordsChampioned);
+    });
+
+    it('should return empty array if no champion words exist', async () => {
+      vi.mocked(redis.get).mockResolvedValue(null);
+
+      const result = await getAllChampionWords(subredditName);
+
+      expect(result).toEqual([]);
     });
   });
 
   describe('findChampionCommentByCommentId', () => {
     it('should find champion comment by comment ID', async () => {
-      const reverseData = JSON.stringify({ postId: 't3_post1', word: 'word2' });
+      const reverseData = JSON.stringify({
+        subredditName: 'testsub',
+        word: 'word2',
+      });
       vi.mocked(redis.get).mockResolvedValue(reverseData);
 
       const result = await findChampionCommentByCommentId(commentId);
 
       expect(redis.get).toHaveBeenCalledWith(
-        REDIS_KEYS.championCommentReverse(commentId)
+        REDIS_KEYS.championWord(commentId)
       );
       expect(result).toEqual({
-        postId: 't3_post1',
+        subredditName: 'testsub',
         word: 'word2',
       });
     });
@@ -142,7 +163,7 @@ describe('Champion Comments Service', () => {
       const result = await findChampionCommentByCommentId('nonexistent');
 
       expect(redis.get).toHaveBeenCalledWith(
-        REDIS_KEYS.championCommentReverse('nonexistent')
+        REDIS_KEYS.championWord('nonexistent')
       );
       expect(result).toBeNull();
     });

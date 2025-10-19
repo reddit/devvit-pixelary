@@ -1,7 +1,7 @@
 import { context } from '@devvit/web/server';
 import type { Request, Response } from 'express';
-import type { T3 } from '../../shared/types';
-import { parseT3 } from '../../shared/types';
+import type { T3 } from '@devvit/shared-types/tid.js';
+import { assertT3 } from '@devvit/shared-types/tid.js';
 import {
   createDrawingPostComment,
   updateDrawingPostComment,
@@ -26,7 +26,8 @@ export async function handleNewDrawingPinnedComment(
     // Validate and parse postId as T3
     let validatedPostId: T3;
     try {
-      validatedPostId = parseT3(postId);
+      assertT3(postId);
+      validatedPostId = postId;
     } catch (error) {
       console.error(
         `Invalid postId in handleNewDrawingPinnedComment: ${postId} - ${error}`
@@ -60,10 +61,10 @@ export async function handleUpdateDrawingPinnedComment(
     // Extract data from the scheduler payload
     const jobData = req.body.data || req.body;
 
-    // Validate and parse postId as T3
+    // Validate and parse postId as validateT3
     let postId: T3;
     try {
-      postId = parseT3(jobData.postId);
+      postId = jobData.postId;
     } catch (error) {
       console.error(
         `Invalid postId in handleUpdateDrawingPinnedComment: ${jobData.postId} - ${error}`

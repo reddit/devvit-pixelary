@@ -14,7 +14,7 @@ export async function handleWords(
   context: CommandContext
 ): Promise<CommandResult> {
   try {
-    const words = await getWords(context.subredditId);
+    const words = await getWords();
     const wordCount = words.length;
     const pageSize = 200;
 
@@ -140,7 +140,7 @@ export async function handleRemove(
       };
     }
 
-    const success = await removeWord(context.subredditId, word);
+    const success = await removeWord(word);
 
     if (success) {
       return {
@@ -162,10 +162,7 @@ export async function handleRemove(
   }
 }
 
-export async function handleWord(
-  args: string[],
-  context: CommandContext
-): Promise<CommandResult> {
+export async function handleWord(args: string[]): Promise<CommandResult> {
   try {
     if (args.length === 0) {
       return {
@@ -183,7 +180,7 @@ export async function handleWord(
     }
 
     // First check if the word exists in the dictionary
-    const words = await getWords(context.subredditId);
+    const words = await getWords();
     const wordExists = words.some(
       (w) => w.toLowerCase() === word.toLowerCase()
     );
@@ -276,7 +273,7 @@ export async function handleShow(
       totalGuesses > 0 ? Math.round((count / totalGuesses) * 100) : 0;
 
     // Check if word is in dictionary
-    const dictionaryWords = await getWords(context.subredditName);
+    const dictionaryWords = await getWords();
     const isInDictionary = dictionaryWords.some(
       (dictWord) => dictWord.toLowerCase() === normalizedWord.toLowerCase()
     );
@@ -285,7 +282,11 @@ export async function handleShow(
     const isBanned = await isWordBanned(context.subredditName, normalizedWord);
 
     // Store this comment as champion comment for this word
-    await setChampionComment(context.postId, normalizedWord, context.commentId);
+    await setChampionComment(
+      context.subredditName,
+      normalizedWord,
+      context.commentId
+    );
 
     // Build response
     let response = `Guess made ${count} times (${percentage}%) so far.`;

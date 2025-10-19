@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
-import type { T3 } from '../../shared/types';
-import { parseT3 } from '../../shared/types';
+import type { T3 } from '@devvit/shared-types/tid.js';
+import { isT3, assertT3 } from '@devvit/shared-types/tid.js';
 import { createPinnedPostComment } from '../services/pinned-post';
 
 /**
@@ -19,7 +19,8 @@ export async function handleCreatePinnedPostComment(
     // Validate and parse postId as T3
     let postId: T3;
     try {
-      postId = parseT3(jobData.postId);
+      assertT3(jobData.postId);
+      postId = jobData.postId;
     } catch (error) {
       console.error(
         `Invalid postId in handleCreatePinnedPostComment: ${jobData.postId} - ${error}`

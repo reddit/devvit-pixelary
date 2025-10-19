@@ -1,5 +1,6 @@
 import { reddit, redis } from '@devvit/web/server';
-import type { Level, T2, T3 } from '../../shared/types';
+import type { T2, T3 } from '@devvit/shared-types/tid.js';
+import type { Level } from '../../shared/types';
 import { REDIS_KEYS } from '../services/redis';
 
 // Configuration-driven approach

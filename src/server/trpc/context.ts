@@ -1,6 +1,6 @@
 import { context, reddit, realtime, scheduler } from '@devvit/web/server';
 import type { PostData } from '../../shared/schema';
-import type { T2, T3, T5 } from '../../shared/types';
+import type { T2, T3, T5 } from '@devvit/shared-types/tid.js';
 
 export async function createContext() {
   const username = await reddit.getCurrentUsername();

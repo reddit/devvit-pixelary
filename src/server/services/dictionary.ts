@@ -4,7 +4,6 @@ import { titleCase } from '../../shared/utils/string';
 import { shuffle } from '../../shared/utils/array';
 import { REDIS_KEYS } from './redis';
 import { getAllChampionWords } from './champion-comments';
-import type { T3 } from '../../shared/types';
 
 /*
 
@@ -23,8 +22,8 @@ All words are stored using subreddit-scoped Redis sorted sets to:
  * @returns The dictionary for the subreddit
  */
 
-export async function getWords(subredditName: string): Promise<string[]> {
-  const key = REDIS_KEYS.wordScores(subredditName);
+export async function getWords(): Promise<string[]> {
+  const key = REDIS_KEYS.wordsScored();
   const words = await redis.zRange(key, 0, -1);
   return words.map((item) => item.member);
 }
@@ -41,7 +40,7 @@ export async function addWord(
   word: string
 ): Promise<boolean> {
   const [dictionary, bannedWords] = await Promise.all([
-    getWords(subredditName),
+    getWords(),
     getBannedWords(subredditName),
   ]);
 
@@ -57,7 +56,7 @@ export async function addWord(
   if (banned) return false;
 
   // Add word to sorted set with default score of 1
-  const key = REDIS_KEYS.wordScores(subredditName);
+  const key = REDIS_KEYS.wordsScored();
   await redis.zAdd(key, {
     member: normalizedWord,
     score: 1,
@@ -73,11 +72,8 @@ export async function addWord(
  * @param words - The words to update the dictionary with
  */
 
-export async function updateWords(
-  subredditName: string,
-  words: string[]
-): Promise<void> {
-  const key = REDIS_KEYS.wordScores(subredditName);
+export async function updateWords(words: string[]): Promise<void> {
+  const key = REDIS_KEYS.wordsScored();
   const parsedWords = words.map((word) => titleCase(word.trim()));
 
   // Clear existing words and add new ones with default score of 1
@@ -97,12 +93,9 @@ export async function updateWords(
  * @returns True if the word was removed, false if it was not found
  */
 
-export async function removeWord(
-  subredditName: string,
-  word: string
-): Promise<boolean> {
+export async function removeWord(word: string): Promise<boolean> {
   const normalizedWord = titleCase(word.trim());
-  const key = REDIS_KEYS.wordScores(subredditName);
+  const key = REDIS_KEYS.wordsScored();
 
   // Remove word from sorted set
   const removed = await redis.zRem(key, [normalizedWord]);
@@ -116,7 +109,7 @@ export async function removeWord(
  */
 
 export async function getBannedWords(subredditName: string): Promise<string[]> {
-  const words = await redis.get(REDIS_KEYS.bannedWords(subredditName));
+  const words = await redis.get(REDIS_KEYS.wordsBanned(subredditName));
   if (!words) return [];
   const wordArray = JSON.parse(words) as string[];
   return wordArray;
@@ -145,7 +138,7 @@ export async function banWord(
   bannedWords.sort();
 
   // Save back to Redis
-  const key = REDIS_KEYS.bannedWords(subredditName);
+  const key = REDIS_KEYS.wordsBanned(subredditName);
   await redis.set(key, JSON.stringify(bannedWords));
   return true;
 }
@@ -161,7 +154,7 @@ export async function updateBannedWords(
   subredditName: string,
   words: string[]
 ): Promise<void> {
-  const key = REDIS_KEYS.bannedWords(subredditName);
+  const key = REDIS_KEYS.wordsBanned(subredditName);
   const parsedWords = words.map((word) => titleCase(word.trim())).sort();
   await redis.set(key, JSON.stringify(parsedWords));
 }
@@ -187,7 +180,7 @@ export async function unbanWord(
   // Return false if word not found
   if (filtered.length === originalLength) return false;
 
-  const key = REDIS_KEYS.bannedWords(subredditName);
+  const key = REDIS_KEYS.wordsBanned(subredditName);
   await redis.set(key, JSON.stringify(filtered));
   return true;
 }
@@ -203,7 +196,7 @@ export async function getRandomWords(
   subredditName: string,
   count: number = 3
 ): Promise<Array<{ word: string; dictionaryName: string }>> {
-  const words = await getWords(subredditName);
+  const words = await getWords();
   const shuffled = shuffle<string>(words);
   const result = shuffled.slice(0, count);
   const dictionaryName = `r/${subredditName}`;
@@ -223,8 +216,8 @@ export async function initializeDictionary(
 ): Promise<void> {
   // Check if dictionary already exists
   const [words, bannedWords] = await Promise.all([
-    redis.exists(REDIS_KEYS.wordScores(subredditName)),
-    redis.exists(REDIS_KEYS.bannedWords(subredditName)),
+    redis.exists(REDIS_KEYS.wordsScored()),
+    redis.exists(REDIS_KEYS.wordsBanned(subredditName)),
     redis.global.zAdd(REDIS_KEYS.communities(), {
       member: subredditName,
       score: Date.now(),
@@ -240,7 +233,7 @@ export async function initializeDictionary(
   if (!words) {
     seedActions.push(
       redis.zAdd(
-        REDIS_KEYS.wordScores(subredditName),
+        REDIS_KEYS.wordsScored(),
         ...DEFAULT_WORDS.map((word) => ({ member: word, score: 1 }))
       )
     );
@@ -248,7 +241,7 @@ export async function initializeDictionary(
 
   if (!bannedWords) {
     seedActions.push(
-      redis.set(REDIS_KEYS.bannedWords(subredditName), JSON.stringify([]))
+      redis.set(REDIS_KEYS.wordsBanned(subredditName), JSON.stringify([]))
     );
   }
 
@@ -258,23 +251,21 @@ export async function initializeDictionary(
 }
 
 /**
- * Get all allowed words for a post (dictionary words + champion comment words - banned words)
+ * Get all allowed words for a subreddit (dictionary words + champion comment words - banned words)
  * @param subredditName - The subreddit name
- * @param postId - The post ID
  * @returns Array of allowed words that can appear unobfuscated
  */
 export async function getAllowedWords(
-  subredditName: string,
-  postId: T3
+  subredditName: string
 ): Promise<string[]> {
-  const [dictionaryWords, championWords, bannedWords] = await Promise.all([
-    getWords(subredditName),
-    getAllChampionWords(postId),
+  const [dictionaryWords, wordsChampioned, bannedWords] = await Promise.all([
+    getWords(),
+    getAllChampionWords(subredditName),
     getBannedWords(subredditName),
   ]);
 
   // Combine dictionary and champion words
-  const allWords = [...dictionaryWords, ...championWords];
+  const allWords = [...dictionaryWords, ...wordsChampioned];
 
   // Normalize all words to titleCase for consistent comparison
   const normalizedWords = allWords.map((word) => titleCase(word.trim()));

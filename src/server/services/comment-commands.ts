@@ -1,4 +1,4 @@
-import type { T5, T3 } from '../../shared/types';
+import type { T5, T3 } from '@devvit/shared-types/tid.js';
 import * as handlers from './comment-command-handlers';
 
 export type CommandContext = {
@@ -59,7 +59,7 @@ export async function processCommand(
     case '!remove':
       return handlers.handleRemove(args, context);
     case '!word':
-      return handlers.handleWord(args, context);
+      return handlers.handleWord(args);
     case '!score':
       return handlers.handleScore(args, context);
     case '!show':

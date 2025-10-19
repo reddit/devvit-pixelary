@@ -104,7 +104,12 @@ export async function trackEvent(
     // Store metadata if provided
     if (metadata && Object.keys(metadata).length > 0) {
       const metadataKey = `${key}:meta:${field}`;
-      await redis.hSet(metadataKey, metadata);
+      // Convert all values to strings for Redis hash storage
+      const stringifiedMetadata: Record<string, string> = {};
+      for (const [key, value] of Object.entries(metadata)) {
+        stringifiedMetadata[key] = String(value);
+      }
+      await redis.hSet(metadataKey, stringifiedMetadata);
       await redis.expire(metadataKey, TELEMETRY_TTL_SECONDS);
     }
   } catch (error) {
@@ -229,20 +234,25 @@ export async function calculateCTR(
  * Fire-and-forget operation that never blocks
  */
 export async function trackSlateEvent(
-  subredditName: string,
   slateId: string,
   eventType: EventType,
   metadata?: Record<string, string | number>
 ): Promise<void> {
   try {
-    const eventKey = REDIS_KEYS.slateEvents(subredditName, slateId);
+    const eventKey = REDIS_KEYS.slateEvents();
     const eventData = {
       eventType,
       timestamp: Date.now().toString(),
       ...metadata,
     };
 
-    await redis.lPush(eventKey, JSON.stringify(eventData));
+    // Convert all values to strings for Redis hash storage
+    const stringifiedData: Record<string, string> = {};
+    for (const [key, value] of Object.entries(eventData)) {
+      stringifiedData[key] = String(value);
+    }
+
+    await redis.hSet(eventKey, stringifiedData);
     await redis.expire(eventKey, 7 * 24 * 60 * 60); // 7 days TTL
   } catch (error) {
     console.warn('Failed to track slate event:', error);

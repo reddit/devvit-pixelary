@@ -1,5 +1,5 @@
 import { reddit, cache } from '@devvit/web/server';
-import type { T2, T3 } from '../../shared/types';
+import type { T2, T3 } from '@devvit/shared-types/tid.js';
 
 /**
  * Centralized Redis key management
@@ -7,40 +7,43 @@ import type { T2, T3 } from '../../shared/types';
  */
 
 export const REDIS_KEYS = {
-  // Global tracking of drawings
-  drawingsByUser: (userId: T2) => `d:u:${userId}`,
-  drawingsByWord: (word: string) => `d:w:${word}`,
-  allDrawings: () => 'd:all',
+  // Drawings
+  drawing: (postId: T3) => `drawing:${postId}`,
+  drawingGuesses: (postId: T3) => `drawing:guesses:${postId}`,
+  drawingAttempts: (postId: T3) => `drawing:attempts:${postId}`,
+  drawingSolves: (postId: T3) => `drawing:solves:${postId}`,
+  drawingSkips: (postId: T3) => `drawing:skips:${postId}`,
+  allDrawings: () => 'drawings:all',
 
-  // Post level data and user interactions
-  drawing: (postId: T3) => `d:${postId}`,
-  drawingGuesses: (postId: T3) => `guesses:${postId}`,
-  userAttempts: (postId: T3) => `attempts:${postId}`,
-  userSolved: (postId: T3) => `solves:${postId}`,
-  userSkipped: (postId: T3) => `skips:${postId}`,
+  // Users
+  userName: (userId: T2) => `user:name:${userId}`,
+  userMod: (userId: T2) => `user:mod:${userId}`,
+  userAdmin: (userId: T2) => `user:admin:${userId}`,
+  userDrawings: (userId: T2) => `user:drawings:${userId}`,
 
-  // Scores & Leaderboard
-  scores: () => 'scores',
+  // Words
+  wordsAll: (subredditName: string) => `words:all:${subredditName}`,
+  wordsBanned: (subredditName: string) => `words:banned:${subredditName}`,
+  wordsScored: () => 'words:scored',
+  wordsChampioned: (subredditName: string) =>
+    `words:championed:${subredditName}`,
 
-  // Dictionary
-  words: (subredditName: string) => `words:${subredditName}`,
-  bannedWords: (subredditName: string) => `banned:${subredditName}`,
+  // Champions
+  championWord: (commentId: string) => `champion:word:${commentId}`,
 
-  // User metadata
-  username: (userId: T2) => `username:${userId}`,
-  moderatorStatus: (subredditName: string, userId: T2) =>
-    `mod:${subredditName}:${userId}`,
-  adminStatus: (userId: T2) => `admin:${userId}`,
+  // Word
+  wordChampion: (word: string) => `word:champion:${word}`,
+  wordMetrics: (word: string) => `word:metrics:${word}`,
+  wordDrawings: (word: string) => `word:drawings:${word}`,
 
   // Communities
   communities: () => 'communities',
 
-  // Champion comments for !show command
-  championComments: (postId: T3) => `champions:${postId}`,
-  championCommentReverse: (commentId: string) => `champion:rev:${commentId}`,
+  // Post comment
+  postComment: (postId: T3) => `post:comment:${postId}`,
 
-  // Pinned post comment storage
-  pinnedPost: (postId: T3) => `pinned:${postId}`,
+  // Progression system
+  scores: () => 'scores',
 
   // Flair templates
   flairTemplates: {
@@ -49,16 +52,12 @@ export const REDIS_KEYS = {
   },
 
   // Telemetry
-  telemetry: (date: string) => `tel:${date}`,
+  telemetry: (date: string) => `telemetry:${date}`,
 
-  // Slate system (simplified keys)
-  wordScores: (subredditName: string) => `ws:${subredditName}`,
-  wordMetrics: (subredditName: string, word: string) =>
-    `wm:${subredditName}:${word}`,
-  slates: (subredditName: string, slateId: string) =>
-    `sl:${subredditName}:${slateId}`,
-  slateEvents: (subredditName: string, slateId: string) =>
-    `se:${subredditName}:${slateId}`,
+  // Slates
+  slate: (slateId: string) => `slate:${slateId}`,
+  slateEvents: () => 'slate:events',
+  allSlates: () => 'slates:all',
 };
 
 const USERNAME_TTL = 30 * 24 * 60 * 60; // 30 days.
@@ -80,7 +79,7 @@ export async function getUsername(userId: T2): Promise<string> {
       return user.username;
     },
     {
-      key: REDIS_KEYS.username(userId),
+      key: REDIS_KEYS.userName(userId),
       ttl: USERNAME_TTL,
     }
   );
@@ -105,7 +104,7 @@ export async function isModerator(
       return moderators.some((user) => user.id === userId);
     },
     {
-      key: REDIS_KEYS.moderatorStatus(subredditName, userId),
+      key: REDIS_KEYS.userMod(userId),
       ttl: MODERATOR_STATUS_TTL,
     }
   );
@@ -124,7 +123,7 @@ export async function isAdmin(userId: T2): Promise<boolean> {
       return false;
     },
     {
-      key: REDIS_KEYS.adminStatus(userId),
+      key: REDIS_KEYS.userAdmin(userId),
       ttl: ADMIN_STATUS_TTL,
     }
   );

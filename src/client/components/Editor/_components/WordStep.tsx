@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { CARD_DRAW_DURATION } from '@shared/constants';
 import type { CandidateWord } from '@shared/schema/pixelary';
 import { PixelFont } from '@components/PixelFont';
@@ -18,6 +18,7 @@ export function WordStep(props: WordStepProps) {
   // State management
   const [startTime, setStartTime] = useState<number | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
+  const trackedSlateIdRef = useRef<string | null>(null);
 
   const { track } = useTelemetry();
   const { setSlateId, trackSlateAction } = useSlate();
@@ -40,9 +41,15 @@ export function WordStep(props: WordStepProps) {
 
   // Set slateId in context and track impression
   useEffect(() => {
-    if (slateId) {
+    console.log('WordStep slateId effect:', { slateId, candidates });
+    if (slateId && slateId !== trackedSlateIdRef.current) {
+      console.log('Setting slateId and tracking impression:', { slateId });
       setSlateId(slateId);
-      trackSlateAction('impression');
+      trackedSlateIdRef.current = slateId;
+      // Track impression with a small delay to ensure mutation is ready
+      setTimeout(() => {
+        trackSlateAction('impression');
+      }, 200);
     }
   }, [slateId, setSlateId, trackSlateAction]);
 
@@ -165,7 +172,11 @@ function WordCandidate(props: WordCandidateProps) {
     <button
       key={`candidate-${index}`}
       onClick={() => {
+        console.log('WordCandidate clicked:', { candidate, index });
         if (candidate) {
+          console.log('Tracking word candidate click:', {
+            word: candidate.word,
+          });
           track('click_word_candidate');
           trackSlateAction('click', candidate.word);
           onSelect(candidate);

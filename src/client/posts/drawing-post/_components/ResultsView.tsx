@@ -51,11 +51,8 @@ export function ResultsView({
   // Get current user profile for level progress calculation
   const { data: userProfile } = trpc.app.user.getProfile.useQuery();
 
-  // Get allowed words for this post
-  const { data: allowedWords = [] } = trpc.app.post.getAllowedWords.useQuery(
-    { postId: postId || '' },
-    { enabled: !!postId }
-  );
+  // Get allowed words for this subreddit
+  const { data: allowedWords = [] } = trpc.app.post.getAllowedWords.useQuery();
 
   // Mutation for revealing guesses
   const revealGuess = trpc.app.post.revealGuess.useMutation();

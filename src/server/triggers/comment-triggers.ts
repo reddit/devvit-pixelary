@@ -120,7 +120,10 @@ export async function handleCommentDelete(
       // Champion comment deleted
 
       // Remove champion comment reference
-      await removeChampionComment(championData.postId, championData.word);
+      await removeChampionComment(
+        championData.subredditName,
+        championData.word
+      );
 
       // Ban the word as enforcement
       if (subredditName) {

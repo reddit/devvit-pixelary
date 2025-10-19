@@ -2,7 +2,7 @@ import { redis, scheduler, reddit } from '@devvit/web/server';
 import { REDIS_KEYS } from './redis';
 import { createPost } from '../core/post';
 import { getLeaderboard } from './progression';
-import type { T1, T3 } from '../../shared/types';
+import type { T1, T3 } from '@devvit/shared-types/tid.js';
 
 /**
  * Pinned Post Service

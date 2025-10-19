@@ -24,7 +24,7 @@ export async function handleWordsUpdate(
 
     // Parse and clean words
     const wordList = words.split(',').map((word: string) => word.trim());
-    await updateWords(context.subredditId, wordList);
+    await updateWords(wordList);
 
     res.json({
       showToast: 'Updated!',

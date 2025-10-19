@@ -12,13 +12,8 @@ import type { DrawingPostDataExtended } from '../../shared/schema/pixelary';
 import { createPost } from '../core/post';
 import { setPostFlair } from '../core/flair';
 import type { DrawingData } from '../../shared/schema/drawing';
-import {
-  parseT2,
-  parseT3,
-  type T1,
-  type T2,
-  type T3,
-} from '../../shared/types';
+import type { T1, T2, T3 } from '@devvit/shared-types/tid.js';
+import { isT2, isT3, assertT2, assertT3 } from '@devvit/shared-types/tid.js';
 import {
   AUTHOR_REWARD_CORRECT_GUESS,
   AUTHOR_REWARD_SUBMIT,
@@ -40,84 +35,166 @@ export const createDrawing = async (options: {
 }) => {
   const { word, dictionary, drawing, authorName, authorId } = options;
 
-  // Create Reddit post unit
-  const post = await createPost(`What did u/${authorName} draw?`, {
-    type: 'drawing',
+  console.log('createDrawing called with:', {
     word,
-    drawing,
     dictionary,
-    authorId,
     authorName,
+    authorId,
+    drawingSize: drawing.size,
+    drawingColors: drawing.colors.length,
+    drawingDataLength: drawing.data.length,
   });
 
-  const postId = post.id;
-  const currentDate = new Date();
-  const currentTime = currentDate.getTime();
+  try {
+    // Create Reddit post unit
+    console.log('Creating Reddit post...');
 
-  // Run all operations in parallel
-  await Promise.all([
-    // Save post data and additional metadata to redis. Largely so we can fetch the drawing post later from other contexts.
-    redis.hSet(REDIS_KEYS.drawing(postId), {
-      type: 'drawing',
-      postId,
-      createdAt: post.createdAt.getTime().toString(),
+    const postData = {
+      type: 'drawing' as const,
       word,
+      drawing,
       dictionary,
-      drawing: JSON.stringify(drawing),
       authorId,
       authorName,
-    }),
+    };
 
-    // Award points for submission
-    incrementScore(authorId, AUTHOR_REWARD_SUBMIT),
-
-    // Add to list of drawings for this word
-    redis.zAdd(REDIS_KEYS.drawingsByWord(word), {
-      member: postId,
-      score: currentTime,
-    }),
-
-    // Add to all drawings list
-    redis.zAdd(REDIS_KEYS.allDrawings(), {
-      member: postId,
-      score: currentTime,
-    }),
-
-    // Add to list of drawings for this user
-    redis.zAdd(REDIS_KEYS.drawingsByUser(authorId), {
-      member: postId,
-      score: currentTime,
-    }),
-  ]);
-
-  // Schedule pinned comment job (non-blocking - don't fail if this fails)
-  try {
-    await scheduler.runJob({
-      name: 'NEW_DRAWING_PINNED_COMMENT',
-      data: {
-        postId,
-        authorName,
-        word,
-      },
-      runAt: currentDate, // run immediately
+    console.log('Post data being created:', {
+      type: postData.type,
+      word: postData.word,
+      dictionary: postData.dictionary,
+      authorId: postData.authorId,
+      authorName: postData.authorName,
+      drawingSize: postData.drawing.size,
+      drawingColors: postData.drawing.colors.length,
+      drawingDataLength: postData.drawing.data.length,
+      drawingBg: postData.drawing.bg,
     });
-  } catch (error) {
-    console.error(
-      `Failed to schedule pinned comment job for post ${postId}:`,
-      error
-    );
-    // Don't throw - the drawing post should still be created even if comment fails
-  }
 
-  // Set "Unranked" flair on new post (non-blocking)
-  try {
-    await setPostFlair(postId, context.subredditName, 'unranked');
-  } catch (error) {
-    console.error(`Failed to set flair for post ${postId}:`, error);
-    // Don't throw - flair setting should not block post creation
-  }
+    const post = await createPost(`What did u/${authorName} draw?`, postData);
+    console.log('Reddit post created successfully:', {
+      postId: post.id,
+      createdAt: post.createdAt,
+    });
 
-  return post;
+    const postId = post.id;
+    const currentDate = new Date();
+    const currentTime = currentDate.getTime();
+
+    console.log('Starting Redis operations for drawing:', {
+      postId,
+      currentTime,
+    });
+
+    // Run all operations in parallel
+    await Promise.all([
+      // Save post data and additional metadata to redis. Largely so we can fetch the drawing post later from other contexts.
+      (async () => {
+        console.log('Saving drawing data to Redis...');
+        await redis.hSet(REDIS_KEYS.drawing(postId), {
+          type: 'drawing',
+          postId,
+          createdAt: post.createdAt.getTime().toString(),
+          word,
+          dictionary,
+          drawing: JSON.stringify(drawing),
+          authorId,
+          authorName,
+        });
+        console.log('Drawing data saved to Redis');
+      })(),
+
+      // Award points for submission
+      (async () => {
+        console.log('Awarding points for submission...');
+        await incrementScore(authorId, AUTHOR_REWARD_SUBMIT);
+        console.log('Points awarded for submission');
+      })(),
+
+      // Add to list of drawings for this word
+      (async () => {
+        console.log('Adding to drawings by word list...');
+        await redis.zAdd(REDIS_KEYS.wordDrawings(word), {
+          member: postId,
+          score: currentTime,
+        });
+        console.log('Added to drawings by word list');
+      })(),
+
+      // Add to all drawings list
+      (async () => {
+        console.log('Adding to all drawings list...');
+        await redis.zAdd(REDIS_KEYS.allDrawings(), {
+          member: postId,
+          score: currentTime,
+        });
+        console.log('Added to all drawings list');
+      })(),
+
+      // Add to list of drawings for this user
+      (async () => {
+        console.log('Adding to drawings by user list...');
+        await redis.zAdd(REDIS_KEYS.userDrawings(authorId), {
+          member: postId,
+          score: currentTime,
+        });
+        console.log('Added to drawings by user list');
+      })(),
+    ]);
+
+    console.log('All Redis operations completed for drawing:', { postId });
+
+    // Schedule pinned comment job (non-blocking - don't fail if this fails)
+    try {
+      console.log('Scheduling pinned comment job...');
+      await scheduler.runJob({
+        name: 'NEW_DRAWING_PINNED_COMMENT',
+        data: {
+          postId,
+          authorName,
+          word,
+        },
+        runAt: currentDate, // run immediately
+      });
+      console.log('Pinned comment job scheduled successfully');
+    } catch (error) {
+      console.error(
+        `Failed to schedule pinned comment job for post ${postId}:`,
+        error
+      );
+      // Don't throw - the drawing post should still be created even if comment fails
+    }
+
+    // Set "Unranked" flair on new post (non-blocking)
+    try {
+      console.log('Setting Unranked flair on post...');
+      await setPostFlair(postId, context.subredditName, 'unranked');
+      console.log('Unranked flair set successfully');
+    } catch (error) {
+      console.error(`Failed to set flair for post ${postId}:`, error);
+      // Don't throw - flair setting should not block post creation
+    }
+
+    console.log('Drawing creation completed successfully:', {
+      postId,
+      authorName,
+      word,
+    });
+    return post;
+  } catch (error) {
+    console.error('createDrawing failed:', {
+      error,
+      errorMessage: error instanceof Error ? error.message : String(error),
+      errorStack: error instanceof Error ? error.stack : undefined,
+      word,
+      dictionary,
+      authorName,
+      authorId,
+      drawingSize: drawing.size,
+      drawingColors: drawing.colors.length,
+      drawingDataLength: drawing.data.length,
+    });
+    throw error;
+  }
 };
 
 /**
@@ -207,7 +284,7 @@ export async function getDrawings(
  */
 
 export async function skipDrawing(postId: T3, userId: T2): Promise<void> {
-  const key = REDIS_KEYS.userSkipped(postId);
+  const key = REDIS_KEYS.drawingSkips(postId);
   await redis.zAdd(key, {
     member: userId,
     score: Date.now(),
@@ -227,8 +304,8 @@ export async function getDrawingStats(postId: T3): Promise<{
   return await cache(
     async () => {
       const [playerCount, solvedCount] = await Promise.all([
-        redis.zCard(REDIS_KEYS.userAttempts(postId)),
-        redis.zCard(REDIS_KEYS.userSolved(postId)),
+        redis.zCard(REDIS_KEYS.drawingAttempts(postId)),
+        redis.zCard(REDIS_KEYS.drawingSolves(postId)),
       ]);
 
       return {
@@ -363,13 +440,13 @@ export async function getUserDrawings(
   limit: number = 20
 ): Promise<T3[]> {
   const drawingIds = await redis.zRange(
-    REDIS_KEYS.drawingsByUser(userId),
+    REDIS_KEYS.userDrawings(userId),
     0,
     limit - 1,
     { reverse: true, by: 'rank' }
   );
 
-  return drawingIds.map((entry) => parseT3(entry.member));
+  return drawingIds.map((entry) => entry.member);
 }
 
 export async function getUserDrawingsWithData(
@@ -378,13 +455,13 @@ export async function getUserDrawingsWithData(
 ): Promise<DrawingPostDataExtended[]> {
   // Get drawing IDs
   const drawingIds = await redis.zRange(
-    REDIS_KEYS.drawingsByUser(userId),
+    REDIS_KEYS.userDrawings(userId),
     0,
     limit - 1,
     { reverse: true, by: 'rank' }
   );
 
-  const postIds = drawingIds.map((entry) => parseT3(entry.member));
+  const postIds = drawingIds.map((entry) => entry.member);
 
   if (postIds.length === 0) return [];
 
@@ -438,8 +515,8 @@ export async function hasCompletedDrawing(
   userId: T2
 ): Promise<boolean> {
   const [solved, skipped] = await Promise.all([
-    redis.zScore(REDIS_KEYS.userSolved(postId), userId),
-    redis.zScore(REDIS_KEYS.userSkipped(postId), userId),
+    redis.zScore(REDIS_KEYS.drawingSolves(postId), userId),
+    redis.zScore(REDIS_KEYS.drawingSkips(postId), userId),
   ]);
 
   return solved !== null || skipped !== null;
@@ -468,8 +545,8 @@ export async function submitGuess(options: {
 
   // Check if user already solved/skipped this post and get the word
   const [solved, skipped, word, authorId] = await Promise.all([
-    redis.zScore(REDIS_KEYS.userSolved(postId), userId),
-    redis.zScore(REDIS_KEYS.userSkipped(postId), userId),
+    redis.zScore(REDIS_KEYS.drawingSolves(postId), userId),
+    redis.zScore(REDIS_KEYS.drawingSkips(postId), userId),
     redis.hGet(REDIS_KEYS.drawing(postId), 'word'),
     redis.hGet(REDIS_KEYS.drawing(postId), 'authorId'),
   ]);
@@ -481,7 +558,7 @@ export async function submitGuess(options: {
   // Clean up inconsistent data - user shouldn't be in both solved and skipped
   if (isInSolvedSet && isInSkippedSet) {
     // Remove from skipped set (solved takes precedence)
-    await redis.zRem(REDIS_KEYS.userSkipped(postId), [userId]);
+    await redis.zRem(REDIS_KEYS.drawingSkips(postId), [userId]);
   }
 
   // Don't allow guesses if user has already solved (but allow if only skipped)
@@ -492,8 +569,8 @@ export async function submitGuess(options: {
   // Increment counters and store the guess
   await Promise.all([
     // Always increment user attempts (zIncrBy will add if not exists, increment if exists)
-    redis.zIncrBy(REDIS_KEYS.userAttempts(postId), userId, 1),
-    redis.zIncrBy(REDIS_KEYS.drawingsByWord(word), postId, 1),
+    redis.zIncrBy(REDIS_KEYS.drawingAttempts(postId), userId, 1),
+    redis.zIncrBy(REDIS_KEYS.wordDrawings(word), postId, 1),
     redis.zIncrBy(
       REDIS_KEYS.drawingGuesses(postId),
       titleCase(guess.trim()),
@@ -577,7 +654,7 @@ export async function submitGuess(options: {
   // Handle correct guess - mark as solved and award points
   await Promise.all([
     // Mark as solved
-    redis.zAdd(REDIS_KEYS.userSolved(postId), {
+    redis.zAdd(REDIS_KEYS.drawingSolves(postId), {
       member: userId,
       score: Date.now(),
     }),
@@ -586,7 +663,7 @@ export async function submitGuess(options: {
     incrementScore(userId, GUESSER_REWARD_SOLVE),
 
     // Award author points
-    incrementScore(parseT2(authorId), AUTHOR_REWARD_CORRECT_GUESS),
+    incrementScore(authorId, AUTHOR_REWARD_CORRECT_GUESS),
   ]);
 
   // Get updated stats after all Redis operations complete
@@ -642,7 +719,7 @@ export async function getGuesses(
         return result;
       }),
     getDrawingStats(postId),
-    redis.zCard(REDIS_KEYS.userSolved(postId)),
+    redis.zCard(REDIS_KEYS.drawingSolves(postId)),
   ]);
 
   // Calculate total guess count from the guesses object
@@ -681,9 +758,9 @@ export async function getDrawingCommentData(postId: T3): Promise<{
 }> {
   const [playerCount, solvedCount, skippedCount, wordCount, guesses] =
     await Promise.all([
-      redis.zCard(REDIS_KEYS.userAttempts(postId)),
-      redis.zCard(REDIS_KEYS.userSolved(postId)),
-      redis.zCard(REDIS_KEYS.userSkipped(postId)),
+      redis.zCard(REDIS_KEYS.drawingAttempts(postId)),
+      redis.zCard(REDIS_KEYS.drawingSolves(postId)),
+      redis.zCard(REDIS_KEYS.drawingSkips(postId)),
       redis.zCard(REDIS_KEYS.drawingGuesses(postId)),
       redis.zRange(REDIS_KEYS.drawingGuesses(postId), 0, -1, {
         reverse: true,

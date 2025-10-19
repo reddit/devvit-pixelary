@@ -1,7 +1,6 @@
 import { redis } from '@devvit/web/server';
 import { REDIS_KEYS } from './redis';
 import { getBannedWords } from './dictionary';
-import type { T3 } from '../../shared/types';
 
 /**
  * Champion Comments Service
@@ -13,78 +12,100 @@ import type { T3 } from '../../shared/types';
  */
 
 /**
- * Set a champion comment for a word on a specific post
- * @param postId - The post ID
+ * Set a champion comment for a word in a subreddit
+ * @param subredditName - The subreddit name
  * @param word - The word to set champion comment for
  * @param commentId - The comment ID that serves as champion
  */
 export async function setChampionComment(
-  postId: T3,
+  subredditName: string,
   word: string,
   commentId: string
 ): Promise<void> {
-  const key = REDIS_KEYS.championComments(postId);
-  const reverseKey = REDIS_KEYS.championCommentReverse(commentId);
+  const normalizedWord = word.toLowerCase();
+  const championWordsKey = REDIS_KEYS.wordsChampioned(subredditName);
+  const wordToCommentKey = REDIS_KEYS.wordChampion(normalizedWord);
+  const commentToWordKey = REDIS_KEYS.championWord(commentId);
 
-  // Set forward mapping (word -> commentId)
-  await redis.hSet(key, { [word.toLowerCase()]: commentId });
+  // Get existing champion words
+  const existingWords = await getAllChampionWords(subredditName);
 
-  // Set reverse mapping (commentId -> {postId, word})
-  await redis.set(reverseKey, JSON.stringify({ postId, word }));
+  // Add word to champion words list if not already present
+  if (!existingWords.includes(normalizedWord)) {
+    const updatedWords = [...existingWords, normalizedWord].sort();
+    await redis.set(championWordsKey, JSON.stringify(updatedWords));
+  }
+
+  // Set word -> commentId mapping
+  await redis.set(wordToCommentKey, commentId);
+
+  // Set commentId -> {subredditName, word} mapping
+  await redis.set(commentToWordKey, JSON.stringify({ subredditName, word }));
 }
 
 /**
- * Get the champion comment ID for a word on a specific post
- * @param postId - The post ID
+ * Get the champion comment ID for a word
  * @param word - The word to get champion comment for
  * @returns The comment ID if it exists, null otherwise
  */
-export async function getChampionComment(
-  postId: T3,
-  word: string
-): Promise<string | null> {
-  const key = REDIS_KEYS.championComments(postId);
-  const commentId = await redis.hGet(key, word.toLowerCase());
+export async function getChampionComment(word: string): Promise<string | null> {
+  const normalizedWord = word.toLowerCase();
+  const wordToCommentKey = REDIS_KEYS.wordChampion(normalizedWord);
+  const commentId = await redis.get(wordToCommentKey);
   return commentId ?? null;
 }
 
 /**
- * Remove a champion comment for a word on a specific post
- * @param postId - The post ID
+ * Remove a champion comment for a word in a subreddit
+ * @param subredditName - The subreddit name
  * @param word - The word to remove champion comment for
  */
 export async function removeChampionComment(
-  postId: T3,
+  subredditName: string,
   word: string
 ): Promise<void> {
-  const key = REDIS_KEYS.championComments(postId);
+  const normalizedWord = word.toLowerCase();
+  const championWordsKey = REDIS_KEYS.wordsChampioned(subredditName);
+  const wordToCommentKey = REDIS_KEYS.wordChampion(normalizedWord);
 
-  // Get commentId from forward mapping before deleting
-  const commentId = await redis.hGet(key, word.toLowerCase());
+  // Get commentId before deleting
+  const commentId = await redis.get(wordToCommentKey);
 
-  // Delete forward mapping
-  await redis.hDel(key, [word.toLowerCase()]);
+  // Remove word from champion words list
+  const existingWords = await getAllChampionWords(subredditName);
+  const updatedWords = existingWords.filter((w) => w !== normalizedWord);
+  await redis.set(championWordsKey, JSON.stringify(updatedWords));
 
-  // Delete reverse mapping if commentId exists
+  // Delete word -> commentId mapping
+  await redis.del(wordToCommentKey);
+
+  // Delete commentId -> {subredditName, word} mapping if commentId exists
   if (commentId) {
-    const reverseKey = REDIS_KEYS.championCommentReverse(commentId);
-    await redis.del(reverseKey);
+    const commentToWordKey = REDIS_KEYS.championWord(commentId);
+    await redis.del(commentToWordKey);
   }
 }
 
 /**
- * Get all words that have champion comments for a specific post
- * @param postId - The post ID
+ * Get all words that have champion comments in a subreddit
+ * @param subredditName - The subreddit name
  * @returns Array of words with champion comments
  */
-export async function getAllChampionWords(postId: T3): Promise<string[]> {
-  const key = REDIS_KEYS.championComments(postId);
-  const championData = await redis.hGetAll(key);
+export async function getAllChampionWords(
+  subredditName: string
+): Promise<string[]> {
+  const championWordsKey = REDIS_KEYS.wordsChampioned(subredditName);
+  const data = await redis.get(championWordsKey);
 
-  // Filter out numeric keys (corrupted data from previous bug)
-  const words = Object.keys(championData).filter((key) => isNaN(Number(key)));
+  if (!data) {
+    return [];
+  }
 
-  return words;
+  try {
+    return JSON.parse(data) as string[];
+  } catch {
+    return [];
+  }
 }
 
 /**
@@ -104,23 +125,23 @@ export async function isWordBanned(
 }
 
 /**
- * Check if a comment ID is a champion comment for any word on any post
+ * Check if a comment ID is a champion comment for any word in any subreddit
  * This is used when handling comment deletion to enforce champion removal
  * @param commentId - The comment ID to check
- * @returns Object with postId and word if found, null otherwise
+ * @returns Object with subredditName and word if found, null otherwise
  */
 export async function findChampionCommentByCommentId(
   commentId: string
-): Promise<{ postId: T3; word: string } | null> {
-  const reverseKey = REDIS_KEYS.championCommentReverse(commentId);
-  const data = await redis.get(reverseKey);
+): Promise<{ subredditName: string; word: string } | null> {
+  const commentToWordKey = REDIS_KEYS.championWord(commentId);
+  const data = await redis.get(commentToWordKey);
 
   if (!data) {
     return null;
   }
 
   try {
-    return JSON.parse(data) as { postId: T3; word: string };
+    return JSON.parse(data) as { subredditName: string; word: string };
   } catch {
     return null;
   }

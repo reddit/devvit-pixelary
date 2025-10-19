@@ -17,6 +17,30 @@ export async function createPost(
     throw new Error('subredditName is required');
   }
 
+  // Calculate the size of the postData to debug potential size issues
+  const postDataString = JSON.stringify(postData);
+  const postDataSize = Buffer.byteLength(postDataString, 'utf8');
+  console.log('Post data size check:', {
+    title,
+    postDataSize,
+    postDataSizeKB: Math.round((postDataSize / 1024) * 100) / 100,
+    postDataKeys: Object.keys(postData),
+    drawingDataSize:
+      postData.type === 'drawing' ? postData.drawing.data.length : 'N/A',
+  });
+
+  // Check if postData exceeds 2KB limit
+  if (postDataSize > 2048) {
+    console.error('Post data exceeds 2KB limit:', {
+      postDataSize,
+      postDataSizeKB: Math.round((postDataSize / 1024) * 100) / 100,
+      limitKB: 2,
+    });
+    throw new Error(
+      `Post data too large: ${postDataSize} bytes (max 2048 bytes)`
+    );
+  }
+
   const post = await reddit.submitCustomPost({
     userGeneratedContent: {
       text: 'Pixelary',
