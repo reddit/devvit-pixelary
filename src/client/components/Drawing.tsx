@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react';
 import { renderDrawingToCanvas } from '../../shared/utils/drawing';
 import { DrawingData } from '@shared/schema/drawing';
 
-export interface DrawingProps {
+interface DrawingProps {
   data: DrawingData;
   size?: number;
   onClick?: () => void;

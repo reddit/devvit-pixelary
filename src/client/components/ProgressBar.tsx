@@ -1,4 +1,4 @@
-export interface ProgressBarProps {
+interface ProgressBarProps {
   percentage: number;
   width?: number;
   height?: number;

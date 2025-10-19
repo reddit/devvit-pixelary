@@ -1,6 +1,6 @@
 import { getGlyph, SupportedGlyph } from './glyphs';
 
-export interface PixelSymbolProps {
+interface PixelSymbolProps {
   type: SupportedGlyph;
   scale?: number;
   color?: string;

@@ -5,7 +5,7 @@ import { DrawingData } from '@shared/schema/drawing';
 import { PixelSymbol } from './PixelSymbol';
 import { PixelFont } from './PixelFont';
 
-export interface LightboxProps {
+interface LightboxProps {
   isOpen: boolean;
   onClose: () => void;
   drawing: DrawingData;

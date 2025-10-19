@@ -4,7 +4,7 @@ import { IconButton } from './IconButton';
 import { PixelFont } from './PixelFont';
 import { DrawingData } from '../../shared/schema/drawing';
 
-export interface PaginatedDrawingGridProps {
+interface PaginatedDrawingGridProps {
   drawings: Array<{ postId: string; drawing: DrawingData }>;
   onDrawingClick: (postId: string) => void;
   isLoading?: boolean;

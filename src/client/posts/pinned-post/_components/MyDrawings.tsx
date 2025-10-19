@@ -6,7 +6,7 @@ import { PaginatedDrawingGrid } from '@components/PaginatedDrawingGrid';
 import { navigateTo } from '@devvit/web/client';
 import { context } from '@devvit/web/client';
 
-export interface MyDrawingsProps {
+interface MyDrawingsProps {
   onClose: () => void;
 }
 

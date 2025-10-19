@@ -34,7 +34,7 @@ export interface ToastConfig {
   onAction?: () => void;
 }
 
-export interface ToastProps extends Omit<ToastConfig, 'onClose'> {
+interface ToastProps extends Omit<ToastConfig, 'onClose'> {
   onClose: (id: string) => void;
   index: number;
   totalToasts: number;

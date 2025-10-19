@@ -3,7 +3,7 @@ import { ProgressBar } from './ProgressBar';
 import { PixelFont } from './PixelFont';
 import { getLevelByScore } from '../../shared/utils/progression';
 
-export interface LevelProgressAttachmentProps {
+interface LevelProgressAttachmentProps {
   newScore: number;
   earnedPoints: number;
 }

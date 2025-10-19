@@ -5,7 +5,7 @@ import { IconButton } from '@components/IconButton';
 import { trpc } from '@client/trpc/client';
 import { PixelSymbol } from '@components/PixelSymbol';
 
-export interface LevelDetailsProps {
+interface LevelDetailsProps {
   onClose: () => void;
 }
 
