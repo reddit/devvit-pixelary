@@ -19,7 +19,7 @@ interface ButtonProps {
 
 export function Button({
   children,
-  onClick = () => console.log('Clicked!'),
+  onClick = () => {},
   variant = 'primary',
   size = 'medium',
   disabled = false,

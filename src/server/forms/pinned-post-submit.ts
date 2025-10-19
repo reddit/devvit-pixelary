@@ -12,11 +12,11 @@ export async function handlePinnedPostSubmit(
   res: Response
 ): Promise<void> {
   try {
-    console.log('Creating pinned post with body:', req.body);
+    // Creating pinned post
     const { title } = req.body;
 
     if (!title) {
-      console.log('No title provided in request');
+      // No title provided
       res.status(400).json({
         status: 'error',
         message: 'Post title is required',
@@ -31,7 +31,7 @@ export async function handlePinnedPostSubmit(
       navigateTo: `https://reddit.com/r/${context.subredditName}/comments/${postId}`,
     });
   } catch (error) {
-    console.error(`Error creating pinned post: ${error}`);
+    console.error('Error creating pinned post:', error);
     res.status(400).json({
       status: 'error',
       message: 'Failed to create pinned post',

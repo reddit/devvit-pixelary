@@ -32,9 +32,9 @@ export async function handleCommentCreate(
     // }
 
     // Check for commands using new system
-    console.log(`Processing comment: "${comment.body}" from ${author.name}`);
+    // Processing comment
     if (isCommand(comment.body)) {
-      console.log(`Command detected: ${comment.body}`);
+      // Command detected
 
       if (!subreddit.name) {
         console.error('Subreddit name is undefined:', {
@@ -68,7 +68,7 @@ export async function handleCommentCreate(
       // Process command through simplified system
       const result = await processCommand(command, args, commandContext);
 
-      console.log(`Command result: ${result.success ? 'SUCCESS' : 'FAILED'}`);
+      // Command processed
 
       if (result.success && result.response) {
         // Reply to the comment
@@ -77,7 +77,7 @@ export async function handleCommentCreate(
             text: result.response,
             id: comment.id as `t1_${string}`,
           });
-          console.log(`✅ Successfully replied to comment ${comment.id}`);
+          // Reply sent
         } catch (replyError) {
           console.error(
             `❌ Failed to reply to comment ${comment.id}:`,
@@ -85,10 +85,10 @@ export async function handleCommentCreate(
           );
         }
       } else if (!result.success) {
-        console.log(`Command failed: ${result.error}`);
+        // Command failed
       }
     } else {
-      console.log(`Not a command: ${comment.body}`);
+      // Not a command
     }
 
     res.json({ status: 'processed' });
@@ -117,9 +117,7 @@ export async function handleCommentDelete(
     const championData = await findChampionCommentByCommentId(commentId);
 
     if (championData) {
-      console.log(
-        `Champion comment deleted: ${commentId} for word "${championData.word}" on post ${championData.postId}`
-      );
+      // Champion comment deleted
 
       // Remove champion comment reference
       await removeChampionComment(championData.postId, championData.word);
@@ -127,15 +125,13 @@ export async function handleCommentDelete(
       // Ban the word as enforcement
       if (subredditName) {
         await banWord(subredditName, championData.word);
-        console.log(
-          `Word "${championData.word}" banned due to champion comment removal`
-        );
+        // Word banned
       }
     }
 
     // TODO: Implement command comment cleanup when command system is updated
     // TODO: Remove guess comment from Redis
-    console.log(`Comment deleted: ${commentId} from post ${postId}`);
+    // Comment deleted
 
     res.json({ status: 'processed' });
   } catch (error) {

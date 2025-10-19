@@ -62,10 +62,6 @@ export async function ensureFlairTemplates(
       console.warn(
         `User flair is not enabled for r/${subredditName}. Skipping user flair setup. To enable user flair, moderators should go to Subreddit Settings > Community Settings > User Flair and enable it.`
       );
-    } else {
-      console.log(
-        `User flair is enabled for r/${subredditName} with ${userTemplates.length} templates`
-      );
     }
 
     // Create post flair templates (we still need these for post difficulty flair)
@@ -89,7 +85,7 @@ export async function ensureFlairTemplates(
       })
     );
 
-    console.log(`Flair templates ensured for r/${subredditName}`);
+    // Flair templates ensured
   } catch (error) {
     console.error(
       `Error ensuring flair templates for r/${subredditName}:`,
@@ -137,7 +133,7 @@ export async function setUserFlair(
       cssClass: cssClass,
     });
 
-    console.log(`Set user flair: ${userId} → ${flairText}`);
+    // User flair set
   } catch (error) {
     // Check if it's a 404 error (API endpoint not found)
     if (error instanceof Error && error.message.includes('404')) {
@@ -174,7 +170,7 @@ export async function setPostFlair(
       flairTemplateId: templateId,
     });
 
-    console.log(`Set post flair: ${postId} → ${difficulty}`);
+    // Post flair set
   } catch (error) {
     console.error(`Error setting post flair for ${postId}:`, error);
     // Don't throw - flair setting should not block other operations

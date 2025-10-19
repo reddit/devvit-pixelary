@@ -17,18 +17,18 @@ export async function handleTestRealtime(
       return;
     }
 
-    console.log(`Sending test realtime message to post-${postId}-guesses`);
+    // Sending test message
     await realtime.send(`post-${postId}-guesses`, {
       type: 'test_message',
       postId,
       message: 'This is a test message',
       timestamp: Date.now(),
     });
-    console.log('Test message sent successfully');
+    // Test message sent
 
     res.json({ status: 'success', message: 'Test message sent' });
   } catch (error) {
-    console.error(`Error sending test message: ${error}`);
+    console.error('Error sending test message:', error);
     res
       .status(400)
       .json({ status: 'error', message: 'Failed to send test message' });
@@ -49,9 +49,7 @@ export async function handleTestScheduler(
       return;
     }
 
-    console.log(
-      `Testing scheduler with postId: ${postId}, authorName: ${authorName}, word: ${word}`
-    );
+    // Testing scheduler
 
     // Test the scheduler endpoint directly
     const response = await fetch(
@@ -73,7 +71,7 @@ export async function handleTestScheduler(
         .json({ status: 'error', message: 'Scheduler test failed' });
     }
   } catch (error) {
-    console.error(`Error testing scheduler: ${error}`);
+    console.error('Error testing scheduler:', error);
     res.status(500).json({ status: 'error', message: 'Scheduler test failed' });
   }
 }
