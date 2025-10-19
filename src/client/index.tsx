@@ -11,6 +11,7 @@ import './index.css';
 import { Background } from './components/Background';
 import { ToastProvider } from './components/ToastManager';
 import { ToastErrorBoundary } from './components/ToastErrorBoundary';
+import { RootErrorBoundary } from './components/RootErrorBoundary';
 
 const queryClient = new QueryClient();
 const trpcClient = trpc.createClient({
@@ -60,57 +61,51 @@ window.addEventListener('unhandledrejection', (event) => {
 });
 
 const App = () => {
-  try {
-    const postData = context.postData;
+  const postData = context.postData;
 
-    if (!postData?.type) {
-      return (
-        <div className="flex items-center justify-center h-screen">
-          <div className="text-center">
-            <div className="text-gray-600">Loading post data...</div>
-          </div>
-        </div>
-      );
-    }
-
-    switch (postData.type) {
-      case 'drawing':
-        return <DrawingPost postData={postData as DrawingPostDataExtended} />;
-      case 'pinned':
-        return <PinnedPost />;
-      default:
-        return (
-          <div className="flex items-center justify-center h-screen">
-            <div className="text-center">
-              <div className="text-red-600 text-xl font-bold mb-2">
-                Unknown Post Type
-              </div>
-              <div className="text-gray-600">
-                Post type "{String(postData.type)}" is not supported
-              </div>
-            </div>
-          </div>
-        );
-    }
-  } catch (error) {
+  if (!postData?.type) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="text-center">
-          <div className="text-red-600 text-xl font-bold mb-2">
-            Application Error
-          </div>
-          <div className="text-gray-600">{(error as Error).message}</div>
+          <div className="text-gray-600">Loading post data...</div>
         </div>
       </div>
     );
+  }
+
+  switch (postData.type) {
+    case 'drawing':
+      return <DrawingPost postData={postData as DrawingPostDataExtended} />;
+    case 'pinned':
+      return <PinnedPost />;
+    default:
+      return (
+        <div className="flex items-center justify-center h-screen">
+          <div className="text-center">
+            <div className="text-red-600 text-xl font-bold mb-2">
+              Unknown Post Type
+            </div>
+            <div className="text-gray-600">
+              Post type "{String(postData.type)}" is not supported
+            </div>
+          </div>
+        </div>
+      );
   }
 };
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <Providers>
-      <Background />
-      <App />
-    </Providers>
+    <RootErrorBoundary
+      onError={(error, errorInfo) => {
+        console.error('Root Error Boundary caught error:', error, errorInfo);
+        // Could send to error tracking service here
+      }}
+    >
+      <Providers>
+        <Background />
+        <App />
+      </Providers>
+    </RootErrorBoundary>
   </React.StrictMode>
 );
