@@ -5,6 +5,7 @@ import { DRAWING_COLORS } from '@shared/constants';
 import { PixelFont } from '@components/PixelFont';
 import { DrawingData, DrawingUtils } from '@shared/schema/drawing';
 import { getContrastColor } from '@shared/utils/color';
+import type { HEX } from '@shared/types';
 
 interface DrawStepProps {
   word: string;
@@ -20,7 +21,7 @@ export function DrawStep(props: DrawStepProps) {
 
   // Canvas state
   const canvasRef = useRef<HTMLCanvasElement>(null);
-  const [currentColor, setCurrentColor] = useState('#000000');
+  const [currentColor, setCurrentColor] = useState<HEX>('#000000');
   const [isDrawing, setIsDrawing] = useState(false);
   const [drawingData, setDrawingData] = useState<DrawingData>(() =>
     DrawingUtils.createBlank()
@@ -285,9 +286,9 @@ export function DrawStep(props: DrawStepProps) {
 }
 
 interface ColorSwatchProps {
-  color: string;
+  color: HEX;
   isSelected: boolean;
-  onSelect: (color: string) => void;
+  onSelect: (color: HEX) => void;
 }
 
 function ColorSwatch(props: ColorSwatchProps) {

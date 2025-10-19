@@ -1,3 +1,5 @@
+import type { HEX } from './types';
+
 // Pixelary game constants
 export const CANONICAL_SUBREDDIT_NAME = 'Pixelary';
 export const DEFAULT_PINNED_POST_TITLE = "Let's play Pixelary!";
@@ -27,7 +29,7 @@ export const TOAST_DURATION_MS = 3000;
 
 export const DRAWING_RESOLUTION = 16;
 
-export const DRAWING_COLORS = [
+export const DRAWING_COLORS: readonly HEX[] = [
   '#FFFFFF', // 0 - white
   '#000000', // 1 - black
   '#EB5757', // 2 - red
