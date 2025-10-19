@@ -45,6 +45,7 @@
     // Path aliases
     "baseUrl": ".",
     "paths": {
+      "@client/*": ["src/client/*"],
       "@src/*": ["src/*"],
       "@components/*": ["src/client/components/*"],
       "@utils/*": ["src/client/utils/*"],

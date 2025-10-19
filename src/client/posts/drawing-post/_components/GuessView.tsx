@@ -2,11 +2,11 @@ import { useState, useRef } from 'react';
 import { Button } from '@components/Button';
 import { Drawing } from '@components/Drawing';
 import { Shimmer } from '@components/Shimmer';
-import { DrawingData } from '../../../../shared/schema/drawing';
+import { DrawingData } from '@shared/schema/drawing';
 import { PixelInput } from '@components/PixelInput';
 import { useToastHelpers } from '@components/ToastManager';
 import { PixelFont } from '@components/PixelFont';
-import type { PostGuesses } from '../../../../shared/schema/pixelary';
+import type { PostGuesses } from '@shared/schema/pixelary';
 
 interface GuessViewProps {
   drawing: DrawingData;

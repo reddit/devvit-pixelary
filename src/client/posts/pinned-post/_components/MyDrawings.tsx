@@ -1,8 +1,8 @@
-import { Button } from '../../../components/Button';
-import { trpc } from '../../../trpc/client';
-import { PixelFont } from '../../../components/PixelFont';
-import { IconButton } from '../../../components/IconButton';
-import { PaginatedDrawingGrid } from '../../../components/PaginatedDrawingGrid';
+import { Button } from '@components/Button';
+import { trpc } from '@client/trpc/client';
+import { PixelFont } from '@components/PixelFont';
+import { IconButton } from '@components/IconButton';
+import { PaginatedDrawingGrid } from '@components/PaginatedDrawingGrid';
 import { navigateTo } from '@devvit/web/client';
 import { context } from '@devvit/web/client';
 

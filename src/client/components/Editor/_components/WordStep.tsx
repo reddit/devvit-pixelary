@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
-import { CARD_DRAW_DURATION } from '../../../../shared/constants';
-import type { CandidateWord } from '../../../../shared/schema/pixelary';
-import { PixelFont } from '../../PixelFont';
-import { PixelSymbol } from '../../PixelSymbol';
+import { CARD_DRAW_DURATION } from '@shared/constants';
+import type { CandidateWord } from '@shared/schema/pixelary';
+import { PixelFont } from '@components/PixelFont';
+import { PixelSymbol } from '@components/PixelSymbol';
 import { context } from '@devvit/web/client';
-import { trpc } from '../../../trpc/client';
+import { trpc } from '@client/trpc/client';
 
 interface WordStepProps {
   selectCandidate: (candidate: CandidateWord) => void;

@@ -1,12 +1,12 @@
-import { LEVELS } from '../../../../shared/constants';
-import type { Level } from '../../../../shared/types';
-import { PixelFont } from '../../../components/PixelFont';
-import { Counter } from '../../../components/Counter';
-import { Button } from '../../../components/Button';
-import { Logo } from '../../../components/Logo';
-import { PixelSymbol } from '../../../components/PixelSymbol';
-import { ProgressBar } from '../../../components/ProgressBar';
-import { trpc } from '../../../trpc/client';
+import { LEVELS } from '@shared/constants';
+import type { Level } from '@shared/types';
+import { PixelFont } from '@components/PixelFont';
+import { Counter } from '@components/Counter';
+import { Button } from '@components/Button';
+import { Logo } from '@components/Logo';
+import { PixelSymbol } from '@components/PixelSymbol';
+import { ProgressBar } from '@components/ProgressBar';
+import { trpc } from '@client/trpc/client';
 
 type MenuProps = {
   onDraw: () => void;

@@ -1,6 +1,6 @@
 import React from 'react';
-import { PixelFont } from '../../../components/PixelFont';
-import { IconButton } from '../../../components/IconButton';
+import { PixelFont } from '@components/PixelFont';
+import { IconButton } from '@components/IconButton';
 
 interface CardLayoutProps {
   title: string;

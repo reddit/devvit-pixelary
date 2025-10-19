@@ -1,4 +1,4 @@
-import { PixelFont } from '../../../components/PixelFont';
+import { PixelFont } from '@components/PixelFont';
 import { CardLayout } from './CardLayout';
 
 interface HowToPlayProps {

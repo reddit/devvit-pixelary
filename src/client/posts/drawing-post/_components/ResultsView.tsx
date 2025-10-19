@@ -3,15 +3,15 @@ import { PixelSymbol } from '@components/PixelSymbol';
 import { Drawing } from '@components/Drawing';
 import { Lightbox } from '@components/Lightbox';
 import { LevelProgressAttachment } from '@components/LevelProgressAttachment';
-import { trpc } from '../../../trpc/client';
+import { trpc } from '@client/trpc/client';
 import { abbreviateNumber } from '@shared/utils/numbers';
-import { DrawingData } from '../../../../shared/schema/drawing';
+import { DrawingData } from '@shared/schema/drawing';
 import { PixelFont } from '@components/PixelFont';
 import { obfuscateString } from '@shared/utils/string';
 import { titleCase } from '@shared/utils/string';
 import { useState, useEffect } from 'react';
 import { useToastHelpers } from '@components/ToastManager';
-import type { PostGuesses } from '../../../../shared/schema/pixelary';
+import type { PostGuesses } from '@shared/schema/pixelary';
 
 interface ResultsViewProps {
   drawing: DrawingData;

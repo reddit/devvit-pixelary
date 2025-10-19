@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { LEVELS } from '../../../../shared/constants';
+import { LEVELS } from '@shared/constants';
 import { PixelFont } from '@components/PixelFont';
 import { IconButton } from '@components/IconButton';
-import { trpc } from '../../../trpc/client';
-import { PixelSymbol } from '@src/client/components/PixelSymbol';
+import { trpc } from '@client/trpc/client';
+import { PixelSymbol } from '@components/PixelSymbol';
 
 export interface LevelDetailsProps {
   onClose: () => void;

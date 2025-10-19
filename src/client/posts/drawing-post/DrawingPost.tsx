@@ -2,12 +2,12 @@ import { useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { GuessView } from './_components/GuessView';
 import { ResultsView } from './_components/ResultsView';
-import { DrawingEditor } from '../../components/Editor/Editor';
-import { trpc } from '../../trpc/client';
+import { DrawingEditor } from '@components/Editor/Editor';
+import { trpc } from '@client/trpc/client';
 import { context } from '@devvit/web/client';
-import { useToastHelpers } from '../../components/ToastManager';
-import { useRealtimeStats } from '../../hooks/useRealtimeStats';
-import { DrawingPostDataExtended } from '../../../shared/schema/pixelary';
+import { useToastHelpers } from '@components/ToastManager';
+import { useRealtimeStats } from '@client/hooks/useRealtimeStats';
+import { DrawingPostDataExtended } from '@shared/schema/pixelary';
 
 type DrawingPostProps = {
   postData: DrawingPostDataExtended | undefined;

@@ -1,11 +1,11 @@
 import { useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Button } from '../../Button';
-import { Drawing } from '../../Drawing';
-import { Modal } from '../../Modal';
-import { trpc } from '../../../trpc/client';
-import { DrawingData } from '../../../../shared/schema/drawing';
-import { PixelFont } from '../../PixelFont';
+import { Button } from '@components/Button';
+import { Drawing } from '@components/Drawing';
+import { Modal } from '@components/Modal';
+import { trpc } from '@client/trpc/client';
+import { DrawingData } from '@shared/schema/drawing';
+import { PixelFont } from '@components/PixelFont';
 import { navigateTo } from '@devvit/web/client';
 
 interface ReviewStepProps {

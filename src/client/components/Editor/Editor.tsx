@@ -2,11 +2,11 @@ import { useState, useEffect, useCallback } from 'react';
 import { WordStep } from './_components/WordStep';
 import { DrawStep } from './_components/DrawStep';
 import { ReviewStep } from './_components/ReviewStep';
-import { trpc } from '../../trpc/client';
-import { LEVELS, DRAWING_DURATION } from '../../../shared/constants';
-import type { Level } from '../../../shared/constants';
-import type { CandidateWord } from '../../../shared/schema/pixelary';
-import { DrawingData, DrawingUtils } from '../../../shared/schema/drawing';
+import { trpc } from '@client/trpc/client';
+import { LEVELS, DRAWING_DURATION } from '@shared/constants';
+import type { Level } from '@shared/constants';
+import type { CandidateWord } from '@shared/schema/pixelary';
+import { DrawingData, DrawingUtils } from '@shared/schema/drawing';
 
 interface DrawingEditorProps {
   onClose: () => void;

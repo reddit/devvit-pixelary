@@ -1,9 +1,9 @@
-import { trpc } from '../../../trpc/client';
-import { abbreviateNumber } from '../../../../shared/utils/numbers';
-import { PixelFont } from '../../../components/PixelFont';
+import { trpc } from '@client/trpc/client';
+import { abbreviateNumber } from '@shared/utils/numbers';
+import { PixelFont } from '@components/PixelFont';
 import { CardLayout } from './CardLayout';
-import { PixelSymbol } from '@src/client/components/PixelSymbol';
-import type { LeaderboardEntry } from '../../../../shared/schema/index';
+import { PixelSymbol } from '@components/PixelSymbol';
+import type { LeaderboardEntry } from '@shared/schema/index';
 
 interface LeaderboardProps {
   onClose: () => void;
