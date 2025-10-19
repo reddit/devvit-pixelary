@@ -107,68 +107,26 @@ export const appRouter = t.router({
           })
         )
         .mutation(async ({ ctx, input }) => {
-          console.log('Drawing submission started:', {
-            userId: ctx.userId,
-            username: ctx.username,
-            subredditId: ctx.subredditId,
-            subredditName: ctx.subredditName,
-            word: input.word,
-            dictionary: input.dictionary,
-            drawingSize: input.drawing.size,
-            drawingColors: input.drawing.colors.length,
-            drawingDataLength: input.drawing.data.length,
-          });
-
           if (!ctx.userId || !ctx.username) {
-            console.error('Drawing submission failed: User not logged in', {
-              userId: ctx.userId,
-              username: ctx.username,
-            });
             throw new Error('Must be logged in');
           }
           if (!ctx.subredditId) {
-            console.error('Drawing submission failed: Subreddit not found', {
-              subredditId: ctx.subredditId,
-              subredditName: ctx.subredditName,
-            });
             throw new Error('Subreddit not found');
           }
 
-          try {
-            console.log('Creating drawing with createDrawing function');
-            const post = await createDrawing({
-              word: input.word,
-              dictionary: input.dictionary,
-              drawing: input.drawing,
-              authorName: ctx.username,
-              authorId: ctx.userId,
-            });
+          const post = await createDrawing({
+            word: input.word,
+            dictionary: input.dictionary,
+            drawing: input.drawing,
+            authorName: ctx.username,
+            authorId: ctx.userId,
+          });
 
-            console.log('Drawing created successfully:', {
-              postId: post.id,
-              navigateTo: `https://reddit.com/r/${ctx.subredditName}/comments/${post.id}`,
-            });
-
-            return {
-              success: true,
-              postId: post.id,
-              navigateTo: `https://reddit.com/r/${ctx.subredditName}/comments/${post.id}`,
-            };
-          } catch (error) {
-            console.error('Drawing creation failed:', {
-              error,
-              errorMessage:
-                error instanceof Error ? error.message : String(error),
-              errorStack: error instanceof Error ? error.stack : undefined,
-              word: input.word,
-              dictionary: input.dictionary,
-              userId: ctx.userId,
-              username: ctx.username,
-              subredditId: ctx.subredditId,
-              subredditName: ctx.subredditName,
-            });
-            throw error;
-          }
+          return {
+            success: true,
+            postId: post.id,
+            navigateTo: `https://reddit.com/r/${ctx.subredditName}/comments/${post.id}`,
+          };
         }),
 
       getAllowedWords: t.procedure.query(async ({ ctx }) => {
@@ -372,20 +330,7 @@ export const appRouter = t.router({
           })
         )
         .mutation(async ({ ctx, input }) => {
-          console.log('Slate action tracking started:', {
-            subredditName: ctx.subredditName,
-            slateId: input.slateId,
-            action: input.action,
-            word: input.word,
-          });
-
           if (!ctx.subredditName) {
-            console.error('Slate action tracking failed: Subreddit not found', {
-              subredditName: ctx.subredditName,
-              slateId: input.slateId,
-              action: input.action,
-              word: input.word,
-            });
             throw new Error('Subreddit not found');
           }
 
@@ -395,24 +340,7 @@ export const appRouter = t.router({
             input.action,
             input.word
           ).catch((error) => {
-            console.error('Slate action tracking failed:', {
-              error,
-              errorMessage:
-                error instanceof Error ? error.message : String(error),
-              errorStack: error instanceof Error ? error.stack : undefined,
-              subredditName: ctx.subredditName,
-              slateId: input.slateId,
-              action: input.action,
-              word: input.word,
-            });
             // Silently ignore errors - telemetry should never break the app
-          });
-
-          console.log('Slate action tracking completed:', {
-            subredditName: ctx.subredditName,
-            slateId: input.slateId,
-            action: input.action,
-            word: input.word,
           });
 
           return { ok: true };

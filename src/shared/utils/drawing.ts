@@ -16,9 +16,6 @@ export function renderDrawingToCanvas(
     typeof drawingData.data !== 'string' ||
     !Array.isArray(drawingData.colors)
   ) {
-    if (typeof console !== 'undefined') {
-      console.error('Invalid drawing data structure:', drawingData);
-    }
     return;
   }
 
@@ -52,9 +49,6 @@ export function renderDrawingToCanvas(
         .map((c) => c.charCodeAt(0))
     );
   } catch (error) {
-    if (typeof console !== 'undefined') {
-      console.error('Invalid base64 drawing data:', error);
-    }
     return;
   }
 

@@ -1,4 +1,4 @@
-import { reddit, redis } from '@devvit/web/server';
+import { reddit, redis, scheduler } from '@devvit/web/server';
 import type { T2, T3 } from '@devvit/shared-types/tid.js';
 import type { Level } from '../../shared/types';
 import { REDIS_KEYS } from '../services/redis';
@@ -42,27 +42,13 @@ export async function ensureFlairTemplates(
   try {
     // Check if flair is enabled by trying to get templates
     const [userTemplates, postTemplates] = await Promise.all([
-      reddit.getUserFlairTemplates(subredditName).catch((error) => {
-        console.warn(
-          `User flair not enabled or accessible for r/${subredditName}:`,
-          error.message
-        );
-        return [];
-      }),
-      reddit.getPostFlairTemplates(subredditName).catch((error) => {
-        console.warn(
-          `Post flair not enabled or accessible for r/${subredditName}:`,
-          error.message
-        );
-        return [];
-      }),
+      reddit.getUserFlairTemplates(subredditName).catch(() => []),
+      reddit.getPostFlairTemplates(subredditName).catch(() => []),
     ]);
 
     // Check if user flair is enabled (for informational purposes)
     if (userTemplates.length === 0) {
-      console.warn(
-        `User flair is not enabled for r/${subredditName}. Skipping user flair setup. To enable user flair, moderators should go to Subreddit Settings > Community Settings > User Flair and enable it.`
-      );
+      // User flair is not enabled - this is informational only
     }
 
     // Create post flair templates (we still need these for post difficulty flair)
@@ -88,16 +74,13 @@ export async function ensureFlairTemplates(
 
     // Flair templates ensured
   } catch (error) {
-    console.error(
-      `Error ensuring flair templates for r/${subredditName}:`,
-      error
-    );
     // Don't throw - flair setup should not block app installation
   }
 }
 
 /**
  * Set user flair based on their level
+ * Uses scheduler to run in app context for proper permissions
  */
 export async function setUserFlair(
   userId: T2,
@@ -105,45 +88,17 @@ export async function setUserFlair(
   level: Level
 ): Promise<void> {
   try {
-    // First check if user flair is enabled
-    const userTemplates = await reddit
-      .getUserFlairTemplates(subredditName)
-      .catch((error) => {
-        console.warn(
-          `Failed to get user flair templates for r/${subredditName}:`,
-          error.message
-        );
-        return [];
-      });
-
-    if (userTemplates.length === 0) {
-      console.warn(
-        `User flair is not enabled for r/${subredditName}. Skipping user flair for ${userId}. To enable user flair, moderators should go to Subreddit Settings > Community Settings > User Flair and enable it.`
-      );
-      return;
-    }
-
-    // Set user flair directly with text and CSS class (like old Pixelary)
-    const flairText = FLAIR_CONFIG.user.format(level);
-    const cssClass = FLAIR_CONFIG.user.cssClass(level);
-
-    await reddit.setUserFlair({
-      username: userId,
-      subredditName,
-      text: flairText,
-      cssClass: cssClass,
+    // Schedule the flair setting job to run in app context
+    await scheduler.runJob({
+      name: 'SET_USER_FLAIR',
+      data: {
+        userId,
+        subredditName,
+        level,
+      },
+      runAt: new Date(), // run immediately
     });
-
-    // User flair set
   } catch (error) {
-    // Check if it's a 404 error (API endpoint not found)
-    if (error instanceof Error && error.message.includes('404')) {
-      console.warn(
-        `User flair API returned 404 for r/${subredditName}. This may indicate that user flair is not properly configured or the API endpoint has changed. Skipping user flair for ${userId}.`
-      );
-    } else {
-      console.error(`Error setting user flair for ${userId}:`, error);
-    }
     // Don't throw - flair setting should not block other operations
   }
 }
@@ -161,7 +116,6 @@ export async function setPostFlair(
       REDIS_KEYS.flairTemplates.post(difficulty)
     );
     if (!templateId) {
-      console.error(`No flair template found for difficulty ${difficulty}`);
       return;
     }
 
@@ -173,7 +127,6 @@ export async function setPostFlair(
 
     // Post flair set
   } catch (error) {
-    console.error(`Error setting post flair for ${postId}:`, error);
     // Don't throw - flair setting should not block other operations
   }
 }

@@ -30,6 +30,7 @@ import {
   handleUpdateDrawingPinnedComment,
   handleUserLevelUp,
   handleCreatePinnedPostComment,
+  handleSetUserFlair,
 } from './scheduler';
 
 // Import trigger handlers
@@ -79,6 +80,7 @@ router.post(
   '/internal/scheduler/create-pinned-post-comment',
   handleCreatePinnedPostComment
 );
+router.post('/internal/scheduler/set-user-flair', handleSetUserFlair);
 
 // ============================================================================
 // MENU ACTIONS

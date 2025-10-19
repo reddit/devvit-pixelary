@@ -22,8 +22,6 @@ export function SlateProvider({ children }: { children: React.ReactNode }) {
   const [slateId, setSlateId] = useState<string | null>(null);
   const [mutationReady, setMutationReady] = useState(false);
 
-  console.log('SlateProvider render:', { slateId, mutationReady });
-
   // Initialize mutation after component mounts to ensure tRPC context is available
   useEffect(() => {
     setMutationReady(true);
@@ -31,34 +29,16 @@ export function SlateProvider({ children }: { children: React.ReactNode }) {
 
   // Use the useMutation hook pattern like telemetry - stable reference
   const trackSlateActionMutation = trpc.app.slate.trackAction.useMutation({
-    onError: (error) => {
-      console.error('Slate tracking mutation error:', error);
-    },
+    onError: (error) => {},
   });
 
   const trackSlateAction = useCallback(
     (action: 'impression' | 'click' | 'publish', word?: string) => {
       if (!slateId) {
-        console.warn('trackSlateAction called but slateId is null/undefined', {
-          action,
-          word,
-        });
         return;
       }
 
-      console.log('Tracking slate action:', {
-        slateId,
-        action,
-        word,
-        mutationReady,
-      });
-
       if (!mutationReady) {
-        console.warn('Slate tracking not ready yet, skipping:', {
-          slateId,
-          action,
-          word,
-        });
         return;
       }
 

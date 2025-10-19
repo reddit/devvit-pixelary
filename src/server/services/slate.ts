@@ -280,8 +280,6 @@ export async function getSlateData(
 export async function testDeterministicSlates(
   subredditName: string
 ): Promise<void> {
-  console.log('Testing deterministic slate generation for:', subredditName);
-
   // Generate multiple slates and verify they're deterministic
   const results = await Promise.all([
     generateSlate(subredditName, 3),
@@ -292,22 +290,17 @@ export async function testDeterministicSlates(
   const slateIds = results.map((r) => r.slateId);
   const words = results.map((r) => r.candidates.map((c) => c.word).sort());
 
-  console.log('Generated slateIds:', slateIds);
-  console.log('Generated words:', words);
-
   // Check if all slateIds are the same
   const allSameId = slateIds.every((id) => id === slateIds[0]);
-  console.log('All slateIds are identical:', allSameId);
 
   // Check if all word sets are the same
   const allSameWords = words.every(
     (wordSet) => JSON.stringify(wordSet) === JSON.stringify(words[0])
   );
-  console.log('All word sets are identical:', allSameWords);
 
   if (allSameId && allSameWords) {
-    console.log('✅ Deterministic slate generation working correctly!');
+    // Deterministic slate generation working correctly
   } else {
-    console.log('❌ Deterministic slate generation has issues');
+    // Deterministic slate generation has issues
   }
 }

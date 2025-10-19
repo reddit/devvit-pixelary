@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import { getLevelByScore, getScore } from '../services/progression';
-import { setUserFlair } from '../core/flair';
+import { scheduler } from '@devvit/web/server';
 
 export async function handleUserLevelUp(
   req: Request,
@@ -12,15 +12,11 @@ export async function handleUserLevelUp(
 
     // Validate required parameters
     if (!userId) {
-      console.error('UserLeveledUp job failed: userId is undefined or empty');
       res.status(400).json({ status: 'error', message: 'userId is required' });
       return;
     }
 
     if (!subredditName) {
-      console.error(
-        'UserLeveledUp job failed: subredditName is undefined or empty'
-      );
       res
         .status(400)
         .json({ status: 'error', message: 'subredditName is required' });
@@ -30,12 +26,19 @@ export async function handleUserLevelUp(
     const score = await getScore(userId);
     const level = getLevelByScore(score);
 
-    // Set user flair (non-blocking)
+    // Schedule user flair update (non-blocking)
     try {
-      await setUserFlair(userId, subredditName, level);
+      await scheduler.runJob({
+        name: 'SET_USER_FLAIR',
+        data: {
+          userId,
+          subredditName,
+          level,
+        },
+        runAt: new Date(),
+      });
     } catch (error) {
-      console.error(`Error setting user flair for ${userId}:`, error);
-      // Don't fail the job if flair setting fails
+      // Don't fail the job if flair scheduling fails
     }
 
     // TODO: Send DM to user
@@ -46,7 +49,6 @@ export async function handleUserLevelUp(
 
     res.json({ status: 'success' });
   } catch (error) {
-    console.error(`Error in user level up job: ${error}`);
     res.status(500).json({ status: 'error', message: 'Job failed' });
   }
 }

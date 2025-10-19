@@ -35,166 +35,91 @@ export const createDrawing = async (options: {
 }) => {
   const { word, dictionary, drawing, authorName, authorId } = options;
 
-  console.log('createDrawing called with:', {
+  // Create Reddit post unit
+  const postData = {
+    type: 'drawing' as const,
     word,
+    drawing,
     dictionary,
-    authorName,
     authorId,
-    drawingSize: drawing.size,
-    drawingColors: drawing.colors.length,
-    drawingDataLength: drawing.data.length,
-  });
+    authorName,
+  };
 
-  try {
-    // Create Reddit post unit
-    console.log('Creating Reddit post...');
+  const post = await createPost(`What did u/${authorName} draw?`, postData);
 
-    const postData = {
-      type: 'drawing' as const,
-      word,
-      drawing,
-      dictionary,
-      authorId,
-      authorName,
-    };
+  const postId = post.id;
+  const currentDate = new Date();
+  const currentTime = currentDate.getTime();
 
-    console.log('Post data being created:', {
-      type: postData.type,
-      word: postData.word,
-      dictionary: postData.dictionary,
-      authorId: postData.authorId,
-      authorName: postData.authorName,
-      drawingSize: postData.drawing.size,
-      drawingColors: postData.drawing.colors.length,
-      drawingDataLength: postData.drawing.data.length,
-      drawingBg: postData.drawing.bg,
-    });
-
-    const post = await createPost(`What did u/${authorName} draw?`, postData);
-    console.log('Reddit post created successfully:', {
-      postId: post.id,
-      createdAt: post.createdAt,
-    });
-
-    const postId = post.id;
-    const currentDate = new Date();
-    const currentTime = currentDate.getTime();
-
-    console.log('Starting Redis operations for drawing:', {
-      postId,
-      currentTime,
-    });
-
-    // Run all operations in parallel
-    await Promise.all([
-      // Save post data and additional metadata to redis. Largely so we can fetch the drawing post later from other contexts.
-      (async () => {
-        console.log('Saving drawing data to Redis...');
-        await redis.hSet(REDIS_KEYS.drawing(postId), {
-          type: 'drawing',
-          postId,
-          createdAt: post.createdAt.getTime().toString(),
-          word,
-          dictionary,
-          drawing: JSON.stringify(drawing),
-          authorId,
-          authorName,
-        });
-        console.log('Drawing data saved to Redis');
-      })(),
-
-      // Award points for submission
-      (async () => {
-        console.log('Awarding points for submission...');
-        await incrementScore(authorId, AUTHOR_REWARD_SUBMIT);
-        console.log('Points awarded for submission');
-      })(),
-
-      // Add to list of drawings for this word
-      (async () => {
-        console.log('Adding to drawings by word list...');
-        await redis.zAdd(REDIS_KEYS.wordDrawings(word), {
-          member: postId,
-          score: currentTime,
-        });
-        console.log('Added to drawings by word list');
-      })(),
-
-      // Add to all drawings list
-      (async () => {
-        console.log('Adding to all drawings list...');
-        await redis.zAdd(REDIS_KEYS.allDrawings(), {
-          member: postId,
-          score: currentTime,
-        });
-        console.log('Added to all drawings list');
-      })(),
-
-      // Add to list of drawings for this user
-      (async () => {
-        console.log('Adding to drawings by user list...');
-        await redis.zAdd(REDIS_KEYS.userDrawings(authorId), {
-          member: postId,
-          score: currentTime,
-        });
-        console.log('Added to drawings by user list');
-      })(),
-    ]);
-
-    console.log('All Redis operations completed for drawing:', { postId });
-
-    // Schedule pinned comment job (non-blocking - don't fail if this fails)
-    try {
-      console.log('Scheduling pinned comment job...');
-      await scheduler.runJob({
-        name: 'NEW_DRAWING_PINNED_COMMENT',
-        data: {
-          postId,
-          authorName,
-          word,
-        },
-        runAt: currentDate, // run immediately
+  // Run all operations in parallel
+  await Promise.all([
+    // Save post data and additional metadata to redis. Largely so we can fetch the drawing post later from other contexts.
+    (async () => {
+      await redis.hSet(REDIS_KEYS.drawing(postId), {
+        type: 'drawing',
+        postId,
+        createdAt: post.createdAt.getTime().toString(),
+        word,
+        dictionary,
+        drawing: JSON.stringify(drawing),
+        authorId,
+        authorName,
       });
-      console.log('Pinned comment job scheduled successfully');
-    } catch (error) {
-      console.error(
-        `Failed to schedule pinned comment job for post ${postId}:`,
-        error
-      );
-      // Don't throw - the drawing post should still be created even if comment fails
-    }
+    })(),
 
-    // Set "Unranked" flair on new post (non-blocking)
-    try {
-      console.log('Setting Unranked flair on post...');
-      await setPostFlair(postId, context.subredditName, 'unranked');
-      console.log('Unranked flair set successfully');
-    } catch (error) {
-      console.error(`Failed to set flair for post ${postId}:`, error);
-      // Don't throw - flair setting should not block post creation
-    }
+    // Award points for submission
+    (async () => {
+      await incrementScore(authorId, AUTHOR_REWARD_SUBMIT);
+    })(),
 
-    console.log('Drawing creation completed successfully:', {
-      postId,
-      authorName,
-      word,
+    // Add to list of drawings for this word
+    (async () => {
+      await redis.zAdd(REDIS_KEYS.wordDrawings(word), {
+        member: postId,
+        score: currentTime,
+      });
+    })(),
+
+    // Add to all drawings list
+    (async () => {
+      await redis.zAdd(REDIS_KEYS.allDrawings(), {
+        member: postId,
+        score: currentTime,
+      });
+    })(),
+
+    // Add to list of drawings for this user
+    (async () => {
+      await redis.zAdd(REDIS_KEYS.userDrawings(authorId), {
+        member: postId,
+        score: currentTime,
+      });
+    })(),
+  ]);
+
+  // Schedule pinned comment job (non-blocking - don't fail if this fails)
+  try {
+    await scheduler.runJob({
+      name: 'NEW_DRAWING_PINNED_COMMENT',
+      data: {
+        postId,
+        authorName,
+        word,
+      },
+      runAt: currentDate, // run immediately
     });
-    return post;
   } catch (error) {
-    console.error('createDrawing failed:', {
-      error,
-      errorMessage: error instanceof Error ? error.message : String(error),
-      errorStack: error instanceof Error ? error.stack : undefined,
-      word,
-      dictionary,
-      authorName,
-      authorId,
-      drawingSize: drawing.size,
-      drawingColors: drawing.colors.length,
-      drawingDataLength: drawing.data.length,
-    });
-    throw error;
+    // Don't throw - the drawing post should still be created even if comment fails
   }
+
+  // Set "Unranked" flair on new post (non-blocking)
+  try {
+    await setPostFlair(postId, context.subredditName, 'unranked');
+  } catch (error) {
+    // Don't throw - flair setting should not block post creation
+  }
+
+  return post;
 };
 
 /**
@@ -605,10 +530,7 @@ export async function submitGuess(options: {
         await scheduler.cancelJob(nextJobId);
         await clearNextScheduledJobId(postId);
       } catch (error) {
-        console.error(
-          `[COMMENT_UPDATE] Failed to cancel job ${nextJobId} for post ${postId}:`,
-          error
-        );
+        // Silently ignore job cancellation errors
       }
     }
 
@@ -616,10 +538,7 @@ export async function submitGuess(options: {
     try {
       await scheduleCommentUpdate(postId, new Date(now));
     } catch (error) {
-      console.error(
-        `[COMMENT_UPDATE] Failed to schedule immediate update for post ${postId}:`,
-        error
-      );
+      // Silently ignore scheduling errors
     }
   } else if (!nextJobId) {
     // Within cooldown, no job scheduled - schedule one
@@ -627,10 +546,7 @@ export async function submitGuess(options: {
     try {
       await scheduleCommentUpdate(postId, new Date(nextUpdateTime));
     } catch (error) {
-      console.error(
-        `[COMMENT_UPDATE] Failed to schedule future update for post ${postId}:`,
-        error
-      );
+      // Silently ignore scheduling errors
     }
   }
   // else: Within cooldown AND job already scheduled - do nothing

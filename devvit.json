@@ -106,6 +106,9 @@
       },
       "CREATE_PINNED_POST_COMMENT": {
         "endpoint": "/internal/scheduler/create-pinned-post-comment"
+      },
+      "SET_USER_FLAIR": {
+        "endpoint": "/internal/scheduler/set-user-flair"
       }
     }
   },

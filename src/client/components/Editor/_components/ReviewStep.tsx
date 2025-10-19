@@ -52,56 +52,29 @@ export function ReviewStep(props: ReviewStepProps) {
   });
 
   const handlePost = async () => {
-    console.log('Starting drawing submission:', {
-      word,
-      dictionary: dictionaryName,
-      drawing,
-    });
     track('click_post_drawing');
 
     try {
-      console.log('Calling submitDrawing.mutateAsync with:', {
-        word,
-        dictionary: dictionaryName,
-        drawingSize: drawing.size,
-        drawingColors: drawing.colors.length,
-        drawingDataLength: drawing.data.length,
-      });
-
       const result = await submitDrawing.mutateAsync({
         word,
         dictionary: dictionaryName,
         drawing: drawing,
       });
 
-      console.log('Drawing submission result:', result);
-
       if (result.success) {
-        console.log('Drawing submitted successfully, tracking slate publish');
         // Track slate publish
         trackSlateAction('publish', word);
 
         if (result.navigateTo) {
-          console.log('Navigating to:', result.navigateTo);
           navigateTo(result.navigateTo);
         } else if (onSuccess) {
-          console.log('Calling onSuccess callback');
           onSuccess(result);
         }
       } else {
-        console.warn('Drawing submission returned success: false', result);
+        // Handle unsuccessful submission
       }
     } catch (error) {
-      console.error('Failed to submit drawing:', {
-        error,
-        word,
-        dictionary: dictionaryName,
-        errorMessage: error instanceof Error ? error.message : String(error),
-        errorStack: error instanceof Error ? error.stack : undefined,
-        drawingSize: drawing.size,
-        drawingColors: drawing.colors.length,
-        drawingDataLength: drawing.data.length,
-      });
+      // Handle submission error
     }
   };
 

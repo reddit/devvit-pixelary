@@ -22,6 +22,9 @@ vi.mock('@devvit/web/server', () => ({
     runJob: vi.fn(),
   },
   cache: vi.fn((fn) => fn()),
+  context: {
+    subredditName: 'testsubreddit',
+  },
 }));
 
 vi.mock('./redis', () => ({
@@ -135,6 +138,7 @@ describe('Leaderboard Service', () => {
           userId: 't2_testuser',
           score: 2,
           level: expect.any(Object),
+          subredditName: 'testsubreddit',
         },
         runAt: expect.any(Date),
       });
