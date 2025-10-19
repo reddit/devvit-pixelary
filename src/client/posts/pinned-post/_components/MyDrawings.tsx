@@ -5,12 +5,20 @@ import { IconButton } from '@components/IconButton';
 import { PaginatedDrawingGrid } from '@components/PaginatedDrawingGrid';
 import { navigateTo } from '@devvit/web/client';
 import { context } from '@devvit/web/client';
+import { useTelemetry } from '@client/hooks/useTelemetry';
+import { useEffect } from 'react';
 
 interface MyDrawingsProps {
   onClose: () => void;
 }
 
 export function MyDrawings({ onClose }: MyDrawingsProps) {
+  const { track } = useTelemetry();
+
+  // Track my drawings view on mount
+  useEffect(() => {
+    track('view_my_drawings');
+  }, [track]);
   const { data: drawings = [], isLoading } = trpc.app.user.getDrawings.useQuery(
     { limit: 20 }
   );
@@ -21,13 +29,20 @@ export function MyDrawings({ onClose }: MyDrawingsProps) {
       <header className="shrink-0 w-full flex flex-row items-center justify-between">
         <PixelFont scale={2.5}>My Drawings</PixelFont>
 
-        <IconButton onClick={onClose} symbol="X" />
+        <IconButton
+          onClick={onClose}
+          symbol="X"
+          telemetryEvent="click_close_my_drawings"
+        />
       </header>
 
       {/* Loading and Drawing Tiles */}
       <PaginatedDrawingGrid
         drawings={drawings}
         onDrawingClick={(postId) => {
+          // Track drawing tile click
+          track('click_drawing_tile');
+
           // Navigate to drawing post
           const subredditName = context.subredditName;
           if (subredditName) {
@@ -53,7 +68,9 @@ export function MyDrawings({ onClose }: MyDrawingsProps) {
                 You haven't created any drawings yet.
               </p>
             </div>
-            <Button onClick={onClose}>Start Drawing</Button>
+            <Button onClick={onClose} telemetryEvent="click_start_drawing">
+              Start Drawing
+            </Button>
           </div>
         </div>
       )}

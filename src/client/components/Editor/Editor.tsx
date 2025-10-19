@@ -7,6 +7,7 @@ import { LEVELS, DRAWING_DURATION } from '@shared/constants';
 import type { Level } from '@shared/constants';
 import type { CandidateWord } from '@shared/schema/pixelary';
 import { DrawingData, DrawingUtils } from '@shared/schema/drawing';
+import { useTelemetry } from '@client/hooks/useTelemetry';
 
 interface DrawingEditorProps {
   onClose: () => void;
@@ -22,6 +23,13 @@ export function DrawingEditor({ onClose }: DrawingEditorProps) {
   const [drawing, setDrawing] = useState<DrawingData>(
     DrawingUtils.createBlank()
   );
+
+  const { track } = useTelemetry();
+
+  // Track editor view on mount
+  useEffect(() => {
+    track('view_editor');
+  }, [track]);
 
   // tRPC hooks
   const { data: userProfile } = trpc.app.user.getProfile.useQuery();

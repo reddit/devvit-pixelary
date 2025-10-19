@@ -7,6 +7,8 @@ import { trpc } from '@client/trpc/client';
 import { DrawingData } from '@shared/schema/drawing';
 import { PixelFont } from '@components/PixelFont';
 import { navigateTo } from '@devvit/web/client';
+import { useTelemetry } from '@client/hooks/useTelemetry';
+import { useEffect } from 'react';
 
 interface ReviewStepProps {
   word: string;
@@ -24,6 +26,12 @@ export function ReviewStep(props: ReviewStepProps) {
   const { word, dictionaryName, drawing, onCancel, onSuccess } = props;
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const queryClient = useQueryClient();
+  const { track } = useTelemetry();
+
+  // Track review step view on mount
+  useEffect(() => {
+    track('view_review_step');
+  }, [track]);
   const submitDrawing = trpc.app.post.submitDrawing.useMutation({
     onSuccess: () => {
       // Invalidate relevant queries
@@ -42,6 +50,8 @@ export function ReviewStep(props: ReviewStepProps) {
   });
 
   const handlePost = async () => {
+    track('click_post_drawing');
+
     try {
       const result = await submitDrawing.mutateAsync({
         word,
@@ -62,6 +72,7 @@ export function ReviewStep(props: ReviewStepProps) {
   };
 
   const handleCancel = () => {
+    track('click_cancel_drawing');
     setShowCancelConfirm(true);
   };
 

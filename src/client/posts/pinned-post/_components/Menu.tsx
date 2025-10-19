@@ -7,6 +7,8 @@ import { Logo } from '@components/Logo';
 import { PixelSymbol } from '@components/PixelSymbol';
 import { ProgressBar } from '@components/ProgressBar';
 import { trpc } from '@client/trpc/client';
+import { useTelemetry } from '@client/hooks/useTelemetry';
+import { useEffect } from 'react';
 
 type MenuProps = {
   onDraw: () => void;
@@ -19,6 +21,13 @@ type MenuProps = {
 export function Menu(props: MenuProps) {
   const { onDraw, onMyDrawings, onLeaderboard, onHowToPlay, onLevelClick } =
     props;
+
+  const { track } = useTelemetry();
+
+  // Track menu view on mount
+  useEffect(() => {
+    track('view_menu');
+  }, [track]);
 
   const { data: userProfile } = trpc.app.user.getProfile.useQuery(undefined, {
     enabled: true,
@@ -47,26 +56,44 @@ export function Menu(props: MenuProps) {
 
       {/* Menu */}
       <nav className="flex flex-col gap-3 w-full max-w-3xs">
-        <Button onClick={onDraw} size="medium">
+        <Button onClick={onDraw} size="medium" telemetryEvent="click_draw">
           Draw
         </Button>
 
-        <Button onClick={onMyDrawings} size="medium" variant="secondary">
+        <Button
+          onClick={onMyDrawings}
+          size="medium"
+          variant="secondary"
+          telemetryEvent="click_my_drawings"
+        >
           My drawings
         </Button>
 
-        <Button onClick={onLeaderboard} size="medium" variant="secondary">
+        <Button
+          onClick={onLeaderboard}
+          size="medium"
+          variant="secondary"
+          telemetryEvent="click_leaderboard"
+        >
           Leaderboard
         </Button>
 
-        <Button onClick={onHowToPlay} size="medium" variant="secondary">
+        <Button
+          onClick={onHowToPlay}
+          size="medium"
+          variant="secondary"
+          telemetryEvent="click_how_to_play"
+        >
           How to play
         </Button>
       </nav>
 
       {/* Experience Bar - Clickable */}
       <button
-        onClick={onLevelClick}
+        onClick={() => {
+          track('click_level_details');
+          onLevelClick();
+        }}
         className="level-button hover:opacity-70 transition-opacity cursor-pointer flex flex-col items-center justify-center gap-2"
       >
         <div className="flex relative">

@@ -27,6 +27,8 @@ import {
 } from '../services/progression';
 import { isAdmin, isModerator } from '../services/redis';
 import { DrawingDataSchema } from '../../shared/schema/pixelary';
+import { trackEventFromContext } from '../services/telemetry';
+import type { EventType } from '../services/telemetry';
 
 const t = initTRPC.context<Context>().create();
 
@@ -309,6 +311,23 @@ export const appRouter = t.router({
           userId: ctx.userId,
         };
       }),
+    }),
+
+    // Telemetry endpoints
+    telemetry: t.router({
+      track: t.procedure
+        .input(z.object({ eventType: z.string() }))
+        .mutation(async ({ ctx, input }) => {
+          // Fire-and-forget telemetry tracking with automatic post type detection
+          trackEventFromContext(
+            input.eventType as EventType,
+            ctx.postData
+          ).catch(() => {
+            // Silently ignore errors - telemetry should never break the app
+          });
+
+          return { ok: true };
+        }),
     }),
   }),
 });

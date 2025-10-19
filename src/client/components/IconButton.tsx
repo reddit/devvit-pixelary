@@ -1,5 +1,7 @@
 import { PixelSymbol } from './PixelSymbol';
 import { SupportedGlyph } from './glyphs';
+import { useTelemetry } from '@client/hooks/useTelemetry';
+import type { TelemetryEventType } from '@shared/types';
 
 interface IconButtonProps {
   symbol: SupportedGlyph;
@@ -8,6 +10,7 @@ interface IconButtonProps {
   size?: 'small' | 'medium' | 'large';
   disabled?: boolean;
   className?: string;
+  telemetryEvent?: TelemetryEventType;
 }
 
 export function IconButton({
@@ -17,7 +20,9 @@ export function IconButton({
   size = 'medium',
   disabled = false,
   className = '',
+  telemetryEvent,
 }: IconButtonProps) {
+  const { track } = useTelemetry();
   const baseClasses =
     'relative inline-flex items-center justify-center border-4 transition-all duration-150';
 
@@ -46,9 +51,19 @@ export function IconButton({
     ? ''
     : 'hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[4px] active:translate-y-[4px]';
 
+  const handleClick = () => {
+    // Track telemetry if provided
+    if (telemetryEvent) {
+      track(telemetryEvent);
+    }
+
+    // Call original onClick
+    onClick?.();
+  };
+
   return (
     <button
-      onClick={disabled ? undefined : onClick}
+      onClick={disabled ? undefined : handleClick}
       disabled={disabled}
       className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${shadowClasses} shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)] active:shadow-none ${className}`}
     >

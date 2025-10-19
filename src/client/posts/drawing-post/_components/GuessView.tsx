@@ -1,4 +1,4 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { Button } from '@components/Button';
 import { Drawing } from '@components/Drawing';
 import { Shimmer } from '@components/Shimmer';
@@ -7,6 +7,7 @@ import { PixelInput } from '@components/PixelInput';
 import { useToastHelpers } from '@components/ToastManager';
 import { PixelFont } from '@components/PixelFont';
 import type { PostGuesses } from '@shared/schema/pixelary';
+import { useTelemetry } from '@client/hooks/useTelemetry';
 
 interface GuessViewProps {
   drawing: DrawingData;
@@ -28,12 +29,21 @@ export function GuessView({
   const [guess, setGuess] = useState('');
   const inputRef = useRef<HTMLInputElement>(null);
   const { warning } = useToastHelpers();
+  const { track } = useTelemetry();
+
+  // Track guess view on mount
+  useEffect(() => {
+    void track('view_guess');
+  }, [track]);
 
   const handleGuessSubmit = async () => {
     if (!guess.trim()) {
       warning('Please enter a guess!', { duration: 2000 });
       return;
     }
+
+    // Track guess submit
+    void track('click_guess_submit');
 
     try {
       await onGuess(guess.trim().toLowerCase());
@@ -117,14 +127,21 @@ export function GuessView({
           }}
           placeholderPhrases={['My guess...', 'Bird?', 'Plane?']}
         />
-        <Button onClick={() => void handleGuessSubmit()} size="large">
+        <Button
+          onClick={() => void handleGuessSubmit()}
+          size="large"
+          telemetryEvent="click_guess_submit"
+        >
           SEND
         </Button>
       </div>
 
       {/* Give Up Button */}
       <button
-        onClick={onGiveUp}
+        onClick={() => {
+          void track('click_give_up');
+          void onGiveUp();
+        }}
         className="flex items-center justify-center cursor-pointer"
       >
         <svg

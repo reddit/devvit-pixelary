@@ -1,6 +1,8 @@
 import { PixelFont } from './PixelFont';
 import { PixelSymbol } from './PixelSymbol';
 import { type SupportedGlyph } from './glyphs';
+import { useTelemetry } from '@client/hooks/useTelemetry';
+import type { TelemetryEventType } from '@shared/types';
 
 interface ButtonProps {
   children?: string;
@@ -12,6 +14,7 @@ interface ButtonProps {
   trailingIcon?: SupportedGlyph;
   className?: string;
   title?: string;
+  telemetryEvent?: TelemetryEventType;
 }
 
 export function Button({
@@ -24,7 +27,9 @@ export function Button({
   trailingIcon,
   className = '',
   title,
+  telemetryEvent,
 }: ButtonProps) {
+  const { track } = useTelemetry();
   const baseClasses =
     'flex flex-row gap-2 items-center justify-center border-4 transition-all';
 
@@ -52,9 +57,19 @@ export function Button({
     large: 2,
   };
 
+  const handleClick = () => {
+    // Track telemetry if provided
+    if (telemetryEvent) {
+      track(telemetryEvent);
+    }
+
+    // Call original onClick
+    onClick();
+  };
+
   return (
     <button
-      onClick={disabled ? undefined : onClick}
+      onClick={disabled ? undefined : handleClick}
       disabled={disabled}
       className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[4px] active:translate-y-[4px] shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)] active:shadow-none ${className}`}
       title={title}

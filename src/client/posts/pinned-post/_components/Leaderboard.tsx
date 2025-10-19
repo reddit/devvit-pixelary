@@ -4,12 +4,20 @@ import { PixelFont } from '@components/PixelFont';
 import { CardLayout } from './CardLayout';
 import { PixelSymbol } from '@components/PixelSymbol';
 import type { LeaderboardEntry } from '@shared/schema/index';
+import { useTelemetry } from '@client/hooks/useTelemetry';
+import { useEffect } from 'react';
 
 interface LeaderboardProps {
   onClose: () => void;
 }
 
 export function Leaderboard({ onClose }: LeaderboardProps) {
+  const { track } = useTelemetry();
+
+  // Track leaderboard view on mount
+  useEffect(() => {
+    track('view_leaderboard');
+  }, [track]);
   const { data: leaderboard = [], isLoading } =
     trpc.app.leaderboard.getTop.useQuery({ limit: 10 });
   const { data: userRank } = trpc.app.user.getRank.useQuery();

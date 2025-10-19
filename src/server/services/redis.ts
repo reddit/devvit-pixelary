@@ -47,6 +47,9 @@ export const REDIS_KEYS = {
     user: (levelRank: number) => `flair:user:${levelRank}`,
     post: (difficulty: string) => `flair:post:${difficulty}`,
   },
+
+  // Telemetry
+  telemetry: (date: string) => `tel:${date}`,
 };
 
 const USERNAME_TTL = 30 * 24 * 60 * 60; // 30 days.

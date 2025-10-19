@@ -4,12 +4,19 @@ import { PixelFont } from '@components/PixelFont';
 import { IconButton } from '@components/IconButton';
 import { trpc } from '@client/trpc/client';
 import { PixelSymbol } from '@components/PixelSymbol';
+import { useTelemetry } from '@client/hooks/useTelemetry';
 
 interface LevelDetailsProps {
   onClose: () => void;
 }
 
 export function LevelDetails({ onClose }: LevelDetailsProps) {
+  const { track } = useTelemetry();
+
+  // Track level details view on mount
+  useEffect(() => {
+    track('view_level_details');
+  }, [track]);
   // Get user profile to show their actual progress
   const { data: userProfile } = trpc.app.user.getProfile.useQuery(undefined, {
     enabled: true,
@@ -81,7 +88,12 @@ export function LevelDetails({ onClose }: LevelDetailsProps) {
             <PixelFont scale={3}>{currentLevel.name}</PixelFont>
           </div>
 
-          <IconButton symbol="X" onClick={onClose} />
+          <IconButton
+            symbol="X"
+            onClick={onClose}
+            telemetryEvent="click_close_level_details"
+            
+          />
         </header>
 
         {/* XP Bar */}
@@ -141,11 +153,15 @@ export function LevelDetails({ onClose }: LevelDetailsProps) {
             symbol="arrow-left"
             onClick={prevLevel}
             disabled={currentLevelIndex === 0}
+            telemetryEvent="click_level_prev"
+            
           />
           <IconButton
             symbol="arrow-right"
             onClick={nextLevel}
             disabled={currentLevelIndex === LEVELS.length - 1}
+            telemetryEvent="click_level_next"
+            
           />
         </nav>
       </div>

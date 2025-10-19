@@ -5,6 +5,7 @@ import { PixelFont } from '@components/PixelFont';
 import { PixelSymbol } from '@components/PixelSymbol';
 import { context } from '@devvit/web/client';
 import { trpc } from '@client/trpc/client';
+import { useTelemetry } from '@client/hooks/useTelemetry';
 
 interface WordStepProps {
   selectCandidate: (candidate: CandidateWord) => void;
@@ -16,6 +17,13 @@ export function WordStep(props: WordStepProps) {
   // State management
   const [startTime, setStartTime] = useState<number | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
+
+  const { track } = useTelemetry();
+
+  // Track word step view on mount
+  useEffect(() => {
+    track('view_word_step');
+  }, [track]);
 
   // tRPC hooks
   const {
@@ -107,7 +115,10 @@ export function WordStep(props: WordStepProps) {
 
       {/* Refresh Button */}
       <button
-        onClick={() => refreshCandidates()}
+        onClick={() => {
+          void track('click_refresh_words');
+          void refreshCandidates();
+        }}
         className="flex items-center hover:opacity-70 transition-opacity p-6 fixed right-0 bottom-0 cursor-pointer"
       >
         <PixelSymbol
@@ -133,11 +144,17 @@ interface WordCandidateProps {
 
 function WordCandidate(props: WordCandidateProps) {
   const { candidate, index, isLoading, onSelect } = props;
+  const { track } = useTelemetry();
 
   return (
     <button
       key={`candidate-${index}`}
-      onClick={() => candidate && onSelect(candidate)}
+      onClick={() => {
+        if (candidate) {
+          void track('click_word_candidate');
+          onSelect(candidate);
+        }
+      }}
       disabled={isLoading}
       className="bg-white border-4 border-black shadow-pixel cursor-pointer w-full h-1/3 flex flex-col gap-2 items-center justify-center"
     >

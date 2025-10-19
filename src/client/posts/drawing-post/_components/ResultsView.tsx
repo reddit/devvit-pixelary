@@ -12,6 +12,7 @@ import { titleCase } from '@shared/utils/string';
 import { useState, useEffect } from 'react';
 import { useToastHelpers } from '@components/ToastManager';
 import type { PostGuesses } from '@shared/schema/pixelary';
+import { useTelemetry } from '@client/hooks/useTelemetry';
 
 interface ResultsViewProps {
   drawing: DrawingData;
@@ -40,6 +41,12 @@ export function ResultsView({
 }: ResultsViewProps) {
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const { success } = useToastHelpers();
+  const { track } = useTelemetry();
+
+  // Track results view on mount
+  useEffect(() => {
+    track('view_results');
+  }, [track]);
 
   // Get current user profile for level progress calculation
   const { data: userProfile } = trpc.app.user.getProfile.useQuery();
@@ -190,7 +197,11 @@ export function ResultsView({
       <PixelFont>See comments for more!</PixelFont>
 
       {/* Primary CTA */}
-      <Button onClick={onDrawSomething} size="large">
+      <Button
+        onClick={onDrawSomething}
+        size="large"
+        telemetryEvent="click_draw_something"
+      >
         DRAW SOMETHING
       </Button>
 

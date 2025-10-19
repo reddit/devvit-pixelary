@@ -8,6 +8,7 @@ import { context } from '@devvit/web/client';
 import { useToastHelpers } from '@components/ToastManager';
 import { useRealtimeStats } from '@client/hooks/useRealtimeStats';
 import { DrawingPostDataExtended } from '@shared/schema/pixelary';
+import { useTelemetry } from '@client/hooks/useTelemetry';
 
 type DrawingPostProps = {
   postData: DrawingPostDataExtended | undefined;
@@ -18,6 +19,12 @@ type DrawingState = 'unsolved' | 'guessing' | 'solved' | 'skipped' | 'author';
 export const DrawingPost = ({ postData: propPostData }: DrawingPostProps) => {
   const currentPostId = context.postId;
   const { error: showErrorToast } = useToastHelpers();
+  const { track } = useTelemetry();
+
+  // Track drawing post view on mount
+  useEffect(() => {
+    track('view_drawing_post');
+  }, [track]);
   const { data: fetchedPostData } = trpc.app.post.getDrawing.useQuery(
     { postId: currentPostId || '' },
     { enabled: !!currentPostId && !propPostData }

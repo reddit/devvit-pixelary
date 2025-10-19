@@ -6,6 +6,7 @@ import { PixelFont } from '@components/PixelFont';
 import { DrawingData, DrawingUtils } from '@shared/schema/drawing';
 import { getContrastColor } from '@shared/utils/color';
 import type { HEX } from '@shared/types';
+import { useTelemetry } from '@client/hooks/useTelemetry';
 
 interface DrawStepProps {
   word: string;
@@ -18,6 +19,13 @@ export function DrawStep(props: DrawStepProps) {
 
   const [startTime] = useState(Date.now());
   const [elapsedTime, setElapsedTime] = useState(0);
+
+  const { track } = useTelemetry();
+
+  // Track draw step view on mount
+  useEffect(() => {
+    track('view_draw_step');
+  }, [track]);
 
   // Canvas state
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -46,6 +54,7 @@ export function DrawStep(props: DrawStepProps) {
   const secondsLeft = Math.max(0, Math.round(time - elapsedTime / 1000));
 
   const handleDone = () => {
+    track('click_done_drawing');
     onComplete(drawingData);
   };
 
@@ -243,7 +252,11 @@ export function DrawStep(props: DrawStepProps) {
           </div>
         </div>
 
-        <Button onClick={handleDone} size="medium">
+        <Button
+          onClick={handleDone}
+          size="medium"
+          telemetryEvent="click_done_drawing"
+        >
           DONE
         </Button>
       </header>
@@ -275,7 +288,10 @@ export function DrawStep(props: DrawStepProps) {
         {DRAWING_COLORS.map((color) => (
           <ColorSwatch
             key={color}
-            onSelect={() => setCurrentColor(color)}
+            onSelect={() => {
+              track('click_color_swatch');
+              setCurrentColor(color);
+            }}
             color={color}
             isSelected={currentColor === color}
           />
