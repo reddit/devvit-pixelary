@@ -17,17 +17,9 @@ export async function createPost(
     throw new Error('subredditName is required');
   }
 
-  // Calculate the size of the postData to debug potential size issues
+  // Calculate the size of the postData to check against 2KB limit
   const postDataString = JSON.stringify(postData);
   const postDataSize = Buffer.byteLength(postDataString, 'utf8');
-  console.log('Post data size check:', {
-    title,
-    postDataSize,
-    postDataSizeKB: Math.round((postDataSize / 1024) * 100) / 100,
-    postDataKeys: Object.keys(postData),
-    drawingDataSize:
-      postData.type === 'drawing' ? postData.drawing.data.length : 'N/A',
-  });
 
   // Check if postData exceeds 2KB limit
   if (postDataSize > 2048) {
