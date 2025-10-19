@@ -17,6 +17,7 @@ vi.mock('@devvit/web/server', () => ({
   realtime: {
     send: vi.fn(),
   },
+  cache: vi.fn((fn) => fn()), // Mock cache to just execute the function
 }));
 
 vi.mock('./progression', () => ({

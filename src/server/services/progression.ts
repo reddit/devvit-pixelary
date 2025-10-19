@@ -1,4 +1,4 @@
-import { redis, scheduler } from '@devvit/web/server';
+import { redis, scheduler, cache } from '@devvit/web/server';
 import { LEVELS } from '../../shared/constants';
 import { getUsername, REDIS_KEYS } from './redis';
 import { parseT2, type T2, type Level } from '../../shared/types';
@@ -30,35 +30,39 @@ export async function getLeaderboard(options?: {
 }> {
   const { cursor = 0, limit = 10, reverse = true, by = 'rank' } = options ?? {};
 
-  // Top leaderboard entries
-  const entries = await redis.zRange(
-    REDIS_KEYS.scores(),
-    cursor,
-    cursor + limit - 1,
+  return await cache(
+    async () => {
+      // Fetch from Redis
+      const entries = await redis.zRange(
+        REDIS_KEYS.scores(),
+        cursor,
+        cursor + limit - 1,
+        { reverse, by }
+      );
+
+      // Hydrate with usernames (getUsername is already cached for 30 days)
+      const data = await Promise.all(
+        entries.map(async (entry, index) => {
+          const username = await getUsername(parseT2(entry.member));
+          return {
+            username: username ?? 'Unknown',
+            userId: parseT2(entry.member),
+            score: entry.score,
+            rank: cursor + index + 1,
+          };
+        })
+      );
+
+      return {
+        entries: data,
+        nextCursor: data.length === limit ? cursor + limit : -1,
+      };
+    },
     {
-      reverse,
-      by,
+      key: `leaderboard:${cursor}:${limit}:${reverse}:${by}`,
+      ttl: 10, // 10 seconds - cache the fully hydrated result
     }
   );
-
-  // Hydrate entries with usernames
-  const data = await Promise.all(
-    entries.map(async (entry, index) => {
-      const username = await getUsername(parseT2(entry.member));
-      return {
-        username: username ?? 'Unknown',
-        userId: parseT2(entry.member),
-        score: entry.score,
-        rank: cursor + index + 1,
-      };
-    })
-  );
-
-  // Return the leaderboard entries and the next cursor
-  return {
-    entries: data,
-    nextCursor: data.length === limit ? cursor + limit : -1,
-  };
 }
 
 /**

@@ -206,10 +206,10 @@ export const appRouter = t.router({
         .query(async ({ ctx }) => {
           if (!ctx.userId) return null;
 
-          const [score, rank, level] = await Promise.all([
-            getScore(ctx.userId),
+          const score = await getScore(ctx.userId);
+          const [rank, level] = await Promise.all([
             getRank(ctx.userId),
-            getUserLevel(await getScore(ctx.userId)),
+            getUserLevel(score), // Use cached score
           ]);
 
           return {

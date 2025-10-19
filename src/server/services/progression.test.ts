@@ -7,9 +7,22 @@ import {
   getUserLevel,
   getRank,
 } from './progression';
-import { redis, scheduler } from '@devvit/web/server';
+import { redis, scheduler, cache } from '@devvit/web/server';
 import { LEVELS } from '../../shared/constants';
 import { getUsername, REDIS_KEYS } from './redis';
+
+vi.mock('@devvit/web/server', () => ({
+  redis: {
+    zRange: vi.fn(),
+    zScore: vi.fn(),
+    zIncrBy: vi.fn(),
+    zRank: vi.fn(),
+  },
+  scheduler: {
+    runJob: vi.fn(),
+  },
+  cache: vi.fn((fn) => fn()),
+}));
 
 vi.mock('./redis', () => ({
   getUsername: vi.fn(),
@@ -17,24 +30,6 @@ vi.mock('./redis', () => ({
     scores: () => 'scores',
   },
 }));
-
-// Mock the redis and scheduler functions directly
-const mockRedis = {
-  zRange: vi.fn(),
-  zScore: vi.fn(),
-  zIncrBy: vi.fn(),
-  zRank: vi.fn(),
-};
-
-const mockScheduler = {
-  runJob: vi.fn(),
-};
-
-vi.mocked(redis).zRange = mockRedis.zRange;
-vi.mocked(redis).zScore = mockRedis.zScore;
-vi.mocked(redis).zIncrBy = mockRedis.zIncrBy;
-vi.mocked(redis).zRank = mockRedis.zRank;
-vi.mocked(scheduler).runJob = mockScheduler.runJob;
 
 describe('Leaderboard Service', () => {
   beforeEach(() => {
@@ -50,7 +45,7 @@ describe('Leaderboard Service', () => {
 
   describe('getLeaderboard', () => {
     it('returns leaderboard entries', async () => {
-      mockRedis.zRange.mockResolvedValue([
+      vi.mocked(redis.zRange).mockResolvedValue([
         { member: 't2_user1', score: 1000 },
         { member: 't2_user2', score: 800 },
         { member: 't2_user3', score: 600 },
@@ -73,7 +68,7 @@ describe('Leaderboard Service', () => {
     });
 
     it('handles empty leaderboard', async () => {
-      mockRedis.zRange.mockResolvedValue([]);
+      vi.mocked(redis.zRange).mockResolvedValue([]);
 
       const result = await getLeaderboard({ limit: 10 });
 
@@ -82,7 +77,7 @@ describe('Leaderboard Service', () => {
     });
 
     it('respects limit parameter', async () => {
-      mockRedis.zRange.mockResolvedValue([
+      vi.mocked(redis.zRange).mockResolvedValue([
         { member: 't2_user1', score: 1000 },
         { member: 't2_user2', score: 800 },
       ]);
@@ -95,7 +90,7 @@ describe('Leaderboard Service', () => {
 
   describe('getScore', () => {
     it('returns user score', async () => {
-      mockRedis.zScore.mockResolvedValue(1000);
+      vi.mocked(redis.zScore).mockResolvedValue(1000);
 
       const result = await getScore('t2_testuser');
 
@@ -103,7 +98,7 @@ describe('Leaderboard Service', () => {
     });
 
     it('handles user not found', async () => {
-      mockRedis.zScore.mockResolvedValue(undefined);
+      vi.mocked(redis.zScore).mockResolvedValue(undefined);
 
       const result = await getScore('t2_nonexistent');
 
@@ -113,20 +108,16 @@ describe('Leaderboard Service', () => {
 
   describe('incrementScore', () => {
     it('increments user score', async () => {
-      mockRedis.zIncrBy.mockResolvedValue(1100);
+      vi.mocked(redis.zIncrBy).mockResolvedValue(1100);
 
       const result = await incrementScore('t2_testuser', 100);
 
       expect(result).toBe(1100);
-      expect(mockRedis.zIncrBy).toHaveBeenCalledWith(
-        'scores',
-        't2_testuser',
-        100
-      );
+      expect(redis.zIncrBy).toHaveBeenCalledWith('scores', 't2_testuser', 100);
     });
 
     it('handles negative increment', async () => {
-      mockRedis.zIncrBy.mockResolvedValue(900);
+      vi.mocked(redis.zIncrBy).mockResolvedValue(900);
 
       const result = await incrementScore('t2_testuser', -100);
 
@@ -134,11 +125,11 @@ describe('Leaderboard Service', () => {
     });
 
     it('schedules level up job when user levels up', async () => {
-      mockRedis.zIncrBy.mockResolvedValue(2); // Level 2 threshold
+      vi.mocked(redis.zIncrBy).mockResolvedValue(2); // Level 2 threshold
 
       await incrementScore('t2_testuser', 1);
 
-      expect(mockScheduler.runJob).toHaveBeenCalledWith({
+      expect(scheduler.runJob).toHaveBeenCalledWith({
         name: 'USER_LEVEL_UP',
         data: {
           userId: 't2_testuser',
@@ -175,7 +166,7 @@ describe('Leaderboard Service', () => {
 
   describe('getRank', () => {
     it('returns user rank', async () => {
-      mockRedis.zRank.mockResolvedValue(5);
+      vi.mocked(redis.zRank).mockResolvedValue(5);
 
       const rank = await getRank('t2_testuser');
 
@@ -183,7 +174,7 @@ describe('Leaderboard Service', () => {
     });
 
     it('handles user not found', async () => {
-      mockRedis.zRank.mockResolvedValue(undefined);
+      vi.mocked(redis.zRank).mockResolvedValue(undefined);
 
       const rank = await getRank('t2_nonexistent');
 

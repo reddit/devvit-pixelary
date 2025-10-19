@@ -4,6 +4,7 @@ import {
   realtime,
   context,
   reddit,
+  cache,
 } from '@devvit/web/server';
 import { incrementScore } from './progression';
 import { titleCase } from '../../shared/utils/string';
@@ -223,20 +224,26 @@ export async function getDrawingStats(postId: T3): Promise<{
   playerCount: number;
   solvedPercentage: number;
 }> {
-  const [playerCount, solvedCount] = await Promise.all([
-    redis.zCard(REDIS_KEYS.userAttempts(postId)),
-    redis.zCard(REDIS_KEYS.userSolved(postId)),
-  ]);
+  return await cache(
+    async () => {
+      const [playerCount, solvedCount] = await Promise.all([
+        redis.zCard(REDIS_KEYS.userAttempts(postId)),
+        redis.zCard(REDIS_KEYS.userSolved(postId)),
+      ]);
 
-  const result = {
-    playerCount,
-    solvedPercentage:
-      playerCount === 0
-        ? 0
-        : Math.round((solvedCount / playerCount) * 100 * 10) / 10,
-  };
-
-  return result;
+      return {
+        playerCount,
+        solvedPercentage:
+          playerCount === 0
+            ? 0
+            : Math.round((solvedCount / playerCount) * 100 * 10) / 10,
+      };
+    },
+    {
+      key: `drawing:stats:${postId}`,
+      ttl: 5, // 5 seconds - realtime updates handle live data
+    }
+  );
 }
 
 /**
@@ -391,23 +398,31 @@ export async function getUserDrawingsWithData(
 
   // Process results and filter out nulls
   const drawings: DrawingPostDataExtended[] = [];
+  const validDrawings = results.filter(
+    ({ drawingData }) => drawingData.type === 'drawing' && drawingData.drawing
+  );
 
-  for (const { postId, drawingData } of results) {
-    if (drawingData.type === 'drawing' && drawingData.drawing) {
-      const stats = await getDrawingStats(postId);
-      drawings.push({
-        postId,
-        type: 'drawing',
-        word: drawingData.word || '',
-        dictionary: drawingData.dictionary || '',
-        drawing: JSON.parse(drawingData.drawing || '{}'),
-        authorId: drawingData.authorId as T2,
-        authorName: drawingData.authorName || '',
-        playerCount: stats.playerCount,
-        solvedPercentage: stats.solvedPercentage,
-      });
-    }
-  }
+  // Batch all stats calls
+  const statsPromises = validDrawings.map(({ postId }) =>
+    getDrawingStats(postId)
+  );
+  const allStats = await Promise.all(statsPromises);
+
+  // Combine data
+  validDrawings.forEach(({ postId, drawingData }, index) => {
+    const stats = allStats[index]!;
+    drawings.push({
+      postId,
+      type: 'drawing',
+      word: drawingData.word || '',
+      dictionary: drawingData.dictionary || '',
+      drawing: JSON.parse(drawingData.drawing || '{}'),
+      authorId: drawingData.authorId as T2,
+      authorName: drawingData.authorName || '',
+      playerCount: stats.playerCount,
+      solvedPercentage: stats.solvedPercentage,
+    });
+  });
 
   return drawings;
 }
