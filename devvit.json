@@ -36,35 +36,37 @@
       },
       {
         "label": "[Pixelary] Word List",
-        "description": "Edit community dictionary",
+        "description": "View and bulk update the word list",
         "location": "subreddit",
         "forUserType": "moderator",
         "endpoint": "/internal/menu/edit-dictionary"
       },
       {
-        "label": "[Pixelary] Banned Words",
-        "description": "Manage banned words",
+        "label": "[Pixelary] Banned Words List",
+        "description": "View and bulk update the banned words list",
         "location": "subreddit",
         "forUserType": "moderator",
         "endpoint": "/internal/menu/banned-words"
       },
       {
-        "label": "[Pixelary] Reveal Word",
-        "description": "Show the word for this drawing",
+        "label": "[Pixelary] View Word",
+        "description": "Reveals the word for you only",
         "location": "post",
         "forUserType": "moderator",
+        "postFilter": "currentApp",
         "endpoint": "/internal/menu/reveal-word"
       },
       {
         "label": "[Pixelary] Update Pinned Comment",
-        "description": "Update pinned comment with latest stats",
+        "description": "Refreshes the pinned comment content",
         "location": "post",
         "forUserType": "moderator",
+        "postFilter": "currentApp",
         "endpoint": "/internal/menu/update-comment"
       },
       {
         "label": "[Pixelary] Set My Flair",
-        "description": "Update your user flair based on your current level",
+        "description": "Refreshes your user flair",
         "location": "subreddit",
         "forUserType": "user",
         "endpoint": "/internal/menu/set-my-flair"
