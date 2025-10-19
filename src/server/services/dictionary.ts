@@ -10,9 +10,10 @@ import type { T3 } from '../../shared/types';
 
 Dictionary Service
 
-All words are stored using global Redis as opposed to per-subreddit Redis to:
-- Enable cross-community dictionary sharing
-- Enable additional safety guards
+All words are stored using subreddit-scoped Redis sorted sets to:
+- Enable per-subreddit word scoring for slate-bandit system
+- Enable word metrics tracking (impressions, clicks, publishes)
+- Maintain alphabetical ordering with scores
 
 */
 
@@ -23,10 +24,9 @@ All words are stored using global Redis as opposed to per-subreddit Redis to:
  */
 
 export async function getWords(subredditName: string): Promise<string[]> {
-  const key = REDIS_KEYS.words(subredditName);
-  const words = await redis.global.get(key);
-  if (!words) return [];
-  return JSON.parse(words) as string[];
+  const key = REDIS_KEYS.wordScores(subredditName);
+  const words = await redis.zRange(key, 0, -1);
+  return words.map((item) => item.member);
 }
 
 /**
@@ -56,13 +56,12 @@ export async function addWord(
   const banned = bannedWords.includes(normalizedWord);
   if (banned) return false;
 
-  // Add word and sort list alphabetically
-  dictionary.push(normalizedWord);
-  dictionary.sort();
-
-  // Save back to Redis
-  const key = REDIS_KEYS.words(subredditName);
-  await redis.global.set(key, JSON.stringify(dictionary));
+  // Add word to sorted set with default score of 1
+  const key = REDIS_KEYS.wordScores(subredditName);
+  await redis.zAdd(key, {
+    member: normalizedWord,
+    score: 1,
+  });
 
   return true;
 }
@@ -78,9 +77,17 @@ export async function updateWords(
   subredditName: string,
   words: string[]
 ): Promise<void> {
-  const key = REDIS_KEYS.words(subredditName);
-  const parsedWords = words.map((word) => titleCase(word.trim())).sort();
-  await redis.global.set(key, JSON.stringify(parsedWords));
+  const key = REDIS_KEYS.wordScores(subredditName);
+  const parsedWords = words.map((word) => titleCase(word.trim()));
+
+  // Clear existing words and add new ones with default score of 1
+  await redis.del(key);
+  if (parsedWords.length > 0) {
+    await redis.zAdd(
+      key,
+      ...parsedWords.map((word) => ({ member: word, score: 1 }))
+    );
+  }
 }
 
 /**
@@ -94,23 +101,12 @@ export async function removeWord(
   subredditName: string,
   word: string
 ): Promise<boolean> {
-  const dictionary = await getWords(subredditName);
-
-  // Format the removal petition
   const normalizedWord = titleCase(word.trim());
+  const key = REDIS_KEYS.wordScores(subredditName);
 
-  // Remove word (case-insensitive)
-  const originalLength = dictionary.length;
-  const filtered = dictionary.filter((word) => word !== normalizedWord);
-
-  // Return false if word not found
-  if (filtered.length === originalLength) return false;
-
-  // Save back to Redis
-  const key = REDIS_KEYS.words(subredditName);
-  await redis.global.set(key, JSON.stringify(filtered));
-
-  return true;
+  // Remove word from sorted set
+  const removed = await redis.zRem(key, [normalizedWord]);
+  return removed > 0;
 }
 
 /**
@@ -120,7 +116,7 @@ export async function removeWord(
  */
 
 export async function getBannedWords(subredditName: string): Promise<string[]> {
-  const words = await redis.global.get(REDIS_KEYS.bannedWords(subredditName));
+  const words = await redis.get(REDIS_KEYS.bannedWords(subredditName));
   if (!words) return [];
   const wordArray = JSON.parse(words) as string[];
   return wordArray;
@@ -150,7 +146,7 @@ export async function banWord(
 
   // Save back to Redis
   const key = REDIS_KEYS.bannedWords(subredditName);
-  await redis.global.set(key, JSON.stringify(bannedWords));
+  await redis.set(key, JSON.stringify(bannedWords));
   return true;
 }
 
@@ -167,7 +163,7 @@ export async function updateBannedWords(
 ): Promise<void> {
   const key = REDIS_KEYS.bannedWords(subredditName);
   const parsedWords = words.map((word) => titleCase(word.trim())).sort();
-  await redis.global.set(key, JSON.stringify(parsedWords));
+  await redis.set(key, JSON.stringify(parsedWords));
 }
 
 /**
@@ -192,7 +188,7 @@ export async function unbanWord(
   if (filtered.length === originalLength) return false;
 
   const key = REDIS_KEYS.bannedWords(subredditName);
-  await redis.global.set(key, JSON.stringify(filtered));
+  await redis.set(key, JSON.stringify(filtered));
   return true;
 }
 
@@ -227,10 +223,8 @@ export async function initializeDictionary(
 ): Promise<void> {
   // Check if dictionary already exists
   const [words, bannedWords] = await Promise.all([
-    redis.global.get(REDIS_KEYS.words(subredditName)).then((words) => !!words),
-    redis.global
-      .get(REDIS_KEYS.bannedWords(subredditName))
-      .then((bannedWords) => !!bannedWords),
+    redis.exists(REDIS_KEYS.wordScores(subredditName)),
+    redis.exists(REDIS_KEYS.bannedWords(subredditName)),
     redis.global.zAdd(REDIS_KEYS.communities(), {
       member: subredditName,
       score: Date.now(),
@@ -245,19 +239,16 @@ export async function initializeDictionary(
 
   if (!words) {
     seedActions.push(
-      redis.global.set(
-        REDIS_KEYS.words(subredditName),
-        JSON.stringify(DEFAULT_WORDS)
+      redis.zAdd(
+        REDIS_KEYS.wordScores(subredditName),
+        ...DEFAULT_WORDS.map((word) => ({ member: word, score: 1 }))
       )
     );
   }
 
   if (!bannedWords) {
     seedActions.push(
-      redis.global.set(
-        REDIS_KEYS.bannedWords(subredditName),
-        JSON.stringify([])
-      )
+      redis.set(REDIS_KEYS.bannedWords(subredditName), JSON.stringify([]))
     );
   }
 

@@ -7,6 +7,22 @@ export const CandidateWordSchema = z.object({
 });
 export type CandidateWord = z.infer<typeof CandidateWordSchema>;
 
+export const SlateDataSchema = z.object({
+  slateId: z.string(),
+  words: z.array(z.string()),
+  timestamp: z.number(),
+});
+export type SlateData = z.infer<typeof SlateDataSchema>;
+
+export const WordMetricsSchema = z.object({
+  impressions: z.number(),
+  clicks: z.number(),
+  clickRate: z.number(),
+  publishes: z.number(),
+  publishRate: z.number(),
+});
+export type WordMetrics = z.infer<typeof WordMetricsSchema>;
+
 export const DictionarySchema = z.object({
   name: z.string(),
   words: z.array(z.string()),

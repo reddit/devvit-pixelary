@@ -115,6 +115,7 @@ export type TelemetryEventType =
   | 'view_word_step'
   | 'view_draw_step'
   | 'view_review_step'
+  | 'view_slate'
   // Click events
   | 'click_draw'
   | 'click_my_drawings'
@@ -139,3 +140,20 @@ export type TelemetryEventType =
   | 'click_color_swatch'
   | 'click_post_drawing'
   | 'click_cancel_drawing';
+
+/**
+ * Slate system types
+ */
+export type SlateData = {
+  slateId: string;
+  words: string[];
+  timestamp: number;
+};
+
+export type WordMetrics = {
+  impressions: number;
+  clicks: number;
+  clickRate: number;
+  publishes: number;
+  publishRate: number;
+};

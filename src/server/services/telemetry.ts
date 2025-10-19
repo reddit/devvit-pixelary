@@ -81,13 +81,14 @@ export type EventType =
   | 'click_cancel_drawing';
 
 /**
- * Track a telemetry event
+ * Track a telemetry event with optional metadata
  * Fire-and-forget operation that never blocks
  */
 export async function trackEvent(
   postType: PostType,
   eventType: EventType,
-  date?: Date
+  date?: Date,
+  metadata?: Record<string, string | number>
 ): Promise<void> {
   const dateKey = getTelemetryDateKey(date);
   const key = REDIS_KEYS.telemetry(dateKey);
@@ -98,6 +99,13 @@ export async function trackEvent(
     // Set TTL to 30 days only if this is a new field (count = 1)
     if (count === 1) {
       await redis.expire(key, TELEMETRY_TTL_SECONDS);
+    }
+
+    // Store metadata if provided
+    if (metadata && Object.keys(metadata).length > 0) {
+      const metadataKey = `${key}:meta:${field}`;
+      await redis.hSet(metadataKey, metadata);
+      await redis.expire(metadataKey, TELEMETRY_TTL_SECONDS);
     }
   } catch (error) {
     // Silently fail - telemetry should never break the app
@@ -111,12 +119,13 @@ export async function trackEvent(
  */
 export async function trackEventFromContext(
   eventType: EventType,
-  postData: { type: 'drawing' | 'pinned' } | null
+  postData: { type: 'drawing' | 'pinned' } | null,
+  metadata?: Record<string, string | number>
 ): Promise<void> {
   // Default to 'pinned' if no postData (e.g., in pinned post context)
   const postType: PostType =
     postData?.type === 'drawing' ? 'drawing' : 'pinned';
-  await trackEvent(postType, eventType);
+  await trackEvent(postType, eventType, undefined, metadata);
 }
 
 /**
@@ -212,6 +221,31 @@ export async function calculateCTR(
   } catch (error) {
     console.warn('Failed to calculate CTR:', error);
     return 0;
+  }
+}
+
+/**
+ * Track a slate-specific event with metadata
+ * Fire-and-forget operation that never blocks
+ */
+export async function trackSlateEvent(
+  subredditName: string,
+  slateId: string,
+  eventType: EventType,
+  metadata?: Record<string, string | number>
+): Promise<void> {
+  try {
+    const eventKey = REDIS_KEYS.slateEvents(subredditName, slateId);
+    const eventData = {
+      eventType,
+      timestamp: Date.now().toString(),
+      ...metadata,
+    };
+
+    await redis.lPush(eventKey, JSON.stringify(eventData));
+    await redis.expire(eventKey, 7 * 24 * 60 * 60); // 7 days TTL
+  } catch (error) {
+    console.warn('Failed to track slate event:', error);
   }
 }
 

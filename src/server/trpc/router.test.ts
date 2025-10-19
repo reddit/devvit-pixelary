@@ -11,14 +11,22 @@ import {
 
 vi.mock('../services/dictionary', () => ({
   getWords: vi.fn(async () => ['cat', 'dog', 'tree']),
-  getRandomWords: vi.fn(async () => [
-    { word: 'cat', dictionaryName: 'r/testsub' },
-    { word: 'dog', dictionaryName: 'r/testsub' },
-    { word: 'tree', dictionaryName: 'r/testsub' },
-  ]),
   addWord: vi.fn(async () => true),
   removeWord: vi.fn(async () => true),
   getBannedWords: vi.fn(async () => []),
+  getAllowedWords: vi.fn(async () => ['cat', 'dog', 'tree']),
+}));
+
+vi.mock('../services/slate', () => ({
+  generateSlate: vi.fn(async () => ({
+    slateId: 'slate_123',
+    candidates: [
+      { word: 'cat', dictionaryName: 'r/testsub' },
+      { word: 'dog', dictionaryName: 'r/testsub' },
+      { word: 'tree', dictionaryName: 'r/testsub' },
+    ],
+  })),
+  trackSlateAction: vi.fn(async () => {}),
 }));
 
 vi.mock('../services/drawing', () => ({
@@ -66,14 +74,20 @@ vi.mock('@devvit/web/server', () => {
       zrevrank: vi.fn(),
       hget: vi.fn(),
       hset: vi.fn(),
+      hGet: vi.fn(),
+      hSet: vi.fn(),
       hgetall: vi.fn(),
+      hGetAll: vi.fn(),
       hdel: vi.fn(),
+      hDel: vi.fn(),
       hincrby: vi.fn(),
+      hIncrBy: vi.fn(),
       sadd: vi.fn(),
       srem: vi.fn(),
       smembers: vi.fn(),
       sismember: vi.fn(),
       lpush: vi.fn(),
+      lPush: vi.fn(),
       rpop: vi.fn(),
       llen: vi.fn(),
       lrange: vi.fn(),
@@ -82,8 +96,9 @@ vi.mock('@devvit/web/server', () => {
       exists: vi.fn(),
       keys: vi.fn(),
       flushdb: vi.fn(),
+      zAdd: vi.fn(),
+      zRem: vi.fn(),
       // Additional methods used in tests
-      hGet: vi.fn(),
       zScore: vi.fn(),
       zRevRank: vi.fn(),
       zRank: vi.fn(),

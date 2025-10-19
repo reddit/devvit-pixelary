@@ -1,5 +1,4 @@
 import type { Request, Response } from 'express';
-import { context } from '@devvit/web/server';
 import { getLevelByScore, getScore } from '../services/progression';
 import { setUserFlair } from '../core/flair';
 
@@ -9,7 +8,7 @@ export async function handleUserLevelUp(
 ): Promise<void> {
   try {
     const jobData = req.body.data || req.body;
-    const { userId } = jobData;
+    const { userId, subredditName } = jobData;
 
     // Validate required parameters
     if (!userId) {
@@ -18,12 +17,22 @@ export async function handleUserLevelUp(
       return;
     }
 
+    if (!subredditName) {
+      console.error(
+        'UserLeveledUp job failed: subredditName is undefined or empty'
+      );
+      res
+        .status(400)
+        .json({ status: 'error', message: 'subredditName is required' });
+      return;
+    }
+
     const score = await getScore(userId);
     const level = getLevelByScore(score);
 
     // Set user flair (non-blocking)
     try {
-      await setUserFlair(userId, context.subredditName, level);
+      await setUserFlair(userId, subredditName, level);
     } catch (error) {
       console.error(`Error setting user flair for ${userId}:`, error);
       // Don't fail the job if flair setting fails

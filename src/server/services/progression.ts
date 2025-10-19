@@ -1,4 +1,4 @@
-import { redis, scheduler, cache } from '@devvit/web/server';
+import { redis, scheduler, cache, context } from '@devvit/web/server';
 import { LEVELS } from '../../shared/constants';
 import { getUsername, REDIS_KEYS } from './redis';
 import { parseT2, type T2, type Level } from '../../shared/types';
@@ -100,6 +100,7 @@ export async function incrementScore(
         userId,
         score,
         level,
+        subredditName: context.subredditName,
       },
       runAt: new Date(),
     });

@@ -7,9 +7,9 @@ import {
   addWord,
   removeWord,
   getBannedWords,
-  getRandomWords,
   getAllowedWords,
 } from '../services/dictionary';
+import { generateSlate, trackSlateAction } from '../services/slate';
 import {
   createDrawing,
   submitGuess,
@@ -75,7 +75,7 @@ export const appRouter = t.router({
 
       getCandidates: t.procedure.query(async ({ ctx }) => {
         if (!ctx.subredditName) throw new Error('Subreddit not found');
-        return await getRandomWords(ctx.subredditName, 3);
+        return await generateSlate(ctx.subredditName, 3);
       }),
     }),
 
@@ -311,6 +311,32 @@ export const appRouter = t.router({
           userId: ctx.userId,
         };
       }),
+    }),
+
+    // Slate endpoints
+    slate: t.router({
+      trackAction: t.procedure
+        .input(
+          z.object({
+            slateId: z.string(),
+            action: z.enum(['impression', 'click', 'publish']),
+            word: z.string().optional(),
+          })
+        )
+        .mutation(async ({ ctx, input }) => {
+          if (!ctx.subredditName) throw new Error('Subreddit not found');
+
+          trackSlateAction(
+            ctx.subredditName,
+            input.slateId,
+            input.action,
+            input.word
+          ).catch(() => {
+            // Silently ignore errors - telemetry should never break the app
+          });
+
+          return { ok: true };
+        }),
     }),
 
     // Telemetry endpoints

@@ -6,6 +6,7 @@ import { PixelSymbol } from '@components/PixelSymbol';
 import { context } from '@devvit/web/client';
 import { trpc } from '@client/trpc/client';
 import { useTelemetry } from '@client/hooks/useTelemetry';
+import { useSlate } from '@client/hooks/useSlate';
 
 interface WordStepProps {
   selectCandidate: (candidate: CandidateWord) => void;
@@ -19,6 +20,7 @@ export function WordStep(props: WordStepProps) {
   const [elapsedTime, setElapsedTime] = useState(0);
 
   const { track } = useTelemetry();
+  const { setSlateId, trackSlateAction } = useSlate();
 
   // Track word step view on mount
   useEffect(() => {
@@ -27,10 +29,22 @@ export function WordStep(props: WordStepProps) {
 
   // tRPC hooks
   const {
-    data: candidates = [null, null, null],
+    data: slateData,
     isLoading,
     refetch: refreshCandidates,
   } = trpc.app.dictionary.getCandidates.useQuery();
+
+  // Extract slateId and candidates from response
+  const slateId = slateData?.slateId || null;
+  const candidates = slateData?.candidates || [null, null, null];
+
+  // Set slateId in context and track impression
+  useEffect(() => {
+    if (slateId) {
+      setSlateId(slateId);
+      trackSlateAction('impression');
+    }
+  }, [slateId, setSlateId, trackSlateAction]);
 
   // Start timer when candidates load
   useEffect(() => {
@@ -53,8 +67,8 @@ export function WordStep(props: WordStepProps) {
   // Auto-select effect
   useEffect(() => {
     const remainingTime = CARD_DRAW_DURATION * 1000 - elapsedTime;
-    if (remainingTime <= 0 && candidates.length > 0) {
-      selectCandidate(candidates[0]!);
+    if (remainingTime <= 0 && candidates.length > 0 && candidates[0]) {
+      selectCandidate(candidates[0]);
     }
   }, [elapsedTime, selectCandidate, candidates]);
 
@@ -116,7 +130,7 @@ export function WordStep(props: WordStepProps) {
       {/* Refresh Button */}
       <button
         onClick={() => {
-          void track('click_refresh_words');
+          track('click_refresh_words');
           void refreshCandidates();
         }}
         className="flex items-center hover:opacity-70 transition-opacity p-6 fixed right-0 bottom-0 cursor-pointer"
@@ -145,13 +159,15 @@ interface WordCandidateProps {
 function WordCandidate(props: WordCandidateProps) {
   const { candidate, index, isLoading, onSelect } = props;
   const { track } = useTelemetry();
+  const { trackSlateAction } = useSlate();
 
   return (
     <button
       key={`candidate-${index}`}
       onClick={() => {
         if (candidate) {
-          void track('click_word_candidate');
+          track('click_word_candidate');
+          trackSlateAction('click', candidate.word);
           onSelect(candidate);
         }
       }}

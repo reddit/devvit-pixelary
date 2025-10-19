@@ -8,6 +8,7 @@ import { DrawingData } from '@shared/schema/drawing';
 import { PixelFont } from '@components/PixelFont';
 import { navigateTo } from '@devvit/web/client';
 import { useTelemetry } from '@client/hooks/useTelemetry';
+import { useSlate } from '@client/hooks/useSlate';
 import { useEffect } from 'react';
 
 interface ReviewStepProps {
@@ -27,6 +28,7 @@ export function ReviewStep(props: ReviewStepProps) {
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const queryClient = useQueryClient();
   const { track } = useTelemetry();
+  const { trackSlateAction } = useSlate();
 
   // Track review step view on mount
   useEffect(() => {
@@ -60,6 +62,9 @@ export function ReviewStep(props: ReviewStepProps) {
       });
 
       if (result.success) {
+        // Track slate publish
+        trackSlateAction('publish', word);
+
         if (result.navigateTo) {
           navigateTo(result.navigateTo);
         } else if (onSuccess) {

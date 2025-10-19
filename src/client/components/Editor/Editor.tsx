@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { WordStep } from './_components/WordStep';
 import { DrawStep } from './_components/DrawStep';
 import { ReviewStep } from './_components/ReviewStep';
+import { SlateProvider } from '@client/hooks/useSlate';
 import { trpc } from '@client/trpc/client';
 import { LEVELS, DRAWING_DURATION } from '@shared/constants';
 import type { Level } from '@shared/constants';
@@ -57,20 +58,18 @@ export function DrawingEditor({ onClose }: DrawingEditorProps) {
     setStep('draw');
   }, []);
 
-  // Render current step
-  switch (step) {
-    case 'word':
-      return <WordStep selectCandidate={selectCandidate} />;
-    case 'draw':
-      return candidate ? (
+  return (
+    <SlateProvider>
+      {/* Render current step */}
+      {step === 'word' && <WordStep selectCandidate={selectCandidate} />}
+      {step === 'draw' && candidate && (
         <DrawStep
           word={candidate.word}
           time={time}
           onComplete={handleOnComplete}
         />
-      ) : null;
-    case 'review':
-      return candidate ? (
+      )}
+      {step === 'review' && candidate && (
         <ReviewStep
           word={candidate.word}
           dictionaryName={candidate.dictionaryName}
@@ -78,8 +77,7 @@ export function DrawingEditor({ onClose }: DrawingEditorProps) {
           onCancel={onClose}
           onSuccess={onClose}
         />
-      ) : null;
-    default:
-      return null;
-  }
+      )}
+    </SlateProvider>
+  );
 }

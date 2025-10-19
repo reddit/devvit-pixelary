@@ -11,10 +11,13 @@ export function useTelemetry() {
   const trackMutation = trpc.app.telemetry.track.useMutation();
 
   const track = useCallback(
-    (eventType: TelemetryEventType) => {
+    (
+      eventType: TelemetryEventType,
+      metadata?: Record<string, string | number>
+    ) => {
       // Fire-and-forget tracking - never blocks the UI
       trackMutation.mutate(
-        { eventType },
+        { eventType, ...metadata },
         {
           onError: (error) => {
             // Silently log errors - telemetry should never break the app

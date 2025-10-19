@@ -50,6 +50,15 @@ export const REDIS_KEYS = {
 
   // Telemetry
   telemetry: (date: string) => `tel:${date}`,
+
+  // Slate system (simplified keys)
+  wordScores: (subredditName: string) => `ws:${subredditName}`,
+  wordMetrics: (subredditName: string, word: string) =>
+    `wm:${subredditName}:${word}`,
+  slates: (subredditName: string, slateId: string) =>
+    `sl:${subredditName}:${slateId}`,
+  slateEvents: (subredditName: string, slateId: string) =>
+    `se:${subredditName}:${slateId}`,
 };
 
 const USERNAME_TTL = 30 * 24 * 60 * 60; // 30 days.
