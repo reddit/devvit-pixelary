@@ -44,7 +44,7 @@ export async function savePinnedPostCommentId(
   postId: T3,
   commentId: T1
 ): Promise<void> {
-  const key = REDIS_KEYS.pinnedPost(postId);
+  const key = REDIS_KEYS.comment(postId);
   await redis.hSet(key, {
     pinnedCommentId: commentId,
   });
@@ -56,7 +56,7 @@ export async function savePinnedPostCommentId(
  * @returns The pinned comment ID if it exists, null otherwise
  */
 export async function getPinnedPostCommentId(postId: T3): Promise<T1 | null> {
-  const key = REDIS_KEYS.pinnedPost(postId);
+  const key = REDIS_KEYS.comment(postId);
   const commentId = await redis.hGet(key, 'pinnedCommentId');
   return commentId as T1 | null;
 }

@@ -39,8 +39,8 @@ export const REDIS_KEYS = {
   // Communities
   communities: () => 'communities',
 
-  // Post comment
-  postComment: (postId: T3) => `post:comment:${postId}`,
+  // Comment
+  comment: (postId: T3) => `comment:${postId}`,
 
   // Progression system
   scores: () => 'scores',
