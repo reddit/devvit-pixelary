@@ -17,3 +17,13 @@ export function titleCase(word: string): string {
     .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
     .join(' ');
 }
+
+/**
+ * Normalize a word by trimming whitespace and converting to title case
+ * @param word - The word to normalize
+ * @returns The normalized word
+ */
+
+export function normalizeWord(word: string): string {
+  return titleCase(word.trim());
+}

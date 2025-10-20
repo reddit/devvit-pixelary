@@ -1,21 +1,11 @@
 import { context, redis } from '@devvit/web/server';
 import { isT1, type T1 } from '@devvit/shared-types/tid.js';
 import { DEFAULT_WORDS } from '../../shared/constants';
-import { titleCase } from '../../shared/utils/string';
+import { normalizeWord } from '../../shared/utils/string';
 import { shuffle } from '../../shared/utils/array';
 import { REDIS_KEYS } from './redis';
 
 const DEFAULT_WORD_SCORE = 1;
-
-/**
- * Normalize a word by trimming whitespace and converting to title case
- * @param word - The word to normalize
- * @returns The normalized word
- */
-
-function normalizeWord(word: string): string {
-  return titleCase(word.trim());
-}
 
 /*
 
