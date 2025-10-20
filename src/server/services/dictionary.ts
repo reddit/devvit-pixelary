@@ -1,4 +1,5 @@
 import { redis } from '@devvit/web/server';
+import type { T1 } from '@devvit/shared-types/tid.js';
 import { DEFAULT_WORDS } from '../../shared/constants';
 import { titleCase } from '../../shared/utils/string';
 import { shuffle } from '../../shared/utils/array';
@@ -324,7 +325,7 @@ export async function getAllowedWords(
 export async function setChampionComment(
   subredditName: string,
   word: string,
-  commentId: string
+  commentId: T1
 ): Promise<void> {
   const normalizedWord = word.toLowerCase();
   const championWordsKey = REDIS_KEYS.wordsChampioned(subredditName);
@@ -385,7 +386,7 @@ export async function removeChampionComment(
 
   // Delete commentId -> {subredditName, word} mapping if commentId exists
   if (commentId) {
-    const commentToWordKey = REDIS_KEYS.championWord(commentId);
+    const commentToWordKey = REDIS_KEYS.championWord(commentId as T1);
     await redis.del(commentToWordKey);
   }
 }
@@ -419,7 +420,7 @@ export async function getAllChampionWords(
  * @returns Object with subredditName and word if found, null otherwise
  */
 export async function findChampionCommentByCommentId(
-  commentId: string
+  commentId: T1
 ): Promise<{ subredditName: string; word: string } | null> {
   const commentToWordKey = REDIS_KEYS.championWord(commentId);
   const data = await redis.get(commentToWordKey);

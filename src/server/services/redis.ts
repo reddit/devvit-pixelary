@@ -1,5 +1,5 @@
 import { reddit, cache } from '@devvit/web/server';
-import type { T2, T3 } from '@devvit/shared-types/tid.js';
+import type { T2, T3, T1 } from '@devvit/shared-types/tid.js';
 
 /**
  * Centralized Redis key management
@@ -29,7 +29,7 @@ export const REDIS_KEYS = {
     `words:championed:${subredditName}`,
 
   // Champions
-  championWord: (commentId: string) => `champion:word:${commentId}`,
+  championWord: (commentId: T1) => `champion:word:${commentId}`,
 
   // Word
   wordChampion: (word: string) => `word:champion:${word}`,

@@ -137,7 +137,7 @@ export async function trackSlateAction(
   slateId: string,
   action: 'impression' | 'click' | 'publish' | 'start',
   word?: string,
-  postId?: string
+  postId?: T3
 ): Promise<void> {
   try {
     // Map action to event type for queue tracking
@@ -372,7 +372,7 @@ type SlateEvent = {
   eventType: string;
   timestamp: string;
   word?: string;
-  postId?: string;
+  postId?: T3;
 };
 
 type PostMetrics = {
@@ -385,9 +385,9 @@ type PostMetrics = {
  * @param postId - The post ID to get metrics for
  * @returns Post metrics with upvotes and comments
  */
-async function getPostMetrics(postId: string): Promise<PostMetrics> {
+async function getPostMetrics(postId: T3): Promise<PostMetrics> {
   try {
-    const post = await reddit.getPostById(postId as T3);
+    const post = await reddit.getPostById(postId);
     return {
       upvotes: post.score || 0,
       comments: typeof post.comments === 'number' ? post.comments : 0,
@@ -403,7 +403,7 @@ async function getPostMetrics(postId: string): Promise<PostMetrics> {
  * @param postId - The post ID
  * @returns Last known metrics or zeros
  */
-async function getLastPostMetrics(postId: string): Promise<PostMetrics> {
+async function getLastPostMetrics(postId: T3): Promise<PostMetrics> {
   try {
     const key = `slate:post:${postId}`;
     const metrics = await redis.hGetAll(key);
@@ -423,7 +423,7 @@ async function getLastPostMetrics(postId: string): Promise<PostMetrics> {
  * @param metrics - The current metrics
  */
 async function updateLastPostMetrics(
-  postId: string,
+  postId: T3,
   metrics: PostMetrics
 ): Promise<void> {
   try {

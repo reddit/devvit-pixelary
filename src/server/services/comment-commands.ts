@@ -1,10 +1,10 @@
-import type { T5, T3 } from '@devvit/shared-types/tid.js';
+import type { T5, T3, T1, T2 } from '@devvit/shared-types/tid.js';
 import * as handlers from './comment-handlers';
 
 export type CommandContext = {
-  commentId: string;
+  commentId: T1;
   authorName: string;
-  authorId: string;
+  authorId: T2;
   subredditName: string;
   subredditId: T5;
   postId?: T3;
