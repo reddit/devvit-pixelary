@@ -12,8 +12,8 @@ export async function handleHelp(
     `  \`!add dog\` - Add "dog" to dictionary\n\n` +
     `• \`!remove <word>\` - Remove word from dictionary\n` +
     `  \`!remove cat\` - Remove "cat" from dictionary\n\n` +
-    `• \`!word <word>\` - Show word statistics\n` +
-    `  \`!word meatloaf\` - Show statistics for "meatloaf"\n\n` +
+    `• \`!stats <word>\` - Show word statistics\n` +
+    `  \`!stats meatloaf\` - Show statistics for "meatloaf"\n\n` +
     `• \`!show <word>\` - Show guess statistics for a word\n` +
     `  \`!show meatloaf\` - Shows stats for "meatloaf" on this post\n\n` +
     `• \`!score <optional username>\` - Show user score\n` +

@@ -28,7 +28,7 @@ const COMMAND_LIST = [
   '!add',
   '!remove',
   '!words',
-  '!word',
+  '!stats',
   '!score',
   '!show',
   '!help',
@@ -58,8 +58,8 @@ export async function processCommand(
       return handlers.handleAdd(args, context);
     case '!remove':
       return handlers.handleRemove(args, context);
-    case '!word':
-      return handlers.handleWord(args);
+    case '!stats':
+      return handlers.handleStats(args);
     case '!score':
       return handlers.handleScore(args, context);
     case '!show':

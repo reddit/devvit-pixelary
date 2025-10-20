@@ -96,19 +96,19 @@ describe('Simplified Command System', () => {
       expect(result.error).toContain('Failed to retrieve dictionary');
     });
 
-    test('should handle word command without arguments', async () => {
+    test('should handle stats command without arguments', async () => {
       const context = createContext();
-      const result = await processCommand('!word', [], context);
+      const result = await processCommand('!stats', [], context);
 
       expect(result.success).toBe(true);
       expect(result.response).toContain(
-        'Provide a word. Usage: `!word <word>`'
+        'Provide a word. Usage: `!stats <word>`'
       );
     });
 
-    test('should handle word command with arguments', async () => {
+    test('should handle stats command with arguments', async () => {
       const context = createContext();
-      const result = await processCommand('!word', ['testword'], context);
+      const result = await processCommand('!stats', ['testword'], context);
 
       // This will fail because the word doesn't exist in the dictionary
       expect(result.success).toBe(false);
