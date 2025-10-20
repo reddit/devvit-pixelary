@@ -13,6 +13,8 @@ export {
   getChampionComment,
   removeChampionComment,
   getAllChampionWords,
-  isWordBanned,
   findChampionCommentByCommentId,
-} from './champion';
+} from '../dictionary';
+
+// Dictionary utilities
+export { isWordBanned } from '../dictionary';

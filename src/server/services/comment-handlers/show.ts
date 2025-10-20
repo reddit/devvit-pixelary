@@ -3,7 +3,8 @@ import { redis } from '@devvit/web/server';
 import { REDIS_KEYS } from '../redis';
 import { titleCase } from '../../../shared/utils/string';
 import { getWords } from '../dictionary';
-import { setChampionComment, isWordBanned } from './champion';
+import { setChampionComment } from '../dictionary';
+import { isWordBanned } from '../dictionary';
 
 export async function handleShow(
   args: string[],

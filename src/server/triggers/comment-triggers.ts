@@ -4,7 +4,7 @@ import { isCommand } from '../services/comment-commands';
 import {
   findChampionCommentByCommentId,
   removeChampionComment,
-} from '../services/champion';
+} from '../services/dictionary';
 import { banWord } from '../services/dictionary';
 
 /**
