@@ -86,18 +86,25 @@
         "endpoint": "/internal/menu/clear-daily-telemetry"
       },
       {
-        "label": "[Pixelary] Slate Queue Size",
-        "description": "Shows the current number of events in the slate queue",
+        "label": "[Pixelary] Slate Events Count",
+        "description": "Count unprocessed slate events",
         "location": "subreddit",
         "forUserType": "moderator",
-        "endpoint": "/internal/menu/slate-queue-size"
+        "endpoint": "/internal/menu/slate-events-count"
       },
       {
-        "label": "[Pixelary] Process Slate Queue",
-        "description": "Processes all events in the slate queue immediately",
+        "label": "[Pixelary] Slate Events Process",
+        "description": "Process slate events now",
         "location": "subreddit",
         "forUserType": "moderator",
-        "endpoint": "/internal/menu/process-slate-queue"
+        "endpoint": "/internal/menu/slate-events-process"
+      },
+      {
+        "label": "[Pixelary] Slate Events Clear",
+        "description": "Clear unprocessed slate events",
+        "location": "subreddit",
+        "forUserType": "moderator",
+        "endpoint": "/internal/menu/slate-events-clear"
       }
     ]
   },

@@ -6,5 +6,6 @@ export { handleSetMyFlair } from './set-my-flair';
 export { handleUpdateComment } from './update-comment';
 export { handleLogTelemetryKey } from './log-daily-telemetry';
 export { handleClearDailyTelemetry } from './clear-daily-telemetry';
-export { handleSlateQueueSize } from './slate-queue-size';
-export { handleProcessSlateQueue } from './process-slate-queue';
+export { handleSlateEventsCount } from './slate-events-count';
+export { handleSlateEventsProcess } from './slate-events-process';
+export { handleSlateEventsClear } from './slate-events-clear';

@@ -14,8 +14,9 @@ import {
   handleUpdateComment,
   handleLogTelemetryKey,
   handleClearDailyTelemetry,
-  handleSlateQueueSize,
-  handleProcessSlateQueue,
+  handleSlateEventsCount,
+  handleSlateEventsProcess,
+  handleSlateEventsClear,
 } from './menu-actions';
 
 // Import form handlers
@@ -98,8 +99,9 @@ router.post('/internal/menu/set-my-flair', handleSetMyFlair);
 router.post('/internal/menu/update-comment', handleUpdateComment);
 router.post('/internal/menu/log-daily-telemetry', handleLogTelemetryKey);
 router.post('/internal/menu/clear-daily-telemetry', handleClearDailyTelemetry);
-router.post('/internal/menu/slate-queue-size', handleSlateQueueSize);
-router.post('/internal/menu/process-slate-queue', handleProcessSlateQueue);
+router.post('/internal/menu/slate-events-count', handleSlateEventsCount);
+router.post('/internal/menu/slate-events-process', handleSlateEventsProcess);
+router.post('/internal/menu/slate-events-clear', handleSlateEventsClear);
 
 // ============================================================================
 // FORM HANDLERS

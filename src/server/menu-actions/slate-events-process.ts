@@ -6,7 +6,7 @@ import { processSlateEvents, getEventQueueSize } from '../services/slate';
  * Menu action handler for processing slate event queue immediately
  * Triggers the slate aggregator job to process events now
  */
-export async function handleProcessSlateQueue(
+export async function handleSlateEventsProcess(
   _req: Request,
   res: Response
 ): Promise<void> {

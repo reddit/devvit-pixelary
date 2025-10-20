@@ -5,7 +5,7 @@ import { getEventQueueSize } from '../services/slate';
  * Menu action handler for showing slate event queue size
  * Shows the current number of events in the queue
  */
-export async function handleSlateQueueSize(
+export async function handleSlateEventsCount(
   _req: Request,
   res: Response
 ): Promise<void> {
@@ -13,7 +13,7 @@ export async function handleSlateQueueSize(
     const queueSize = await getEventQueueSize();
 
     res.json({
-      showToast: `Slate event queue has ${queueSize} events`,
+      showToast: `${queueSize} slate events`,
     });
   } catch (error) {
     console.error(`Error getting slate queue size: ${error}`);
