@@ -24,12 +24,16 @@ export function DrawStep(props: DrawStepProps) {
   const { track } = useTelemetry();
   const { trackSlateAction } = useSlate();
 
-  // Track draw step view on mount
+  // Track draw step view on mount - use ref to ensure it only runs once
+  const hasTrackedView = useRef(false);
   useEffect(() => {
-    track('view_draw_step');
-    // Also track as slate event for queue processing
-    trackSlateAction('start', word); // This maps to 'view_draw_step' in the slate processing
-  }, [track, word]);
+    if (!hasTrackedView.current) {
+      track('view_draw_step');
+      // Also track as slate event for queue processing
+      trackSlateAction('start', word); // This maps to 'view_draw_step' in the slate processing
+      hasTrackedView.current = true;
+    }
+  }, [track, trackSlateAction, word]);
 
   // Canvas state
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -53,7 +57,7 @@ export function DrawStep(props: DrawStepProps) {
     }, 100);
 
     return () => clearInterval(timer);
-  }, [startTime, time, onComplete, drawingData]);
+  }, [startTime, time, onComplete]);
 
   const secondsLeft = Math.max(0, Math.round(time - elapsedTime / 1000));
 
