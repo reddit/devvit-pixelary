@@ -28,7 +28,7 @@ import {
   getAllChampionWords,
   isWordBanned,
   findChampionCommentByCommentId,
-} from './champion-comments';
+} from './champion';
 import { REDIS_KEYS } from './redis';
 import { banWord } from './dictionary';
 

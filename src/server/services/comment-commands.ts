@@ -1,5 +1,5 @@
 import type { T5, T3 } from '@devvit/shared-types/tid.js';
-import * as handlers from './comment-command-handlers';
+import * as handlers from './comment-handlers';
 
 export type CommandContext = {
   commentId: string;

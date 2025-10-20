@@ -3,7 +3,7 @@ import { DEFAULT_WORDS } from '../../shared/constants';
 import { titleCase } from '../../shared/utils/string';
 import { shuffle } from '../../shared/utils/array';
 import { REDIS_KEYS } from './redis';
-import { getAllChampionWords } from './champion-comments';
+import { getAllChampionWords } from './champion';
 
 /*
 
