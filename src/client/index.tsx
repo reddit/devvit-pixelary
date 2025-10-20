@@ -88,16 +88,16 @@ const App = () => {
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <ErrorBoundary
-      onError={(error, errorInfo) => {
-        console.error('Error Boundary caught error:', error, errorInfo);
-        // Could send to error tracking service here
-      }}
-    >
-      <Providers>
+    <Providers>
+      <ErrorBoundary
+        onError={(error, errorInfo) => {
+          console.error('Error Boundary caught error:', error, errorInfo);
+          // Could send to error tracking service here
+        }}
+      >
         <Background />
         <App />
-      </Providers>
-    </ErrorBoundary>
+      </ErrorBoundary>
+    </Providers>
   </React.StrictMode>
 );

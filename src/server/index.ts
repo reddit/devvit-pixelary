@@ -14,6 +14,8 @@ import {
   handleUpdateComment,
   handleLogTelemetryKey,
   handleClearDailyTelemetry,
+  handleSlateQueueSize,
+  handleProcessSlateQueue,
 } from './menu-actions';
 
 // Import form handlers
@@ -31,6 +33,7 @@ import {
   handleUserLevelUp,
   handleCreatePinnedPostComment,
   handleSetUserFlair,
+  handleSlateAggregator,
 } from './scheduler';
 
 // Import trigger handlers
@@ -81,6 +84,7 @@ router.post(
   handleCreatePinnedPostComment
 );
 router.post('/internal/scheduler/set-user-flair', handleSetUserFlair);
+router.post('/internal/scheduler/slate-aggregator', handleSlateAggregator);
 
 // ============================================================================
 // MENU ACTIONS
@@ -94,6 +98,8 @@ router.post('/internal/menu/set-my-flair', handleSetMyFlair);
 router.post('/internal/menu/update-comment', handleUpdateComment);
 router.post('/internal/menu/log-daily-telemetry', handleLogTelemetryKey);
 router.post('/internal/menu/clear-daily-telemetry', handleClearDailyTelemetry);
+router.post('/internal/menu/slate-queue-size', handleSlateQueueSize);
+router.post('/internal/menu/process-slate-queue', handleProcessSlateQueue);
 
 // ============================================================================
 // FORM HANDLERS

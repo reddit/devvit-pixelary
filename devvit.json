@@ -84,6 +84,20 @@
         "location": "subreddit",
         "forUserType": "moderator",
         "endpoint": "/internal/menu/clear-daily-telemetry"
+      },
+      {
+        "label": "[Pixelary] Slate Queue Size",
+        "description": "Shows the current number of events in the slate queue",
+        "location": "subreddit",
+        "forUserType": "moderator",
+        "endpoint": "/internal/menu/slate-queue-size"
+      },
+      {
+        "label": "[Pixelary] Process Slate Queue",
+        "description": "Processes all events in the slate queue immediately",
+        "location": "subreddit",
+        "forUserType": "moderator",
+        "endpoint": "/internal/menu/process-slate-queue"
       }
     ]
   },
@@ -109,6 +123,10 @@
       },
       "SET_USER_FLAIR": {
         "endpoint": "/internal/scheduler/set-user-flair"
+      },
+      "SLATE_AGGREGATOR": {
+        "endpoint": "/internal/scheduler/slate-aggregator",
+        "cron": "0 * * * *"
       }
     }
   },

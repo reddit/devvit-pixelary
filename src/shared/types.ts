@@ -78,8 +78,22 @@ export type SlateData = {
 
 export type WordMetrics = {
   impressions: number;
-  clicks: number;
+  clicks: number; // picks
   clickRate: number;
-  publishes: number;
+  publishes: number; // finishes
   publishRate: number;
+  starts: number;
+  guesses: number;
+  skips: number;
+  solves: number;
+  skipRate: number;
+  solveRate: number;
+  upvotes: number;
+  comments: number;
+};
+
+export type SlateMetrics = {
+  served: number;
+  upvotes: number;
+  comments: number;
 };

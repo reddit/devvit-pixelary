@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { CARD_DRAW_DURATION } from '@shared/constants';
 import type { CandidateWord } from '@shared/schema/pixelary';
 import { PixelFont } from '@components/PixelFont';
@@ -37,7 +37,10 @@ export function WordStep(props: WordStepProps) {
 
   // Extract slateId and candidates from response
   const slateId = slateData?.slateId || null;
-  const candidates = slateData?.candidates || [null, null, null];
+  const candidates = useMemo(
+    () => slateData?.candidates || [null, null, null],
+    [slateData?.candidates]
+  );
 
   // Set slateId in context and track impression
   useEffect(() => {
@@ -51,7 +54,7 @@ export function WordStep(props: WordStepProps) {
         trackSlateAction('impression');
       }, 200);
     }
-  }, [slateId, setSlateId, trackSlateAction]);
+  }, [slateId, setSlateId]);
 
   // Start timer when candidates load
   useEffect(() => {

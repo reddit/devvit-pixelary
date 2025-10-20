@@ -121,7 +121,7 @@ export function useRealtimeStats(postId: string) {
         cleanup();
       }
     };
-  }, [postId, queryClient]);
+  }, [postId]);
 
   // Reset optimistic stats when initial data changes (e.g., page refresh)
   useEffect(() => {

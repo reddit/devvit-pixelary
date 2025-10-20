@@ -1,17 +1,11 @@
-import React, {
-  createContext,
-  useContext,
-  useState,
-  useCallback,
-  useEffect,
-} from 'react';
+import React, { createContext, useContext, useState, useCallback } from 'react';
 import { trpc } from '@client/trpc/client';
 
 interface SlateContextType {
   slateId: string | null;
   setSlateId: (slateId: string | null) => void;
   trackSlateAction: (
-    action: 'impression' | 'click' | 'publish',
+    action: 'impression' | 'click' | 'publish' | 'start',
     word?: string
   ) => void;
 }
@@ -20,66 +14,54 @@ const SlateContext = createContext<SlateContextType | null>(null);
 
 export function SlateProvider({ children }: { children: React.ReactNode }) {
   const [slateId, setSlateId] = useState<string | null>(null);
-  const [mutationReady, setMutationReady] = useState(false);
-
-  // Initialize mutation after component mounts to ensure tRPC context is available
-  useEffect(() => {
-    setMutationReady(true);
-  }, []);
-
-  // Use the useMutation hook pattern like telemetry - stable reference
-  const trackSlateActionMutation = trpc.app.slate.trackAction.useMutation({
-    onError: (error) => {},
-  });
 
   const trackSlateAction = useCallback(
-    (action: 'impression' | 'click' | 'publish', word?: string) => {
+    (action: 'impression' | 'click' | 'publish' | 'start', word?: string) => {
       if (!slateId) {
         return;
       }
 
-      if (!mutationReady) {
-        return;
-      }
-
-      // Use the mutation hook with fire-and-forget pattern like telemetry
-      try {
-        trackSlateActionMutation.mutate(
-          {
-            slateId,
-            action,
-            word,
-          },
-          {
-            onError: (error) => {
-              console.error('Failed to track slate action:', {
-                error,
-                slateId,
-                action,
-                word,
-                errorMessage:
-                  error instanceof Error ? error.message : String(error),
-                errorStack: error instanceof Error ? error.stack : undefined,
-              });
-              // Silently ignore errors - slate tracking should never break the app
+      // Use direct fetch instead of tRPC mutation to avoid hook issues
+      const trackSlateEvent = async () => {
+        try {
+          const response = await fetch('/api/trpc/app.slate.trackAction', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
             },
+            body: JSON.stringify({
+              slateId,
+              action,
+              word,
+            }),
+          });
+
+          if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
           }
-        );
-      } catch (error) {
-        console.error('Slate tracking failed to initiate:', {
-          error,
-          slateId,
-          action,
-          word,
-        });
-        // Silently ignore - slate tracking should never break the app
-      }
+
+          const data = await response.json();
+          console.log('Slate tracking success:', data);
+        } catch (error) {
+          // Silently log errors - slate tracking should never break the app
+          console.warn('Slate tracking failed:', error);
+        }
+      };
+
+      // Fire-and-forget tracking - never blocks the UI
+      void trackSlateEvent();
     },
-    [slateId, trackSlateActionMutation, mutationReady]
+    [slateId]
   );
 
+  const memoizedSetSlateId = useCallback((newSlateId: string | null) => {
+    setSlateId(newSlateId);
+  }, []);
+
   return (
-    <SlateContext.Provider value={{ slateId, setSlateId, trackSlateAction }}>
+    <SlateContext.Provider
+      value={{ slateId, setSlateId: memoizedSetSlateId, trackSlateAction }}
+    >
       {children}
     </SlateContext.Provider>
   );

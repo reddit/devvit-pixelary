@@ -1,7 +1,9 @@
-import { redis } from '@devvit/web/server';
+import { redis, reddit } from '@devvit/web/server';
 import { REDIS_KEYS } from './redis';
 import { getWords } from './dictionary';
+import { trackSlateEvent, type EventType } from './telemetry';
 import type { CandidateWord } from '../../shared/schema/pixelary';
+import type { T3 } from '@devvit/shared-types/tid.js';
 
 /**
  * Generate a deterministic slate ID based on selected words
@@ -111,6 +113,9 @@ export async function generateSlate(
   await redis.hSet(slateKey, {
     words: JSON.stringify(selectedWords),
     timestamp: Date.now().toString(),
+    served: '0',
+    upvotes: '0',
+    comments: '0',
   });
 
   // Set TTL for slate data (7 days)
@@ -125,14 +130,47 @@ export async function generateSlate(
  * @param slateId - The slate ID
  * @param action - The action being tracked
  * @param word - Optional word for click/publish actions
+ * @param postId - Optional post ID for context
  */
 export async function trackSlateAction(
   subredditName: string,
   slateId: string,
-  action: 'impression' | 'click' | 'publish',
-  word?: string
+  action: 'impression' | 'click' | 'publish' | 'start',
+  word?: string,
+  postId?: string
 ): Promise<void> {
   try {
+    // Map action to event type for queue tracking
+    let eventType: EventType;
+    switch (action) {
+      case 'impression':
+        eventType = 'view_word_step'; // Use existing EventType
+        break;
+      case 'click':
+        eventType = 'click_word_candidate';
+        break;
+      case 'publish':
+        eventType = 'click_post_drawing';
+        break;
+      case 'start':
+        eventType = 'view_draw_step';
+        break;
+      default:
+        eventType = action as EventType;
+    }
+
+    // Add event to queue for processing
+    const metadata: Record<string, string | number> = {
+      word: word || '',
+      subredditName,
+    };
+    if (postId) {
+      metadata.postId = postId;
+    }
+
+    await trackSlateEvent(slateId, eventType, metadata);
+
+    // Also update metrics directly for immediate availability
     if (action === 'impression') {
       // Track impression for all words in slate
       const slateData = await getSlateData(slateId);
@@ -162,6 +200,9 @@ export async function trackSlateAction(
       const metricsKey = REDIS_KEYS.wordMetrics(word);
       await redis.hIncrBy(metricsKey, 'publishes', 1);
       await redis.expire(metricsKey, 30 * 24 * 60 * 60);
+    } else if (action === 'start') {
+      // Start action doesn't require word - just track the event
+      // No additional metrics needed for start action
     } else {
       console.warn('Invalid slate action or missing word:', { action, word });
     }
@@ -180,7 +221,6 @@ export async function trackSlateAction(
 
 /**
  * Get word metrics for a specific word
- * @param subredditName - The subreddit name
  * @param word - The word to get metrics for
  * @returns Word metrics with calculated rates
  */
@@ -190,6 +230,14 @@ export async function getWordMetrics(word: string): Promise<{
   clickRate: number;
   publishes: number;
   publishRate: number;
+  starts: number;
+  guesses: number;
+  skips: number;
+  solves: number;
+  skipRate: number;
+  solveRate: number;
+  upvotes: number;
+  comments: number;
 }> {
   try {
     const metricsKey = REDIS_KEYS.wordMetrics(word);
@@ -198,13 +246,33 @@ export async function getWordMetrics(word: string): Promise<{
     const impressions = parseInt(metrics.impressions || '0', 10);
     const clicks = parseInt(metrics.clicks || '0', 10);
     const publishes = parseInt(metrics.publishes || '0', 10);
+    const starts = parseInt(metrics.starts || '0', 10);
+    const guesses = parseInt(metrics.guesses || '0', 10);
+    const skips = parseInt(metrics.skips || '0', 10);
+    const solves = parseInt(metrics.solves || '0', 10);
+    const upvotes = parseInt(metrics.upvotes || '0', 10);
+    const comments = parseInt(metrics.comments || '0', 10);
+
+    // Calculate rates
+    const clickRate = impressions > 0 ? clicks / impressions : 0;
+    const publishRate = impressions > 0 ? publishes / impressions : 0;
+    const skipRate = impressions > 0 ? skips / impressions : 0;
+    const solveRate = impressions > 0 ? solves / impressions : 0;
 
     return {
       impressions,
       clicks,
-      clickRate: impressions > 0 ? clicks / impressions : 0,
+      clickRate,
       publishes,
-      publishRate: impressions > 0 ? publishes / impressions : 0,
+      publishRate,
+      starts,
+      guesses,
+      skips,
+      solves,
+      skipRate,
+      solveRate,
+      upvotes,
+      comments,
     };
   } catch (error) {
     console.warn('Failed to get word metrics:', error);
@@ -214,6 +282,14 @@ export async function getWordMetrics(word: string): Promise<{
       clickRate: 0,
       publishes: 0,
       publishRate: 0,
+      starts: 0,
+      guesses: 0,
+      skips: 0,
+      solves: 0,
+      skipRate: 0,
+      solveRate: 0,
+      upvotes: 0,
+      comments: 0,
     };
   }
 }
@@ -246,33 +322,376 @@ export async function getSlateData(
 }
 
 /**
- * Test function to verify deterministic slateId generation
- * This can be called manually to test the behavior
+ * Increment slate served counter
+ * @param slateId - The slate ID
  */
-export async function testDeterministicSlates(
-  subredditName: string
+export async function incrementSlateServed(slateId: string): Promise<void> {
+  try {
+    const slateKey = REDIS_KEYS.slate(slateId);
+    await redis.hIncrBy(slateKey, 'served', 1);
+  } catch (error) {
+    console.warn('Failed to increment slate served counter:', error);
+  }
+}
+
+/**
+ * Get slate metrics
+ * @param slateId - The slate ID
+ * @returns Slate metrics
+ */
+export async function getSlateMetrics(slateId: string): Promise<{
+  served: number;
+  upvotes: number;
+  comments: number;
+}> {
+  try {
+    const slateKey = REDIS_KEYS.slate(slateId);
+    const metrics = await redis.hGetAll(slateKey);
+
+    return {
+      served: parseInt(metrics.served || '0', 10),
+      upvotes: parseInt(metrics.upvotes || '0', 10),
+      comments: parseInt(metrics.comments || '0', 10),
+    };
+  } catch (error) {
+    console.warn('Failed to get slate metrics:', error);
+    return {
+      served: 0,
+      upvotes: 0,
+      comments: 0,
+    };
+  }
+}
+
+// ============================================================================
+// SLATE EVENT AGGREGATION
+// ============================================================================
+
+type SlateEvent = {
+  slateId: string;
+  eventType: string;
+  timestamp: string;
+  word?: string;
+  postId?: string;
+};
+
+type PostMetrics = {
+  upvotes: number;
+  comments: number;
+};
+
+/**
+ * Get post metrics from Reddit API
+ * @param postId - The post ID to get metrics for
+ * @returns Post metrics with upvotes and comments
+ */
+async function getPostMetrics(postId: string): Promise<PostMetrics> {
+  try {
+    const post = await reddit.getPostById(postId as T3);
+    return {
+      upvotes: post.score || 0,
+      comments: typeof post.comments === 'number' ? post.comments : 0,
+    };
+  } catch (error) {
+    console.warn(`Failed to get post metrics for ${postId}:`, error);
+    return { upvotes: 0, comments: 0 };
+  }
+}
+
+/**
+ * Get the last known metrics for a post to calculate deltas
+ * @param postId - The post ID
+ * @returns Last known metrics or zeros
+ */
+async function getLastPostMetrics(postId: string): Promise<PostMetrics> {
+  try {
+    const key = `slate:post:${postId}`;
+    const metrics = await redis.hGetAll(key);
+    return {
+      upvotes: parseInt(metrics.upvotes || '0', 10),
+      comments: parseInt(metrics.comments || '0', 10),
+    };
+  } catch (error) {
+    console.warn(`Failed to get last post metrics for ${postId}:`, error);
+    return { upvotes: 0, comments: 0 };
+  }
+}
+
+/**
+ * Update the last known metrics for a post
+ * @param postId - The post ID
+ * @param metrics - The current metrics
+ */
+async function updateLastPostMetrics(
+  postId: string,
+  metrics: PostMetrics
 ): Promise<void> {
-  // Generate multiple slates and verify they're deterministic
-  const results = await Promise.all([
-    generateSlate(subredditName, 3),
-    generateSlate(subredditName, 3),
-    generateSlate(subredditName, 3),
-  ]);
+  try {
+    const key = `slate:post:${postId}`;
+    await redis.hSet(key, {
+      upvotes: metrics.upvotes.toString(),
+      comments: metrics.comments.toString(),
+    });
+    await redis.expire(key, 7 * 24 * 60 * 60); // 7 days TTL
+  } catch (error) {
+    console.warn(`Failed to update last post metrics for ${postId}:`, error);
+  }
+}
 
-  const slateIds = results.map((r) => r.slateId);
-  const words = results.map((r) => r.candidates.map((c) => c.word).sort());
+/**
+ * Process a single slate event
+ * @param event - The slate event to process
+ */
+async function processSlateEvent(event: SlateEvent): Promise<void> {
+  const { slateId, eventType, word, postId } = event;
 
-  // Check if all slateIds are the same
-  const allSameId = slateIds.every((id) => id === slateIds[0]);
+  try {
+    console.log(`Processing event: ${eventType} for slate ${slateId}`, {
+      word,
+      postId,
+      timestamp: event.timestamp,
+    });
 
-  // Check if all word sets are the same
-  const allSameWords = words.every(
-    (wordSet) => JSON.stringify(wordSet) === JSON.stringify(words[0])
-  );
+    // Handle different event types
+    if (eventType === 'view_slate') {
+      // Increment slate served counter
+      await incrementSlateServed(slateId);
 
-  if (allSameId && allSameWords) {
-    // Deterministic slate generation working correctly
-  } else {
-    // Deterministic slate generation has issues
+      // Get slate data to increment impressions for all words
+      const slateData = await redis.hGetAll(REDIS_KEYS.slate(slateId));
+      if (slateData.words) {
+        const words = JSON.parse(slateData.words) as string[];
+        console.log(
+          `Incrementing impressions for ${words.length} words in slate ${slateId}`
+        );
+
+        for (const w of words) {
+          const metricsKey = REDIS_KEYS.wordMetrics(w);
+          await redis.hIncrBy(metricsKey, 'impressions', 1);
+          await redis.expire(metricsKey, 30 * 24 * 60 * 60); // 30 days TTL
+        }
+      } else {
+        console.warn(`No words found in slate data for ${slateId}`);
+      }
+    } else if (eventType === 'click_word_candidate' && word) {
+      // Increment picks (clicks) for the word
+      console.log(`Incrementing clicks for word: ${word}`);
+      const metricsKey = REDIS_KEYS.wordMetrics(word);
+      await redis.hIncrBy(metricsKey, 'clicks', 1);
+      await redis.expire(metricsKey, 30 * 24 * 60 * 60);
+    } else if (eventType === 'view_draw_step' && word) {
+      // Increment starts for the word
+      console.log(`Incrementing starts for word: ${word}`);
+      const metricsKey = REDIS_KEYS.wordMetrics(word);
+      await redis.hIncrBy(metricsKey, 'starts', 1);
+      await redis.expire(metricsKey, 30 * 24 * 60 * 60);
+    } else if (eventType === 'click_post_drawing' && word) {
+      // Increment finishes (publishes) for the word
+      console.log(`Incrementing publishes for word: ${word}`);
+      const metricsKey = REDIS_KEYS.wordMetrics(word);
+      await redis.hIncrBy(metricsKey, 'publishes', 1);
+      await redis.expire(metricsKey, 30 * 24 * 60 * 60);
+    } else {
+      console.log(
+        `Event type ${eventType} processed (no specific action needed)`
+      );
+    }
+
+    // Handle social metrics if postId is available
+    if (postId) {
+      console.log(`Processing social metrics for post: ${postId}`);
+
+      const currentMetrics = await getPostMetrics(postId);
+      const lastMetrics = await getLastPostMetrics(postId);
+
+      // Calculate deltas
+      const upvoteDelta = Math.max(
+        0,
+        currentMetrics.upvotes - lastMetrics.upvotes
+      );
+      const commentDelta = Math.max(
+        0,
+        currentMetrics.comments - lastMetrics.comments
+      );
+
+      console.log(`Post metrics deltas:`, {
+        upvotes: `${lastMetrics.upvotes} -> ${currentMetrics.upvotes} (delta: ${upvoteDelta})`,
+        comments: `${lastMetrics.comments} -> ${currentMetrics.comments} (delta: ${commentDelta})`,
+      });
+
+      // Update word metrics with deltas
+      if (word && (upvoteDelta > 0 || commentDelta > 0)) {
+        const metricsKey = REDIS_KEYS.wordMetrics(word);
+        if (upvoteDelta > 0) {
+          await redis.hIncrBy(metricsKey, 'upvotes', upvoteDelta);
+        }
+        if (commentDelta > 0) {
+          await redis.hIncrBy(metricsKey, 'comments', commentDelta);
+        }
+        await redis.expire(metricsKey, 30 * 24 * 60 * 60);
+      }
+
+      // Update slate metrics with deltas
+      if (upvoteDelta > 0 || commentDelta > 0) {
+        const slateKey = REDIS_KEYS.slate(slateId);
+        if (upvoteDelta > 0) {
+          await redis.hIncrBy(slateKey, 'upvotes', upvoteDelta);
+        }
+        if (commentDelta > 0) {
+          await redis.hIncrBy(slateKey, 'comments', commentDelta);
+        }
+      }
+
+      // Update last known metrics
+      await updateLastPostMetrics(postId, currentMetrics);
+    }
+
+    console.log(
+      `Successfully processed event ${eventType} for slate ${slateId}`
+    );
+  } catch (error) {
+    console.error(
+      `Failed to process event ${eventType} for slate ${slateId}:`,
+      {
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined,
+        event,
+      }
+    );
+    throw error; // Re-throw to be caught by the calling function
+  }
+}
+
+/**
+ * Process slate events in batches
+ * @param batchSize - Number of events to process per batch
+ * @returns Processing result with count and whether more events remain
+ */
+export async function processSlateEvents(
+  batchSize: number = 100
+): Promise<{ processed: number; hasMore: boolean }> {
+  const startTime = Date.now();
+  const eventKey = REDIS_KEYS.slateEvents();
+  let processed = 0;
+  let errors = 0;
+
+  try {
+    console.log(`Starting slate event processing. Batch size: ${batchSize}`);
+
+    // Get all events from the hash
+    const allEvents = await redis.hGetAll(eventKey);
+    const eventEntries = Object.entries(allEvents);
+
+    console.log(`Found ${eventEntries.length} total events in queue`);
+
+    if (eventEntries.length === 0) {
+      console.log('No events found in queue');
+      return {
+        processed: 0,
+        hasMore: false,
+      };
+    }
+
+    // Process only the specified batch size
+    const eventsToProcess = eventEntries.slice(0, batchSize);
+    const hasMore = eventEntries.length > batchSize;
+
+    console.log(
+      `Processing ${eventsToProcess.length} events (hasMore: ${hasMore})`
+    );
+
+    // Process each event
+    for (const [timestamp, eventDataStr] of eventsToProcess) {
+      try {
+        console.log(`Processing event at timestamp ${timestamp}`);
+
+        // Validate event data
+        if (!eventDataStr) {
+          console.warn(`Empty event data at timestamp ${timestamp}`);
+          await redis.hDel(eventKey, [timestamp]);
+          processed++;
+          continue;
+        }
+
+        let eventData: SlateEvent;
+        try {
+          eventData = JSON.parse(eventDataStr) as SlateEvent;
+        } catch (parseError) {
+          console.error(
+            `Failed to parse event data at ${timestamp}:`,
+            parseError
+          );
+          console.error(`Raw event data: ${eventDataStr}`);
+          await redis.hDel(eventKey, [timestamp]);
+          processed++;
+          errors++;
+          continue;
+        }
+
+        // Validate event structure
+        if (
+          !eventData.slateId ||
+          !eventData.eventType ||
+          !eventData.timestamp
+        ) {
+          console.error(`Invalid event structure at ${timestamp}:`, eventData);
+          await redis.hDel(eventKey, [timestamp]);
+          processed++;
+          errors++;
+          continue;
+        }
+
+        await processSlateEvent(eventData);
+
+        // Remove processed event
+        await redis.hDel(eventKey, [timestamp]);
+        processed++;
+
+        console.log(
+          `Successfully processed event ${eventData.eventType} for slate ${eventData.slateId}`
+        );
+      } catch (error) {
+        console.error(`Failed to process event at ${timestamp}:`, error);
+        console.error(`Event data: ${eventDataStr}`);
+
+        // Still remove the event to avoid infinite retry
+        await redis.hDel(eventKey, [timestamp]);
+        processed++;
+        errors++;
+      }
+    }
+
+    const duration = Date.now() - startTime;
+    console.log(
+      `Slate event processing completed in ${duration}ms. Processed: ${processed}, Errors: ${errors}, HasMore: ${hasMore}`
+    );
+
+    return {
+      processed,
+      hasMore,
+    };
+  } catch (error) {
+    const duration = Date.now() - startTime;
+    console.error(`Failed to process slate events after ${duration}ms:`, error);
+    console.error(`Processed before error: ${processed}, Errors: ${errors}`);
+
+    return {
+      processed,
+      hasMore: false,
+    };
+  }
+}
+
+/**
+ * Get the current size of the slate events queue
+ * @returns Number of events in the queue
+ */
+export async function getEventQueueSize(): Promise<number> {
+  try {
+    const eventKey = REDIS_KEYS.slateEvents();
+    return await redis.hLen(eventKey);
+  } catch (error) {
+    console.warn('Failed to get event queue size:', error);
+    return 0;
   }
 }

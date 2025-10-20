@@ -7,6 +7,7 @@ import { DrawingData, DrawingUtils } from '@shared/schema/drawing';
 import { getContrastColor } from '@shared/utils/color';
 import type { HEX } from '@shared/types';
 import { useTelemetry } from '@client/hooks/useTelemetry';
+import { useSlate } from '@client/hooks/useSlate';
 
 interface DrawStepProps {
   word: string;
@@ -21,11 +22,14 @@ export function DrawStep(props: DrawStepProps) {
   const [elapsedTime, setElapsedTime] = useState(0);
 
   const { track } = useTelemetry();
+  const { trackSlateAction } = useSlate();
 
   // Track draw step view on mount
   useEffect(() => {
     track('view_draw_step');
-  }, []);
+    // Also track as slate event for queue processing
+    trackSlateAction('start', word); // This maps to 'view_draw_step' in the slate processing
+  }, [track, word]);
 
   // Canvas state
   const canvasRef = useRef<HTMLCanvasElement>(null);

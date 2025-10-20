@@ -94,7 +94,7 @@ export const appRouter = t.router({
         .input(z.object({ postIds: z.array(z.string()) }))
         .query(async ({ input }) => {
           input.postIds.forEach(assertT3);
-          const postIds = input.postIds.map((id) => id);
+          const postIds = input.postIds as T3[];
           return await getDrawings(postIds);
         }),
 
@@ -325,7 +325,7 @@ export const appRouter = t.router({
         .input(
           z.object({
             slateId: z.string(),
-            action: z.enum(['impression', 'click', 'publish']),
+            action: z.enum(['impression', 'click', 'publish', 'start']),
             word: z.string().optional(),
           })
         )
@@ -338,8 +338,10 @@ export const appRouter = t.router({
             ctx.subredditName,
             input.slateId,
             input.action,
-            input.word
+            input.word,
+            ctx.postId || undefined
           ).catch((error) => {
+            console.error('Slate tracking error:', error);
             // Silently ignore errors - telemetry should never break the app
           });
 
@@ -350,15 +352,47 @@ export const appRouter = t.router({
     // Telemetry endpoints
     telemetry: t.router({
       track: t.procedure
-        .input(z.object({ eventType: z.string() }))
+        .input(
+          z.union([
+            z.object({
+              eventType: z.string(),
+              metadata: z.record(z.union([z.string(), z.number()])),
+            }),
+            z.object({
+              eventType: z.string(),
+            }),
+          ])
+        )
         .mutation(async ({ ctx, input }) => {
-          // Fire-and-forget telemetry tracking with automatic post type detection
-          trackEventFromContext(
-            input.eventType as EventType,
-            ctx.postData
-          ).catch(() => {
-            // Silently ignore errors - telemetry should never break the app
+          console.log('🔍 tRPC telemetry.track called:', {
+            eventType: input.eventType,
+            metadata: 'metadata' in input ? input.metadata : undefined,
+            metadataType:
+              'metadata' in input ? typeof input.metadata : 'undefined',
+            postData: ctx.postData,
+            postDataType: typeof ctx.postData,
           });
+
+          try {
+            // Fire-and-forget telemetry tracking with automatic post type detection
+            const metadata = 'metadata' in input ? input.metadata : {};
+            await trackEventFromContext(
+              input.eventType as EventType,
+              ctx.postData,
+              metadata
+            );
+            console.log('🔍 tRPC telemetry.track success');
+          } catch (error) {
+            console.warn('🔍 tRPC telemetry.track error:', error);
+            console.warn('🔍 tRPC telemetry.track error details:', {
+              errorMessage:
+                error instanceof Error ? error.message : String(error),
+              errorStack: error instanceof Error ? error.stack : undefined,
+              input,
+              ctx: { postData: ctx.postData },
+            });
+            // Silently ignore errors - telemetry should never break the app
+          }
 
           return { ok: true };
         }),

@@ -90,19 +90,40 @@ export async function trackEvent(
   date?: Date,
   metadata?: Record<string, string | number>
 ): Promise<void> {
+  console.log('🔍 trackEvent called:', {
+    postType,
+    eventType,
+    date,
+    metadata,
+    metadataType: typeof metadata,
+    metadataKeys: metadata ? Object.keys(metadata) : 'no metadata',
+  });
+
   const dateKey = getTelemetryDateKey(date);
   const key = REDIS_KEYS.telemetry(dateKey);
   const field = `${postType}:${eventType}`;
 
+  console.log('🔍 trackEvent: Redis key and field:', { key, field });
+
   try {
     const count = await redis.hIncrBy(key, field, 1);
+    console.log('🔍 trackEvent: Redis hIncrBy result:', count);
+
     // Set TTL to 30 days only if this is a new field (count = 1)
     if (count === 1) {
       await redis.expire(key, TELEMETRY_TTL_SECONDS);
+      console.log('🔍 trackEvent: Set TTL for key:', key);
     }
 
     // Store metadata if provided
+    console.log('🔍 trackEvent: Checking metadata:', {
+      metadata,
+      metadataExists: !!metadata,
+      metadataKeysLength: metadata ? Object.keys(metadata).length : 0,
+    });
+
     if (metadata && Object.keys(metadata).length > 0) {
+      console.log('🔍 trackEvent: Processing metadata');
       const metadataKey = `${key}:meta:${field}`;
       // Convert all values to strings for Redis hash storage
       const stringifiedMetadata: Record<string, string> = {};
@@ -111,10 +132,23 @@ export async function trackEvent(
       }
       await redis.hSet(metadataKey, stringifiedMetadata);
       await redis.expire(metadataKey, TELEMETRY_TTL_SECONDS);
+      console.log('🔍 trackEvent: Stored metadata:', {
+        metadataKey,
+        stringifiedMetadata,
+      });
+    } else {
+      console.log('🔍 trackEvent: No metadata to store');
     }
   } catch (error) {
     // Silently fail - telemetry should never break the app
-    console.warn('Telemetry tracking failed:', error);
+    console.warn('🔍 Telemetry tracking failed:', error);
+    console.warn('🔍 Telemetry tracking error details:', {
+      errorMessage: error instanceof Error ? error.message : String(error),
+      errorStack: error instanceof Error ? error.stack : undefined,
+      postType,
+      eventType,
+      metadata,
+    });
   }
 }
 
@@ -127,9 +161,20 @@ export async function trackEventFromContext(
   postData: { type: 'drawing' | 'pinned' } | null,
   metadata?: Record<string, string | number>
 ): Promise<void> {
+  console.log('🔍 trackEventFromContext called:', {
+    eventType,
+    postData,
+    postDataType: typeof postData,
+    metadata,
+    metadataType: typeof metadata,
+  });
+
   // Default to 'pinned' if no postData (e.g., in pinned post context)
   const postType: PostType =
     postData?.type === 'drawing' ? 'drawing' : 'pinned';
+
+  console.log('🔍 trackEventFromContext: determined postType:', postType);
+
   await trackEvent(postType, eventType, undefined, metadata);
 }
 
@@ -240,19 +285,16 @@ export async function trackSlateEvent(
 ): Promise<void> {
   try {
     const eventKey = REDIS_KEYS.slateEvents();
+    const timestamp = Date.now().toString();
     const eventData = {
+      slateId,
       eventType,
-      timestamp: Date.now().toString(),
+      timestamp,
       ...metadata,
     };
 
-    // Convert all values to strings for Redis hash storage
-    const stringifiedData: Record<string, string> = {};
-    for (const [key, value] of Object.entries(eventData)) {
-      stringifiedData[key] = String(value);
-    }
-
-    await redis.hSet(eventKey, stringifiedData);
+    // Use timestamp as field name to create unique entries
+    await redis.hSet(eventKey, { [timestamp]: JSON.stringify(eventData) });
     await redis.expire(eventKey, 7 * 24 * 60 * 60); // 7 days TTL
   } catch (error) {
     console.warn('Failed to track slate event:', error);
