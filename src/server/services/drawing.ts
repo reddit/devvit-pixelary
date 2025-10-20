@@ -13,7 +13,7 @@ import { createPost } from '../core/post';
 import { setPostFlair } from '../core/flair';
 import type { DrawingData } from '../../shared/schema/drawing';
 import type { T1, T2, T3 } from '@devvit/shared-types/tid.js';
-import { isT2, isT3, assertT2, assertT3 } from '@devvit/shared-types/tid.js';
+import { isT2, isT3 } from '@devvit/shared-types/tid.js';
 import {
   AUTHOR_REWARD_CORRECT_GUESS,
   AUTHOR_REWARD_SUBMIT,
@@ -371,7 +371,7 @@ export async function getUserDrawings(
     { reverse: true, by: 'rank' }
   );
 
-  return drawingIds.map((entry) => entry.member);
+  return drawingIds.map((entry) => entry.member).filter(isT3);
 }
 
 export async function getUserDrawingsWithData(
@@ -386,7 +386,7 @@ export async function getUserDrawingsWithData(
     { reverse: true, by: 'rank' }
   );
 
-  const postIds = drawingIds.map((entry) => entry.member);
+  const postIds = drawingIds.map((entry) => entry.member).filter(isT3);
 
   if (postIds.length === 0) return [];
 
@@ -487,7 +487,7 @@ export async function submitGuess(options: {
   }
 
   // Don't allow guesses if user has already solved (but allow if only skipped)
-  if (!word || !authorId || isInSolvedSet) {
+  if (!word || !authorId || !isT2(authorId) || isInSolvedSet) {
     return empty;
   }
 
