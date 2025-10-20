@@ -22,7 +22,7 @@ export async function handleAdd(
     }
 
     // Check if word is banned before attempting to add
-    const bannedWords = await getBannedWords(context.subredditId);
+    const bannedWords = await getBannedWords();
     const isBanned = bannedWords.some(
       (w) => w.toLowerCase() === word.toLowerCase()
     );
@@ -33,7 +33,7 @@ export async function handleAdd(
       };
     }
 
-    const success = await addWord(context.subredditId, word);
+    const success = await addWord(word);
 
     if (success) {
       return {

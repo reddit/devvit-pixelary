@@ -21,7 +21,7 @@ export async function handleRemove(
       };
     }
 
-    const success = await removeWord(word);
+    const success = await removeWord(word, context.subredditName);
 
     if (success) {
       return {

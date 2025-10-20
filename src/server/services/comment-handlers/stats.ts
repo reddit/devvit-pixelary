@@ -1,5 +1,5 @@
 import type { CommandResult } from '../comment-commands';
-import { getWords } from '../dictionary';
+import { getAllWords } from '../dictionary';
 import { getWordMetrics } from '../slate';
 
 export async function handleStats(args: string[]): Promise<CommandResult> {
@@ -20,7 +20,7 @@ export async function handleStats(args: string[]): Promise<CommandResult> {
     }
 
     // First check if the word exists in the dictionary
-    const words = await getWords();
+    const words = await getAllWords();
     const wordExists = words.some(
       (w) => w.toLowerCase() === word.toLowerCase()
     );

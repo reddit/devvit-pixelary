@@ -1,12 +1,12 @@
 import type { CommandContext, CommandResult } from '../comment-commands';
-import { getWords } from '../dictionary';
+import { getAllWords } from '../dictionary';
 
 export async function handleWords(
   args: string[],
   context: CommandContext
 ): Promise<CommandResult> {
   try {
-    const words = await getWords();
+    const words = await getAllWords();
     const wordCount = words.length;
     const pageSize = 200;
 

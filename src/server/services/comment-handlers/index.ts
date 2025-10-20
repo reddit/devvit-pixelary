@@ -9,11 +9,11 @@ export { handleHelp } from './help';
 
 // Champion comment utilities
 export {
-  setChampionComment,
-  getChampionComment,
-  removeChampionComment,
+  setWordChampion,
+  getWordChampion,
+  removeWordChampion,
   getAllChampionWords,
-  findChampionCommentByCommentId,
+  isWordChampion,
 } from '../dictionary';
 
 // Dictionary utilities

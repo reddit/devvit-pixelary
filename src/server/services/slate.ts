@@ -1,6 +1,6 @@
 import { redis, reddit } from '@devvit/web/server';
 import { REDIS_KEYS } from './redis';
-import { getWords } from './dictionary';
+import { getAllWords } from './dictionary';
 import { trackSlateEvent, type EventType } from './telemetry';
 import type { CandidateWord } from '../../shared/schema/pixelary';
 import type { T3 } from '@devvit/shared-types/tid.js';
@@ -85,7 +85,7 @@ export async function generateSlate(
   subredditName: string,
   count: number = 3
 ): Promise<{ slateId: string; candidates: CandidateWord[] }> {
-  const words = await getWords();
+  const words = await getAllWords();
 
   if (words.length === 0) {
     const slateId = generateSlateId([]);

@@ -1,10 +1,7 @@
 import type { Request, Response } from 'express';
 import { context, reddit } from '@devvit/web/server';
 import { isCommand } from '../services/comment-commands';
-import {
-  findChampionCommentByCommentId,
-  removeChampionComment,
-} from '../services/dictionary';
+import { isWordChampion, removeWordChampion } from '../services/dictionary';
 import { banWord } from '../services/dictionary';
 
 /**
@@ -114,20 +111,17 @@ export async function handleCommentDelete(
     }
 
     // Check if this deleted comment was a champion comment
-    const championData = await findChampionCommentByCommentId(commentId);
+    const championData = await isWordChampion(commentId);
 
     if (championData) {
       // Champion comment deleted
 
       // Remove champion comment reference
-      await removeChampionComment(
-        championData.subredditName,
-        championData.word
-      );
+      await removeWordChampion(championData.word);
 
       // Ban the word as enforcement
       if (subredditName) {
-        await banWord(subredditName, championData.word);
+        await banWord(championData.word);
         // Word banned
       }
     }

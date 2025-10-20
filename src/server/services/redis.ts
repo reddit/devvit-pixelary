@@ -24,7 +24,6 @@ export const REDIS_KEYS = {
   // Words
   wordsAll: (subredditName: string) => `words:all:${subredditName}`,
   wordsBanned: (subredditName: string) => `words:banned:${subredditName}`,
-  wordsScored: () => 'words:scored',
   wordsChampioned: (subredditName: string) =>
     `words:championed:${subredditName}`,
 

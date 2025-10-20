@@ -1,10 +1,10 @@
 import type { Request, Response } from 'express';
-import { updateWords } from '../services/dictionary';
+import { replaceAllWords } from '../services/dictionary';
 import { context } from '@devvit/web/server';
 
 /**
- * Form handler for words update
- * Updates the community dictionary with new words
+ * Form handler for words replacement
+ * Replaces the community dictionary with new words
  */
 
 export async function handleWordsUpdate(
@@ -24,7 +24,7 @@ export async function handleWordsUpdate(
 
     // Parse and clean words
     const wordList = words.split(',').map((word: string) => word.trim());
-    await updateWords(wordList);
+    await replaceAllWords(wordList);
 
     res.json({
       showToast: 'Updated!',

@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { getWords } from '../services/dictionary';
+import { getAllWords } from '../services/dictionary';
 import { context } from '@devvit/web/server';
 
 /**
@@ -11,7 +11,7 @@ export async function handleEditDictionary(
   res: Response
 ): Promise<void> {
   try {
-    const words = await getWords(context.subredditId);
+    const words = await getAllWords(context.subredditId);
 
     res.json({
       showForm: {

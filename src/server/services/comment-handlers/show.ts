@@ -2,8 +2,8 @@ import type { CommandContext, CommandResult } from '../comment-commands';
 import { redis } from '@devvit/web/server';
 import { REDIS_KEYS } from '../redis';
 import { titleCase } from '../../../shared/utils/string';
-import { getWords } from '../dictionary';
-import { setChampionComment } from '../dictionary';
+import { getAllWords } from '../dictionary';
+import { setWordChampion } from '../dictionary';
 import { isWordBanned } from '../dictionary';
 
 export async function handleShow(
@@ -59,20 +59,16 @@ export async function handleShow(
       totalGuesses > 0 ? Math.round((count / totalGuesses) * 100) : 0;
 
     // Check if word is in dictionary
-    const dictionaryWords = await getWords();
+    const dictionaryWords = await getAllWords();
     const isInDictionary = dictionaryWords.some(
       (dictWord) => dictWord.toLowerCase() === normalizedWord.toLowerCase()
     );
 
     // Check if word is banned
-    const isBanned = await isWordBanned(context.subredditName, normalizedWord);
+    const isBanned = await isWordBanned(normalizedWord);
 
     // Store this comment as champion comment for this word
-    await setChampionComment(
-      context.subredditName,
-      normalizedWord,
-      context.commentId
-    );
+    await setWordChampion(normalizedWord, context.commentId);
 
     // Build response
     let response = `Guess made ${count} times (${percentage}%) so far.`;

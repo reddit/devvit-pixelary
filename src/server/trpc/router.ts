@@ -4,7 +4,7 @@ import { z } from 'zod';
 import type { T3 } from '@devvit/shared-types/tid.js';
 import { isT3, assertT3 } from '@devvit/shared-types/tid.js';
 import {
-  getWords,
+  getAllWords,
   addWord,
   removeWord,
   getBannedWords,
@@ -44,7 +44,7 @@ export const appRouter = t.router({
     dictionary: t.router({
       get: t.procedure.query(async ({ ctx }) => {
         if (!ctx.subredditName) throw new Error('Subreddit not found');
-        return await getWords();
+        return await getAllWords();
       }),
 
       add: t.procedure
@@ -62,7 +62,7 @@ export const appRouter = t.router({
         .input(z.object({ word: z.string().min(1).max(50) }))
         .mutation(async ({ ctx, input }) => {
           if (!ctx.subredditName) throw new Error('Subreddit not found');
-          const success = await removeWord(input.word);
+          const success = await removeWord(input.word, ctx.subredditName);
           if (!success) {
             throw new Error('Failed to remove word or word not found');
           }

@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { updateBannedWords } from '../services/dictionary';
+import { replaceBannedWords } from '../services/dictionary';
 import { context } from '@devvit/web/server';
 
 /**
@@ -33,7 +33,7 @@ export async function handleBannedWordsUpdate(
       )
       .sort();
 
-    await updateBannedWords(context.subredditId, wordList);
+    await replaceBannedWords(wordList);
 
     res.json({
       showToast: 'Updated!',
