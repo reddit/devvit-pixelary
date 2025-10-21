@@ -8,7 +8,6 @@ import { DrawingData } from '@shared/schema/drawing';
 import { PixelFont } from '@components/PixelFont';
 import { navigateTo } from '@devvit/web/client';
 import { useTelemetry } from '@client/hooks/useTelemetry';
-import { useSlate } from '@client/hooks/useSlate';
 import { useEffect } from 'react';
 
 interface ReviewStepProps {
@@ -21,14 +20,34 @@ interface ReviewStepProps {
     postId: string;
     navigateTo?: string;
   }) => void;
+  slateId: string | null;
+  trackSlateAction: (
+    action:
+      | 'slate_impression'
+      | 'slate_click'
+      | 'slate_auto_select'
+      | 'drawing_start'
+      | 'drawing_first_pixel'
+      | 'drawing_publish'
+      | 'post_skip',
+    word?: string,
+    metadata?: Record<string, string | number>
+  ) => Promise<void>;
 }
 
 export function ReviewStep(props: ReviewStepProps) {
-  const { word, dictionaryName, drawing, onCancel, onSuccess } = props;
+  const {
+    word,
+    dictionaryName,
+    drawing,
+    onCancel,
+    onSuccess,
+    slateId,
+    trackSlateAction,
+  } = props;
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const queryClient = useQueryClient();
   const { track } = useTelemetry();
-  const { trackSlateAction } = useSlate();
 
   // Track review step view on mount
   useEffect(() => {
@@ -63,7 +82,7 @@ export function ReviewStep(props: ReviewStepProps) {
 
       if (result.success) {
         // Track slate publish - await to ensure delivery before navigation
-        await trackSlateAction('publish', word);
+        await trackSlateAction('drawing_publish', word);
 
         if (result.navigateTo) {
           navigateTo(result.navigateTo);
@@ -80,6 +99,7 @@ export function ReviewStep(props: ReviewStepProps) {
 
   const handleCancel = () => {
     void track('click_cancel_drawing');
+    void track('drawing_cancel');
     setShowCancelConfirm(true);
   };
 

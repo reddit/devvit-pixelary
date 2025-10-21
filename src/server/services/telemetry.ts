@@ -42,6 +42,9 @@ export function getTelemetryDateKeys(startDate: Date, endDate: Date): string[] {
 
 export type PostType = 'drawing' | 'pinned';
 export type EventType =
+  // ============================================================================
+  // GENERIC TELEMETRY EVENTS (UI tracking only, no word metrics impact)
+  // ============================================================================
   // View events
   | 'view_menu'
   | 'view_my_drawings'
@@ -78,7 +81,28 @@ export type EventType =
   | 'click_done_drawing'
   | 'click_color_swatch'
   | 'click_post_drawing'
-  | 'click_cancel_drawing';
+  | 'click_cancel_drawing'
+  // Drawing events
+  | 'first_pixel_drawn'
+  // ============================================================================
+  // SLATE EVENTS (tracked per word, affect word metrics in !stats)
+  // ============================================================================
+  | 'slate_impression' // Slate shown to user (increments impressions for all words)
+  | 'slate_click' // User manually selected word (increments clicks)
+  | 'slate_auto_select' // Timer auto-selected word (increments clicks)
+  | 'slate_refresh' // User refreshed word choices
+  // Drawing events (specific taxonomy)
+  | 'drawing_start' // Drawing begins (increments starts)
+  | 'drawing_first_pixel' // First pixel drawn (increments first_pixel)
+  | 'drawing_done_manual' // User clicks done (increments manual_completion)
+  | 'drawing_done_auto' // Auto-complete triggers (increments auto_completion)
+  | 'drawing_publish' // Drawing is posted (increments publishes)
+  | 'drawing_cancel' // Drawing is cancelled (increments cancellations)
+  // Post events (specific taxonomy)
+  | 'post_impression' // Post viewed (affects social metrics)
+  | 'post_guess' // User submitted guess
+  | 'post_solve' // User solved the drawing
+  | 'post_skip'; // User gave up/skipped
 
 /**
  * Track a telemetry event with optional metadata
@@ -90,40 +114,20 @@ export async function trackEvent(
   date?: Date,
   metadata?: Record<string, string | number>
 ): Promise<void> {
-  console.log('🔍 trackEvent called:', {
-    postType,
-    eventType,
-    date,
-    metadata,
-    metadataType: typeof metadata,
-    metadataKeys: metadata ? Object.keys(metadata) : 'no metadata',
-  });
-
   const dateKey = getTelemetryDateKey(date);
   const key = REDIS_KEYS.telemetry(dateKey);
   const field = `${postType}:${eventType}`;
 
-  console.log('🔍 trackEvent: Redis key and field:', { key, field });
-
   try {
     const count = await redis.hIncrBy(key, field, 1);
-    console.log('🔍 trackEvent: Redis hIncrBy result:', count);
 
     // Set TTL to 30 days only if this is a new field (count = 1)
     if (count === 1) {
       await redis.expire(key, TELEMETRY_TTL_SECONDS);
-      console.log('🔍 trackEvent: Set TTL for key:', key);
     }
 
     // Store metadata if provided
-    console.log('🔍 trackEvent: Checking metadata:', {
-      metadata,
-      metadataExists: !!metadata,
-      metadataKeysLength: metadata ? Object.keys(metadata).length : 0,
-    });
-
     if (metadata && Object.keys(metadata).length > 0) {
-      console.log('🔍 trackEvent: Processing metadata');
       const metadataKey = `${key}:meta:${field}`;
       // Convert all values to strings for Redis hash storage
       const stringifiedMetadata: Record<string, string> = {};
@@ -132,23 +136,10 @@ export async function trackEvent(
       }
       await redis.hSet(metadataKey, stringifiedMetadata);
       await redis.expire(metadataKey, TELEMETRY_TTL_SECONDS);
-      console.log('🔍 trackEvent: Stored metadata:', {
-        metadataKey,
-        stringifiedMetadata,
-      });
-    } else {
-      console.log('🔍 trackEvent: No metadata to store');
     }
   } catch (error) {
     // Silently fail - telemetry should never break the app
-    console.warn('🔍 Telemetry tracking failed:', error);
-    console.warn('🔍 Telemetry tracking error details:', {
-      errorMessage: error instanceof Error ? error.message : String(error),
-      errorStack: error instanceof Error ? error.stack : undefined,
-      postType,
-      eventType,
-      metadata,
-    });
+    console.warn('Telemetry tracking failed:', error);
   }
 }
 
@@ -161,19 +152,9 @@ export async function trackEventFromContext(
   postData: { type: 'drawing' | 'pinned' } | null,
   metadata?: Record<string, string | number>
 ): Promise<void> {
-  console.log('🔍 trackEventFromContext called:', {
-    eventType,
-    postData,
-    postDataType: typeof postData,
-    metadata,
-    metadataType: typeof metadata,
-  });
-
   // Default to 'pinned' if no postData (e.g., in pinned post context)
   const postType: PostType =
     postData?.type === 'drawing' ? 'drawing' : 'pinned';
-
-  console.log('🔍 trackEventFromContext: determined postType:', postType);
 
   await trackEvent(postType, eventType, undefined, metadata);
 }
@@ -286,11 +267,17 @@ export async function trackSlateEvent(
   try {
     const eventKey = REDIS_KEYS.slateEvents();
     const timestamp = Date.now().toString();
+
+    // Extract word and postId from metadata if present
+    const { word, postId, ...restMetadata } = metadata || {};
+
     const eventData = {
       slateId,
       eventType,
       timestamp,
-      ...metadata,
+      word,
+      postId,
+      metadata: Object.keys(restMetadata).length > 0 ? restMetadata : undefined,
     };
 
     // Use timestamp as field name to create unique entries

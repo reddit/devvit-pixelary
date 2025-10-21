@@ -37,12 +37,14 @@ export async function handleStats(args: string[]): Promise<CommandResult> {
     const response = `##### 🎨 Drawer stats
 - Shown: ${metrics.impressions}
 - Picked: ${metrics.clicks} (${(metrics.clickRate * 100).toFixed(1)}%)
+- Started: ${metrics.starts}
+- First pixel: ${metrics.firstPixel}
 - Published: ${metrics.publishes} (${(metrics.publishRate * 100).toFixed(1)}%)
+- Manual completion: ${metrics.manualCompletion}
+- Auto completion: ${metrics.autoCompletion}
+- Cancelled: ${metrics.cancellations}
 
-##### 🔍 Guesser stats
-- Guesses: ${metrics.guesses}
-- Solves: ${metrics.solves} (${(metrics.solveRate * 100).toFixed(1)}%)
-- Skips: ${metrics.skips} (${(metrics.skipRate * 100).toFixed(1)}%)
+##### 📈 Social stats
 - Upvotes: ${metrics.upvotes}
 - Comments: ${metrics.comments}`;
 

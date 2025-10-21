@@ -7,33 +7,49 @@ import { DrawingData, DrawingUtils } from '@shared/schema/drawing';
 import { getContrastColor } from '@shared/utils/color';
 import type { HEX } from '@shared/types';
 import { useTelemetry } from '@client/hooks/useTelemetry';
-import { useSlate } from '@client/hooks/useSlate';
 
 interface DrawStepProps {
   word: string;
   time: number;
   onComplete: (drawing: DrawingData) => void;
+  slateId: string | null;
+  trackSlateAction: (
+    action:
+      | 'slate_impression'
+      | 'slate_click'
+      | 'slate_auto_select'
+      | 'drawing_start'
+      | 'drawing_first_pixel'
+      | 'drawing_publish'
+      | 'post_skip',
+    word?: string,
+    metadata?: Record<string, string | number>
+  ) => Promise<void>;
 }
 
 export function DrawStep(props: DrawStepProps) {
-  const { word, time, onComplete } = props;
+  console.log('DrawStep component mounted');
+  const { word, time, onComplete, slateId, trackSlateAction } = props;
 
   const [startTime] = useState(Date.now());
   const [elapsedTime, setElapsedTime] = useState(0);
 
   const { track } = useTelemetry();
-  const { trackSlateAction } = useSlate();
 
   // Track draw step view on mount - use ref to ensure it only runs once
   const hasTrackedView = useRef(false);
   useEffect(() => {
     if (!hasTrackedView.current) {
+      console.log('DrawStep: tracking view and drawing_start', {
+        slateId,
+        word,
+      });
       void track('view_draw_step');
       // Also track as slate event for queue processing
-      void trackSlateAction('start', word); // This maps to 'view_draw_step' in the slate processing
+      void trackSlateAction('drawing_start', word); // This maps to 'drawing_start' in the slate processing
       hasTrackedView.current = true;
     }
-  }, [track, trackSlateAction, word]);
+  }, [track, trackSlateAction, word, slateId]);
 
   // Canvas state
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -42,6 +58,7 @@ export function DrawStep(props: DrawStepProps) {
   const [drawingData, setDrawingData] = useState<DrawingData>(() =>
     DrawingUtils.createBlank()
   );
+  const hasTrackedFirstPixel = useRef(false);
 
   const canvasInternalSize = 16;
 
@@ -52,17 +69,19 @@ export function DrawStep(props: DrawStepProps) {
       setElapsedTime(currentElapsed);
       const remainingTime = time * 1000 - currentElapsed;
       if (remainingTime <= 0) {
+        void track('drawing_done_auto');
         onComplete(drawingData);
       }
     }, 100);
 
     return () => clearInterval(timer);
-  }, [startTime, time, onComplete]);
+  }, [startTime, time, onComplete, track, drawingData]);
 
   const secondsLeft = Math.max(0, Math.round(time - elapsedTime / 1000));
 
   const handleDone = () => {
     void track('click_done_drawing');
+    void track('drawing_done_manual');
     onComplete(drawingData);
   };
 
@@ -143,9 +162,16 @@ export function DrawStep(props: DrawStepProps) {
         setDrawingData((prev) =>
           DrawingUtils.setPixel(prev, index, currentColor)
         );
+
+        // Track first pixel drawn
+        if (!hasTrackedFirstPixel.current) {
+          void track('first_pixel_drawn');
+          void trackSlateAction('drawing_first_pixel', word);
+          hasTrackedFirstPixel.current = true;
+        }
       }
     },
-    [currentColor]
+    [currentColor, track]
   );
 
   const handleMouseDown = useCallback(

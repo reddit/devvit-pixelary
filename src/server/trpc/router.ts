@@ -324,8 +324,24 @@ export const appRouter = t.router({
         .input(
           z.object({
             slateId: z.string(),
-            action: z.enum(['impression', 'click', 'publish', 'start']),
+            action: z.enum([
+              'slate_impression',
+              'slate_click',
+              'slate_auto_select',
+              'slate_refresh',
+              'drawing_start',
+              'drawing_first_pixel',
+              'drawing_done_manual',
+              'drawing_done_auto',
+              'drawing_publish',
+              'drawing_cancel',
+              'post_impression',
+              'post_guess',
+              'post_solve',
+              'post_skip',
+            ]),
             word: z.string().optional(),
+            metadata: z.record(z.union([z.string(), z.number()])).optional(),
           })
         )
         .mutation(async ({ ctx, input }) => {
@@ -333,16 +349,14 @@ export const appRouter = t.router({
             throw new Error('Subreddit not found');
           }
 
-          trackSlateAction(
+          await trackSlateAction(
             ctx.subredditName,
             input.slateId,
             input.action,
             input.word,
-            ctx.postId || undefined
-          ).catch((error) => {
-            console.error('Slate tracking error:', error);
-            // Silently ignore errors - telemetry should never break the app
-          });
+            ctx.postId || undefined,
+            input.metadata
+          );
 
           return { ok: true };
         }),
@@ -363,14 +377,7 @@ export const appRouter = t.router({
           ])
         )
         .mutation(async ({ ctx, input }) => {
-          console.log('🔍 tRPC telemetry.track called:', {
-            eventType: input.eventType,
-            metadata: 'metadata' in input ? input.metadata : undefined,
-            metadataType:
-              'metadata' in input ? typeof input.metadata : 'undefined',
-            postData: ctx.postData,
-            postDataType: typeof ctx.postData,
-          });
+          console.log(`📊 Event: ${input.eventType}`);
 
           try {
             // Fire-and-forget telemetry tracking with automatic post type detection
@@ -380,16 +387,8 @@ export const appRouter = t.router({
               ctx.postData,
               metadata
             );
-            console.log('🔍 tRPC telemetry.track success');
           } catch (error) {
-            console.warn('🔍 tRPC telemetry.track error:', error);
-            console.warn('🔍 tRPC telemetry.track error details:', {
-              errorMessage:
-                error instanceof Error ? error.message : String(error),
-              errorStack: error instanceof Error ? error.stack : undefined,
-              input,
-              ctx: { postData: ctx.postData },
-            });
+            console.warn('Telemetry tracking failed:', error);
             // Silently ignore errors - telemetry should never break the app
           }
 

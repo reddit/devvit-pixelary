@@ -118,18 +118,8 @@ app.use(router);
 // Public telemetry endpoint for Beacon API (no auth required)
 router.post('/api/telemetry/public', async (req, res) => {
   try {
-    const { eventType, metadata } = req.body;
-
-    // Log the telemetry event (without user context)
-    console.log('🔍 Public telemetry event:', {
-      eventType,
-      metadata,
-      timestamp: new Date().toISOString(),
-    });
-
-    // You could store this in Redis or send to analytics service
-    // For now, just log it
-
+    const { eventType } = req.body;
+    console.log(`📊 Public Event: ${eventType}`);
     res.json({ ok: true });
   } catch (error) {
     console.warn('Public telemetry error:', error);

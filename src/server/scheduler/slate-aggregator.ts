@@ -14,25 +14,15 @@ export async function handleSlateAggregator(
   const jobId = `slate-aggregator-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
   try {
-    console.log(`[${jobId}] Starting slate aggregator job`);
-
     // Extract parameters from request body
     const jobData = req.body.data || req.body;
     const batchSize = jobData.batchSize || 100;
     const isInitialJob = jobData.isInitialJob !== false; // Default to true for first run
 
-    console.log(`[${jobId}] Job parameters:`, {
-      batchSize,
-      isInitialJob,
-      requestBody: req.body,
-    });
-
     // Get initial queue size for logging
     const initialQueueSize = await getEventQueueSize();
-    console.log(`[${jobId}] Initial queue size: ${initialQueueSize}`);
 
     if (initialQueueSize === 0) {
-      console.log(`[${jobId}] Queue is empty, nothing to process`);
       res.json({
         status: 'success',
         processed: 0,
@@ -43,27 +33,22 @@ export async function handleSlateAggregator(
       return;
     }
 
-    // Process events in batch
-    console.log(`[${jobId}] Processing batch of ${batchSize} events...`);
+    console.log(`🔄 Slate Aggregator: Processing ${initialQueueSize} events`, {
+      jobId,
+      batchSize,
+      isInitialJob,
+    });
     const result = await processSlateEvents(batchSize);
 
     const jobDuration = Date.now() - jobStartTime;
-    console.log(`[${jobId}] Batch processing completed:`, {
-      processed: result.processed,
-      hasMore: result.hasMore,
-      duration: jobDuration,
-      initialQueueSize,
-    });
-
-    // Verify the processing actually worked
     const remainingQueueSize = await getEventQueueSize();
     console.log(
-      `[${jobId}] Queue size after processing: ${remainingQueueSize}`
+      `✅ Slate Aggregator: Processed ${result.processed}, Remaining: ${remainingQueueSize}`
     );
 
     if (result.processed === 0 && initialQueueSize > 0) {
       console.error(
-        `[${jobId}] CRITICAL: No events were processed despite queue having ${initialQueueSize} events`
+        `❌ Slate Aggregator: No events processed despite ${initialQueueSize} in queue`
       );
       res.status(500).json({
         status: 'error',
@@ -81,24 +66,15 @@ export async function handleSlateAggregator(
     if (result.hasMore && jobDuration < 50000) {
       // Leave 10s buffer before 60s timeout
       try {
-        console.log(
-          `[${jobId}] Scheduling next batch (${remainingQueueSize} events remaining)...`
-        );
-
-        const nextJobResult = await scheduler.runJob({
+        await scheduler.runJob({
           name: 'SLATE_AGGREGATOR',
           data: {
             batchSize,
             isInitialJob: false,
           },
         });
-
-        console.log(
-          `[${jobId}] Next batch scheduled successfully:`,
-          nextJobResult
-        );
       } catch (error) {
-        console.error(`[${jobId}] Failed to schedule next batch:`, error);
+        console.error(`Failed to schedule next batch:`, error);
         res.status(500).json({
           status: 'error',
           message: 'Failed to schedule next batch',

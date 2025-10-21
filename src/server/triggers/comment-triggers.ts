@@ -32,6 +32,7 @@ export async function handleCommentCreate(
 
     // Extract the command and arguments from the comment body
     const { command, args } = parseCommand(comment.body);
+    console.log(`💬 Comment Command: ${command} by ${author.name}`);
 
     // Create command context
     const commandContext: CommandContext = {

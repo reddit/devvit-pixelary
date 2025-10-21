@@ -136,40 +136,92 @@ export async function generateSlate(
 export async function trackSlateAction(
   subredditName: string,
   slateId: string,
-  action: 'impression' | 'click' | 'publish' | 'start',
+  action:
+    | 'slate_impression'
+    | 'slate_click'
+    | 'slate_auto_select'
+    | 'slate_refresh'
+    | 'drawing_start'
+    | 'drawing_first_pixel'
+    | 'drawing_done_manual'
+    | 'drawing_done_auto'
+    | 'drawing_publish'
+    | 'drawing_cancel'
+    | 'post_impression'
+    | 'post_guess'
+    | 'post_solve'
+    | 'post_skip',
   word?: string,
-  postId?: T3
+  postId?: T3,
+  metadata?: Record<string, string | number | undefined>
 ): Promise<void> {
   try {
     // Map action to event type for queue tracking
     let eventType: EventType;
     switch (action) {
-      case 'impression':
-        eventType = 'view_word_step'; // Use existing EventType
+      case 'slate_impression':
+        eventType = 'slate_impression';
         break;
-      case 'click':
-        eventType = 'click_word_candidate';
+      case 'slate_click':
+        eventType = 'slate_click';
         break;
-      case 'publish':
-        eventType = 'click_post_drawing';
+      case 'slate_auto_select':
+        eventType = 'slate_auto_select';
         break;
-      case 'start':
-        eventType = 'view_draw_step';
+      case 'slate_refresh':
+        eventType = 'slate_refresh';
+        break;
+      case 'drawing_start':
+        eventType = 'drawing_start';
+        break;
+      case 'drawing_first_pixel':
+        eventType = 'drawing_first_pixel';
+        break;
+      case 'drawing_done_manual':
+        eventType = 'drawing_done_manual';
+        break;
+      case 'drawing_done_auto':
+        eventType = 'drawing_done_auto';
+        break;
+      case 'drawing_publish':
+        eventType = 'drawing_publish';
+        break;
+      case 'drawing_cancel':
+        eventType = 'drawing_cancel';
+        break;
+      case 'post_impression':
+        eventType = 'post_impression';
+        break;
+      case 'post_guess':
+        eventType = 'post_guess';
+        break;
+      case 'post_solve':
+        eventType = 'post_solve';
+        break;
+      case 'post_skip':
+        eventType = 'post_skip';
         break;
       default:
         eventType = action as EventType;
     }
 
     // Add event to queue for processing
-    const metadata: Record<string, string | number> = {
-      word: word || '',
+    const eventMetadata: Record<string, string | number> = {
       subredditName,
+      ...metadata,
     };
+    if (word) {
+      eventMetadata.word = word;
+    }
     if (postId) {
-      metadata.postId = postId;
+      eventMetadata.postId = postId;
     }
 
-    await trackSlateEvent(slateId, eventType, metadata);
+    await trackSlateEvent(slateId, eventType, eventMetadata);
+    console.log(`✅ Queued slate event: ${action} for slate ${slateId}`, {
+      eventMetadata,
+      timestamp: Date.now(),
+    });
   } catch (error) {
     console.error(`Failed to track slate ${action}:`, {
       error,
@@ -195,11 +247,10 @@ export async function getWordMetrics(word: string): Promise<{
   publishes: number;
   publishRate: number;
   starts: number;
-  guesses: number;
-  skips: number;
-  solves: number;
-  skipRate: number;
-  solveRate: number;
+  firstPixel: number;
+  manualCompletion: number;
+  autoCompletion: number;
+  cancellations: number;
   upvotes: number;
   comments: number;
 }> {
@@ -214,9 +265,10 @@ export async function getWordMetrics(word: string): Promise<{
     const clicks = parseInt(metrics.clicks || '0', 10);
     const publishes = parseInt(metrics.publishes || '0', 10);
     const starts = parseInt(metrics.starts || '0', 10);
-    const guesses = parseInt(metrics.guesses || '0', 10);
-    const skips = parseInt(metrics.skips || '0', 10);
-    const solves = parseInt(metrics.solves || '0', 10);
+    const firstPixel = parseInt(metrics.first_pixel || '0', 10);
+    const manualCompletion = parseInt(metrics.manual_completion || '0', 10);
+    const autoCompletion = parseInt(metrics.auto_completion || '0', 10);
+    const cancellations = parseInt(metrics.cancellations || '0', 10);
     const upvotes = parseInt(metrics.upvotes || '0', 10);
     const comments = parseInt(metrics.comments || '0', 10);
 
@@ -224,15 +276,14 @@ export async function getWordMetrics(word: string): Promise<{
     console.log('Clicks:', clicks);
     console.log('Publishes:', publishes);
     console.log('Starts:', starts);
-    console.log('Guesses:', guesses);
-    console.log('Skips:', skips);
-    console.log('Solves:', solves);
+    console.log('First pixel:', firstPixel);
+    console.log('Manual completion:', manualCompletion);
+    console.log('Auto completion:', autoCompletion);
+    console.log('Cancellations:', cancellations);
 
     // Calculate rates
     const clickRate = impressions > 0 ? clicks / impressions : 0;
     const publishRate = impressions > 0 ? publishes / impressions : 0;
-    const skipRate = impressions > 0 ? skips / impressions : 0;
-    const solveRate = impressions > 0 ? solves / impressions : 0;
 
     return {
       impressions,
@@ -241,11 +292,10 @@ export async function getWordMetrics(word: string): Promise<{
       publishes,
       publishRate,
       starts,
-      guesses,
-      skips,
-      solves,
-      skipRate,
-      solveRate,
+      firstPixel,
+      manualCompletion,
+      autoCompletion,
+      cancellations,
       upvotes,
       comments,
     };
@@ -258,11 +308,10 @@ export async function getWordMetrics(word: string): Promise<{
       publishes: 0,
       publishRate: 0,
       starts: 0,
-      guesses: 0,
-      skips: 0,
-      solves: 0,
-      skipRate: 0,
-      solveRate: 0,
+      firstPixel: 0,
+      manualCompletion: 0,
+      autoCompletion: 0,
+      cancellations: 0,
       upvotes: 0,
       comments: 0,
     };
@@ -348,6 +397,11 @@ type SlateEvent = {
   timestamp: string;
   word?: string;
   postId?: T3;
+  metadata?: {
+    selectionType?: 'manual' | 'auto';
+    completionType?: 'manual' | 'auto';
+    [key: string]: string | number | undefined;
+  };
 };
 
 type PostMetrics = {
@@ -428,7 +482,7 @@ async function processSlateEvent(event: SlateEvent): Promise<void> {
     });
 
     // Handle different event types
-    if (eventType === 'view_word_step') {
+    if (eventType === 'slate_impression') {
       // Increment slate served counter
       await incrementSlateServed(slateId);
 
@@ -449,26 +503,57 @@ async function processSlateEvent(event: SlateEvent): Promise<void> {
       } else {
         console.warn(`No words found in slate data for ${slateId}`);
       }
-    } else if (eventType === 'click_word_candidate' && word) {
+    } else if (
+      (eventType === 'slate_click' || eventType === 'slate_auto_select') &&
+      word
+    ) {
       // Increment picks (clicks) for the word
       console.log(`Incrementing clicks for word: ${word}`);
       const normalizedWord = normalizeWord(word);
       const metricsKey = REDIS_KEYS.wordMetrics(normalizedWord);
       await redis.hIncrBy(metricsKey, 'clicks', 1);
       await redis.expire(metricsKey, 30 * 24 * 60 * 60);
-    } else if (eventType === 'view_draw_step' && word) {
+    } else if (eventType === 'drawing_start' && word) {
       // Increment starts for the word
       console.log(`Incrementing starts for word: ${word}`);
       const normalizedWord = normalizeWord(word);
       const metricsKey = REDIS_KEYS.wordMetrics(normalizedWord);
       await redis.hIncrBy(metricsKey, 'starts', 1);
       await redis.expire(metricsKey, 30 * 24 * 60 * 60);
-    } else if (eventType === 'click_post_drawing' && word) {
+    } else if (eventType === 'drawing_publish' && word) {
       // Increment finishes (publishes) for the word
       console.log(`Incrementing publishes for word: ${word}`);
       const normalizedWord = normalizeWord(word);
       const metricsKey = REDIS_KEYS.wordMetrics(normalizedWord);
       await redis.hIncrBy(metricsKey, 'publishes', 1);
+      await redis.expire(metricsKey, 30 * 24 * 60 * 60);
+    } else if (eventType === 'drawing_first_pixel' && word) {
+      // Increment engagement metric for the word
+      console.log(`Incrementing first pixel engagement for word: ${word}`);
+      const normalizedWord = normalizeWord(word);
+      const metricsKey = REDIS_KEYS.wordMetrics(normalizedWord);
+      await redis.hIncrBy(metricsKey, 'first_pixel', 1);
+      await redis.expire(metricsKey, 30 * 24 * 60 * 60);
+    } else if (eventType === 'drawing_done_manual' && word) {
+      // Track manual completion
+      console.log(`Incrementing manual completion for word: ${word}`);
+      const normalizedWord = normalizeWord(word);
+      const metricsKey = REDIS_KEYS.wordMetrics(normalizedWord);
+      await redis.hIncrBy(metricsKey, 'manual_completion', 1);
+      await redis.expire(metricsKey, 30 * 24 * 60 * 60);
+    } else if (eventType === 'drawing_done_auto' && word) {
+      // Track auto completion
+      console.log(`Incrementing auto completion for word: ${word}`);
+      const normalizedWord = normalizeWord(word);
+      const metricsKey = REDIS_KEYS.wordMetrics(normalizedWord);
+      await redis.hIncrBy(metricsKey, 'auto_completion', 1);
+      await redis.expire(metricsKey, 30 * 24 * 60 * 60);
+    } else if (eventType === 'drawing_cancel' && word) {
+      // Track drawing cancellation
+      console.log(`Incrementing cancellation for word: ${word}`);
+      const normalizedWord = normalizeWord(word);
+      const metricsKey = REDIS_KEYS.wordMetrics(normalizedWord);
+      await redis.hIncrBy(metricsKey, 'cancellations', 1);
       await redis.expire(metricsKey, 30 * 24 * 60 * 60);
     } else {
       console.log(
@@ -583,11 +668,8 @@ export async function processSlateEvents(
     // Process each event
     for (const [timestamp, eventDataStr] of eventsToProcess) {
       try {
-        console.log(`Processing event at timestamp ${timestamp}`);
-
         // Validate event data
         if (!eventDataStr) {
-          console.warn(`Empty event data at timestamp ${timestamp}`);
           await redis.hDel(eventKey, [timestamp]);
           processed++;
           continue;
@@ -601,7 +683,6 @@ export async function processSlateEvents(
             `Failed to parse event data at ${timestamp}:`,
             parseError
           );
-          console.error(`Raw event data: ${eventDataStr}`);
           await redis.hDel(eventKey, [timestamp]);
           processed++;
           errors++;
@@ -621,18 +702,16 @@ export async function processSlateEvents(
           continue;
         }
 
+        console.log(
+          `🎯 Slate Event: ${eventData.eventType} (${eventData.slateId})`
+        );
         await processSlateEvent(eventData);
 
         // Remove processed event
         await redis.hDel(eventKey, [timestamp]);
         processed++;
-
-        console.log(
-          `Successfully processed event ${eventData.eventType} for slate ${eventData.slateId}`
-        );
       } catch (error) {
         console.error(`Failed to process event at ${timestamp}:`, error);
-        console.error(`Event data: ${eventDataStr}`);
 
         // Still remove the event to avoid infinite retry
         await redis.hDel(eventKey, [timestamp]);

@@ -33,7 +33,7 @@ export function GuessView({
 
   // Track guess view on mount
   useEffect(() => {
-    void void track('view_guess');
+    void track('post_impression');
   }, []);
 
   const handleGuessSubmit = async () => {
@@ -43,7 +43,7 @@ export function GuessView({
     }
 
     // Track guess submit
-    void void track('click_guess_submit');
+    void track('post_guess');
 
     try {
       await onGuess(guess.trim().toLowerCase());
@@ -139,7 +139,7 @@ export function GuessView({
       {/* Give Up Button */}
       <button
         onClick={() => {
-          void void track('click_give_up');
+          void track('post_skip');
           void onGiveUp();
         }}
         className="flex items-center justify-center cursor-pointer"

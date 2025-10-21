@@ -4,16 +4,38 @@ import type { CandidateWord } from '@shared/schema/pixelary';
 import { PixelFont } from '@components/PixelFont';
 import { PixelSymbol } from '@components/PixelSymbol';
 import { context } from '@devvit/web/client';
-import { trpc } from '@client/trpc/client';
 import { useTelemetry } from '@client/hooks/useTelemetry';
-import { useSlate } from '@client/hooks/useSlate';
 
 interface WordStepProps {
   selectCandidate: (candidate: CandidateWord) => void;
+  slateId: string | null;
+  candidates: (CandidateWord | null)[];
+  isLoading: boolean;
+  refreshCandidates: () => void;
+  trackSlateAction: (
+    action:
+      | 'slate_impression'
+      | 'slate_click'
+      | 'slate_auto_select'
+      | 'drawing_start'
+      | 'drawing_first_pixel'
+      | 'drawing_publish'
+      | 'post_skip',
+    word?: string,
+    metadata?: Record<string, string | number>
+  ) => Promise<void>;
 }
 
 export function WordStep(props: WordStepProps) {
-  const { selectCandidate } = props;
+  console.log('WordStep component mounted');
+  const {
+    selectCandidate,
+    slateId,
+    candidates,
+    isLoading,
+    refreshCandidates,
+    trackSlateAction,
+  } = props;
 
   // State management
   const [startTime, setStartTime] = useState<number | null>(null);
@@ -21,37 +43,61 @@ export function WordStep(props: WordStepProps) {
   const trackedSlateIdRef = useRef<string | null>(null);
 
   const { track } = useTelemetry();
-  const { setSlateId, trackSlateAction } = useSlate();
 
   // Track word step view on mount
   useEffect(() => {
+    console.log('🔍 WordStep: About to track view_word_step');
     void track('view_word_step');
+    console.log('🔍 WordStep: Tracked view_word_step');
   }, []);
 
-  // tRPC hooks
-  const {
-    data: slateData,
-    isLoading,
-    refetch: refreshCandidates,
-  } = trpc.app.dictionary.getCandidates.useQuery();
-
-  // Extract slateId and candidates from response
-  const slateId = slateData?.slateId || null;
-  const candidates = useMemo(
-    () => slateData?.candidates || [null, null, null],
-    [slateData?.candidates]
-  );
-
-  // Set slateId in context and track impression
+  // Debug slate data
   useEffect(() => {
-    console.log('WordStep slateId effect:', { slateId, candidates });
-    if (slateId && slateId !== trackedSlateIdRef.current) {
-      console.log('Setting slateId and tracking impression:', { slateId });
-      setSlateId(slateId);
+    console.log('WordStep slateData debug:', {
+      slateId,
+      isLoading,
+      candidatesLength: candidates.length,
+    });
+  }, [slateId, isLoading, candidates]);
+
+  // Track slate impression when slateId is available
+  useEffect(() => {
+    console.log('🔍 WordStep slateId effect:', {
+      slateId,
+      candidates,
+      isLoading,
+      trackedSlateIdRef: trackedSlateIdRef.current,
+    });
+
+    // Only proceed if we have a valid slateId and query is complete
+    if (slateId && !isLoading && slateId !== trackedSlateIdRef.current) {
+      console.log('🔍 WordStep: Tracking impression for slateId:', {
+        slateId,
+      });
       trackedSlateIdRef.current = slateId;
-      void trackSlateAction('impression'); // No delay needed with Beacon
+
+      // Track impression after ensuring context is updated
+      console.log(
+        '🔍 WordStep: About to call trackSlateAction for slate_impression'
+      );
+      // Use setTimeout to ensure React state update has completed
+      setTimeout(() => {
+        trackSlateAction('slate_impression').catch((error) => {
+          console.error(
+            '🔍 WordStep: Failed to track slate impression:',
+            error
+          );
+        });
+        console.log(
+          '🔍 WordStep: Called trackSlateAction for slate_impression'
+        );
+      }, 0);
+    } else if (!slateId && !isLoading) {
+      console.log('🔍 WordStep: No slateId available after query completed');
+    } else if (slateId && slateId === trackedSlateIdRef.current) {
+      console.log('🔍 WordStep: slateId already tracked, skipping impression');
     }
-  }, [slateId, setSlateId, trackSlateAction]);
+  }, [slateId, isLoading, trackSlateAction]);
 
   // Start timer when candidates load
   useEffect(() => {
@@ -75,9 +121,13 @@ export function WordStep(props: WordStepProps) {
   useEffect(() => {
     const remainingTime = CARD_DRAW_DURATION * 1000 - elapsedTime;
     if (remainingTime <= 0 && candidates.length > 0 && candidates[0]) {
+      // Track auto-select before selecting
+      void trackSlateAction('slate_auto_select', candidates[0].word, {
+        selectionType: 'auto',
+      });
       selectCandidate(candidates[0]);
     }
-  }, [elapsedTime, selectCandidate, candidates]);
+  }, [elapsedTime, selectCandidate, candidates, trackSlateAction]);
 
   // Derived state
   const secondsLeft = Math.max(
@@ -98,6 +148,7 @@ export function WordStep(props: WordStepProps) {
             index={index}
             isLoading={isLoading}
             onSelect={selectCandidate}
+            trackSlateAction={trackSlateAction}
           />
         ))}
       </div>
@@ -161,12 +212,23 @@ interface WordCandidateProps {
   index: number;
   isLoading: boolean;
   onSelect: (candidate: CandidateWord) => void;
+  trackSlateAction: (
+    action:
+      | 'slate_impression'
+      | 'slate_click'
+      | 'slate_auto_select'
+      | 'drawing_start'
+      | 'drawing_first_pixel'
+      | 'drawing_publish'
+      | 'post_skip',
+    word?: string,
+    metadata?: Record<string, string | number>
+  ) => Promise<void>;
 }
 
 function WordCandidate(props: WordCandidateProps) {
-  const { candidate, index, isLoading, onSelect } = props;
+  const { candidate, index, isLoading, onSelect, trackSlateAction } = props;
   const { track } = useTelemetry();
-  const { trackSlateAction } = useSlate();
 
   return (
     <button
@@ -178,7 +240,9 @@ function WordCandidate(props: WordCandidateProps) {
             word: candidate.word,
           });
           void track('click_word_candidate');
-          void trackSlateAction('click', candidate.word);
+          void trackSlateAction('slate_click', candidate.word, {
+            selectionType: 'manual',
+          });
           onSelect(candidate);
         }
       }}

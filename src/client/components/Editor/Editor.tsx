@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback } from 'react';
 import { WordStep } from './_components/WordStep';
 import { DrawStep } from './_components/DrawStep';
 import { ReviewStep } from './_components/ReviewStep';
-import { SlateProvider } from '@client/hooks/useSlate';
 import { trpc } from '@client/trpc/client';
 import { LEVELS, DRAWING_DURATION } from '@shared/constants';
 import type { Level } from '@shared/constants';
@@ -24,6 +23,7 @@ export function DrawingEditor({ onClose }: DrawingEditorProps) {
   const [drawing, setDrawing] = useState<DrawingData>(
     DrawingUtils.createBlank()
   );
+  const [slateId, setSlateId] = useState<string | null>(null);
 
   const { track } = useTelemetry();
 
@@ -34,6 +34,71 @@ export function DrawingEditor({ onClose }: DrawingEditorProps) {
 
   // tRPC hooks
   const { data: userProfile } = trpc.app.user.getProfile.useQuery();
+  const trackSlateActionMutation = trpc.app.slate.trackAction.useMutation();
+
+  // Fetch slate data at Editor level to persist across step transitions
+  const {
+    data: slateData,
+    isLoading: isSlateLoading,
+    refetch: refreshCandidates,
+  } = trpc.app.dictionary.getCandidates.useQuery();
+
+  // Extract slateId and candidates from response
+  const currentSlateId = slateData?.slateId || null;
+  const candidates = slateData?.candidates || [null, null, null];
+
+  // Set slateId when slate data loads
+  useEffect(() => {
+    if (currentSlateId && currentSlateId !== slateId) {
+      console.log('🔍 Editor: Setting slateId from slate data:', {
+        currentSlateId,
+        previousSlateId: slateId,
+      });
+      setSlateId(currentSlateId);
+    }
+  }, [currentSlateId, slateId]);
+
+  // Track slate action function
+  const trackSlateAction = useCallback(
+    async (
+      action:
+        | 'slate_impression'
+        | 'slate_click'
+        | 'slate_auto_select'
+        | 'drawing_start'
+        | 'drawing_first_pixel'
+        | 'drawing_publish'
+        | 'post_skip',
+      word?: string,
+      metadata?: Record<string, string | number>
+    ) => {
+      console.log('🔍 Editor: trackSlateAction called', {
+        action,
+        word,
+        slateId,
+      });
+      if (!slateId) {
+        console.warn(
+          '🔍 Editor: trackSlateAction called but slateId is not set',
+          { action, word }
+        );
+        return;
+      }
+
+      console.log('🔍 Editor: tracking slate action', {
+        slateId,
+        action,
+        word,
+      });
+      await trackSlateActionMutation.mutateAsync({
+        slateId,
+        action,
+        word,
+        metadata,
+      });
+    },
+    [slateId, trackSlateActionMutation]
+  );
 
   // On load effect
   useEffect(() => {
@@ -59,14 +124,25 @@ export function DrawingEditor({ onClose }: DrawingEditorProps) {
   }, []);
 
   return (
-    <SlateProvider>
+    <>
       {/* Render current step */}
-      {step === 'word' && <WordStep selectCandidate={selectCandidate} />}
+      {step === 'word' && (
+        <WordStep
+          selectCandidate={selectCandidate}
+          slateId={slateId}
+          candidates={candidates}
+          isLoading={isSlateLoading}
+          refreshCandidates={refreshCandidates}
+          trackSlateAction={trackSlateAction}
+        />
+      )}
       {step === 'draw' && candidate && (
         <DrawStep
           word={candidate.word}
           time={time}
           onComplete={handleOnComplete}
+          slateId={slateId}
+          trackSlateAction={trackSlateAction}
         />
       )}
       {step === 'review' && candidate && (
@@ -76,8 +152,10 @@ export function DrawingEditor({ onClose }: DrawingEditorProps) {
           drawing={drawing}
           onCancel={onClose}
           onSuccess={onClose}
+          slateId={slateId}
+          trackSlateAction={trackSlateAction}
         />
       )}
-    </SlateProvider>
+    </>
   );
 }
