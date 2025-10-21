@@ -2,6 +2,7 @@ import { redis, reddit } from '@devvit/web/server';
 import { REDIS_KEYS } from './redis';
 import { getAllWords } from './dictionary';
 import { trackSlateEvent, type EventType } from './telemetry';
+import { normalizeWord } from '../../shared/utils/string';
 import type { CandidateWord } from '../../shared/schema/pixelary';
 import type { T3 } from '@devvit/shared-types/tid.js';
 
@@ -184,7 +185,8 @@ export async function trackSlateAction(
       }
 
       const promises = slateData.words.map(async (w) => {
-        const metricsKey = REDIS_KEYS.wordMetrics(w);
+        const normalizedWord = normalizeWord(w);
+        const metricsKey = REDIS_KEYS.wordMetrics(normalizedWord);
         await redis.hIncrBy(metricsKey, 'impressions', 1);
         await redis.expire(metricsKey, 30 * 24 * 60 * 60); // 30 days TTL
       });
@@ -192,12 +194,14 @@ export async function trackSlateAction(
       await Promise.all(promises);
     } else if (action === 'click' && word) {
       // Track click for specific word
-      const metricsKey = REDIS_KEYS.wordMetrics(word);
+      const normalizedWord = normalizeWord(word);
+      const metricsKey = REDIS_KEYS.wordMetrics(normalizedWord);
       await redis.hIncrBy(metricsKey, 'clicks', 1);
       await redis.expire(metricsKey, 30 * 24 * 60 * 60);
     } else if (action === 'publish' && word) {
       // Track publish for specific word
-      const metricsKey = REDIS_KEYS.wordMetrics(word);
+      const normalizedWord = normalizeWord(word);
+      const metricsKey = REDIS_KEYS.wordMetrics(normalizedWord);
       await redis.hIncrBy(metricsKey, 'publishes', 1);
       await redis.expire(metricsKey, 30 * 24 * 60 * 60);
     } else if (action === 'start') {
@@ -239,10 +243,13 @@ export async function getWordMetrics(word: string): Promise<{
   upvotes: number;
   comments: number;
 }> {
+  console.log('Getting word metrics for:', word);
   try {
-    const metricsKey = REDIS_KEYS.wordMetrics(word);
+    // Normalize the word to match how it's stored in Redis
+    const normalizedWord = normalizeWord(word);
+    const metricsKey = REDIS_KEYS.wordMetrics(normalizedWord);
     const metrics = await redis.hGetAll(metricsKey);
-
+    console.log('Metrics:', metrics);
     const impressions = parseInt(metrics.impressions || '0', 10);
     const clicks = parseInt(metrics.clicks || '0', 10);
     const publishes = parseInt(metrics.publishes || '0', 10);
@@ -252,6 +259,14 @@ export async function getWordMetrics(word: string): Promise<{
     const solves = parseInt(metrics.solves || '0', 10);
     const upvotes = parseInt(metrics.upvotes || '0', 10);
     const comments = parseInt(metrics.comments || '0', 10);
+
+    console.log('Impressions:', impressions);
+    console.log('Clicks:', clicks);
+    console.log('Publishes:', publishes);
+    console.log('Starts:', starts);
+    console.log('Guesses:', guesses);
+    console.log('Skips:', skips);
+    console.log('Solves:', solves);
 
     // Calculate rates
     const clickRate = impressions > 0 ? clicks / impressions : 0;
@@ -466,7 +481,8 @@ async function processSlateEvent(event: SlateEvent): Promise<void> {
         );
 
         for (const w of words) {
-          const metricsKey = REDIS_KEYS.wordMetrics(w);
+          const normalizedWord = normalizeWord(w);
+          const metricsKey = REDIS_KEYS.wordMetrics(normalizedWord);
           await redis.hIncrBy(metricsKey, 'impressions', 1);
           await redis.expire(metricsKey, 30 * 24 * 60 * 60); // 30 days TTL
         }
@@ -476,19 +492,22 @@ async function processSlateEvent(event: SlateEvent): Promise<void> {
     } else if (eventType === 'click_word_candidate' && word) {
       // Increment picks (clicks) for the word
       console.log(`Incrementing clicks for word: ${word}`);
-      const metricsKey = REDIS_KEYS.wordMetrics(word);
+      const normalizedWord = normalizeWord(word);
+      const metricsKey = REDIS_KEYS.wordMetrics(normalizedWord);
       await redis.hIncrBy(metricsKey, 'clicks', 1);
       await redis.expire(metricsKey, 30 * 24 * 60 * 60);
     } else if (eventType === 'view_draw_step' && word) {
       // Increment starts for the word
       console.log(`Incrementing starts for word: ${word}`);
-      const metricsKey = REDIS_KEYS.wordMetrics(word);
+      const normalizedWord = normalizeWord(word);
+      const metricsKey = REDIS_KEYS.wordMetrics(normalizedWord);
       await redis.hIncrBy(metricsKey, 'starts', 1);
       await redis.expire(metricsKey, 30 * 24 * 60 * 60);
     } else if (eventType === 'click_post_drawing' && word) {
       // Increment finishes (publishes) for the word
       console.log(`Incrementing publishes for word: ${word}`);
-      const metricsKey = REDIS_KEYS.wordMetrics(word);
+      const normalizedWord = normalizeWord(word);
+      const metricsKey = REDIS_KEYS.wordMetrics(normalizedWord);
       await redis.hIncrBy(metricsKey, 'publishes', 1);
       await redis.expire(metricsKey, 30 * 24 * 60 * 60);
     } else {
@@ -521,7 +540,8 @@ async function processSlateEvent(event: SlateEvent): Promise<void> {
 
       // Update word metrics with deltas
       if (word && (upvoteDelta > 0 || commentDelta > 0)) {
-        const metricsKey = REDIS_KEYS.wordMetrics(word);
+        const normalizedWord = normalizeWord(word);
+        const metricsKey = REDIS_KEYS.wordMetrics(normalizedWord);
         if (upvoteDelta > 0) {
           await redis.hIncrBy(metricsKey, 'upvotes', upvoteDelta);
         }

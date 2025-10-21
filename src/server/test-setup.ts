@@ -1,7 +1,13 @@
 import { vi } from 'vitest';
 
-// Mock @devvit/web/server
+// Mock context
 vi.mock('@devvit/web/server', () => ({
+  context: {
+    subredditName: 'testsub',
+    subredditId: 't5_test' as const,
+    userId: 't2_testuser' as `t2_${string}`,
+    username: 'testuser',
+  },
   redis: {
     get: vi.fn(),
     set: vi.fn(),
@@ -32,6 +38,38 @@ vi.mock('@devvit/web/server', () => ({
     exists: vi.fn(),
     keys: vi.fn(),
     flushDb: vi.fn(),
+    global: {
+      get: vi.fn(),
+      set: vi.fn(),
+      del: vi.fn(),
+      incr: vi.fn(),
+      mGet: vi.fn(),
+      zAdd: vi.fn(),
+      zRange: vi.fn(),
+      zCard: vi.fn(),
+      zScore: vi.fn(),
+      zRank: vi.fn(),
+      zIncrBy: vi.fn(),
+      zRem: vi.fn(),
+      hGet: vi.fn(),
+      hSet: vi.fn(),
+      hGetAll: vi.fn(),
+      hDel: vi.fn(),
+      hIncrBy: vi.fn(),
+      sAdd: vi.fn(),
+      sRem: vi.fn(),
+      sMembers: vi.fn(),
+      sIsMember: vi.fn(),
+      lPush: vi.fn(),
+      rPop: vi.fn(),
+      lLen: vi.fn(),
+      lRange: vi.fn(),
+      expire: vi.fn(),
+      ttl: vi.fn(),
+      exists: vi.fn(),
+      keys: vi.fn(),
+      flushDb: vi.fn(),
+    },
   },
   reddit: {
     getPostById: vi.fn(),

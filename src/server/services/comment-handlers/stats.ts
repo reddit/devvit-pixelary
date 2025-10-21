@@ -1,5 +1,5 @@
 import type { CommandResult } from '../comment-commands';
-import { getAllWords } from '../dictionary';
+import { isWordInList } from '../dictionary';
 import { getWordMetrics } from '../slate';
 
 export async function handleStats(args: string[]): Promise<CommandResult> {
@@ -19,12 +19,8 @@ export async function handleStats(args: string[]): Promise<CommandResult> {
       };
     }
 
-    // First check if the word exists in the dictionary
-    const words = await getAllWords();
-    const wordExists = words.some(
-      (w) => w.toLowerCase() === word.toLowerCase()
-    );
-
+    // Check if the word exists in the dictionary
+    const wordExists = await isWordInList(word);
     if (!wordExists) {
       return {
         success: false,
@@ -35,29 +31,20 @@ export async function handleStats(args: string[]): Promise<CommandResult> {
     // Get word metrics
     const metrics = await getWordMetrics(word);
 
+    console.log('Got metrics for:', word, metrics);
+
     // Format metrics concisely
-    const response = `**Word details**
-Word selection:
-Impressions: ${metrics.impressions}
-Picks: ${metrics.clicks}
-Pick rate: ${(metrics.clickRate * 100).toFixed(1)}%
+    const response = `##### 🎨 Drawer stats
+- Shown: ${metrics.impressions}
+- Picked: ${metrics.clicks} (${(metrics.clickRate * 100).toFixed(1)}%)
+- Published: ${metrics.publishes} (${(metrics.publishRate * 100).toFixed(1)}%)
 
-Drawing:
-Starts: ${metrics.starts}
-Publishes: ${metrics.publishes}
-Publish rate: ${(metrics.publishRate * 100).toFixed(1)}%
-
-Guessing:
-Attempts: ${metrics.guesses}
-Solves: ${metrics.solves}
-Solve rate: ${(metrics.solveRate * 100).toFixed(1)}%
-Skips: ${metrics.skips}
-Skip rate: ${(metrics.skipRate * 100).toFixed(1)}%
-
-Reddit engagement:
-Upvotes: ${metrics.upvotes}
-Comments: ${metrics.comments}
-`;
+##### 🔍 Guesser stats
+- Guesses: ${metrics.guesses}
+- Solves: ${metrics.solves} (${(metrics.solveRate * 100).toFixed(1)}%)
+- Skips: ${metrics.skips} (${(metrics.skipRate * 100).toFixed(1)}%)
+- Upvotes: ${metrics.upvotes}
+- Comments: ${metrics.comments}`;
 
     return {
       success: true,

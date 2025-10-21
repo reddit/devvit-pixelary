@@ -94,7 +94,7 @@ describe('Comment command system', () => {
       );
 
       expect(result.success).toBe(false);
-      expect(result.error).toContain('Word not found');
+      expect(result.error).toContain('Failed to retrieve word statistics');
     });
   });
 });
