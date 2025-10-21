@@ -1,5 +1,5 @@
 import type { CommandContext, CommandResult } from '../comment-commands';
-import { addWord, getBannedWords } from '../dictionary';
+import { addWord, getAllBannedWords } from '../dictionary';
 
 export async function handleAdd(
   args: string[],
@@ -22,7 +22,7 @@ export async function handleAdd(
     }
 
     // Check if word is banned before attempting to add
-    const bannedWords = await getBannedWords();
+    const bannedWords = await getAllBannedWords();
     const isBanned = bannedWords.some(
       (w) => w.toLowerCase() === word.toLowerCase()
     );

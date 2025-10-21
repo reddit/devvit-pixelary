@@ -13,7 +13,7 @@ vi.mock('../services/dictionary', () => ({
   getAllWords: vi.fn(async () => ['cat', 'dog', 'tree']),
   addWord: vi.fn(async () => true),
   removeWord: vi.fn(async () => true),
-  getBannedWords: vi.fn(async () => []),
+  getAllBannedWords: vi.fn(async () => []),
   getAllowedWords: vi.fn(async () => ['cat', 'dog', 'tree']),
 }));
 

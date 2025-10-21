@@ -68,6 +68,8 @@ export const LEVELS = [
   { rank: 15, name: 'Pixelary Eternal', min: 16384, max: 32767, extraTime: 42 },
 ] as const;
 
+export const DEFAULT_WORD_SCORE = 1;
+
 export const DEFAULT_WORDS = [
   'Air',
   'Airplane',

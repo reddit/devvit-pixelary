@@ -9,7 +9,6 @@ export type CommandContext = {
   subredditId: T5;
   postId?: T3;
   timestamp: number;
-  source: 'devvit' | 'http' | 'test';
 };
 
 export type CommandResult = {
@@ -34,6 +33,10 @@ const COMMAND_LIST = [
   '!help',
 ];
 
+/**
+ * Check if the text is a valid command. Returns `true` if the text is a valid command, `false` otherwise.
+ */
+
 export function isCommand(text: string): boolean {
   if (!text || typeof text !== 'string') return false;
   const command = text.split(' ')[0]?.toLowerCase().trim();
@@ -41,8 +44,23 @@ export function isCommand(text: string): boolean {
 }
 
 /**
- * Simplified command processing
+ * Parse the command and arguments from the text. Returns the command and arguments if the text is a valid command, `null` otherwise.
  */
+
+export function parseCommand(text: string): {
+  command: string;
+  args: string[];
+} {
+  const parts = text.trim().split(' ');
+  const command = parts[0]!.toLowerCase();
+  const args = parts.slice(1) ?? [];
+  return { command, args };
+}
+
+/**
+ * Process the command and return a reponse message.
+ */
+
 export async function processCommand(
   command: string,
   args: string[],

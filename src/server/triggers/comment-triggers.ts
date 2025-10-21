@@ -1,8 +1,12 @@
 import type { Request, Response } from 'express';
 import { context, reddit } from '@devvit/web/server';
-import { isCommand } from '../services/comment-commands';
-import { isWordChampion, removeWordChampion } from '../services/dictionary';
-import { banWord } from '../services/dictionary';
+import {
+  CommandContext,
+  isCommand,
+  parseCommand,
+} from '../services/comment-commands';
+import { handleChampionDelete } from '../services/champion';
+import { processCommand } from '../services/comment-commands';
 
 /**
  * Comment trigger handlers
@@ -16,76 +20,41 @@ export async function handleCommentCreate(
   try {
     const { comment, author, subreddit } = req.body;
 
-    if (!comment || !author || author.name === context.appName) {
+    if (
+      !comment ||
+      !isCommand(comment.body) ||
+      !author ||
+      author.name === context.appName
+    ) {
       res.json({ status: 'ignored' });
       return;
     }
 
-    // TODO: Check for banned words when subreddit ID is available
+    // Extract the command and arguments from the comment body
+    const { command, args } = parseCommand(comment.body);
 
-    // if (isSpam) {
-    //   // TODO: Remove and lock comment
-    //   console.log(`Spam comment detected: ${comment.id}`);
-    // }
+    // Create command context
+    const commandContext: CommandContext = {
+      commentId: comment.id,
+      authorName: author.name,
+      authorId: author.id,
+      subredditName: subreddit.name,
+      subredditId: subreddit.id,
+      postId: comment.postId,
+      timestamp: Date.now(),
+    };
 
-    // Check for commands using new system
-    // Processing comment
-    if (isCommand(comment.body)) {
-      // Command detected
+    // Process command
+    const result = await processCommand(command, args, commandContext);
 
-      if (!subreddit.name) {
-        console.error('Subreddit name is undefined:', {
-          comment: comment.id,
-          subreddit,
-        });
-        res.json({ status: 'error', message: 'Subreddit name not available' });
-        return;
-      }
-
-      // Import simplified command system
-      const { processCommand } = await import('../services/comment-commands');
-
-      // Parse command and arguments
-      const commandParts = comment.body.trim().split(' ');
-      const command = commandParts[0].toLowerCase();
-      const args = commandParts.slice(1);
-
-      // Create command context
-      const commandContext = {
-        commentId: comment.id,
-        authorName: author.name,
-        authorId: author.id,
-        subredditName: subreddit.name,
-        subredditId: subreddit.id as `t5_${string}`,
-        postId: comment.postId as `t3_${string}`,
-        timestamp: Date.now(),
-        source: 'http' as const,
-      };
-
-      // Process command through simplified system
-      const result = await processCommand(command, args, commandContext);
-
-      // Command processed
-
-      if (result.success && result.response) {
-        // Reply to the comment
-        try {
-          await reddit.submitComment({
-            text: result.response,
-            id: comment.id as `t1_${string}`,
-          });
-          // Reply sent
-        } catch (replyError) {
-          console.error(
-            `❌ Failed to reply to comment ${comment.id}:`,
-            replyError
-          );
-        }
-      } else if (!result.success) {
-        // Command failed
-      }
-    } else {
-      // Not a command
+    if (result.success && result.response) {
+      // Reply to the comment
+      await reddit.submitComment({
+        text: result.response,
+        id: comment.id,
+      });
+    } else if (!result.success) {
+      // Command failed
     }
 
     res.json({ status: 'processed' });
@@ -103,32 +72,17 @@ export async function handleCommentDelete(
   res: Response
 ): Promise<void> {
   try {
-    const { postId, commentId, subredditName } = req.body;
+    const { commentId } = req.body;
 
-    if (!postId || !commentId) {
-      res.json({ status: 'ignored' });
+    if (!commentId) {
+      res.status(400).json({
+        status: 'error',
+        message: 'Comment ID is required',
+      });
       return;
     }
 
-    // Check if this deleted comment was a champion comment
-    const championData = await isWordChampion(commentId);
-
-    if (championData) {
-      // Champion comment deleted
-
-      // Remove champion comment reference
-      await removeWordChampion(championData.word);
-
-      // Ban the word as enforcement
-      if (subredditName) {
-        await banWord(championData.word);
-        // Word banned
-      }
-    }
-
-    // TODO: Implement command comment cleanup when command system is updated
-    // TODO: Remove guess comment from Redis
-    // Comment deleted
+    await handleChampionDelete(commentId);
 
     res.json({ status: 'processed' });
   } catch (error) {

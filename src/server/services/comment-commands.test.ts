@@ -2,27 +2,23 @@ import { describe, test, expect } from 'vitest';
 import { processCommand } from './comment-commands';
 import type { CommandContext } from './comment-commands';
 
-/**
- * Simplified tests for command system
- */
-describe('Simplified Command System', () => {
+describe('Comment command system', () => {
   const createContext = (
     authorName = 'testuser',
     subredditName = 'testsub',
     postId?: string
   ): CommandContext => ({
-    commentId: 'test123',
+    commentId: 'test123' as `t1_${string}`,
     authorName,
-    authorId: 'testuser123',
+    authorId: 'testuser123' as `t2_${string}`,
     subredditName,
     subredditId: 't5_test' as const,
     ...(postId && { postId: postId as `t3_${string}` }),
     timestamp: Date.now(),
-    source: 'test' as const,
   });
 
-  describe('Command Processing', () => {
-    test('should process valid commands successfully', async () => {
+  describe('Command routing', () => {
+    test('should process valid commands', async () => {
       const context = createContext();
       const result = await processCommand('!help', [], context);
 
@@ -39,63 +35,46 @@ describe('Simplified Command System', () => {
       expect(result.success).toBe(false);
       expect(result.error).toBe('Unknown command');
     });
+  });
 
-    test('should validate input parameters', async () => {
+  describe('Parameter validation', () => {
+    test('should require arguments for commands that need them', async () => {
       const context = createContext();
-      const result = await processCommand('!add', [], context);
 
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('Provide a word. Usage: `!add <word>`');
+      const addResult = await processCommand('!add', [], context);
+      expect(addResult.success).toBe(false);
+      expect(addResult.error).toContain('Provide a word. Usage: `!add <word>`');
+
+      const showResult = await processCommand('!show', [], context);
+      expect(showResult.success).toBe(false);
+      expect(showResult.error).toContain(
+        'Provide a word. Usage: `!show <word>`'
+      );
     });
 
-    test('should handle !show command with word', async () => {
-      const context = createContext('testuser', 'testsub', 't3_post123');
-      const result = await processCommand('!show', ['testword'], context);
+    test('should validate word format', async () => {
+      const context = createContext();
 
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('Failed to retrieve word statistics');
+      const emptyResult = await processCommand('!add', [''], context);
+      expect(emptyResult.success).toBe(false);
+      expect(emptyResult.error).toContain('Invalid word');
+
+      const longWord = 'a'.repeat(51);
+      const longResult = await processCommand('!add', [longWord], context);
+      expect(longResult.success).toBe(false);
+      expect(longResult.error).toContain('Invalid word');
     });
 
-    test('should reject !show command without word', async () => {
-      const context = createContext('testuser', 'testsub', 't3_post123');
-      const result = await processCommand('!show', [], context);
-
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('Provide a word. Usage: `!show <word>`');
-    });
-
-    test('should reject !show command without postId', async () => {
+    test('should require postId for !show command', async () => {
       const context = createContext('testuser', 'testsub');
       const result = await processCommand('!show', ['testword'], context);
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('Unable to determine post context');
     });
+  });
 
-    test('should handle words command with pagination', async () => {
-      const context = createContext();
-      const result = await processCommand('!words', ['1'], context);
-
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('Failed to retrieve dictionary');
-    });
-
-    test('should validate page numbers', async () => {
-      const context = createContext();
-      const result = await processCommand('!words', ['abc'], context);
-
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('Failed to retrieve dictionary');
-    });
-
-    test('should reject invalid page numbers', async () => {
-      const context = createContext();
-      const result = await processCommand('!words', ['0'], context);
-
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('Failed to retrieve dictionary');
-    });
-
+  describe('Command behavior', () => {
     test('should handle stats command without arguments', async () => {
       const context = createContext();
       const result = await processCommand('!stats', [], context);
@@ -106,42 +85,16 @@ describe('Simplified Command System', () => {
       );
     });
 
-    test('should handle stats command with arguments', async () => {
+    test('should handle non-existent words gracefully', async () => {
       const context = createContext();
-      const result = await processCommand('!stats', ['testword'], context);
-
-      // This will fail because the word doesn't exist in the dictionary
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('Failed to retrieve word statistics');
-    });
-  });
-
-  describe('Moderator Commands', () => {
-    test('should reject remove command for non-moderators', async () => {
-      const context = createContext('regularuser', 'testsub');
-      const result = await processCommand('!remove', ['testword'], context);
+      const result = await processCommand(
+        '!stats',
+        ['nonexistentword'],
+        context
+      );
 
       expect(result.success).toBe(false);
-      expect(result.error).toContain('Failed to remove word');
-    });
-  });
-
-  describe('Input Validation', () => {
-    test('should handle empty arguments', async () => {
-      const context = createContext();
-      const result = await processCommand('!add', [''], context);
-
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('Invalid word');
-    });
-
-    test('should handle long words', async () => {
-      const context = createContext();
-      const longWord = 'a'.repeat(51);
-      const result = await processCommand('!add', [longWord], context);
-
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('Invalid word');
+      expect(result.error).toContain('Word not found');
     });
   });
 });

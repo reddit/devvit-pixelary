@@ -2,13 +2,12 @@ import { initTRPC } from '@trpc/server';
 import type { Context } from './context';
 import { z } from 'zod';
 import type { T3 } from '@devvit/shared-types/tid.js';
-import { isT3, assertT3 } from '@devvit/shared-types/tid.js';
+import { assertT3 } from '@devvit/shared-types/tid.js';
 import {
   getAllWords,
   addWord,
   removeWord,
-  getBannedWords,
-  getAllowedWords,
+  getAllBannedWords,
 } from '../services/dictionary';
 import { generateSlate, trackSlateAction } from '../services/slate';
 import {
@@ -51,7 +50,7 @@ export const appRouter = t.router({
         .input(z.object({ word: z.string().min(1).max(50) }))
         .mutation(async ({ ctx, input }) => {
           if (!ctx.subredditName) throw new Error('Subreddit not found');
-          const success = await addWord(ctx.subredditName, input.word);
+          const success = await addWord(input.word);
           if (!success) {
             throw new Error('Failed to add word or word already exists');
           }
@@ -62,7 +61,7 @@ export const appRouter = t.router({
         .input(z.object({ word: z.string().min(1).max(50) }))
         .mutation(async ({ ctx, input }) => {
           if (!ctx.subredditName) throw new Error('Subreddit not found');
-          const success = await removeWord(input.word, ctx.subredditName);
+          const success = await removeWord(input.word);
           if (!success) {
             throw new Error('Failed to remove word or word not found');
           }
@@ -71,7 +70,7 @@ export const appRouter = t.router({
 
       getBanned: t.procedure.query(async ({ ctx }) => {
         if (!ctx.subredditName) throw new Error('Subreddit not found');
-        return await getBannedWords(ctx.subredditName);
+        return await getAllBannedWords();
       }),
 
       getCandidates: t.procedure.query(async ({ ctx }) => {
@@ -131,7 +130,7 @@ export const appRouter = t.router({
 
       getAllowedWords: t.procedure.query(async ({ ctx }) => {
         if (!ctx.subredditName) throw new Error('Subreddit not found');
-        return await getAllowedWords(ctx.subredditName);
+        return await getAllWords(ctx.subredditName);
       }),
 
       revealGuess: t.procedure

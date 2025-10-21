@@ -3,7 +3,7 @@ import { redis } from '@devvit/web/server';
 import { REDIS_KEYS } from '../redis';
 import { titleCase } from '../../../shared/utils/string';
 import { getAllWords } from '../dictionary';
-import { setWordChampion } from '../dictionary';
+import { setChampion } from '../champion';
 import { isWordBanned } from '../dictionary';
 
 export async function handleShow(
@@ -68,7 +68,7 @@ export async function handleShow(
     const isBanned = await isWordBanned(normalizedWord);
 
     // Store this comment as champion comment for this word
-    await setWordChampion(normalizedWord, context.commentId);
+    await setChampion(normalizedWord, context.commentId);
 
     // Build response
     let response = `Guess made ${count} times (${percentage}%) so far.`;
