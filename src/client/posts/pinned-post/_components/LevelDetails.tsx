@@ -15,7 +15,7 @@ export function LevelDetails({ onClose }: LevelDetailsProps) {
 
   // Track level details view on mount
   useEffect(() => {
-    track('view_level_details');
+    void track('view_level_details');
   }, []);
   // Get user profile to show their actual progress
   const { data: userProfile } = trpc.app.user.getProfile.useQuery(undefined, {

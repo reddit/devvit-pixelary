@@ -26,7 +26,7 @@ export function Menu(props: MenuProps) {
 
   // Track menu view on mount
   useEffect(() => {
-    track('view_menu');
+    void track('view_menu');
   }, []);
 
   const { data: userProfile } = trpc.app.user.getProfile.useQuery(undefined, {
@@ -91,7 +91,7 @@ export function Menu(props: MenuProps) {
       {/* Experience Bar - Clickable */}
       <button
         onClick={() => {
-          track('click_level_details');
+          void track('click_level_details');
           onLevelClick();
         }}
         className="level-button hover:opacity-70 transition-opacity cursor-pointer flex flex-col items-center justify-center gap-2"

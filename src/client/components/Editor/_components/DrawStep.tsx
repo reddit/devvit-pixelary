@@ -28,9 +28,9 @@ export function DrawStep(props: DrawStepProps) {
   const hasTrackedView = useRef(false);
   useEffect(() => {
     if (!hasTrackedView.current) {
-      track('view_draw_step');
+      void track('view_draw_step');
       // Also track as slate event for queue processing
-      trackSlateAction('start', word); // This maps to 'view_draw_step' in the slate processing
+      void trackSlateAction('start', word); // This maps to 'view_draw_step' in the slate processing
       hasTrackedView.current = true;
     }
   }, [track, trackSlateAction, word]);
@@ -62,7 +62,7 @@ export function DrawStep(props: DrawStepProps) {
   const secondsLeft = Math.max(0, Math.round(time - elapsedTime / 1000));
 
   const handleDone = () => {
-    track('click_done_drawing');
+    void track('click_done_drawing');
     onComplete(drawingData);
   };
 
@@ -297,7 +297,7 @@ export function DrawStep(props: DrawStepProps) {
           <ColorSwatch
             key={color}
             onSelect={() => {
-              track('click_color_swatch');
+              void track('click_color_swatch');
               setCurrentColor(color);
             }}
             color={color}

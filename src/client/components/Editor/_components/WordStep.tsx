@@ -25,7 +25,7 @@ export function WordStep(props: WordStepProps) {
 
   // Track word step view on mount
   useEffect(() => {
-    track('view_word_step');
+    void track('view_word_step');
   }, []);
 
   // tRPC hooks
@@ -49,12 +49,9 @@ export function WordStep(props: WordStepProps) {
       console.log('Setting slateId and tracking impression:', { slateId });
       setSlateId(slateId);
       trackedSlateIdRef.current = slateId;
-      // Track impression with a small delay to ensure mutation is ready
-      setTimeout(() => {
-        trackSlateAction('impression');
-      }, 200);
+      void trackSlateAction('impression'); // No delay needed with Beacon
     }
-  }, [slateId, setSlateId]);
+  }, [slateId, setSlateId, trackSlateAction]);
 
   // Start timer when candidates load
   useEffect(() => {
@@ -140,7 +137,7 @@ export function WordStep(props: WordStepProps) {
       {/* Refresh Button */}
       <button
         onClick={() => {
-          track('click_refresh_words');
+          void track('click_refresh_words');
           void refreshCandidates();
         }}
         className="flex items-center hover:opacity-70 transition-opacity p-6 fixed right-0 bottom-0 cursor-pointer"
@@ -180,8 +177,8 @@ function WordCandidate(props: WordCandidateProps) {
           console.log('Tracking word candidate click:', {
             word: candidate.word,
           });
-          track('click_word_candidate');
-          trackSlateAction('click', candidate.word);
+          void track('click_word_candidate');
+          void trackSlateAction('click', candidate.word);
           onSelect(candidate);
         }
       }}

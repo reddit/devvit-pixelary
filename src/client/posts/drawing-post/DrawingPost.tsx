@@ -23,7 +23,7 @@ export const DrawingPost = ({ postData: propPostData }: DrawingPostProps) => {
 
   // Track drawing post view on mount
   useEffect(() => {
-    track('view_drawing_post');
+    void track('view_drawing_post');
   }, []);
   const { data: fetchedPostData } = trpc.app.post.getDrawing.useQuery(
     { postId: currentPostId || '' },

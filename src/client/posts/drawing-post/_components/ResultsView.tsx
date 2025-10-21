@@ -45,7 +45,7 @@ export function ResultsView({
 
   // Track results view on mount
   useEffect(() => {
-    track('view_results');
+    void track('view_results');
   }, []);
 
   // Get current user profile for level progress calculation

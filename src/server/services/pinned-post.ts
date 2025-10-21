@@ -17,20 +17,36 @@ import type { T1, T3 } from '@devvit/shared-types/tid.js';
  * @returns The created post ID
  */
 export async function createPinnedPost(title: string): Promise<T3> {
+  console.log('Creating pinned post with title:', title);
+
   // Create a new post unit
   const post = await createPost(title, {
     type: 'pinned',
   });
 
+  console.log('Post created with ID:', post.id);
+
   // Pin the new post
   await post.sticky(1);
+  console.log('Post pinned successfully');
 
   // Schedule pinned comment creation
-  await scheduler.runJob({
-    name: 'CREATE_PINNED_POST_COMMENT',
-    data: { postId: post.id },
-    runAt: new Date(), // Run immediately
-  });
+  try {
+    await scheduler.runJob({
+      name: 'CREATE_PINNED_POST_COMMENT',
+      data: { postId: post.id },
+      runAt: new Date(), // Run immediately
+    });
+    console.log('Scheduled pinned comment creation job');
+  } catch (error) {
+    console.error('Failed to schedule pinned comment creation:', error);
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+      postId: post.id,
+    });
+    // Don't throw - post was created successfully, comment can be created manually
+  }
 
   return post.id;
 }

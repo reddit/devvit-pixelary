@@ -24,15 +24,23 @@ export async function handlePinnedPostSubmit(
       return;
     }
 
+    console.log('Creating pinned post with title:', title);
+
     // Create the pinned post using the service
     const postId = await createPinnedPost(title);
+
+    console.log('Pinned post created successfully:', postId);
 
     res.json({
       navigateTo: `https://reddit.com/r/${context.subredditName}/comments/${postId}`,
     });
   } catch (error) {
     console.error('Error creating pinned post:', error);
-    res.status(400).json({
+    console.error('Error details:', {
+      message: error instanceof Error ? error.message : String(error),
+      stack: error instanceof Error ? error.stack : undefined,
+    });
+    res.status(500).json({
       status: 'error',
       message: 'Failed to create pinned post',
     });

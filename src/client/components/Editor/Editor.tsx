@@ -29,7 +29,7 @@ export function DrawingEditor({ onClose }: DrawingEditorProps) {
 
   // Track editor view on mount
   useEffect(() => {
-    track('view_editor');
+    void track('view_editor');
   }, []);
 
   // tRPC hooks

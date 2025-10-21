@@ -170,46 +170,6 @@ export async function trackSlateAction(
     }
 
     await trackSlateEvent(slateId, eventType, metadata);
-
-    // Also update metrics directly for immediate availability
-    if (action === 'impression') {
-      // Track impression for all words in slate
-      const slateData = await getSlateData(slateId);
-
-      if (!slateData) {
-        console.warn('No slate data found for impression tracking:', {
-          subredditName,
-          slateId,
-        });
-        return;
-      }
-
-      const promises = slateData.words.map(async (w) => {
-        const normalizedWord = normalizeWord(w);
-        const metricsKey = REDIS_KEYS.wordMetrics(normalizedWord);
-        await redis.hIncrBy(metricsKey, 'impressions', 1);
-        await redis.expire(metricsKey, 30 * 24 * 60 * 60); // 30 days TTL
-      });
-
-      await Promise.all(promises);
-    } else if (action === 'click' && word) {
-      // Track click for specific word
-      const normalizedWord = normalizeWord(word);
-      const metricsKey = REDIS_KEYS.wordMetrics(normalizedWord);
-      await redis.hIncrBy(metricsKey, 'clicks', 1);
-      await redis.expire(metricsKey, 30 * 24 * 60 * 60);
-    } else if (action === 'publish' && word) {
-      // Track publish for specific word
-      const normalizedWord = normalizeWord(word);
-      const metricsKey = REDIS_KEYS.wordMetrics(normalizedWord);
-      await redis.hIncrBy(metricsKey, 'publishes', 1);
-      await redis.expire(metricsKey, 30 * 24 * 60 * 60);
-    } else if (action === 'start') {
-      // Start action doesn't require word - just track the event
-      // No additional metrics needed for start action
-    } else {
-      console.warn('Invalid slate action or missing word:', { action, word });
-    }
   } catch (error) {
     console.error(`Failed to track slate ${action}:`, {
       error,

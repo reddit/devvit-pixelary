@@ -54,7 +54,7 @@ export function IconButton({
   const handleClick = () => {
     // Track telemetry if provided
     if (telemetryEvent) {
-      track(telemetryEvent);
+      void track(telemetryEvent);
     }
 
     // Call original onClick

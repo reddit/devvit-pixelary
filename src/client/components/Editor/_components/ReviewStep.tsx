@@ -32,7 +32,7 @@ export function ReviewStep(props: ReviewStepProps) {
 
   // Track review step view on mount
   useEffect(() => {
-    track('view_review_step');
+    void track('view_review_step');
   }, []);
   const submitDrawing = trpc.app.post.submitDrawing.useMutation({
     onSuccess: () => {
@@ -52,7 +52,7 @@ export function ReviewStep(props: ReviewStepProps) {
   });
 
   const handlePost = async () => {
-    track('click_post_drawing');
+    void track('click_post_drawing');
 
     try {
       const result = await submitDrawing.mutateAsync({
@@ -62,8 +62,8 @@ export function ReviewStep(props: ReviewStepProps) {
       });
 
       if (result.success) {
-        // Track slate publish
-        trackSlateAction('publish', word);
+        // Track slate publish - await to ensure delivery before navigation
+        await trackSlateAction('publish', word);
 
         if (result.navigateTo) {
           navigateTo(result.navigateTo);
@@ -79,7 +79,7 @@ export function ReviewStep(props: ReviewStepProps) {
   };
 
   const handleCancel = () => {
-    track('click_cancel_drawing');
+    void track('click_cancel_drawing');
     setShowCancelConfirm(true);
   };
 

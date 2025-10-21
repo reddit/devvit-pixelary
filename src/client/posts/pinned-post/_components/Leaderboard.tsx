@@ -16,7 +16,7 @@ export function Leaderboard({ onClose }: LeaderboardProps) {
 
   // Track leaderboard view on mount
   useEffect(() => {
-    track('view_leaderboard');
+    void track('view_leaderboard');
   }, []);
   const { data: leaderboard = [], isLoading } =
     trpc.app.leaderboard.getTop.useQuery({ limit: 10 });

@@ -17,7 +17,7 @@ export function MyDrawings({ onClose }: MyDrawingsProps) {
 
   // Track my drawings view on mount
   useEffect(() => {
-    track('view_my_drawings');
+    void track('view_my_drawings');
   }, []);
   const { data: drawings = [], isLoading } = trpc.app.user.getDrawings.useQuery(
     { limit: 20 }
@@ -39,9 +39,9 @@ export function MyDrawings({ onClose }: MyDrawingsProps) {
       {/* Loading and Drawing Tiles */}
       <PaginatedDrawingGrid
         drawings={drawings}
-        onDrawingClick={(postId) => {
-          // Track drawing tile click
-          track('click_drawing_tile');
+        onDrawingClick={async (postId) => {
+          // Track drawing tile click - await to ensure delivery before navigation
+          await track('click_drawing_tile');
 
           // Navigate to drawing post
           const subredditName = context.subredditName;

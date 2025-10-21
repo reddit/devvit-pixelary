@@ -11,6 +11,7 @@ import './index.css';
 import { Background } from './components/Background';
 import { ToastProvider } from './components/ToastManager';
 import { ErrorBoundary } from './components/ErrorBoundary';
+import { TelemetryProvider } from './hooks/useTelemetry';
 
 const queryClient = new QueryClient();
 const trpcClient = trpc.createClient({
@@ -26,7 +27,7 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
           defaultPosition="top-right"
           defaultDuration={4000}
         >
-          {children}
+          <TelemetryProvider>{children}</TelemetryProvider>
         </ToastProvider>
       </QueryClientProvider>
     </trpc.Provider>
