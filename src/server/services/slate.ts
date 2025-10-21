@@ -206,10 +206,14 @@ export async function trackSlateAction(
     }
 
     // Add event to queue for processing
-    const eventMetadata: Record<string, string | number> = {
-      subredditName,
-      ...metadata,
-    };
+    const eventMetadata: Record<string, string | number> = {};
+    if (metadata) {
+      Object.entries(metadata).forEach(([key, value]) => {
+        if (value !== undefined) {
+          eventMetadata[key] = value;
+        }
+      });
+    }
     if (word) {
       eventMetadata.word = word;
     }

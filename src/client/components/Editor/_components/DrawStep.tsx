@@ -288,11 +288,7 @@ export function DrawStep(props: DrawStepProps) {
           </div>
         </div>
 
-        <Button
-          onClick={handleDone}
-          size="medium"
-          telemetryEvent="click_done_drawing"
-        >
+        <Button onClick={handleDone} size="medium">
           DONE
         </Button>
       </header>
