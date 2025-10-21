@@ -468,7 +468,7 @@ async function processSlateEvent(event: SlateEvent): Promise<void> {
     });
 
     // Handle different event types
-    if (eventType === 'view_slate') {
+    if (eventType === 'view_word_step') {
       // Increment slate served counter
       await incrementSlateServed(slateId);
 
