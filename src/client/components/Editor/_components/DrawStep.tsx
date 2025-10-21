@@ -70,18 +70,20 @@ export function DrawStep(props: DrawStepProps) {
       const remainingTime = time * 1000 - currentElapsed;
       if (remainingTime <= 0) {
         void track('drawing_done_auto');
+        void trackSlateAction('drawing_done_auto', word);
         onComplete(drawingData);
       }
     }, 100);
 
     return () => clearInterval(timer);
-  }, [startTime, time, onComplete, track, drawingData]);
+  }, [startTime, time, onComplete, track, trackSlateAction, word, drawingData]);
 
   const secondsLeft = Math.max(0, Math.round(time - elapsedTime / 1000));
 
   const handleDone = () => {
     void track('click_done_drawing');
     void track('drawing_done_manual');
+    void trackSlateAction('drawing_done_manual', word);
     onComplete(drawingData);
   };
 

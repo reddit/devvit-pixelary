@@ -100,6 +100,7 @@ export function ReviewStep(props: ReviewStepProps) {
   const handleCancel = () => {
     void track('click_cancel_drawing');
     void track('drawing_cancel');
+    void trackSlateAction('drawing_cancel', word);
     setShowCancelConfirm(true);
   };
 
