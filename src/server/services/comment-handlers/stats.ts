@@ -35,18 +35,18 @@ export async function handleStats(args: string[]): Promise<CommandResult> {
 
     // Format metrics concisely
     const response = `##### 🎨 Drawer stats
-- Shown: ${metrics.impressions}
-- Picked: ${metrics.clicks} (${(metrics.clickRate * 100).toFixed(1)}%)
-- Started: ${metrics.starts}
-- First pixel: ${metrics.firstPixel}
-- Published: ${metrics.publishes} (${(metrics.publishRate * 100).toFixed(1)}%)
-- Manual completion: ${metrics.manualCompletion}
-- Auto completion: ${metrics.autoCompletion}
-- Cancelled: ${metrics.cancellations}
+- Shown: ${metrics.slateImpressions}
+- Picked: ${metrics.slatePicks} (${(metrics.slatePickRate * 100).toFixed(1)}%)
+- Started: ${metrics.drawingStarts}
+- First pixel: ${metrics.drawingFirstPixel}
+- Published: ${metrics.drawingPublishes} (${(metrics.drawingPublishRate * 100).toFixed(1)}%)
+- Manual completion: ${metrics.drawingDoneManual}
+- Auto completion: ${metrics.drawingDoneAuto}
+- Cancelled: ${metrics.drawingCancels}
 
 ##### 📈 Social stats
-- Upvotes: ${metrics.upvotes}
-- Comments: ${metrics.comments}`;
+- Upvotes: ${metrics.postUpvotes}
+- Comments: ${metrics.postComments}`;
 
     return {
       success: true,

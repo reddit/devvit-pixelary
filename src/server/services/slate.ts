@@ -245,80 +245,124 @@ export async function trackSlateAction(
  * @returns Word metrics with calculated rates
  */
 export async function getWordMetrics(word: string): Promise<{
-  impressions: number;
-  clicks: number;
-  clickRate: number;
-  publishes: number;
-  publishRate: number;
-  starts: number;
-  firstPixel: number;
-  manualCompletion: number;
-  autoCompletion: number;
-  cancellations: number;
-  upvotes: number;
-  comments: number;
+  slateImpressions: number;
+  slatePicks: number;
+  slatePicksManual: number;
+  slatePicksAuto: number;
+  slatePickRate: number;
+  slatePickRateManual: number;
+  slatePickRateAuto: number;
+  drawingStarts: number;
+  drawingFirstPixel: number;
+  drawingDone: number;
+  drawingDoneManual: number;
+  drawingDoneAuto: number;
+  drawingDoneRate: number;
+  drawingDoneManualRate: number;
+  drawingDoneAutoRate: number;
+  drawingCancels: number;
+  drawingCancelRate: number;
+  drawingPublishes: number;
+  drawingPublishRate: number;
+  postImpressions: number;
+  postGuesses: number;
+  postSolves: number;
+  postSkips: number;
+  postUpvotes: number;
+  postComments: number;
 }> {
   console.log('Getting word metrics for:', word);
+
+  const base = {
+    slateImpressions: 0,
+    slatePicks: 0,
+    slatePicksManual: 0,
+    slatePicksAuto: 0,
+    slatePickRate: 0,
+    slatePickRateManual: 0,
+    slatePickRateAuto: 0,
+    drawingStarts: 0,
+    drawingFirstPixel: 0,
+    drawingDone: 0,
+    drawingDoneManual: 0,
+    drawingDoneAuto: 0,
+    drawingDoneRate: 0,
+    drawingDoneManualRate: 0,
+    drawingDoneAutoRate: 0,
+    drawingCancels: 0,
+    drawingCancelRate: 0,
+    drawingPublishes: 0,
+    drawingPublishRate: 0,
+    postImpressions: 0,
+    postGuesses: 0,
+    postSolves: 0,
+    postSkips: 0,
+    postUpvotes: 0,
+    postComments: 0,
+  };
   try {
     // Normalize the word to match how it's stored in Redis
     const normalizedWord = normalizeWord(word);
     const metricsKey = REDIS_KEYS.wordMetrics(normalizedWord);
     const metrics = await redis.hGetAll(metricsKey);
-    console.log('Metrics:', metrics);
-    const impressions = parseInt(metrics.impressions || '0', 10);
-    const clicks = parseInt(metrics.clicks || '0', 10);
-    const publishes = parseInt(metrics.publishes || '0', 10);
-    const starts = parseInt(metrics.starts || '0', 10);
-    const firstPixel = parseInt(metrics.first_pixel || '0', 10);
-    const manualCompletion = parseInt(metrics.manual_completion || '0', 10);
-    const autoCompletion = parseInt(metrics.auto_completion || '0', 10);
-    const cancellations = parseInt(metrics.cancellations || '0', 10);
-    const upvotes = parseInt(metrics.upvotes || '0', 10);
-    const comments = parseInt(metrics.comments || '0', 10);
+    console.log('Raw word metrics:', metrics);
 
-    console.log('Impressions:', impressions);
-    console.log('Clicks:', clicks);
-    console.log('Publishes:', publishes);
-    console.log('Starts:', starts);
-    console.log('First pixel:', firstPixel);
-    console.log('Manual completion:', manualCompletion);
-    console.log('Auto completion:', autoCompletion);
-    console.log('Cancellations:', cancellations);
+    // Parse the metrics into the base object
+    const parsed = { ...base };
+    Object.entries(metrics).forEach(([key, value]) => {
+      if (key in parsed) {
+        parsed[key as keyof typeof parsed] = parseInt(value || '0', 10);
+      }
+    });
+
+    // Calculate derived fields
+    parsed.slatePicksManual = parsed.slatePicks - parsed.slatePicksAuto;
+    parsed.drawingDone = parsed.drawingDoneManual + parsed.drawingDoneAuto;
 
     // Calculate rates
-    const clickRate = impressions > 0 ? clicks / impressions : 0;
-    const publishRate = impressions > 0 ? publishes / impressions : 0;
+    parsed.slatePickRate =
+      parsed.slateImpressions > 0
+        ? parsed.slatePicks / parsed.slateImpressions
+        : 0;
 
-    return {
-      impressions,
-      clicks,
-      clickRate,
-      publishes,
-      publishRate,
-      starts,
-      firstPixel,
-      manualCompletion,
-      autoCompletion,
-      cancellations,
-      upvotes,
-      comments,
-    };
+    parsed.slatePickRateManual =
+      parsed.slateImpressions > 0
+        ? parsed.slatePicksManual / parsed.slateImpressions
+        : 0;
+
+    parsed.slatePickRateAuto =
+      parsed.slateImpressions > 0
+        ? parsed.slatePicksAuto / parsed.slateImpressions
+        : 0;
+
+    parsed.drawingDoneRate =
+      parsed.drawingStarts > 0 ? parsed.drawingDone / parsed.drawingStarts : 0;
+
+    parsed.drawingDoneManualRate =
+      parsed.drawingStarts > 0
+        ? parsed.drawingDoneManual / parsed.drawingStarts
+        : 0;
+
+    parsed.drawingDoneAutoRate =
+      parsed.drawingStarts > 0
+        ? parsed.drawingDoneAuto / parsed.drawingStarts
+        : 0;
+
+    parsed.drawingCancelRate =
+      parsed.drawingStarts > 0
+        ? parsed.drawingCancels / parsed.drawingStarts
+        : 0;
+
+    parsed.drawingPublishRate =
+      parsed.slateImpressions > 0
+        ? parsed.drawingPublishes / parsed.slateImpressions
+        : 0;
+
+    console.log('Parsed word metrics:', parsed);
+    return parsed;
   } catch (error) {
     console.warn('Failed to get word metrics:', error);
-    return {
-      impressions: 0,
-      clicks: 0,
-      clickRate: 0,
-      publishes: 0,
-      publishRate: 0,
-      starts: 0,
-      firstPixel: 0,
-      manualCompletion: 0,
-      autoCompletion: 0,
-      cancellations: 0,
-      upvotes: 0,
-      comments: 0,
-    };
+    return { ...base };
   }
 }
 
@@ -490,74 +534,78 @@ async function processSlateEvent(event: SlateEvent): Promise<void> {
       // Increment slate served counter
       await incrementSlateServed(slateId);
 
-      // Get slate data to increment impressions for all words
+      // Get slate data to increment slateImpressions for all words
       const slateData = await redis.hGetAll(REDIS_KEYS.slate(slateId));
       if (slateData.words) {
         const words = JSON.parse(slateData.words) as string[];
         console.log(
-          `Incrementing impressions for ${words.length} words in slate ${slateId}`
+          `Incrementing slateImpressions for ${words.length} words in slate ${slateId}`
         );
 
         for (const w of words) {
           const normalizedWord = normalizeWord(w);
           const metricsKey = REDIS_KEYS.wordMetrics(normalizedWord);
-          await redis.hIncrBy(metricsKey, 'impressions', 1);
+          await redis.hIncrBy(metricsKey, 'slateImpressions', 1);
           await redis.expire(metricsKey, 30 * 24 * 60 * 60); // 30 days TTL
         }
       } else {
         console.warn(`No words found in slate data for ${slateId}`);
       }
-    } else if (
-      (eventType === 'slate_click' || eventType === 'slate_auto_select') &&
-      word
-    ) {
-      // Increment picks (clicks) for the word
-      console.log(`Incrementing clicks for word: ${word}`);
+    } else if (eventType === 'slate_click' && word) {
+      // Increment manual slatePicks for the word
+      console.log(`Incrementing manual slatePicks for word: ${word}`);
       const normalizedWord = normalizeWord(word);
       const metricsKey = REDIS_KEYS.wordMetrics(normalizedWord);
-      await redis.hIncrBy(metricsKey, 'clicks', 1);
+      await redis.hIncrBy(metricsKey, 'slatePicks', 1);
+      await redis.expire(metricsKey, 30 * 24 * 60 * 60);
+    } else if (eventType === 'slate_auto_select' && word) {
+      // Increment auto slatePicks for the word
+      console.log(`Incrementing auto slatePicks for word: ${word}`);
+      const normalizedWord = normalizeWord(word);
+      const metricsKey = REDIS_KEYS.wordMetrics(normalizedWord);
+      await redis.hIncrBy(metricsKey, 'slatePicksAuto', 1);
       await redis.expire(metricsKey, 30 * 24 * 60 * 60);
     } else if (eventType === 'drawing_start' && word) {
       // Increment starts for the word
       console.log(`Incrementing starts for word: ${word}`);
       const normalizedWord = normalizeWord(word);
       const metricsKey = REDIS_KEYS.wordMetrics(normalizedWord);
-      await redis.hIncrBy(metricsKey, 'starts', 1);
+      await redis.hIncrBy(metricsKey, 'drawingStarts', 1);
       await redis.expire(metricsKey, 30 * 24 * 60 * 60);
     } else if (eventType === 'drawing_publish' && word) {
       // Increment finishes (publishes) for the word
       console.log(`Incrementing publishes for word: ${word}`);
       const normalizedWord = normalizeWord(word);
       const metricsKey = REDIS_KEYS.wordMetrics(normalizedWord);
-      await redis.hIncrBy(metricsKey, 'publishes', 1);
+      await redis.hIncrBy(metricsKey, 'drawingPublishes', 1);
       await redis.expire(metricsKey, 30 * 24 * 60 * 60);
     } else if (eventType === 'drawing_first_pixel' && word) {
       // Increment engagement metric for the word
       console.log(`Incrementing first pixel engagement for word: ${word}`);
       const normalizedWord = normalizeWord(word);
       const metricsKey = REDIS_KEYS.wordMetrics(normalizedWord);
-      await redis.hIncrBy(metricsKey, 'first_pixel', 1);
+      await redis.hIncrBy(metricsKey, 'drawingFirstPixel', 1);
       await redis.expire(metricsKey, 30 * 24 * 60 * 60);
     } else if (eventType === 'drawing_done_manual' && word) {
       // Track manual completion
       console.log(`Incrementing manual completion for word: ${word}`);
       const normalizedWord = normalizeWord(word);
       const metricsKey = REDIS_KEYS.wordMetrics(normalizedWord);
-      await redis.hIncrBy(metricsKey, 'manual_completion', 1);
+      await redis.hIncrBy(metricsKey, 'drawingDoneManual', 1);
       await redis.expire(metricsKey, 30 * 24 * 60 * 60);
     } else if (eventType === 'drawing_done_auto' && word) {
       // Track auto completion
       console.log(`Incrementing auto completion for word: ${word}`);
       const normalizedWord = normalizeWord(word);
       const metricsKey = REDIS_KEYS.wordMetrics(normalizedWord);
-      await redis.hIncrBy(metricsKey, 'auto_completion', 1);
+      await redis.hIncrBy(metricsKey, 'drawingDoneAuto', 1);
       await redis.expire(metricsKey, 30 * 24 * 60 * 60);
     } else if (eventType === 'drawing_cancel' && word) {
       // Track drawing cancellation
       console.log(`Incrementing cancellation for word: ${word}`);
       const normalizedWord = normalizeWord(word);
       const metricsKey = REDIS_KEYS.wordMetrics(normalizedWord);
-      await redis.hIncrBy(metricsKey, 'cancellations', 1);
+      await redis.hIncrBy(metricsKey, 'drawingCancels', 1);
       await redis.expire(metricsKey, 30 * 24 * 60 * 60);
     } else {
       console.log(
@@ -592,10 +640,10 @@ async function processSlateEvent(event: SlateEvent): Promise<void> {
         const normalizedWord = normalizeWord(word);
         const metricsKey = REDIS_KEYS.wordMetrics(normalizedWord);
         if (upvoteDelta > 0) {
-          await redis.hIncrBy(metricsKey, 'upvotes', upvoteDelta);
+          await redis.hIncrBy(metricsKey, 'postUpvotes', upvoteDelta);
         }
         if (commentDelta > 0) {
-          await redis.hIncrBy(metricsKey, 'comments', commentDelta);
+          await redis.hIncrBy(metricsKey, 'postComments', commentDelta);
         }
         await redis.expire(metricsKey, 30 * 24 * 60 * 60);
       }
