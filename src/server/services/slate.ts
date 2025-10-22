@@ -310,7 +310,11 @@ export async function updateWordScores() {
         score: wordStats[word]?.drawerUncertainty ?? 0,
       }))
     ),
-    // Cleanup hourly stats?
+    // Cleanup hourly stats in 90 days
+    redis.expire(
+      REDIS_KEYS.wordsHourlyStats(context.subredditName, timestamp),
+      90 * 24 * 60 * 60
+    ),
   ]);
 
   console.log('Scores updated!');
