@@ -84,7 +84,7 @@ export async function pickFromBucket(
 
   // Get the members in the window
   const members = await redis.zRange(
-    REDIS_KEYS.wordsScore(context.subredditName),
+    REDIS_KEYS.wordsAll(context.subredditName),
     start,
     stop,
     { by: 'rank', reverse: true }
@@ -117,7 +117,7 @@ export async function generateSlate(): Promise<Slate> {
 
   // Check out how many words are available
   const wordCount = await redis.zCard(
-    REDIS_KEYS.wordsScore(context.subredditName)
+    REDIS_KEYS.wordsAll(context.subredditName)
   );
   if (wordCount < 3) throw new Error('Not enough candidates to create a slate');
 
@@ -137,7 +137,7 @@ export async function generateSlate(): Promise<Slate> {
   // TODO: Add a cooldown period per word.
   while (slateWords.length < 3) {
     const backfill = await redis.zRange(
-      REDIS_KEYS.wordsScore(context.subredditName),
+      REDIS_KEYS.wordsAll(context.subredditName),
       0,
       50,
       { by: 'rank', reverse: true }
@@ -154,14 +154,14 @@ export async function generateSlate(): Promise<Slate> {
 
   // ε-exploration: swap lowest-score slot with most-uncertain word
   if (Math.random() < EXPLORATION_RATE) {
-    // Get current scores
+    // Get current scores for the current words.
     const scores = await Promise.all(
       slateWords.map((word) =>
         redis
-          .zScore(REDIS_KEYS.wordsScore(context.subredditName), word)
+          .zScore(REDIS_KEYS.wordsAll(context.subredditName), word)
           .then((score) => score ?? -Infinity)
       )
-    ).then((scores) => scores.sort());
+    );
 
     // Get the index of the lowest score
     const minIdx = scores.indexOf(Math.min(...scores));
@@ -434,7 +434,7 @@ export async function updateWordScores() {
   await Promise.all([
     // Scores
     redis.zAdd(
-      REDIS_KEYS.wordsScore(context.subredditName),
+      REDIS_KEYS.wordsAll(context.subredditName),
       ...words.map((word) => ({
         member: word,
         score: wordStats[word]?.drawerScore ?? 0,

@@ -31,7 +31,6 @@ export const REDIS_KEYS = {
   wordsHourlyStats: (subredditName: string, timestamp: string) =>
     `words:hourly:${subredditName}:${timestamp}`,
   wordsTotalStats: (subredditName: string) => `words:total:${subredditName}`,
-  wordsScore: (subredditName: string) => `words:score:${subredditName}`,
   wordsUncertainty: (subredditName: string) =>
     `words:uncertainty:${subredditName}`,
 
