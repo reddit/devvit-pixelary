@@ -2,6 +2,15 @@ import { context, redis } from '@devvit/web/server';
 import { REDIS_KEYS } from './redis';
 import type { T3 } from '@devvit/shared-types/tid.js';
 import { clamp } from '../../shared/utils/numbers';
+import { shuffle } from '../../shared/utils/array';
+
+// Configuration.
+// TODO: Move to redis.
+const EXPLORATION_RATE = 0.1;
+const BUCKET_SIZE_MIN = 20; // Fallback for tiny pools
+const Z_SCORE_CLAMP = 3;
+const WEIGHT_PICK_RATE = 1;
+const WEIGHT_POST_RATE = 1;
 
 export type SlateId = `slate_${string}`;
 
@@ -27,36 +36,166 @@ export type SlateEventPosted = {
 
 export type SlateEvent = SlateEventServed | SlateEventPicked | SlateEventPosted;
 
+type Slate = {
+  slateId: SlateId;
+  words: string[];
+  timestamp: number;
+  word?: string;
+  postId?: T3;
+  servedAt?: number;
+  pickedAt?: number;
+  postedAt?: number;
+};
+
+/**
+ * Get the index range for a given bucket
+ */
+
+function getBucketIndexRange(
+  bucket: 0 | 1 | 2,
+  wordCount: number,
+  thirds: number
+): { minIndex: number; maxIndex: number } {
+  return {
+    minIndex: bucket * thirds,
+    maxIndex: Math.min(wordCount - 1, (bucket + 1) * thirds - 1),
+  };
+}
+
+/**
+ * Pick a word from a bucket
+ */
+
+export async function pickFromBucket(
+  bucket: 0 | 1 | 2,
+  wordCount: number,
+  thirds: number
+): Promise<string> {
+  const { minIndex, maxIndex } = getBucketIndexRange(bucket, wordCount, thirds);
+  const length = Math.max(1, maxIndex - minIndex + 1);
+  const offset = minIndex + Math.floor(Math.random() * length);
+
+  // A small window around offset for randomness without large fetch
+  const window = 10;
+  const start = Math.max(minIndex, offset - Math.floor(window / 2));
+  const stop = Math.min(maxIndex, start + window - 1);
+
+  // Get the members in the window
+  const members = await redis.zRange(
+    REDIS_KEYS.wordsScore(context.subredditName),
+    start,
+    stop,
+    { by: 'rank', reverse: true }
+  );
+
+  // Weighted choice by score
+  const total =
+    members.reduce((a, m) => a + (m.score || 0), 0) || members.length;
+
+  let random = Math.random() * total;
+  for (const member of members) {
+    random -= member.score || 1;
+    if (random <= 0) return member.member as string;
+  }
+
+  const candidate = members[0]?.member;
+  if (!candidate) throw new Error('No candidate found');
+
+  return candidate;
+}
+
 /**
  * Creates a new slate of candidates
  */
 
-export async function generateSlate(): Promise<{
-  slateId: string;
-  words: string[];
-  timestamp: number;
-}> {
-  const slateId = `slate_${crypto.randomUUID()}`;
+export async function generateSlate(): Promise<Slate> {
+  const slateId: SlateId = `slate_${crypto.randomUUID()}`;
   const slateKey = REDIS_KEYS.slate(slateId);
-  const timestamp = Date.now();
+  const now = Date.now();
 
-  const words = ['Apple', 'Banana', 'Cherry'];
+  // Check out how many words are available
+  const wordCount = await redis.zCard(
+    REDIS_KEYS.wordsScore(context.subredditName)
+  );
+  if (wordCount < 3) throw new Error('Not enough candidates to create a slate');
 
-  const slate = {
+  // Calculate bucket index ranges
+  const thirds = Math.max(1, Math.floor(wordCount / 3));
+
+  // Sample 1 from each bucket (top, middle, tail)
+  let slateWords = [
+    await pickFromBucket(0, wordCount, thirds), // top third
+    await pickFromBucket(1, wordCount, thirds), // middle third
+    await pickFromBucket(2, wordCount, thirds), // bottom third
+  ];
+
+  // Dedupe if collisions
+  slateWords = Array.from(new Set(slateWords));
+  // If dedupe shrank slate, backfill from global top.
+  // TODO: Add a cooldown period per word.
+  while (slateWords.length < 3) {
+    const backfill = await redis.zRange(
+      REDIS_KEYS.wordsScore(context.subredditName),
+      0,
+      50,
+      { by: 'rank', reverse: true }
+    );
+    for (const candidate of backfill) {
+      if (!slateWords.includes(candidate.member)) {
+        slateWords.push(candidate.member);
+        break;
+      }
+    }
+    if (slateWords.length < 3) break;
+  }
+  if (slateWords.length < 3) throw new Error('Unable to form slate');
+
+  // 3) ε-exploration: swap lowest-score slot with most-uncertain word
+  if (Math.random() < EXPLORATION_RATE) {
+    // Get current scores
+    const scores = await Promise.all(
+      slateWords.map((word) =>
+        redis
+          .zScore(REDIS_KEYS.wordsScore(context.subredditName), word)
+          .then((score) => score ?? -Infinity)
+      )
+    ).then((scores) => scores.sort());
+
+    // Get the index of the lowest score
+    const minIdx = scores.indexOf(Math.min(...scores));
+
+    // Find the most uncertain word not in slate
+    const uncertainWords = await redis.zRange(
+      REDIS_KEYS.wordsUncertainty(context.subredditName),
+      0,
+      50,
+      { by: 'rank', reverse: true }
+    );
+    const cand = uncertainWords.find(
+      (candidate) => !slateWords.includes(candidate.member)
+    );
+    if (cand) slateWords[minIdx] = cand.member;
+  }
+
+  // Shuffle positions to avoid position bias.
+  slateWords = shuffle(slateWords);
+
+  // Create slate object
+  const slate: Slate = {
     slateId,
-    words,
-    timestamp,
+    words: slateWords,
+    timestamp: now,
   };
 
-  // Store slate data in Redis
-  const parsedSlated = {
-    slateId: slate.slateId,
-    words: JSON.stringify(slate.words),
-    timestamp: slate.timestamp.toString(),
-  };
-  await redis.hSet(slateKey, parsedSlated);
+  // Persist slate data in Redis
+  await redis.hSet(slateKey, {
+    slateId,
+    words: JSON.stringify(slateWords),
+    timestamp: now.toString(),
+  });
   await redis.expire(slateKey, 90 * 24 * 60 * 60); // 90 days TTL
 
+  // Emit served event?
   return slate;
 }
 
@@ -267,10 +406,6 @@ export async function updateWordScores() {
   );
 
   // Compute z-scores, uncertainties, and drawerscores
-  const Z_SCORE_CLAMP = 3;
-  const WEIGHT_PICK_RATE = 1;
-  const WEIGHT_POST_RATE = 1;
-
   for (const word in wordStats) {
     const wordStat = wordStats[word];
     if (!wordStat) continue;
