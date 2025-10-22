@@ -26,14 +26,18 @@ export const REDIS_KEYS = {
   wordsBanned: (subredditName: string) => `words:banned:${subredditName}`,
   wordsChampioned: (subredditName: string) =>
     `words:championed:${subredditName}`,
+  wordsActive: (subredditName: string, timestamp: string) =>
+    `words:active:${subredditName}:${timestamp}`,
 
   // Champions
   championWord: (commentId: T1) => `champion:word:${commentId}`,
 
   // Word
   wordChampion: (word: string) => `word:champion:${word}`,
-  wordMetrics: (word: string) => `word:metrics:${word}`,
   wordDrawings: (word: string) => `word:drawings:${word}`,
+  wordHourlyStats: (word: string, timestamp: string) =>
+    `word:hourly:${word}:${timestamp}`,
+  wordTotalStats: (word: string) => `word:total:${word}`,
 
   // Communities
   communities: () => 'communities',
@@ -56,7 +60,6 @@ export const REDIS_KEYS = {
   // Slates
   slate: (slateId: string) => `slate:${slateId}`,
   slateEvents: () => 'slate:events',
-  allSlates: () => 'slates:all',
 };
 
 const USERNAME_TTL = 30 * 24 * 60 * 60; // 30 days.

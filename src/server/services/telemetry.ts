@@ -83,21 +83,12 @@ export type EventType =
   | 'click_post_drawing'
   | 'click_cancel_drawing'
   // Drawing events
-  | 'first_pixel_drawn'
-  // ============================================================================
-  // SLATE EVENTS (tracked per word, affect word metrics in !stats)
-  // ============================================================================
-  | 'slate_impression' // Slate shown to user (increments impressions for all words)
-  | 'slate_click' // User manually selected word (increments clicks)
-  | 'slate_auto_select' // Timer auto-selected word (increments clicks)
-  | 'slate_refresh' // User refreshed word choices
-  // Drawing events (specific taxonomy)
-  | 'drawing_start' // Drawing begins (increments starts)
-  | 'drawing_first_pixel' // First pixel drawn (increments first_pixel)
-  | 'drawing_done_manual' // User clicks done (increments manual_completion)
-  | 'drawing_done_auto' // Auto-complete triggers (increments auto_completion)
-  | 'drawing_publish' // Drawing is posted (increments publishes)
-  | 'drawing_cancel' // Drawing is cancelled (increments cancellations)
+  | 'drawing_start'
+  | 'drawing_first_pixel'
+  | 'drawing_end_manual'
+  | 'drawing_end_auto' // Ran out of time
+  | 'drawing_publish' // Drawing is posted
+  | 'drawing_cancel'
   // Post events (specific taxonomy)
   | 'post_impression' // Post viewed (affects social metrics)
   | 'post_guess' // User submitted guess
@@ -254,87 +245,6 @@ export async function calculateCTR(
     return 0;
   }
 }
-
-/**
- * Track a slate-specific event with metadata
- * Fire-and-forget operation that never blocks
- */
-export async function trackSlateEvent(
-  slateId: string,
-  eventType: EventType,
-  metadata?: Record<string, string | number>
-): Promise<void> {
-  try {
-    const eventKey = REDIS_KEYS.slateEvents();
-    const timestamp = Date.now().toString();
-
-    // Extract word and postId from metadata if present
-    const { word, postId, ...restMetadata } = metadata || {};
-
-    const eventData = {
-      slateId,
-      eventType,
-      timestamp,
-      word,
-      postId,
-      metadata: Object.keys(restMetadata).length > 0 ? restMetadata : undefined,
-    };
-
-    // Use timestamp as field name to create unique entries
-    await redis.hSet(eventKey, { [timestamp]: JSON.stringify(eventData) });
-    await redis.expire(eventKey, 7 * 24 * 60 * 60); // 7 days TTL
-  } catch (error) {
-    console.warn('Failed to track slate event:', error);
-  }
-}
-
-/**
- * Generalized telemetry tracking function that handles different payload types
- * based on the event type. This consolidates all user action tracking.
- */
-export async function trackUserAction(
-  subredditName: string,
-  slateId: string,
-  eventType: EventType,
-  payload?: {
-    word?: string;
-    postId?: string;
-    metadata?: Record<string, string | number | undefined>;
-  }
-): Promise<void> {
-  try {
-    // Process metadata, filtering out undefined values
-    const eventMetadata: Record<string, string | number> = {};
-    if (payload?.metadata) {
-      Object.entries(payload.metadata).forEach(([key, value]) => {
-        if (value !== undefined) {
-          eventMetadata[key] = value;
-        }
-      });
-    }
-    if (payload?.word) {
-      eventMetadata.word = payload.word;
-    }
-    if (payload?.postId) {
-      eventMetadata.postId = payload.postId;
-    }
-
-    await trackSlateEvent(slateId, eventType, eventMetadata);
-    console.log(`✅ Queued user action: ${eventType} for slate ${slateId}`, {
-      eventMetadata,
-      timestamp: Date.now(),
-    });
-  } catch (error) {
-    console.error(`Failed to track user action ${eventType}:`, {
-      error,
-      slateId,
-      subredditName,
-      payload,
-    });
-  }
-}
-
-/**
 
 /**
  * Clear telemetry data for a specific date

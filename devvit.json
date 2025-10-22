@@ -84,27 +84,6 @@
         "location": "subreddit",
         "forUserType": "moderator",
         "endpoint": "/internal/menu/clear-daily-telemetry"
-      },
-      {
-        "label": "[Pixelary] Slate Events Count",
-        "description": "Count unprocessed slate events",
-        "location": "subreddit",
-        "forUserType": "moderator",
-        "endpoint": "/internal/menu/slate-events-count"
-      },
-      {
-        "label": "[Pixelary] Slate Events Process",
-        "description": "Process slate events now",
-        "location": "subreddit",
-        "forUserType": "moderator",
-        "endpoint": "/internal/menu/slate-events-process"
-      },
-      {
-        "label": "[Pixelary] Slate Events Clear",
-        "description": "Clear unprocessed slate events",
-        "location": "subreddit",
-        "forUserType": "moderator",
-        "endpoint": "/internal/menu/slate-events-clear"
       }
     ]
   },
@@ -131,8 +110,8 @@
       "SET_USER_FLAIR": {
         "endpoint": "/internal/scheduler/set-user-flair"
       },
-      "SLATE_AGGREGATOR": {
-        "endpoint": "/internal/scheduler/slate-aggregator",
+      "UPDATE_WORD_SCORES": {
+        "endpoint": "/internal/scheduler/update-word-scores",
         "cron": "0 * * * *"
       }
     }

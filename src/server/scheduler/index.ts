@@ -5,4 +5,4 @@ export {
 export { handleUserLevelUp } from './user-level-up';
 export { handleCreatePinnedPostComment } from './pinned-post-comment';
 export { handleSetUserFlair } from './user-flair';
-export { handleSlateAggregator } from './slate-aggregator';
+export { handleUpdateWords } from './update-word-stats';

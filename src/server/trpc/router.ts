@@ -9,8 +9,7 @@ import {
   removeWord,
   getAllBannedWords,
 } from '../services/dictionary';
-import { generateSlate } from '../services/slate';
-import { trackUserAction } from '../services/telemetry';
+import { generateSlate, trackSlateEvent } from '../services/slate';
 import {
   createDrawing,
   submitGuess,
@@ -350,16 +349,11 @@ export const appRouter = t.router({
             throw new Error('Subreddit not found');
           }
 
-          await trackUserAction(
-            ctx.subredditName,
-            input.slateId,
-            input.action,
-            {
-              ...(input.word && { word: input.word }),
-              ...(ctx.postId && { postId: ctx.postId }),
-              ...(input.metadata && { metadata: input.metadata }),
-            }
-          );
+          await trackSlateEvent(input.slateId, input.action, {
+            ...(input.word && { word: input.word }),
+            ...(ctx.postId && { postId: ctx.postId }),
+            ...(input.metadata && input.metadata),
+          });
 
           return { ok: true };
         }),
