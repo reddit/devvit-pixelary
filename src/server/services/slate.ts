@@ -55,7 +55,7 @@ export async function generateSlate(): Promise<{
     timestamp: slate.timestamp.toString(),
   };
   await redis.hSet(slateKey, parsedSlated);
-  await redis.expire(slateKey, 7 * 24 * 60 * 60); // 7 days TTL
+  await redis.expire(slateKey, 90 * 24 * 60 * 60); // 90 days TTL
 
   return slate;
 }
