@@ -153,78 +153,127 @@ export async function updateWordScores() {
   const words = await getWordsActive();
   const timestamp = getPreviousTimestamp();
 
+  // Intermediate tallies
   const pickRates: number[] = [];
   const postRates: number[] = [];
-
-  const wordStats = await Promise.all(
-    words.map(async (word) => {
-      return {
-        word,
-        stats: await redis.hGetAll(REDIS_KEYS.wordHourlyStats(word, timestamp)),
+  const wordStats: Record<
+    string,
+    {
+      hourly: {
+        served: number;
+        picked: number;
+        posted: number;
+        pickRate: number;
+        postRate: number;
       };
-    })
-  ).then(
-    (
-      results: {
-        word: string;
-        stats: Record<string, string>;
-      }[]
-    ) => {
-      return results.map((result) => {
-        const served = parseInt(result.stats.served ?? '0');
-        const picked = parseInt(result.stats.picked ?? '0');
-        const posted = parseInt(result.stats.posted ?? '0');
-
-        // Smoothing (alpha-beta filter)
-        const pickRate = (picked + 5) / (served + 100);
-        const postRate = (posted + 5) / (picked + 10);
-
-        // Collect rates for later normalization (mean and standard deviation)
-        pickRates.push(pickRate);
-        postRates.push(postRate);
-
-        return {
-          ...result,
-          served,
-          picked,
-          posted,
-          pickRate,
-          postRate,
-        };
-      });
+      total: {
+        served: number;
+        picked: number;
+        posted: number;
+      };
+      drawerScore?: number;
+      drawerUncertainty?: number;
     }
-  );
+  > = {};
 
-  // Compute mean and standard deviation for pick and post rates
+  for (const word of words) {
+    // Grab hourly and total stats for each word
+    const [hourly, total] = await Promise.all([
+      redis.hGetAll(REDIS_KEYS.wordHourlyStats(word, timestamp)),
+      redis.hGetAll(REDIS_KEYS.wordTotalStats(word)),
+    ]);
+
+    // Parse stats
+    const hourlyServed = parseInt(hourly.served ?? '0');
+    const hourlyPicked = parseInt(hourly.picked ?? '0');
+    const hourlyPosted = parseInt(hourly.posted ?? '0');
+    const totalServed = parseInt(total.served ?? '0');
+    const totalPicked = parseInt(total.picked ?? '0');
+    const totalPosted = parseInt(total.posted ?? '0');
+
+    // Smoothing (alpha-beta filter)
+    const hourlyPickRate = (hourlyPicked + 5) / (hourlyServed + 100);
+    const hourlyPostRate = (hourlyPosted + 5) / (hourlyPicked + 10);
+
+    // Collect rates for later normalization
+    pickRates.push(hourlyPickRate);
+    postRates.push(hourlyPostRate);
+
+    // Store stats
+    wordStats[word] = {
+      hourly: {
+        served: hourlyServed,
+        picked: hourlyPicked,
+        posted: hourlyPosted,
+        pickRate: hourlyPickRate,
+        postRate: hourlyPostRate,
+      },
+      total: {
+        served: totalServed,
+        picked: totalPicked,
+        posted: totalPosted,
+      },
+    };
+  }
+
+  // Compute mean and standard deviation for hourly pick and post rates
   const meanPickRate = pickRates.reduce((a, b) => a + b, 0) / pickRates.length;
   const stdPickRate = Math.sqrt(
     pickRates.reduce((a, b) => a + Math.pow(b - meanPickRate, 2), 0) /
       pickRates.length
   );
-
   const meanPostRate = postRates.reduce((a, b) => a + b, 0) / postRates.length;
   const stdPostRate = Math.sqrt(
     postRates.reduce((a, b) => a + Math.pow(b - meanPostRate, 2), 0) /
       postRates.length
   );
 
-  // Compute z-scores for pick and post rates
+  // Compute z-scores, uncertainties, and drawerscores
   const Z_SCORE_CLAMP = 3;
   const WEIGHT_PICK_RATE = 1;
   const WEIGHT_POST_RATE = 1;
-  const scores = wordStats.map((wordStat) => {
-    const zPickRate = (wordStat.pickRate - meanPickRate) / stdPickRate;
-    const zPostRate = (wordStat.postRate - meanPostRate) / stdPostRate;
+
+  for (const word in wordStats) {
+    const wordStat = wordStats[word];
+    if (!wordStat) continue;
+
+    const zPickRate = (wordStat.hourly.pickRate - meanPickRate) / stdPickRate;
+    const zPostRate = (wordStat.hourly.postRate - meanPostRate) / stdPostRate;
     const zPickRateClamped = clamp(zPickRate, -Z_SCORE_CLAMP, Z_SCORE_CLAMP);
     const zPostRateClamped = clamp(zPostRate, -Z_SCORE_CLAMP, Z_SCORE_CLAMP);
+
     const drawerScore =
       WEIGHT_PICK_RATE * zPickRateClamped + WEIGHT_POST_RATE * zPostRateClamped;
+    const drawerUncertainty = 1 / Math.sqrt(Math.max(wordStat.total.served, 1));
 
-    return { word: wordStat.word, drawerScore };
-  });
+    // Append drawer score and uncertainty to word stats
+    wordStats[word] = {
+      ...wordStat,
+      drawerScore,
+      drawerUncertainty,
+    };
+  }
 
-  // Save scores to Redis
-  // Bucketing
+  // Save data to Redis + cleanup
+  await Promise.all([
+    // Scores
+    redis.zAdd(
+      REDIS_KEYS.wordsScore(context.subredditName),
+      ...words.map((word) => ({
+        member: word,
+        score: wordStats[word]?.drawerScore ?? 0,
+      }))
+    ),
+    // Uncertainties
+    redis.zAdd(
+      REDIS_KEYS.wordsUncertainty(context.subredditName),
+      ...words.map((word) => ({
+        member: word,
+        score: wordStats[word]?.drawerUncertainty ?? 0,
+      }))
+    ),
+    // Cleanup hourly stats?
+  ]);
 
-  console.log(scores);
+  console.log('Scores updated!');
 }

@@ -28,6 +28,9 @@ export const REDIS_KEYS = {
     `words:championed:${subredditName}`,
   wordsActive: (subredditName: string, timestamp: string) =>
     `words:active:${subredditName}:${timestamp}`,
+  wordsScore: (subredditName: string) => `words:score:${subredditName}`,
+  wordsUncertainty: (subredditName: string) =>
+    `words:uncertainty:${subredditName}`,
 
   // Champions
   championWord: (commentId: T1) => `champion:word:${commentId}`,
