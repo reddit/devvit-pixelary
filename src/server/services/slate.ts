@@ -25,6 +25,7 @@ export type SlateEventPicked = {
   name: 'slate_picked'; // Did you pick it?
   timestamp: string;
   word: string;
+  position: number; // Position in the slate (0, 1, or 2)
 };
 
 export type SlateEventPosted = {
@@ -41,6 +42,7 @@ type Slate = {
   words: string[];
   timestamp: number;
   word?: string;
+  position?: number;
   postId?: T3;
   servedAt?: number;
   pickedAt?: number;
@@ -150,7 +152,7 @@ export async function generateSlate(): Promise<Slate> {
   }
   if (slateWords.length < 3) throw new Error('Unable to form slate');
 
-  // 3) ε-exploration: swap lowest-score slot with most-uncertain word
+  // ε-exploration: swap lowest-score slot with most-uncertain word
   if (Math.random() < EXPLORATION_RATE) {
     // Get current scores
     const scores = await Promise.all(
@@ -241,7 +243,7 @@ export async function handleSlateEvent(event: SlateEvent): Promise<void> {
     );
   } else if (name === 'slate_picked') {
     // Increment pick counts + set pickedAt time
-    const { word } = event;
+    const { word, position } = event;
     promises.push(
       redis.hIncrBy(
         REDIS_KEYS.wordsHourlyStats(context.subredditName, timestamp),
@@ -255,6 +257,7 @@ export async function handleSlateEvent(event: SlateEvent): Promise<void> {
       ),
       redis.hSet(REDIS_KEYS.slate(slateId), {
         word,
+        position: position.toString(),
         pickedAt: timestamp,
       })
     );
