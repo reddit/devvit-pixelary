@@ -289,6 +289,54 @@ export async function trackSlateEvent(
 }
 
 /**
+ * Generalized telemetry tracking function that handles different payload types
+ * based on the event type. This consolidates all user action tracking.
+ */
+export async function trackUserAction(
+  subredditName: string,
+  slateId: string,
+  eventType: EventType,
+  payload?: {
+    word?: string;
+    postId?: string;
+    metadata?: Record<string, string | number | undefined>;
+  }
+): Promise<void> {
+  try {
+    // Process metadata, filtering out undefined values
+    const eventMetadata: Record<string, string | number> = {};
+    if (payload?.metadata) {
+      Object.entries(payload.metadata).forEach(([key, value]) => {
+        if (value !== undefined) {
+          eventMetadata[key] = value;
+        }
+      });
+    }
+    if (payload?.word) {
+      eventMetadata.word = payload.word;
+    }
+    if (payload?.postId) {
+      eventMetadata.postId = payload.postId;
+    }
+
+    await trackSlateEvent(slateId, eventType, eventMetadata);
+    console.log(`✅ Queued user action: ${eventType} for slate ${slateId}`, {
+      eventMetadata,
+      timestamp: Date.now(),
+    });
+  } catch (error) {
+    console.error(`Failed to track user action ${eventType}:`, {
+      error,
+      slateId,
+      subredditName,
+      payload,
+    });
+  }
+}
+
+/**
+
+/**
  * Clear telemetry data for a specific date
  * Returns the number of records that were deleted
  */

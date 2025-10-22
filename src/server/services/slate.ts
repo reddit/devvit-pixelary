@@ -1,11 +1,9 @@
 import { redis, reddit } from '@devvit/web/server';
 import { REDIS_KEYS } from './redis';
 import { getAllWords } from './dictionary';
-import { trackSlateEvent, type EventType } from './telemetry';
 import { normalizeWord } from '../../shared/utils/string';
 import type { CandidateWord } from '../../shared/schema/pixelary';
 import type { T3 } from '@devvit/shared-types/tid.js';
-
 /**
  * Generate a deterministic slate ID based on selected words
  */
@@ -123,120 +121,6 @@ export async function generateSlate(
   await redis.expire(slateKey, 7 * 24 * 60 * 60);
 
   return { slateId, candidates };
-}
-
-/**
- * Consolidated slate tracking - single function for all slate actions
- * @param subredditName - The subreddit name
- * @param slateId - The slate ID
- * @param action - The action being tracked
- * @param word - Optional word for click/publish actions
- * @param postId - Optional post ID for context
- */
-export async function trackSlateAction(
-  subredditName: string,
-  slateId: string,
-  action:
-    | 'slate_impression'
-    | 'slate_click'
-    | 'slate_auto_select'
-    | 'slate_refresh'
-    | 'drawing_start'
-    | 'drawing_first_pixel'
-    | 'drawing_done_manual'
-    | 'drawing_done_auto'
-    | 'drawing_publish'
-    | 'drawing_cancel'
-    | 'post_impression'
-    | 'post_guess'
-    | 'post_solve'
-    | 'post_skip',
-  word?: string,
-  postId?: T3,
-  metadata?: Record<string, string | number | undefined>
-): Promise<void> {
-  try {
-    // Map action to event type for queue tracking
-    let eventType: EventType;
-    switch (action) {
-      case 'slate_impression':
-        eventType = 'slate_impression';
-        break;
-      case 'slate_click':
-        eventType = 'slate_click';
-        break;
-      case 'slate_auto_select':
-        eventType = 'slate_auto_select';
-        break;
-      case 'slate_refresh':
-        eventType = 'slate_refresh';
-        break;
-      case 'drawing_start':
-        eventType = 'drawing_start';
-        break;
-      case 'drawing_first_pixel':
-        eventType = 'drawing_first_pixel';
-        break;
-      case 'drawing_done_manual':
-        eventType = 'drawing_done_manual';
-        break;
-      case 'drawing_done_auto':
-        eventType = 'drawing_done_auto';
-        break;
-      case 'drawing_publish':
-        eventType = 'drawing_publish';
-        break;
-      case 'drawing_cancel':
-        eventType = 'drawing_cancel';
-        break;
-      case 'post_impression':
-        eventType = 'post_impression';
-        break;
-      case 'post_guess':
-        eventType = 'post_guess';
-        break;
-      case 'post_solve':
-        eventType = 'post_solve';
-        break;
-      case 'post_skip':
-        eventType = 'post_skip';
-        break;
-      default:
-        eventType = action as EventType;
-    }
-
-    // Add event to queue for processing
-    const eventMetadata: Record<string, string | number> = {};
-    if (metadata) {
-      Object.entries(metadata).forEach(([key, value]) => {
-        if (value !== undefined) {
-          eventMetadata[key] = value;
-        }
-      });
-    }
-    if (word) {
-      eventMetadata.word = word;
-    }
-    if (postId) {
-      eventMetadata.postId = postId;
-    }
-
-    await trackSlateEvent(slateId, eventType, eventMetadata);
-    console.log(`✅ Queued slate event: ${action} for slate ${slateId}`, {
-      eventMetadata,
-      timestamp: Date.now(),
-    });
-  } catch (error) {
-    console.error(`Failed to track slate ${action}:`, {
-      error,
-      errorMessage: error instanceof Error ? error.message : String(error),
-      errorStack: error instanceof Error ? error.stack : undefined,
-      subredditName,
-      slateId,
-      action,
-      word,
-    });
-  }
 }
 
 /**
