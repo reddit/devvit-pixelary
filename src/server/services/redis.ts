@@ -28,6 +28,9 @@ export const REDIS_KEYS = {
     `words:championed:${subredditName}`,
   wordsActive: (subredditName: string, timestamp: string) =>
     `words:active:${subredditName}:${timestamp}`,
+  wordsHourlyStats: (subredditName: string, timestamp: string) =>
+    `words:hourly:${subredditName}:${timestamp}`,
+  wordsTotalStats: (subredditName: string) => `words:total:${subredditName}`,
   wordsScore: (subredditName: string) => `words:score:${subredditName}`,
   wordsUncertainty: (subredditName: string) =>
     `words:uncertainty:${subredditName}`,
@@ -38,9 +41,6 @@ export const REDIS_KEYS = {
   // Word
   wordChampion: (word: string) => `word:champion:${word}`,
   wordDrawings: (word: string) => `word:drawings:${word}`,
-  wordHourlyStats: (word: string, timestamp: string) =>
-    `word:hourly:${word}:${timestamp}`,
-  wordTotalStats: (word: string) => `word:total:${word}`,
 
   // Communities
   communities: () => 'communities',

@@ -77,8 +77,16 @@ export async function handleSlateEvent(event: SlateEvent): Promise<void> {
 
     for (const word of words) {
       promises.push(
-        redis.hIncrBy(REDIS_KEYS.wordHourlyStats(word, timestamp), 'served', 1),
-        redis.hIncrBy(REDIS_KEYS.wordTotalStats(word), 'served', 1)
+        redis.hIncrBy(
+          REDIS_KEYS.wordsHourlyStats(context.subredditName, timestamp),
+          `${word}:served`,
+          1
+        ),
+        redis.hIncrBy(
+          REDIS_KEYS.wordsTotalStats(context.subredditName),
+          `${word}:served`,
+          1
+        )
       );
     }
     promises.push(
@@ -96,8 +104,16 @@ export async function handleSlateEvent(event: SlateEvent): Promise<void> {
     // Increment pick counts + set pickedAt time
     const { word } = event;
     promises.push(
-      redis.hIncrBy(REDIS_KEYS.wordHourlyStats(word, timestamp), 'picked', 1),
-      redis.hIncrBy(REDIS_KEYS.wordTotalStats(word), 'picked', 1),
+      redis.hIncrBy(
+        REDIS_KEYS.wordsHourlyStats(context.subredditName, timestamp),
+        `${word}:picked`,
+        1
+      ),
+      redis.hIncrBy(
+        REDIS_KEYS.wordsTotalStats(context.subredditName),
+        `${word}:picked`,
+        1
+      ),
       redis.hSet(REDIS_KEYS.slate(slateId), {
         word,
         pickedAt: timestamp,
@@ -107,8 +123,16 @@ export async function handleSlateEvent(event: SlateEvent): Promise<void> {
     // Increment post counts + set postedAt time
     const { word, postId } = event;
     promises.push(
-      redis.hIncrBy(REDIS_KEYS.wordHourlyStats(word, timestamp), 'posted', 1),
-      redis.hIncrBy(REDIS_KEYS.wordTotalStats(word), 'posted', 1),
+      redis.hIncrBy(
+        REDIS_KEYS.wordsHourlyStats(context.subredditName, timestamp),
+        `${word}:posted`,
+        1
+      ),
+      redis.hIncrBy(
+        REDIS_KEYS.wordsTotalStats(context.subredditName),
+        `${word}:posted`,
+        1
+      ),
       redis.hSet(REDIS_KEYS.slate(slateId), {
         word,
         postId,
@@ -153,6 +177,14 @@ export async function updateWordScores() {
   const words = await getWordsActive();
   const timestamp = getPreviousTimestamp();
 
+  // Fetch all stats once
+  const [allHourlyStats, allTotalStats] = await Promise.all([
+    redis.hGetAll(
+      REDIS_KEYS.wordsHourlyStats(context.subredditName, timestamp)
+    ),
+    redis.hGetAll(REDIS_KEYS.wordsTotalStats(context.subredditName)),
+  ]);
+
   // Intermediate tallies
   const pickRates: number[] = [];
   const postRates: number[] = [];
@@ -177,11 +209,17 @@ export async function updateWordScores() {
   > = {};
 
   for (const word of words) {
-    // Grab hourly and total stats for each word
-    const [hourly, total] = await Promise.all([
-      redis.hGetAll(REDIS_KEYS.wordHourlyStats(word, timestamp)),
-      redis.hGetAll(REDIS_KEYS.wordTotalStats(word)),
-    ]);
+    // Extract per-word stats from shared hashes
+    const hourly = {
+      served: allHourlyStats[`${word}:served`],
+      picked: allHourlyStats[`${word}:picked`],
+      posted: allHourlyStats[`${word}:posted`],
+    };
+    const total = {
+      served: allTotalStats[`${word}:served`],
+      picked: allTotalStats[`${word}:picked`],
+      posted: allTotalStats[`${word}:posted`],
+    };
 
     // Parse stats
     const hourlyServed = parseInt(hourly.served ?? '0');
