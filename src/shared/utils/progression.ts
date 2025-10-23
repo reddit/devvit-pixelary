@@ -49,10 +49,9 @@ export function getLevelByScore(score: number = 0): Level {
     return generateLevel(1);
   }
 
-  // Calculate rank using log10: rank = floor(log10(score)) + 1
-  // 100-999 → log10(100) = 2, so rank = 2 + 1 = 3... wait that's wrong
-  // Let me recalculate: 100-999 → level 2, 1000-9999 → level 3
-  // So: rank = floor(log10(score)) - 1 + 1 = floor(log10(score))
+  // Calculate rank using log10
+  // 100-999 → log10(100) = 2, so rank = 2
+  // 1000-9999 → log10(1000) = 3, so rank = 3
   const rank = Math.floor(Math.log10(score));
 
   return generateLevel(rank);

@@ -1,7 +1,11 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@components/Button';
 import { PixelSymbol } from '@components/PixelSymbol';
-import { DRAWING_COLORS, EXTENDED_DRAWING_COLORS } from '@shared/constants';
+import {
+  DRAWING_COLORS,
+  EXTENDED_DRAWING_COLORS,
+  DRAWING_DURATION,
+} from '@shared/constants';
 import { PixelFont } from '@components/PixelFont';
 import { DrawingData, DrawingUtils } from '@shared/schema/drawing';
 import { getContrastColor } from '@shared/utils/color';
@@ -59,7 +63,7 @@ export function DrawStep(props: DrawStepProps) {
     const timer = setInterval(() => {
       const currentElapsed = Date.now() - startTime;
       setElapsedTime(currentElapsed);
-      const remainingTime = time * 1000 - currentElapsed;
+      const remainingTime = (time || DRAWING_DURATION) * 1000 - currentElapsed;
       if (remainingTime <= 0) {
         void track('drawing_done_auto');
         onComplete(drawingData);
@@ -67,9 +71,12 @@ export function DrawStep(props: DrawStepProps) {
     }, 100);
 
     return () => clearInterval(timer);
-  }, [startTime, time, onComplete, track, trackSlateAction, word, drawingData]);
+  }, [startTime, time, onComplete, track, trackSlateAction, word]);
 
-  const secondsLeft = Math.max(0, Math.round(time - elapsedTime / 1000));
+  const secondsLeft = Math.max(
+    0,
+    Math.round((time || DRAWING_DURATION) - elapsedTime / 1000)
+  );
 
   const handleDone = () => {
     void track('click_done_drawing');
