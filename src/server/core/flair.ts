@@ -133,19 +133,19 @@ export async function setPostFlair(
 /**
  * Get difficulty level from drawing stats
  */
-export function getDifficultyFromStats(stats: DrawingStats): string | null {
-  // Only return difficulty if threshold is met (same as UI)
-  if (stats.guessCount < 100) {
-    return null;
+export function getDifficultyFromStats(stats: DrawingStats): string {
+  // Return "unranked" for posts with insufficient data
+  if (stats.playerCount < 4) {
+    return 'unranked';
   }
 
-  const difficultyScore =
-    stats.playerCount > 0
-      ? Math.round((stats.guessCount / stats.playerCount) * 10) / 10
-      : 0;
+  // Calculate solve rate percentage
+  const solveRate = stats.solvedPercentage;
 
-  if (difficultyScore < 2) return 'easy';
-  if (difficultyScore < 4) return 'medium';
-  if (difficultyScore < 6) return 'hard';
-  return 'expert';
+  // Determine difficulty based on solve rate
+  if (solveRate >= 80) return 'easy';
+  if (solveRate >= 50) return 'medium';
+  if (solveRate >= 25) return 'hard';
+  if (solveRate >= 10) return 'expert';
+  return 'expert'; // For solve rates below 10%
 }
