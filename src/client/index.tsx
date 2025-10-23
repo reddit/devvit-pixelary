@@ -90,7 +90,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <Providers>
       <ErrorBoundary
-        onError={(error, errorInfo) => {
+        onError={(_error, _errorInfo) => {
           // Error boundary caught error
         }}
       >
