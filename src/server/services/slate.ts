@@ -467,7 +467,7 @@ export async function applyScoreDecay(
  * Get the current timestamp
  */
 
-function getCurrentTimestamp(): string {
+export function getCurrentTimestamp(): string {
   const now = new Date();
   return now.toISOString().slice(0, 13).replace('T', '-');
 }

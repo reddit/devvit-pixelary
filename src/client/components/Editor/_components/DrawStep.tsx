@@ -7,6 +7,7 @@ import { DrawingData, DrawingUtils } from '@shared/schema/drawing';
 import { getContrastColor } from '@shared/utils/color';
 import type { HEX } from '@shared/types';
 import { useTelemetry } from '@client/hooks/useTelemetry';
+import type { SlateAction } from '@shared/types';
 
 interface DrawStepProps {
   word: string;
@@ -14,14 +15,7 @@ interface DrawStepProps {
   onComplete: (drawing: DrawingData) => void;
   slateId: string | null;
   trackSlateAction: (
-    action:
-      | 'slate_impression'
-      | 'slate_click'
-      | 'slate_auto_select'
-      | 'drawing_start'
-      | 'drawing_first_pixel'
-      | 'drawing_publish'
-      | 'post_skip',
+    action: SlateAction,
     word?: string,
     metadata?: Record<string, string | number>
   ) => Promise<void>;
@@ -45,8 +39,7 @@ export function DrawStep(props: DrawStepProps) {
         word,
       });
       void track('view_draw_step');
-      // Also track as slate event for queue processing
-      void trackSlateAction('drawing_start', word); // This maps to 'drawing_start' in the slate processing
+      void track('drawing_start');
       hasTrackedView.current = true;
     }
   }, [track, trackSlateAction, word, slateId]);
@@ -70,7 +63,6 @@ export function DrawStep(props: DrawStepProps) {
       const remainingTime = time * 1000 - currentElapsed;
       if (remainingTime <= 0) {
         void track('drawing_done_auto');
-        void trackSlateAction('drawing_done_auto', word);
         onComplete(drawingData);
       }
     }, 100);
@@ -83,7 +75,6 @@ export function DrawStep(props: DrawStepProps) {
   const handleDone = () => {
     void track('click_done_drawing');
     void track('drawing_done_manual');
-    void trackSlateAction('drawing_done_manual', word);
     onComplete(drawingData);
   };
 
@@ -168,7 +159,7 @@ export function DrawStep(props: DrawStepProps) {
         // Track first pixel drawn
         if (!hasTrackedFirstPixel.current) {
           void track('first_pixel_drawn');
-          void trackSlateAction('drawing_first_pixel', word);
+          void track('drawing_first_pixel');
           hasTrackedFirstPixel.current = true;
         }
       }

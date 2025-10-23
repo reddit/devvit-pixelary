@@ -2,13 +2,15 @@
  * Color types
  */
 
+export type HEX = `#${string}`;
+
 export type RGB = {
   r: number;
   g: number;
   b: number;
 };
 
-export type HEX = `#${string}`;
+export type SlateAction = 'slate_served' | 'slate_picked' | 'slate_posted';
 
 /**
  * Progression system

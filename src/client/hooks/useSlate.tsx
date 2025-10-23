@@ -6,26 +6,13 @@ import React, {
   useEffect,
 } from 'react';
 import { trpc } from '@client/trpc/client';
+import type { SlateAction } from '@shared/types';
 
 interface SlateContextType {
   slateId: string | null;
   setSlateId: (slateId: string | null) => void;
   trackSlateAction: (
-    action:
-      | 'slate_impression'
-      | 'slate_click'
-      | 'slate_auto_select'
-      | 'slate_refresh'
-      | 'drawing_start'
-      | 'drawing_first_pixel'
-      | 'drawing_done_manual'
-      | 'drawing_done_auto'
-      | 'drawing_publish'
-      | 'drawing_cancel'
-      | 'post_impression'
-      | 'post_guess'
-      | 'post_solve'
-      | 'post_skip',
+    action: SlateAction,
     word?: string,
     metadata?: Record<string, string | number>
   ) => Promise<void>;
@@ -44,21 +31,7 @@ export function SlateProvider({ children }: { children: React.ReactNode }) {
 
   const trackSlateAction = useCallback(
     async (
-      action:
-        | 'slate_impression'
-        | 'slate_click'
-        | 'slate_auto_select'
-        | 'slate_refresh'
-        | 'drawing_start'
-        | 'drawing_first_pixel'
-        | 'drawing_done_manual'
-        | 'drawing_done_auto'
-        | 'drawing_publish'
-        | 'drawing_cancel'
-        | 'post_impression'
-        | 'post_guess'
-        | 'post_solve'
-        | 'post_skip',
+      action: SlateAction,
       word?: string,
       metadata?: Record<string, string | number>
     ) => {

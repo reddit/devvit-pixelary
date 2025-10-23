@@ -9,6 +9,7 @@ import { PixelFont } from '@components/PixelFont';
 import { navigateTo } from '@devvit/web/client';
 import { useTelemetry } from '@client/hooks/useTelemetry';
 import { useEffect } from 'react';
+import type { SlateAction } from '@shared/types';
 
 interface ReviewStepProps {
   word: string;
@@ -22,14 +23,7 @@ interface ReviewStepProps {
   }) => void;
   slateId: string | null;
   trackSlateAction: (
-    action:
-      | 'slate_impression'
-      | 'slate_click'
-      | 'slate_auto_select'
-      | 'drawing_start'
-      | 'drawing_first_pixel'
-      | 'drawing_publish'
-      | 'post_skip',
+    action: SlateAction,
     word?: string,
     metadata?: Record<string, string | number>
   ) => Promise<void>;
@@ -82,7 +76,7 @@ export function ReviewStep(props: ReviewStepProps) {
 
       if (result.success) {
         // Track slate publish - await to ensure delivery before navigation
-        await trackSlateAction('drawing_publish', word);
+        await trackSlateAction('slate_posted', word);
 
         if (result.navigateTo) {
           navigateTo(result.navigateTo);
@@ -100,7 +94,6 @@ export function ReviewStep(props: ReviewStepProps) {
   const handleCancel = () => {
     void track('click_cancel_drawing');
     void track('drawing_cancel');
-    void trackSlateAction('drawing_cancel', word);
     setShowCancelConfirm(true);
   };
 

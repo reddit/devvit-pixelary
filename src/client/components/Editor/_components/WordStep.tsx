@@ -5,6 +5,7 @@ import { PixelFont } from '@components/PixelFont';
 import { PixelSymbol } from '@components/PixelSymbol';
 import { context } from '@devvit/web/client';
 import { useTelemetry } from '@client/hooks/useTelemetry';
+import type { SlateAction } from '@shared/types';
 
 interface WordStepProps {
   selectCandidate: (candidate: CandidateWord) => void;
@@ -13,14 +14,7 @@ interface WordStepProps {
   isLoading: boolean;
   refreshCandidates: () => void;
   trackSlateAction: (
-    action:
-      | 'slate_impression'
-      | 'slate_click'
-      | 'slate_auto_select'
-      | 'drawing_start'
-      | 'drawing_first_pixel'
-      | 'drawing_publish'
-      | 'post_skip',
+    action: SlateAction,
     word?: string,
     metadata?: Record<string, string | number>
   ) => Promise<void>;
@@ -78,19 +72,14 @@ export function WordStep(props: WordStepProps) {
 
       // Track impression after ensuring context is updated
       console.log(
-        '🔍 WordStep: About to call trackSlateAction for slate_impression'
+        '🔍 WordStep: About to call trackSlateAction for slate_served'
       );
       // Use setTimeout to ensure React state update has completed
       setTimeout(() => {
-        trackSlateAction('slate_impression').catch((error) => {
-          console.error(
-            '🔍 WordStep: Failed to track slate impression:',
-            error
-          );
+        trackSlateAction('slate_served').catch((error) => {
+          console.error('🔍 WordStep: Failed to track slate served:', error);
         });
-        console.log(
-          '🔍 WordStep: Called trackSlateAction for slate_impression'
-        );
+        console.log('🔍 WordStep: Called trackSlateAction for slate_served');
       }, 0);
     } else if (!slateId && !isLoading) {
       console.log('🔍 WordStep: No slateId available after query completed');
@@ -122,7 +111,7 @@ export function WordStep(props: WordStepProps) {
     const remainingTime = CARD_DRAW_DURATION * 1000 - elapsedTime;
     if (remainingTime <= 0 && candidates.length > 0 && candidates[0]) {
       // Track auto-select before selecting
-      void trackSlateAction('slate_auto_select', candidates[0].word, {
+      void trackSlateAction('slate_picked', candidates[0].word, {
         selectionType: 'auto',
       });
       selectCandidate(candidates[0]);
@@ -213,14 +202,7 @@ interface WordCandidateProps {
   isLoading: boolean;
   onSelect: (candidate: CandidateWord) => void;
   trackSlateAction: (
-    action:
-      | 'slate_impression'
-      | 'slate_click'
-      | 'slate_auto_select'
-      | 'drawing_start'
-      | 'drawing_first_pixel'
-      | 'drawing_publish'
-      | 'post_skip',
+    action: SlateAction,
     word?: string,
     metadata?: Record<string, string | number>
   ) => Promise<void>;
@@ -240,7 +222,7 @@ function WordCandidate(props: WordCandidateProps) {
             word: candidate.word,
           });
           void track('click_word_candidate');
-          void trackSlateAction('slate_click', candidate.word, {
+          void trackSlateAction('slate_picked', candidate.word, {
             selectionType: 'manual',
           });
           onSelect(candidate);

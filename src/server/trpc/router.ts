@@ -9,7 +9,12 @@ import {
   removeWord,
   getAllBannedWords,
 } from '../services/dictionary';
-import { generateSlate, trackSlateEvent } from '../services/slate';
+import {
+  generateSlate,
+  handleSlateEvent,
+  getCurrentTimestamp,
+  type SlateId,
+} from '../services/slate';
 import {
   createDrawing,
   submitGuess,
@@ -75,7 +80,7 @@ export const appRouter = t.router({
 
       getCandidates: t.procedure.query(async ({ ctx }) => {
         if (!ctx.subredditName) throw new Error('Subreddit not found');
-        return await generateSlate(ctx.subredditName, 3);
+        return await generateSlate();
       }),
     }),
 
@@ -325,21 +330,10 @@ export const appRouter = t.router({
           z.object({
             slateId: z.string(),
             action: z.enum([
-              'slate_impression',
-              'slate_click',
-              'slate_auto_select',
-              'slate_refresh',
-              'drawing_start',
-              'drawing_first_pixel',
-              'drawing_done_manual',
-              'drawing_done_auto',
-              'drawing_publish',
-              'drawing_cancel',
-              'post_impression',
-              'post_guess',
-              'post_solve',
-              'post_skip',
-            ]),
+              'slate_served',
+              'slate_picked',
+              'slate_posted',
+            ] as const),
             word: z.string().optional(),
             metadata: z.record(z.union([z.string(), z.number()])).optional(),
           })
@@ -349,11 +343,34 @@ export const appRouter = t.router({
             throw new Error('Subreddit not found');
           }
 
-          await trackSlateEvent(input.slateId, input.action, {
-            ...(input.word && { word: input.word }),
-            ...(ctx.postId && { postId: ctx.postId }),
-            ...(input.metadata && input.metadata),
-          });
+          // Map action names to slate event types
+          const timestamp = getCurrentTimestamp();
+
+          if (input.action === 'slate_served') {
+            await handleSlateEvent({
+              slateId: input.slateId as SlateId,
+              name: 'slate_served',
+              timestamp,
+            });
+          } else if (input.action === 'slate_picked') {
+            if (!input.word) return { ok: true };
+            await handleSlateEvent({
+              slateId: input.slateId as SlateId,
+              name: 'slate_picked',
+              timestamp,
+              word: input.word,
+              position: (input.metadata?.position as number) ?? 0,
+            });
+          } else if (input.action === 'slate_posted') {
+            if (!input.word || !ctx.postId) return { ok: true };
+            await handleSlateEvent({
+              slateId: input.slateId as SlateId,
+              name: 'slate_posted',
+              word: input.word,
+              postId: ctx.postId,
+            });
+          }
+          // All other events should be handled by telemetry.ts instead
 
           return { ok: true };
         }),

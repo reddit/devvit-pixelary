@@ -8,6 +8,7 @@ import type { Level } from '@shared/constants';
 import type { CandidateWord } from '@shared/schema/pixelary';
 import { DrawingData, DrawingUtils } from '@shared/schema/drawing';
 import { useTelemetry } from '@client/hooks/useTelemetry';
+import type { SlateAction } from '@shared/types';
 
 interface DrawingEditorProps {
   onClose: () => void;
@@ -61,14 +62,7 @@ export function DrawingEditor({ onClose }: DrawingEditorProps) {
   // Track slate action function
   const trackSlateAction = useCallback(
     async (
-      action:
-        | 'slate_impression'
-        | 'slate_click'
-        | 'slate_auto_select'
-        | 'drawing_start'
-        | 'drawing_first_pixel'
-        | 'drawing_publish'
-        | 'post_skip',
+      action: SlateAction,
       word?: string,
       metadata?: Record<string, string | number>
     ) => {
