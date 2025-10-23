@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { LEVELS } from '@shared/constants';
 import { generateLevel, getLevelByScore } from '@shared/utils/progression';
 import { abbreviateNumber } from '@shared/utils/numbers';
 import { PixelFont } from '@components/PixelFont';
@@ -135,7 +134,7 @@ export function LevelDetails({ onClose }: LevelDetailsProps) {
             />
           )}
           <RewardItem
-            reward={`Level ${currentLevel.rank} badge`}
+            reward={`Level ${currentLevel.rank} flair`}
             unlocked={overMinimum}
           />
         </div>
