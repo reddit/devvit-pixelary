@@ -5,9 +5,7 @@ import { clamp } from '../../shared/utils/numbers';
 import { shuffle } from '../../shared/utils/array';
 
 // Configuration.
-// TODO: Move to redis.
-const EXPLORATION_RATE = 0.1;
-const BUCKET_SIZE_MIN = 20; // Fallback for tiny pools
+const EXPLORATION_RATE = 0.1; // ε-exploration rate
 const Z_SCORE_CLAMP = 3;
 const WEIGHT_PICK_RATE = 1;
 const WEIGHT_POST_RATE = 1;
@@ -197,7 +195,6 @@ export async function generateSlate(): Promise<Slate> {
   });
   await redis.expire(slateKey, 90 * 24 * 60 * 60); // 90 days TTL
 
-  // Emit served event?
   return slate;
 }
 
