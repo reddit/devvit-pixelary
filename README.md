@@ -1,55 +1,50 @@
 # Pixelary
 
-Pixelary is a community drawing and guessing game where players compete to earn
-points, unlock rewards, and rise up the leaderboard.
+Pixelary is a community drawing and guessing game built for Reddit communities.
+Players draw pixel art based on randomly selected words, and other community
+members guess what they've drawn. The game was designed and built for
+[r/Pixelary](https://reddit.com/r/Pixelary), but anyone can install it.
+
+Pixelary is an [open source](https://github.com/reddit/devvit-pixelary) project.
 
 ## How It Works
 
-**Drawers**
+**Gameplay Flow**
 
-- 10 points for posting a drawing
-- 1 point for each correct guess made by others
+1. **Word Selection** - Choose from three random words (10 seconds)
+2. **Drawing** - Create pixel art on a 16x16 canvas (60 seconds)
+3. **Guessing** - Community members guess what you drew
+4. **Scoring** - Earn points for posting and getting correct guesses
 
-**Guessers**
+**Scoring System**
 
-- 2 points for each correct guess
-- 10 bonus points for being first to guess correctly
+- **25 points** for posting a drawing
+- **1 point per correct guess** on your drawing
+- **5 points** for solving someone else's drawing
 
 ## Progression System
 
-Levels follow powers of two, with each level taking progressively longer to
-reach. As you level up, unlock exciting perks:
+Players earn points to level up, unlocking perks:
 
-- Extra Drawing Time (+3 seconds per level)
-- Exclusive User Flair
-- More rewards coming soon!
+- Level 2+: Extra drawing time (+15s per level)
+- Level 3: Add/remove custom words
+- Level 4: +35 extended colors (43 total colors)
+- All levels: Level flair
 
-Track your progress with the progress bar in your community's pinned post.
+## Word Selection
 
-## Installation
+Pixelary uses a non-personalized slate bandit system for word selection:
 
-1. Visit [Reddit Developers](https://developers.reddit.com/)
-2. Create a Reddit account and connect it to Reddit Developers
-3. Install Pixelary in your subreddit
-4. Configure your game settings and dictionary
+- **UCB algorithm** balances popular words with underutilized ones
+- Tracks pick rates, post rates, and completion metrics
+- Automatically optimizes word selection over time
 
-## Moderation Features
+## Community & Support
 
-- Dictionary management for custom word lists
-- Banned words filtering
-- User progression tracking
-- Community leaderboards
-
-## Community
-
-- Join the discussion: [r/Pixelary](https://reddit.com/r/Pixelary)
-- View source code:
+- **Join the discussion**: [r/Pixelary](https://reddit.com/r/Pixelary)
+- **Open source**:
   [GitHub Repository](https://github.com/reddit/devvit-pixelary)
-
-## Support
-
-For technical issues or feature requests, please visit our community or open an
-issue on GitHub.
+- **Support**: Visit our community or open an issue on GitHub
 
 ---
 

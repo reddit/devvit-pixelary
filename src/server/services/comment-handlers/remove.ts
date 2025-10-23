@@ -1,18 +1,19 @@
 import type { CommandContext, CommandResult } from '../comment-commands';
 import { removeWord } from '../dictionary';
 import { getScore, getLevelByScore } from '../progression';
+import { hasReward } from '../../../shared/rewards';
 
 export async function handleRemove(
   args: string[],
   context: CommandContext
 ): Promise<CommandResult> {
   try {
-    // Check user level - requires Level 2 (100+ points)
+    // Check user level - requires Level 3 (1000+ points)
     if (context.authorId) {
       const userScore = await getScore(context.authorId);
       const userLevel = getLevelByScore(userScore);
 
-      if (userLevel.rank < 3) {
+      if (!hasReward(userLevel.rank, 'add_remove_words')) {
         return {
           success: false,
           error: 'Requires Level 3 to remove words.',

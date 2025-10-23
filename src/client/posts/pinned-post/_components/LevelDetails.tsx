@@ -6,6 +6,7 @@ import { IconButton } from '@components/IconButton';
 import { trpc } from '@client/trpc/client';
 import { PixelSymbol } from '@components/PixelSymbol';
 import { useTelemetry } from '@client/hooks/useTelemetry';
+import { getRewardsByLevel, getRewardLabel } from '@shared/rewards';
 
 interface LevelDetailsProps {
   onClose: () => void;
@@ -141,19 +142,13 @@ export function LevelDetails({ onClose }: LevelDetailsProps) {
         {/* Rewards */}
         <PixelFont scale={3}>Rewards:</PixelFont>
         <div className="flex flex-col items-start justify-start gap-3 flex-1 h-full">
-          {currentLevel.rank >= 2 && (
+          {getRewardsByLevel(currentLevel.rank).map((reward) => (
             <RewardItem
-              reward={`+${(currentLevel.rank - 1) * 15}s drawing time`}
+              key={reward}
+              reward={getRewardLabel(reward, currentLevel.rank)}
               unlocked={overMinimum}
             />
-          )}
-          {currentLevel.rank >= 3 && (
-            <RewardItem reward="Add/remove words" unlocked={overMinimum} />
-          )}
-          {currentLevel.rank >= 4 && (
-            <RewardItem reward="+35 colors" unlocked={overMinimum} />
-          )}
-          <RewardItem reward="Level flair" unlocked={overMinimum} />
+          ))}
         </div>
 
         {/* Navigation */}

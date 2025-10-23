@@ -34,7 +34,6 @@ export const LevelSchema = z.object({
   name: z.string(),
   min: z.number().int(),
   max: z.number().int(),
-  extraTime: z.number().int(),
 });
 export type Level = z.infer<typeof LevelSchema>;
 

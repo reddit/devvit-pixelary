@@ -10,6 +10,7 @@ import { DrawingData, DrawingUtils } from '@shared/schema/drawing';
 import { useTelemetry } from '@client/hooks/useTelemetry';
 import type { SlateAction } from '@shared/types';
 import { context } from '@devvit/web/client';
+import { getExtraDrawingTime } from '@shared/rewards';
 
 interface DrawingEditorProps {
   onClose: () => void;
@@ -96,11 +97,8 @@ export function DrawingEditor({ onClose }: DrawingEditorProps) {
   // On load effect
   useEffect(() => {
     if (userProfile) {
-      const userLevel = generateLevel(userProfile.level);
-
-      if (userLevel) {
-        setTime(DRAWING_DURATION + userLevel.extraTime);
-      }
+      const extraTime = getExtraDrawingTime(userProfile.level);
+      setTime(DRAWING_DURATION + extraTime);
     }
   }, [userProfile]);
 

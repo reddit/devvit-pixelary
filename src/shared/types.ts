@@ -21,7 +21,6 @@ export type Level = {
   name: string;
   min: number;
   max: number;
-  extraTime: number;
 };
 
 /**

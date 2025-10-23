@@ -30,8 +30,6 @@ export const DRAWING_RESOLUTION = 16;
  * Levels
  */
 
-export const EXTRA_TIME_PER_LEVEL = 15;
-
 // First 10 named levels (order of magnitude progression: 10x per level)
 // Levels 11+ are generated dynamically as "Bonus N"
 export const LEVELS = [

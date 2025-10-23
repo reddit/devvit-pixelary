@@ -10,6 +10,7 @@ import type { HEX } from '@shared/types';
 import { useTelemetry } from '@client/hooks/useTelemetry';
 import type { SlateAction } from '@shared/types';
 import { Modal } from '@components/Modal';
+import { hasReward } from '@shared/rewards';
 
 interface DrawStepProps {
   word: string;
@@ -339,7 +340,7 @@ export function DrawStep(props: DrawStepProps) {
             isSelected={currentColor === color}
           />
         ))}
-        {userLevel >= 4 && (
+        {hasReward(userLevel, 'extended_colors') && (
           <ColorPickerPlusButton onClick={handleOpenColorPicker} />
         )}
       </div>

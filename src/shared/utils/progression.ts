@@ -1,10 +1,10 @@
-import { LEVELS, EXTRA_TIME_PER_LEVEL } from '../constants';
+import { LEVELS } from '../constants';
 import type { Level } from '../types';
 
 /**
  * Generate level data for any rank (supports infinite levels)
  * @param rank - The level rank (1-based)
- * @returns Level data with name, min/max points, and extraTime
+ * @returns Level data with name, min/max points
  */
 export function generateLevel(rank: number): Level {
   // Handle named levels (1-10)
@@ -12,7 +12,6 @@ export function generateLevel(rank: number): Level {
     const namedLevel = LEVELS[rank - 1]!;
     return {
       ...namedLevel,
-      extraTime: (rank - 1) * EXTRA_TIME_PER_LEVEL,
     };
   }
 
@@ -27,14 +26,12 @@ export function generateLevel(rank: number): Level {
       name: `Bonus ${bonusNumber}`,
       min,
       max,
-      extraTime: (rank - 1) * EXTRA_TIME_PER_LEVEL,
     };
   }
 
   // Fallback to level 1 for invalid ranks
   return {
     ...LEVELS[0]!,
-    extraTime: 0,
   };
 }
 

@@ -9,7 +9,6 @@ describe('progression utilities', () => {
         name: 'Doodle',
         min: 0,
         max: 99,
-        extraTime: 0,
       });
 
       expect(generateLevel(2)).toEqual({
@@ -17,7 +16,6 @@ describe('progression utilities', () => {
         name: 'Sketch',
         min: 100,
         max: 999,
-        extraTime: 15,
       });
 
       expect(generateLevel(10)).toEqual({
@@ -25,7 +23,6 @@ describe('progression utilities', () => {
         name: 'Master',
         min: 10000000000,
         max: 99999999999,
-        extraTime: 135,
       });
     });
 
@@ -35,7 +32,6 @@ describe('progression utilities', () => {
         name: 'Bonus 1',
         min: 100000000000,
         max: 999999999999,
-        extraTime: 150,
       });
 
       expect(generateLevel(12)).toEqual({
@@ -43,7 +39,6 @@ describe('progression utilities', () => {
         name: 'Bonus 2',
         min: 1000000000000,
         max: 9999999999999,
-        extraTime: 165,
       });
     });
 
@@ -53,7 +48,6 @@ describe('progression utilities', () => {
         name: 'Doodle',
         min: 0,
         max: 99,
-        extraTime: 0,
       });
 
       expect(generateLevel(-1)).toEqual({
@@ -61,7 +55,6 @@ describe('progression utilities', () => {
         name: 'Doodle',
         min: 0,
         max: 99,
-        extraTime: 0,
       });
     });
   });
@@ -88,19 +81,11 @@ describe('progression utilities', () => {
       expect(getLevelByScore(100).name).toBe('Sketch');
     });
 
-    it('calculates extraTime correctly', () => {
-      expect(getLevelByScore(0).extraTime).toBe(0);
-      expect(getLevelByScore(100).extraTime).toBe(15);
-      expect(getLevelByScore(1000).extraTime).toBe(30);
-      expect(getLevelByScore(10000).extraTime).toBe(45);
-    });
-
     it('handles very high scores with infinite levels', () => {
       const highScore = 100000000000; // Level 11
       const result = getLevelByScore(highScore);
       expect(result.rank).toBe(11);
       expect(result.name).toBe('Bonus 1');
-      expect(result.extraTime).toBe(150);
     });
 
     it('handles negative scores', () => {
