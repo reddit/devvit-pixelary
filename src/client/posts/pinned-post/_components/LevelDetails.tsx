@@ -122,12 +122,18 @@ export function LevelDetails({ onClose }: LevelDetailsProps) {
 
         {/* Rewards */}
         <PixelFont scale={3}>Rewards:</PixelFont>
-        <div className="flex flex-col items-start justify-start gap-2 flex-1 h-full">
+        <div className="flex flex-col items-start justify-start gap-3 flex-1 h-full">
           {currentLevel.rank >= 2 && (
             <RewardItem
               reward={`+${(currentLevel.rank - 1) * 15}s drawing time`}
               unlocked={overMinimum}
             />
+          )}
+          {currentLevel.rank >= 2 && (
+            <RewardItem reward="Add words" unlocked={overMinimum} />
+          )}
+          {currentLevel.rank >= 2 && (
+            <RewardItem reward="Remove words" unlocked={overMinimum} />
           )}
           <RewardItem
             reward={`Level ${currentLevel.rank} flair`}
