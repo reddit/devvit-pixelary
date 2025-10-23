@@ -24,6 +24,8 @@ export function LevelDetails({ onClose }: LevelDetailsProps) {
   });
 
   const [currentLevelRank, setCurrentLevelRank] = useState(1);
+  const [displayProgress, setDisplayProgress] = useState(0);
+
   const currentLevel = generateLevel(currentLevelRank);
 
   // Update level rank when user profile loads
@@ -34,8 +36,8 @@ export function LevelDetails({ onClose }: LevelDetailsProps) {
     }
   }, [userProfile]);
 
-  // Calculate progress percentage for the current level being viewed
-  const progressPercentage =
+  // Calculate actual progress percentage
+  const actualProgressPercentage =
     userProfile && currentLevel
       ? Math.max(
           0,
@@ -47,6 +49,22 @@ export function LevelDetails({ onClose }: LevelDetailsProps) {
           )
         )
       : 0;
+
+  // Animate progress bar from 0 to actual percentage
+  useEffect(() => {
+    if (userProfile) {
+      // Small delay to ensure smooth animation
+      const timer = setTimeout(() => {
+        setDisplayProgress(actualProgressPercentage);
+      }, 100);
+      return () => clearTimeout(timer);
+    } else {
+      setDisplayProgress(0);
+    }
+  }, [userProfile, actualProgressPercentage]);
+
+  // Use the animated display progress
+  const progressPercentage = displayProgress;
   const nextLevel = () => {
     setCurrentLevelRank(currentLevelRank + 1);
   };
