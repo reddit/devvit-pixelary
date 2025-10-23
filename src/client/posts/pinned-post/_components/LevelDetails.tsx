@@ -80,8 +80,8 @@ export function LevelDetails({ onClose }: LevelDetailsProps) {
     <main className="fixed inset-0 flex flex-col items-center justify-center p-6">
       <div className="flex flex-col items-start justify-start gap-6 w-full h-full p-6 bg-white pixel-shadow">
         {/* Header */}
-        <header className="flex flex-row items-start justify-start gap-2 w-full">
-          <div className="flex flex-col items-start justify-start gap-2 w-full h-full">
+        <header className="flex flex-row items-start justify-between gap-2 w-full">
+          <div className="flex flex-col items-start justify-start gap-2 flex-1">
             <PixelFont color="var(--color-brand-orangered)">
               {`Level ${currentLevel.rank}`}
             </PixelFont>
