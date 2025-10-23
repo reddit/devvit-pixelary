@@ -345,6 +345,7 @@ export function DrawStep(props: DrawStepProps) {
         isOpen={isColorPickerOpen}
         onClose={handleCloseColorPicker}
         onSelectColor={handleSelectExtendedColor}
+        currentColor={currentColor}
       />
     </main>
   );
@@ -396,10 +397,11 @@ interface ColorPickerModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelectColor: (color: HEX) => void;
+  currentColor: HEX;
 }
 
 function ColorPickerModal(props: ColorPickerModalProps) {
-  const { isOpen, onClose, onSelectColor } = props;
+  const { isOpen, onClose, onSelectColor, currentColor } = props;
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Select a color">
@@ -408,7 +410,7 @@ function ColorPickerModal(props: ColorPickerModalProps) {
           <ColorSwatch
             key={color}
             color={color}
-            isSelected={false}
+            isSelected={currentColor === color}
             onSelect={onSelectColor}
           />
         ))}
