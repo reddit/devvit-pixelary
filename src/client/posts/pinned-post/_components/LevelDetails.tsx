@@ -23,14 +23,7 @@ export function LevelDetails({ onClose }: LevelDetailsProps) {
     enabled: true,
   });
 
-  // Calculate initial level rank based on user's current score, default to 1 if no profile
-  const getInitialLevelRank = () => {
-    if (!userProfile) return 1;
-    const userLevel = getLevelByScore(userProfile.score);
-    return userLevel.rank;
-  };
-
-  const [currentLevelRank, setCurrentLevelRank] = useState(getInitialLevelRank);
+  const [currentLevelRank, setCurrentLevelRank] = useState(1);
   const currentLevel = generateLevel(currentLevelRank);
 
   // Update level rank when user profile loads
@@ -98,29 +91,32 @@ export function LevelDetails({ onClose }: LevelDetailsProps) {
 
           {/* Labels */}
           <div className="flex flex-row items-center justify-between w-full">
-            <PixelFont
-              className={
-                overMinimum
-                  ? 'text-[var(--color-brand-orangered)]'
-                  : 'text-black/40'
-              }
-            >{`${abbreviateNumber(currentLevel.min)} XP`}</PixelFont>
+            <div className="flex flex-row items-center justify-start gap-3">
+              <PixelFont
+                className={
+                  overMinimum
+                    ? 'text-[var(--color-brand-orangered)]'
+                    : 'text-black/40'
+                }
+              >{`${abbreviateNumber(overMinimum ? (userProfile?.score ?? 0) : currentLevel.min)}`}</PixelFont>
+              {overMinimum && !overMaximum && (
+                <PixelFont
+                  className={
+                    overMinimum
+                      ? 'text-[var(--color-brand-orangered)]'
+                      : 'text-black/40'
+                  }
+                >{`(${progressPercentage.toFixed(1)}%)`}</PixelFont>
+              )}
+            </div>
+
             <PixelFont
               className={
                 overMaximum
                   ? 'text-[var(--color-brand-orangered)]'
                   : 'text-black/40'
               }
-            >{`${abbreviateNumber(currentLevel.max)} XP`}</PixelFont>
-            {overMinimum && !overMaximum && (
-              <PixelFont
-                className={`${
-                  overMinimum
-                    ? 'text-[var(--color-brand-orangered)]'
-                    : 'text-black/40'
-                } absolute left-1/2 -translate-x-1/2`}
-              >{`${progressPercentage.toFixed(1)}%`}</PixelFont>
-            )}
+            >{`${abbreviateNumber(currentLevel.max)}`}</PixelFont>
           </div>
         </div>
 
