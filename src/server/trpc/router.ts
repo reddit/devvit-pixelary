@@ -112,8 +112,29 @@ export const appRouter = t.router({
       }),
 
       getCandidates: t.procedure.query(async ({ ctx }) => {
+        console.log('🔍 [DEBUG] getCandidates: Starting endpoint');
         if (!ctx.subredditName) throw new Error('Subreddit not found');
-        return await generateSlate();
+        console.log(
+          '🔍 [DEBUG] getCandidates: Subreddit found:',
+          ctx.subredditName
+        );
+
+        try {
+          console.log('🔍 [DEBUG] getCandidates: Calling generateSlate()');
+          const result = await generateSlate();
+          console.log('🔍 [DEBUG] getCandidates: generateSlate() succeeded:', {
+            slateId: result.slateId,
+            wordsCount: result.words.length,
+            words: result.words,
+          });
+          return result;
+        } catch (error) {
+          console.error(
+            '🔍 [DEBUG] getCandidates: generateSlate() failed:',
+            error
+          );
+          throw error;
+        }
       }),
     }),
 

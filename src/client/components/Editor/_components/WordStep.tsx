@@ -8,9 +8,9 @@ import { useTelemetry } from '@client/hooks/useTelemetry';
 import type { SlateAction } from '@shared/types';
 
 interface WordStepProps {
-  selectCandidate: (candidate: CandidateWord) => void;
+  selectCandidate: (word: string) => void;
   slateId: string | null;
-  candidates: (CandidateWord | null)[];
+  words: (string | null)[];
   isLoading: boolean;
   refreshCandidates: () => void;
   trackSlateAction: (
@@ -25,7 +25,7 @@ export function WordStep(props: WordStepProps) {
   const {
     selectCandidate,
     slateId,
-    candidates,
+    words,
     isLoading,
     refreshCandidates,
     trackSlateAction,
@@ -50,15 +50,15 @@ export function WordStep(props: WordStepProps) {
     console.log('WordStep slateData debug:', {
       slateId,
       isLoading,
-      candidatesLength: candidates.length,
+      wordsLength: words.length,
     });
-  }, [slateId, isLoading, candidates]);
+  }, [slateId, isLoading, words]);
 
   // Track slate impression when slateId is available
   useEffect(() => {
     console.log('🔍 WordStep slateId effect:', {
       slateId,
-      candidates,
+      words,
       isLoading,
       trackedSlateIdRef: trackedSlateIdRef.current,
     });
@@ -86,14 +86,14 @@ export function WordStep(props: WordStepProps) {
     } else if (slateId && slateId === trackedSlateIdRef.current) {
       console.log('🔍 WordStep: slateId already tracked, skipping impression');
     }
-  }, [slateId, isLoading, trackSlateAction]);
+  }, [slateId, isLoading]);
 
-  // Start timer when candidates load
+  // Start timer when words load
   useEffect(() => {
-    if (!isLoading && candidates.length > 0 && startTime === null) {
+    if (!isLoading && words.length > 0 && startTime === null) {
       setStartTime(Date.now());
     }
-  }, [isLoading, candidates, startTime]);
+  }, [isLoading, words, startTime]);
 
   // Timer effect
   useEffect(() => {
@@ -109,14 +109,14 @@ export function WordStep(props: WordStepProps) {
   // Auto-select effect
   useEffect(() => {
     const remainingTime = CARD_DRAW_DURATION * 1000 - elapsedTime;
-    if (remainingTime <= 0 && candidates.length > 0 && candidates[0]) {
+    if (remainingTime <= 0 && words.length > 0 && words[0]) {
       // Track auto-select before selecting
-      void trackSlateAction('slate_picked', candidates[0].word, {
+      void trackSlateAction('slate_picked', words[0], {
         selectionType: 'auto',
       });
-      selectCandidate(candidates[0]);
+      selectCandidate(words[0]);
     }
-  }, [elapsedTime, selectCandidate, candidates, trackSlateAction]);
+  }, [elapsedTime, selectCandidate, words, trackSlateAction]);
 
   // Derived state
   const secondsLeft = Math.max(
@@ -131,9 +131,10 @@ export function WordStep(props: WordStepProps) {
 
       {/* Word Candidates */}
       <div className="flex flex-col gap-3 items-center justify-center h-full w-full max-w-xs flex-1">
-        {candidates?.map((candidate: CandidateWord | null, index: number) => (
+        {words?.map((word: string | null, index: number) => (
           <WordCandidate
-            candidate={candidate}
+            key={`word-${index}-${word || 'loading'}`}
+            word={word}
             index={index}
             isLoading={isLoading}
             onSelect={selectCandidate}
@@ -197,10 +198,10 @@ export function WordStep(props: WordStepProps) {
  */
 
 interface WordCandidateProps {
-  candidate: CandidateWord | null;
+  word: string | null;
   index: number;
   isLoading: boolean;
-  onSelect: (candidate: CandidateWord) => void;
+  onSelect: (word: string) => void;
   trackSlateAction: (
     action: SlateAction,
     word?: string,
@@ -209,23 +210,22 @@ interface WordCandidateProps {
 }
 
 function WordCandidate(props: WordCandidateProps) {
-  const { candidate, index, isLoading, onSelect, trackSlateAction } = props;
+  const { word, index, isLoading, onSelect, trackSlateAction } = props;
   const { track } = useTelemetry();
 
   return (
     <button
-      key={`candidate-${index}`}
       onClick={() => {
-        console.log('WordCandidate clicked:', { candidate, index });
-        if (candidate) {
+        console.log('WordCandidate clicked:', { word, index });
+        if (word) {
           console.log('Tracking word candidate click:', {
-            word: candidate.word,
+            word,
           });
           void track('click_word_candidate');
-          void trackSlateAction('slate_picked', candidate.word, {
+          void trackSlateAction('slate_picked', word, {
             selectionType: 'manual',
           });
-          onSelect(candidate);
+          onSelect(word);
         }
       }}
       disabled={isLoading}
@@ -241,10 +241,10 @@ function WordCandidate(props: WordCandidateProps) {
             className="animate-nudge-right"
           />
         )}
-        {isLoading || !candidate ? (
+        {isLoading || !word ? (
           <div className="w-16 h-3.5 skeleton" />
         ) : (
-          <PixelFont scale={2}>{candidate.word}</PixelFont>
+          <PixelFont scale={2}>{word}</PixelFont>
         )}
         {index === 0 && !isLoading && (
           <PixelSymbol
@@ -256,13 +256,7 @@ function WordCandidate(props: WordCandidateProps) {
         )}
       </div>
 
-      {/* Dictionary name */}
-      {candidate &&
-        candidate.dictionaryName !== `r/${context.subredditName}` && (
-          <PixelFont scale={2} className="text-black/50">
-            {candidate.dictionaryName}
-          </PixelFont>
-        )}
+      {/* Dictionary name - removed since we're just using strings now */}
     </button>
   );
 }

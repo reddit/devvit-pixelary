@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { WordStep } from './_components/WordStep';
 import { DrawStep } from './_components/DrawStep';
 import { ReviewStep } from './_components/ReviewStep';
@@ -9,6 +9,7 @@ import type { CandidateWord } from '@shared/schema/pixelary';
 import { DrawingData, DrawingUtils } from '@shared/schema/drawing';
 import { useTelemetry } from '@client/hooks/useTelemetry';
 import type { SlateAction } from '@shared/types';
+import { context } from '@devvit/web/client';
 
 interface DrawingEditorProps {
   onClose: () => void;
@@ -36,6 +37,8 @@ export function DrawingEditor({ onClose }: DrawingEditorProps) {
   // tRPC hooks
   const { data: userProfile } = trpc.app.user.getProfile.useQuery();
   const trackSlateActionMutation = trpc.app.slate.trackAction.useMutation();
+  const trackSlateActionRef = useRef(trackSlateActionMutation.mutateAsync);
+  const subredditNameRef = useRef(context.subredditName);
 
   // Fetch slate data at Editor level to persist across step transitions
   const {
@@ -44,9 +47,9 @@ export function DrawingEditor({ onClose }: DrawingEditorProps) {
     refetch: refreshCandidates,
   } = trpc.app.dictionary.getCandidates.useQuery();
 
-  // Extract slateId and candidates from response
+  // Extract slateId and words from response
   const currentSlateId = slateData?.slateId || null;
-  const candidates = slateData?.candidates || [null, null, null];
+  const words = slateData?.words || [null, null, null];
 
   // Set slateId when slate data loads
   useEffect(() => {
@@ -58,6 +61,12 @@ export function DrawingEditor({ onClose }: DrawingEditorProps) {
       setSlateId(currentSlateId);
     }
   }, [currentSlateId, slateId]);
+
+  // Update refs when values change
+  useEffect(() => {
+    trackSlateActionRef.current = trackSlateActionMutation.mutateAsync;
+    subredditNameRef.current = context.subredditName;
+  }, [trackSlateActionMutation.mutateAsync, context.subredditName]);
 
   // Track slate action function
   const trackSlateAction = useCallback(
@@ -84,14 +93,14 @@ export function DrawingEditor({ onClose }: DrawingEditorProps) {
         action,
         word,
       });
-      await trackSlateActionMutation.mutateAsync({
+      await trackSlateActionRef.current({
         slateId,
         action,
         word,
         metadata,
       });
     },
-    [slateId, trackSlateActionMutation]
+    [slateId]
   );
 
   // On load effect
@@ -112,8 +121,8 @@ export function DrawingEditor({ onClose }: DrawingEditorProps) {
     setStep('review');
   }, []);
 
-  const selectCandidate = useCallback((candidate: CandidateWord) => {
-    setCandidate(candidate);
+  const selectCandidate = useCallback((word: string) => {
+    setCandidate({ word, dictionaryName: `r/${subredditNameRef.current}` });
     setStep('draw');
   }, []);
 
@@ -124,7 +133,7 @@ export function DrawingEditor({ onClose }: DrawingEditorProps) {
         <WordStep
           selectCandidate={selectCandidate}
           slateId={slateId}
-          candidates={candidates}
+          words={words}
           isLoading={isSlateLoading}
           refreshCandidates={refreshCandidates}
           trackSlateAction={trackSlateAction}
