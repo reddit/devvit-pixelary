@@ -112,27 +112,12 @@ export const appRouter = t.router({
       }),
 
       getCandidates: t.procedure.query(async ({ ctx }) => {
-        console.log('🔍 [DEBUG] getCandidates: Starting endpoint');
         if (!ctx.subredditName) throw new Error('Subreddit not found');
-        console.log(
-          '🔍 [DEBUG] getCandidates: Subreddit found:',
-          ctx.subredditName
-        );
 
         try {
-          console.log('🔍 [DEBUG] getCandidates: Calling generateSlate()');
           const result = await generateSlate();
-          console.log('🔍 [DEBUG] getCandidates: generateSlate() succeeded:', {
-            slateId: result.slateId,
-            wordsCount: result.words.length,
-            words: result.words,
-          });
           return result;
         } catch (error) {
-          console.error(
-            '🔍 [DEBUG] getCandidates: generateSlate() failed:',
-            error
-          );
           throw error;
         }
       }),
@@ -407,7 +392,9 @@ export const appRouter = t.router({
               timestamp,
             });
           } else if (input.action === 'slate_picked') {
-            if (!input.word) return { ok: true };
+            if (!input.word) {
+              return { ok: true };
+            }
             await handleSlateEvent({
               slateId: input.slateId as SlateId,
               name: 'slate_picked',
@@ -416,7 +403,9 @@ export const appRouter = t.router({
               position: (input.metadata?.position as number) ?? 0,
             });
           } else if (input.action === 'slate_posted') {
-            if (!input.word || !ctx.postId) return { ok: true };
+            if (!input.word || !ctx.postId) {
+              return { ok: true };
+            }
             await handleSlateEvent({
               slateId: input.slateId as SlateId,
               name: 'slate_posted',
@@ -445,8 +434,6 @@ export const appRouter = t.router({
           ])
         )
         .mutation(async ({ ctx, input }) => {
-          console.log(`📊 Event: ${input.eventType}`);
-
           try {
             // Fire-and-forget telemetry tracking with automatic post type detection
             const metadata = 'metadata' in input ? input.metadata : {};
@@ -456,7 +443,6 @@ export const appRouter = t.router({
               metadata
             );
           } catch (error) {
-            console.warn('Telemetry tracking failed:', error);
             // Silently ignore errors - telemetry should never break the app
           }
 

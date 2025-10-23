@@ -50,10 +50,7 @@ class RealtimeManager {
         });
         this.connections.set(channelName, connection);
       } catch (error) {
-        console.error(
-          `Failed to connect to realtime channel ${channelName}:`,
-          error
-        );
+        // Failed to connect to realtime channel
       }
     }
 

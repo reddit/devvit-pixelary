@@ -13,16 +13,10 @@ export async function handleInitializeApp(
   res: Response
 ): Promise<void> {
   try {
-    console.log(`Initializing Pixelary for r/${context.subredditName}`);
-
     // Run initialization
     await initDictionary();
     await initFlairTemplates();
     await initSlateBandit();
-
-    console.log(
-      `Pixelary successfully initialized for r/${context.subredditName}`
-    );
 
     res.json({
       showToast: {
@@ -31,7 +25,6 @@ export async function handleInitializeApp(
       },
     });
   } catch (error) {
-    console.error(`Error initializing Pixelary: ${error}`);
     res.json({
       showToast: {
         text: 'Failed to initialize Pixelary',

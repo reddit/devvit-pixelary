@@ -190,13 +190,10 @@ export async function getRandomWords(count: number = 3): Promise<string[]> {
  */
 
 export async function initDictionary(): Promise<void> {
-  console.log('🔍 [DEBUG] initDictionary: Starting initialization');
   const subredditName = context.subredditName;
-  console.log('🔍 [DEBUG] initDictionary: Subreddit name:', subredditName);
 
   try {
     const wordsKey = REDIS_KEYS.wordsAll(subredditName);
-    console.log('🔍 [DEBUG] initDictionary: Words key:', wordsKey);
 
     const [words, _communityAdditions] = await Promise.all([
       redis.global.exists(wordsKey),
@@ -206,18 +203,10 @@ export async function initDictionary(): Promise<void> {
       }),
     ]);
 
-    console.log('🔍 [DEBUG] initDictionary: Words exist check result:', words);
-
     if (words !== 0) {
-      console.log('🔍 [DEBUG] initDictionary: Dictionary already initialized');
       return; // Already initialized
     }
 
-    console.log(
-      '🔍 [DEBUG] initDictionary: Initializing dictionary with',
-      DEFAULT_WORDS.length,
-      'words'
-    );
     await redis.global.zAdd(
       REDIS_KEYS.wordsAll(subredditName),
       ...DEFAULT_WORDS.map((word) => ({
@@ -225,11 +214,7 @@ export async function initDictionary(): Promise<void> {
         score: DEFAULT_WORD_SCORE,
       }))
     );
-    console.log(
-      '🔍 [DEBUG] initDictionary: Dictionary initialization complete'
-    );
   } catch (error) {
-    console.error('🔍 [DEBUG] initDictionary: Error occurred:', error);
     throw error;
   }
 }

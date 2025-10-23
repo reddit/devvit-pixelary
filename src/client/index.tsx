@@ -36,21 +36,11 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
 
 // Global error handler
 window.addEventListener('error', (event) => {
-  console.error('🚨 Global Error Handler:', {
-    message: event.message,
-    filename: event.filename,
-    lineno: event.lineno,
-    colno: event.colno,
-    error: event.error,
-    stack: event.error?.stack,
-  });
+  // Global error handling
 });
 
 window.addEventListener('unhandledrejection', (event) => {
-  console.error('🚨 Unhandled Promise Rejection:', {
-    reason: event.reason,
-    promise: event.promise,
-  });
+  // Unhandled promise rejection handling
 });
 
 const App = () => {
@@ -92,8 +82,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <Providers>
       <ErrorBoundary
         onError={(error, errorInfo) => {
-          console.error('Error Boundary caught error:', error, errorInfo);
-          // Could send to error tracking service here
+          // Error boundary caught error
         }}
       >
         <Background />

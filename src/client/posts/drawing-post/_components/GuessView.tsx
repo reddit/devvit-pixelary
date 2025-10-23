@@ -54,7 +54,7 @@ export function GuessView({
         inputRef.current?.focus();
       }, 100);
     } catch (error) {
-      console.error('Failed to submit guess:', error);
+      // Failed to submit guess
     }
   };
 

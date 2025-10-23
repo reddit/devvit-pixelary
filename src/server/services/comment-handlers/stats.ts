@@ -4,6 +4,7 @@ import { redis, context } from '@devvit/web/server';
 import { REDIS_KEYS } from '../redis';
 import type { WordMetrics } from '../../../shared/types';
 import type { T3 } from '@devvit/shared-types/tid.js';
+import { normalizeWord } from '../../../shared/utils/string';
 
 export async function handleStats(args: string[]): Promise<CommandResult> {
   try {
@@ -33,8 +34,6 @@ export async function handleStats(args: string[]): Promise<CommandResult> {
 
     // Get word metrics
     const metrics = await getWordMetrics(word);
-
-    console.log('Got metrics for:', word, metrics);
 
     // Format metrics concisely
     const response = `##### 🎨 Drawer stats
@@ -70,19 +69,22 @@ export async function handleStats(args: string[]): Promise<CommandResult> {
  */
 export async function getWordMetrics(word: string): Promise<WordMetrics> {
   try {
+    // Normalize the word to match how it's stored in Redis
+    const normalizedWord = normalizeWord(word);
+
     // Get slate stats for the word
     const totalStats = await redis.hGetAll(
       REDIS_KEYS.wordsTotalStats(context.subredditName)
     );
 
-    // Extract slate metrics
-    const impressions = parseInt(totalStats[`${word}:served`] || '0');
-    const clicks = parseInt(totalStats[`${word}:picked`] || '0');
-    const publishes = parseInt(totalStats[`${word}:posted`] || '0');
+    // Extract slate metrics using normalized word
+    const impressions = parseInt(totalStats[`${normalizedWord}:served`] || '0');
+    const clicks = parseInt(totalStats[`${normalizedWord}:picked`] || '0');
+    const publishes = parseInt(totalStats[`${normalizedWord}:posted`] || '0');
 
     // Get drawing-related metrics for this word
     const wordDrawings = await redis.zRange(
-      REDIS_KEYS.wordDrawings(word),
+      REDIS_KEYS.wordDrawings(normalizedWord),
       0,
       -1
     );
@@ -134,7 +136,6 @@ export async function getWordMetrics(word: string): Promise<WordMetrics> {
       comments,
     };
   } catch (error) {
-    console.warn('Failed to get word metrics:', error);
     // Return zero metrics on error
     return {
       impressions: 0,

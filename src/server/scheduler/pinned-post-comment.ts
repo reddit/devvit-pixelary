@@ -22,7 +22,6 @@ export async function handleCreatePinnedPostComment(
       assertT3(jobData.postId);
       postId = jobData.postId;
     } catch (error) {
-      console.error(`Invalid postId: ${jobData.postId} - ${error}`);
       res.status(400).json({
         status: 'error',
         message: 'PostId is required and must be a valid T3 ID',
@@ -30,13 +29,10 @@ export async function handleCreatePinnedPostComment(
       return;
     }
 
-    console.log(`📌 Creating pinned comment for post: ${postId}`);
     const commentId = await createPinnedPostComment(postId);
-    console.log(`✅ Pinned comment created: ${commentId}`);
 
     res.json({ status: 'success', commentId });
   } catch (error) {
-    console.error(`Error in pinned post comment job:`, error);
     res.status(500).json({ status: 'error', message: 'Job failed' });
   }
 }

@@ -149,7 +149,6 @@ export const DrawingPost = ({ postData: propPostData }: DrawingPostProps) => {
         }
       }
     } catch (err) {
-      console.error('Failed to submit guess to server:', err);
       showErrorToast('Failed to submit guess. Please try again.', {
         duration: 5000,
       });
@@ -163,7 +162,6 @@ export const DrawingPost = ({ postData: propPostData }: DrawingPostProps) => {
       await skipPost.mutateAsync({ postId: currentPostId });
       setCurrentState('skipped');
     } catch (err) {
-      console.error('Failed to skip post:', err);
       showErrorToast('Failed to skip post. Please try again.', {
         duration: 5000,
       });

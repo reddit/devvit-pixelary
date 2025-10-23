@@ -119,10 +119,8 @@ app.use(router);
 router.post('/api/telemetry/public', async (req, res) => {
   try {
     const { eventType } = req.body;
-    console.log(`📊 Public Event: ${eventType}`);
     res.json({ ok: true });
   } catch (error) {
-    console.warn('Public telemetry error:', error);
     res.status(500).json({ error: 'Telemetry failed' });
   }
 });
@@ -136,5 +134,7 @@ app.use(
 // Get port, create, and start the server
 const port = getServerPort();
 const server = createServer(app);
-server.on('error', (err) => console.error(`server error; ${err.stack}`));
+server.on('error', (err) => {
+  // Server error handling
+});
 server.listen(port);

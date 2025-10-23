@@ -26,7 +26,7 @@ export function SlateProvider({ children }: { children: React.ReactNode }) {
 
   // Debug slateId changes
   useEffect(() => {
-    console.log('SlateProvider: slateId changed', { slateId });
+    // SlateId changed
   }, [slateId]);
 
   const trackSlateAction = useCallback(
@@ -35,24 +35,10 @@ export function SlateProvider({ children }: { children: React.ReactNode }) {
       word?: string,
       metadata?: Record<string, string | number>
     ) => {
-      console.log('🔍 useSlate: trackSlateAction called', {
-        action,
-        word,
-        slateId,
-      });
       if (!slateId) {
-        console.warn(
-          '🔍 useSlate: trackSlateAction called but slateId is not set',
-          { action, word }
-        );
         return;
       }
 
-      console.log('🔍 useSlate: tracking slate action', {
-        slateId,
-        action,
-        word,
-      });
       await trackSlateActionMutation.mutateAsync({
         slateId,
         action,
@@ -65,10 +51,6 @@ export function SlateProvider({ children }: { children: React.ReactNode }) {
 
   const memoizedSetSlateId = useCallback(
     (newSlateId: string | null) => {
-      console.log('useSlate: setSlateId called', {
-        newSlateId,
-        currentSlateId: slateId,
-      });
       setSlateId(newSlateId);
     },
     [slateId]

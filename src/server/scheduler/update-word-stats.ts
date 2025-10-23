@@ -16,7 +16,6 @@ export async function handleUpdateWords(
       message: 'Word scores updated',
     });
   } catch (error) {
-    console.error(`Word scores update job failed:`, error);
     res.status(500).json({
       status: 'error',
       message: 'Word scores update job failed',

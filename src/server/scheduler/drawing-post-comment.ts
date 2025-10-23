@@ -29,9 +29,6 @@ export async function handleNewDrawingPinnedComment(
       assertT3(postId);
       validatedPostId = postId;
     } catch (error) {
-      console.error(
-        `Invalid postId in handleNewDrawingPinnedComment: ${postId} - ${error}`
-      );
       res.status(400).json({
         status: 'error',
         message: 'PostId is required and must be a valid T3 ID',
@@ -43,7 +40,6 @@ export async function handleNewDrawingPinnedComment(
     await createDrawingPostComment(validatedPostId);
     res.json({ status: 'success' });
   } catch (error) {
-    console.error(`Error in new drawing pinned comment job: ${error}`);
     res.status(500).json({ status: 'error', message: 'Job failed' });
   }
 }
@@ -66,9 +62,6 @@ export async function handleUpdateDrawingPinnedComment(
     try {
       postId = jobData.postId;
     } catch (error) {
-      console.error(
-        `Invalid postId in handleUpdateDrawingPinnedComment: ${jobData.postId} - ${error}`
-      );
       res.status(400).json({
         status: 'error',
         message: 'PostId is required and must be a valid T3 ID',
@@ -89,16 +82,11 @@ export async function handleUpdateDrawingPinnedComment(
         }
       }
     } catch (error) {
-      console.error(
-        `Error setting difficulty flair for post ${postId}:`,
-        error
-      );
       // Don't fail the job if flair setting fails
     }
 
     res.json({ status: 'success' });
   } catch (error) {
-    console.error(`Error in update drawing pinned comment job: ${error}`);
     res.status(500).json({ status: 'error', message: 'Job failed' });
   }
 }

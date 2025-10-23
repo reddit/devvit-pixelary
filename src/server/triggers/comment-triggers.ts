@@ -32,7 +32,6 @@ export async function handleCommentCreate(
 
     // Extract the command and arguments from the comment body
     const { command, args } = parseCommand(comment.body);
-    console.log(`💬 Comment Command: ${command} by ${author.name}`);
 
     // Create command context
     const commandContext: CommandContext = {
@@ -60,7 +59,6 @@ export async function handleCommentCreate(
 
     res.json({ status: 'processed' });
   } catch (error) {
-    console.error(`Error processing comment create: ${error}`);
     res.status(400).json({
       status: 'error',
       message: 'Failed to process comment',
@@ -87,7 +85,6 @@ export async function handleCommentDelete(
 
     res.json({ status: 'processed' });
   } catch (error) {
-    console.error(`Error processing comment delete: ${error}`);
     res.status(400).json({
       status: 'error',
       message: 'Failed to process comment deletion',

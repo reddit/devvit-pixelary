@@ -51,13 +51,14 @@ export function DrawingEditor({ onClose }: DrawingEditorProps) {
   const currentSlateId = slateData?.slateId || null;
   const words = slateData?.words || [null, null, null];
 
+  // Debug slate data
+  useEffect(() => {
+    // Slate data changed
+  }, [slateData, currentSlateId, isSlateLoading, slateId]);
+
   // Set slateId when slate data loads
   useEffect(() => {
     if (currentSlateId && currentSlateId !== slateId) {
-      console.log('🔍 Editor: Setting slateId from slate data:', {
-        currentSlateId,
-        previousSlateId: slateId,
-      });
       setSlateId(currentSlateId);
     }
   }, [currentSlateId, slateId]);
@@ -75,32 +76,21 @@ export function DrawingEditor({ onClose }: DrawingEditorProps) {
       word?: string,
       metadata?: Record<string, string | number>
     ) => {
-      console.log('🔍 Editor: trackSlateAction called', {
-        action,
-        word,
-        slateId,
-      });
-      if (!slateId) {
-        console.warn(
-          '🔍 Editor: trackSlateAction called but slateId is not set',
-          { action, word }
-        );
+      // Use currentSlateId if slateId is not set yet
+      const effectiveSlateId = slateId || currentSlateId;
+
+      if (!effectiveSlateId) {
         return;
       }
 
-      console.log('🔍 Editor: tracking slate action', {
-        slateId,
-        action,
-        word,
-      });
       await trackSlateActionRef.current({
-        slateId,
+        slateId: effectiveSlateId,
         action,
         word,
         metadata,
       });
     },
-    [slateId]
+    [slateId, currentSlateId]
   );
 
   // On load effect

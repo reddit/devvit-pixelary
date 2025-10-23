@@ -21,7 +21,6 @@ interface WordStepProps {
 }
 
 export function WordStep(props: WordStepProps) {
-  console.log('WordStep component mounted');
   const {
     selectCandidate,
     slateId,
@@ -40,51 +39,27 @@ export function WordStep(props: WordStepProps) {
 
   // Track word step view on mount
   useEffect(() => {
-    console.log('🔍 WordStep: About to track view_word_step');
     void track('view_word_step');
-    console.log('🔍 WordStep: Tracked view_word_step');
   }, []);
 
   // Debug slate data
   useEffect(() => {
-    console.log('WordStep slateData debug:', {
-      slateId,
-      isLoading,
-      wordsLength: words.length,
-    });
+    // Slate data debug
   }, [slateId, isLoading, words]);
 
   // Track slate impression when slateId is available
   useEffect(() => {
-    console.log('🔍 WordStep slateId effect:', {
-      slateId,
-      words,
-      isLoading,
-      trackedSlateIdRef: trackedSlateIdRef.current,
-    });
-
     // Only proceed if we have a valid slateId and query is complete
     if (slateId && !isLoading && slateId !== trackedSlateIdRef.current) {
-      console.log('🔍 WordStep: Tracking impression for slateId:', {
-        slateId,
-      });
       trackedSlateIdRef.current = slateId;
 
       // Track impression after ensuring context is updated
-      console.log(
-        '🔍 WordStep: About to call trackSlateAction for slate_served'
-      );
       // Use setTimeout to ensure React state update has completed
       setTimeout(() => {
         trackSlateAction('slate_served').catch((error) => {
-          console.error('🔍 WordStep: Failed to track slate served:', error);
+          // Failed to track slate served
         });
-        console.log('🔍 WordStep: Called trackSlateAction for slate_served');
       }, 0);
-    } else if (!slateId && !isLoading) {
-      console.log('🔍 WordStep: No slateId available after query completed');
-    } else if (slateId && slateId === trackedSlateIdRef.current) {
-      console.log('🔍 WordStep: slateId already tracked, skipping impression');
     }
   }, [slateId, isLoading]);
 
@@ -216,11 +191,7 @@ function WordCandidate(props: WordCandidateProps) {
   return (
     <button
       onClick={() => {
-        console.log('WordCandidate clicked:', { word, index });
         if (word) {
-          console.log('Tracking word candidate click:', {
-            word,
-          });
           void track('click_word_candidate');
           void trackSlateAction('slate_picked', word, {
             selectionType: 'manual',

@@ -66,16 +66,10 @@ export type SlateBanditConfig = {
  * Get the current slate bandit configuration from Redis
  */
 export async function getSlateBanditConfig(): Promise<SlateBanditConfig> {
-  console.log('🔍 [DEBUG] getSlateBanditConfig: Starting');
   const configKey = REDIS_KEYS.slateConfig();
-  console.log('🔍 [DEBUG] getSlateBanditConfig: Config key:', configKey);
 
   try {
     const config = await redis.hGetAll(configKey);
-    console.log(
-      '🔍 [DEBUG] getSlateBanditConfig: Raw config from Redis:',
-      config
-    );
 
     const rawConfig = {
       explorationRate: config.explorationRate
@@ -98,11 +92,6 @@ export async function getSlateBanditConfig(): Promise<SlateBanditConfig> {
         : SCORE_DECAY_RATE,
     };
 
-    console.log(
-      '🔍 [DEBUG] getSlateBanditConfig: Parsed raw config:',
-      rawConfig
-    );
-
     // Validate and clamp values
     const finalConfig = {
       explorationRate: clamp(rawConfig.explorationRate, 0, 1),
@@ -113,10 +102,8 @@ export async function getSlateBanditConfig(): Promise<SlateBanditConfig> {
       scoreDecayRate: clamp(rawConfig.scoreDecayRate, 0, 1),
     };
 
-    console.log('🔍 [DEBUG] getSlateBanditConfig: Final config:', finalConfig);
     return finalConfig;
   } catch (error) {
-    console.error('🔍 [DEBUG] getSlateBanditConfig: Error occurred:', error);
     throw error;
   }
 }
@@ -144,24 +131,12 @@ export async function setSlateBanditConfig(
  */
 
 export async function initSlateBandit(): Promise<void> {
-  console.log('🔍 [DEBUG] initSlateBandit: Starting initialization');
-  console.log(
-    '🔍 [DEBUG] initSlateBandit: Subreddit name:',
-    context.subredditName
-  );
-
   try {
     const configKey = REDIS_KEYS.slateConfig();
-    console.log('🔍 [DEBUG] initSlateBandit: Config key:', configKey);
     const existingKeys = await redis.exists(configKey);
-    console.log(
-      '🔍 [DEBUG] initSlateBandit: Existing config keys:',
-      existingKeys
-    );
 
     // Only set defaults if no configuration exists
     if (existingKeys === 0) {
-      console.log('🔍 [DEBUG] initSlateBandit: Setting default config');
       const defaultConfig: SlateBanditConfig = {
         explorationRate: EXPLORATION_RATE,
         zScoreClamp: Z_SCORE_CLAMP,
@@ -171,37 +146,23 @@ export async function initSlateBandit(): Promise<void> {
         scoreDecayRate: SCORE_DECAY_RATE,
       };
       await setSlateBanditConfig(defaultConfig);
-      console.log('🔍 [DEBUG] initSlateBandit: Default config set');
     }
 
     // Initialize uncertainty scores for all words if not already set
     const uncertaintyKey = REDIS_KEYS.wordsUncertainty(context.subredditName);
-    console.log('🔍 [DEBUG] initSlateBandit: Uncertainty key:', uncertaintyKey);
     const uncertaintyExists = await redis.global.exists(uncertaintyKey);
-    console.log(
-      '🔍 [DEBUG] initSlateBandit: Uncertainty exists:',
-      uncertaintyExists
-    );
 
     if (uncertaintyExists === 0) {
-      console.log(
-        '🔍 [DEBUG] initSlateBandit: Initializing uncertainty scores'
-      );
       // Get all words and set initial uncertainty
       const allWords = await redis.global.zRange(
         REDIS_KEYS.wordsAll(context.subredditName),
         0,
         -1
       );
-      console.log('🔍 [DEBUG] initSlateBandit: Found words:', allWords.length);
 
       // Only proceed if we have words to initialize
       if (allWords.length > 0) {
         const initialUncertainty = 1 / Math.sqrt(10); // Small prior for new words
-        console.log(
-          '🔍 [DEBUG] initSlateBandit: Setting initial uncertainty:',
-          initialUncertainty
-        );
 
         await redis.global.zAdd(
           uncertaintyKey,
@@ -210,18 +171,9 @@ export async function initSlateBandit(): Promise<void> {
             score: initialUncertainty,
           }))
         );
-        console.log(
-          '🔍 [DEBUG] initSlateBandit: Uncertainty scores initialized'
-        );
-      } else {
-        console.log(
-          '🔍 [DEBUG] initSlateBandit: No words found to initialize uncertainty'
-        );
       }
     }
-    console.log('🔍 [DEBUG] initSlateBandit: Initialization complete');
   } catch (error) {
-    console.error('🔍 [DEBUG] initSlateBandit: Error occurred:', error);
     throw error;
   }
 }
@@ -231,16 +183,9 @@ export async function initSlateBandit(): Promise<void> {
  */
 
 export async function pickWordsWithUCB(count: number = 3): Promise<string[]> {
-  console.log('🔍 [DEBUG] pickWordsWithUCB: Starting with count:', count);
-
   try {
-    console.log('🔍 [DEBUG] pickWordsWithUCB: Getting slate bandit config');
     const config = await getSlateBanditConfig();
-    console.log('🔍 [DEBUG] pickWordsWithUCB: Config retrieved:', config);
 
-    console.log(
-      '🔍 [DEBUG] pickWordsWithUCB: Getting words and uncertainties from Redis'
-    );
     // Get all words with their scores and uncertainties
     const [allWords, uncertainties] = await Promise.all([
       redis.global.zRange(REDIS_KEYS.wordsAll(context.subredditName), 0, -1),
@@ -251,29 +196,12 @@ export async function pickWordsWithUCB(count: number = 3): Promise<string[]> {
       ),
     ]);
 
-    console.log('🔍 [DEBUG] pickWordsWithUCB: Retrieved data:', {
-      allWordsCount: allWords.length,
-      uncertaintiesCount: uncertainties.length,
-      subredditName: context.subredditName,
-      wordsAllKey: REDIS_KEYS.wordsAll(context.subredditName),
-      wordsUncertaintyKey: REDIS_KEYS.wordsUncertainty(context.subredditName),
-    });
-
     if (allWords.length < count) {
-      console.error(
-        '🔍 [DEBUG] pickWordsWithUCB: Not enough words available:',
-        {
-          needed: count,
-          available: allWords.length,
-          words: allWords.map((w) => w.member),
-        }
-      );
       throw new Error(
         `Not enough words available. Need ${count}, have ${allWords.length}`
       );
     }
 
-    console.log('🔍 [DEBUG] pickWordsWithUCB: Creating UCB scores');
     // Create UCB scores: score + c * sqrt(ln(total_serves) / serves)
     const ucbScores: Array<{ word: string; ucbScore: number }> = [];
 
@@ -284,20 +212,13 @@ export async function pickWordsWithUCB(count: number = 3): Promise<string[]> {
       ucbScores.push({ word: word.member, ucbScore });
     }
 
-    console.log(
-      '🔍 [DEBUG] pickWordsWithUCB: UCB scores created:',
-      ucbScores.slice(0, 5)
-    );
-
     // Sort by UCB score (descending)
     ucbScores.sort((a, b) => b.ucbScore - a.ucbScore);
-    console.log('🔍 [DEBUG] pickWordsWithUCB: UCB scores sorted');
 
     // Sample proportionally to UCB scores, but with some randomness
     const selectedWords: string[] = [];
     const remainingWords = [...ucbScores];
 
-    console.log('🔍 [DEBUG] pickWordsWithUCB: Starting word selection');
     for (let i = 0; i < count && remainingWords.length > 0; i++) {
       // Use weighted random selection based on UCB scores
       const totalScore = remainingWords.reduce(
@@ -310,10 +231,6 @@ export async function pickWordsWithUCB(count: number = 3): Promise<string[]> {
         const randomIndex = Math.floor(Math.random() * remainingWords.length);
         selectedWords.push(remainingWords[randomIndex]!.word);
         remainingWords.splice(randomIndex, 1);
-        console.log(
-          '🔍 [DEBUG] pickWordsWithUCB: Selected random word:',
-          selectedWords[selectedWords.length - 1]
-        );
       } else {
         // Weighted selection
         let random = Math.random() * totalScore;
@@ -328,21 +245,12 @@ export async function pickWordsWithUCB(count: number = 3): Promise<string[]> {
         }
 
         selectedWords.push(remainingWords[selectedIndex]!.word);
-        console.log(
-          '🔍 [DEBUG] pickWordsWithUCB: Selected weighted word:',
-          selectedWords[selectedWords.length - 1]
-        );
         remainingWords.splice(selectedIndex, 1);
       }
     }
 
-    console.log(
-      '🔍 [DEBUG] pickWordsWithUCB: Final selected words:',
-      selectedWords
-    );
     return selectedWords;
   } catch (error) {
-    console.error('🔍 [DEBUG] pickWordsWithUCB: Error occurred:', error);
     throw error;
   }
 }
@@ -352,49 +260,29 @@ export async function pickWordsWithUCB(count: number = 3): Promise<string[]> {
  */
 
 export async function generateSlate(): Promise<Slate> {
-  console.log('🔍 [DEBUG] generateSlate: Starting slate generation');
   const slateId: SlateId = `slate_${crypto.randomUUID()}`;
   const slateKey = REDIS_KEYS.slate(slateId);
   const now = Date.now();
-  console.log('🔍 [DEBUG] generateSlate: Generated slateId:', slateId);
 
   try {
-    console.log('🔍 [DEBUG] generateSlate: Calling pickWordsWithUCB(3)');
     // Use UCB algorithm to pick words
     let slateWords = await pickWordsWithUCB(3);
-    console.log(
-      '🔍 [DEBUG] generateSlate: pickWordsWithUCB returned:',
-      slateWords
-    );
 
     // Dedupe if collisions
     // Shouldn't happen with UCB but safety check
     slateWords = Array.from(new Set(slateWords));
-    console.log('🔍 [DEBUG] generateSlate: After dedupe:', slateWords);
 
     // If dedupe shrank slate, backfill from top words
     while (slateWords.length < 3) {
-      console.log(
-        '🔍 [DEBUG] generateSlate: Backfilling words, current count:',
-        slateWords.length
-      );
       const backfill = await redis.global.zRange(
         REDIS_KEYS.wordsAll(context.subredditName),
         0,
         10,
         { by: 'rank', reverse: true }
       );
-      console.log(
-        '🔍 [DEBUG] generateSlate: Backfill candidates:',
-        backfill.map((b) => b.member)
-      );
       for (const candidate of backfill) {
         if (!slateWords.includes(candidate.member)) {
           slateWords.push(candidate.member);
-          console.log(
-            '🔍 [DEBUG] generateSlate: Added backfill word:',
-            candidate.member
-          );
           break;
         }
       }
@@ -403,16 +291,11 @@ export async function generateSlate(): Promise<Slate> {
 
     // If we don't have 3 words at this point, just give up
     if (slateWords.length < 3) {
-      console.error(
-        '🔍 [DEBUG] generateSlate: Unable to fill slate:',
-        slateWords
-      );
       throw new Error(`Unable to fill slate: ${slateWords.join(', ')}`);
     }
 
     // Shuffle positions to avoid position bias
     slateWords = shuffle(slateWords);
-    console.log('🔍 [DEBUG] generateSlate: Final shuffled words:', slateWords);
 
     // Create slate object
     const slate: Slate = {
@@ -421,7 +304,6 @@ export async function generateSlate(): Promise<Slate> {
       timestamp: now,
     };
 
-    console.log('🔍 [DEBUG] generateSlate: Persisting slate to Redis');
     // Persist slate data in Redis
     await redis.hSet(slateKey, {
       slateId,
@@ -429,11 +311,9 @@ export async function generateSlate(): Promise<Slate> {
       timestamp: now.toString(),
     });
     await redis.expire(slateKey, 90 * 24 * 60 * 60); // 90 days TTL
-    console.log('🔍 [DEBUG] generateSlate: Slate persisted successfully');
 
     return slate;
   } catch (error) {
-    console.error('🔍 [DEBUG] generateSlate: Error occurred:', error);
     throw error;
   }
 }
@@ -485,6 +365,7 @@ export async function handleSlateEvent(event: SlateEvent): Promise<void> {
   } else if (name === 'slate_picked') {
     // Increment pick counts + set pickedAt time
     const { word, position } = event;
+
     promises.push(
       redis.hIncrBy(
         REDIS_KEYS.wordsHourlyStats(context.subredditName, timestamp),
@@ -648,7 +529,6 @@ export async function updateWordScores() {
   const words = allWords.map((item) => item.member);
 
   if (words.length === 0) {
-    console.log('No words found in dictionary');
     return;
   }
 
@@ -842,6 +722,4 @@ export async function updateWordScores() {
       90 * 24 * 60 * 60
     ),
   ]);
-
-  console.log('Scores updated!');
 }

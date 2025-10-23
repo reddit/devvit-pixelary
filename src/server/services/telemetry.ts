@@ -130,7 +130,6 @@ export async function trackEvent(
     }
   } catch (error) {
     // Silently fail - telemetry should never break the app
-    console.warn('Telemetry tracking failed:', error);
   }
 }
 
@@ -176,7 +175,6 @@ export async function getEventStats(
 
     return result;
   } catch (error) {
-    console.warn('Failed to get telemetry stats:', error);
     return {};
   }
 }
@@ -216,7 +214,6 @@ export async function getEventStatsRange(
 
     return result;
   } catch (error) {
-    console.warn('Failed to get telemetry stats range:', error);
     return {};
   }
 }
@@ -241,7 +238,6 @@ export async function calculateCTR(
 
     return views > 0 ? clicks / views : 0;
   } catch (error) {
-    console.warn('Failed to calculate CTR:', error);
     return 0;
   }
 }
@@ -264,7 +260,6 @@ export async function clearTelemetryData(date?: string): Promise<number> {
 
     return recordCount;
   } catch (error) {
-    console.warn('Failed to clear telemetry data:', error);
     return 0;
   }
 }

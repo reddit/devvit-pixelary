@@ -258,7 +258,6 @@ export function Toast({
 
   const portalRoot = document.getElementById('portal-root');
   if (!portalRoot) {
-    console.error('Toast: portal-root element not found');
     return null;
   }
 

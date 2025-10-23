@@ -22,7 +22,6 @@ interface DrawStepProps {
 }
 
 export function DrawStep(props: DrawStepProps) {
-  console.log('DrawStep component mounted');
   const { word, time, onComplete, slateId, trackSlateAction } = props;
 
   const [startTime] = useState(Date.now());
@@ -34,10 +33,6 @@ export function DrawStep(props: DrawStepProps) {
   const hasTrackedView = useRef(false);
   useEffect(() => {
     if (!hasTrackedView.current) {
-      console.log('DrawStep: tracking view and drawing_start', {
-        slateId,
-        word,
-      });
       void track('view_draw_step');
       void track('drawing_start');
       hasTrackedView.current = true;

@@ -22,7 +22,6 @@ export async function handleAppInstall(
       message: `Pixelary ${context.appVersion} installed in r/${context.subredditName}`,
     });
   } catch (error) {
-    console.error(`Error installing Pixelary: ${error}`);
     res.status(400).json({
       status: 'error',
       message: 'Failed to install Pixelary',
@@ -43,7 +42,6 @@ export async function handleAppUpgrade(
       message: `Pixelary upgraded to ${context.appVersion} in r/${context.subredditName}`,
     });
   } catch (error) {
-    console.error(`Error upgrading Pixelary: ${error}`);
     res.status(400).json({
       status: 'error',
       message: 'Failed to upgrade Pixelary',
