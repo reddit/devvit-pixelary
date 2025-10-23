@@ -1,5 +1,5 @@
 import { context, redis } from '@devvit/web/server';
-import { DEFAULT_WORDS, DEFAULT_WORD_SCORE } from '../../shared/constants';
+import { DEFAULT_WORDS, DEFAULT_WORD_SCORE } from '../constants';
 import { normalizeWord } from '../../shared/utils/string';
 import { shuffle } from '../../shared/utils/array';
 import { REDIS_KEYS } from './redis';

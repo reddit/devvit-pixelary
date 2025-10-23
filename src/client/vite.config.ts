@@ -22,6 +22,17 @@ export default defineConfig({
       input: {
         index: './index.html',
       },
+      output: {
+        manualChunks: {
+          'react-vendor': ['react', 'react-dom'],
+          'trpc-vendor': [
+            '@trpc/client',
+            '@trpc/react-query',
+            '@tanstack/react-query',
+          ],
+        },
+      },
     },
+    minify: 'esbuild',
   },
 });

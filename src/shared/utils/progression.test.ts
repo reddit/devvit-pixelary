@@ -6,7 +6,7 @@ describe('progression utilities', () => {
     it('generates correct levels for ranks 1-10', () => {
       expect(generateLevel(1)).toEqual({
         rank: 1,
-        name: 'Newcomer',
+        name: 'Doodle',
         min: 0,
         max: 99,
         extraTime: 0,
@@ -14,7 +14,7 @@ describe('progression utilities', () => {
 
       expect(generateLevel(2)).toEqual({
         rank: 2,
-        name: 'Apprentice',
+        name: 'Sketch',
         min: 100,
         max: 999,
         extraTime: 15,
@@ -22,7 +22,7 @@ describe('progression utilities', () => {
 
       expect(generateLevel(10)).toEqual({
         rank: 10,
-        name: 'Grandmaster',
+        name: 'Master',
         min: 10000000000,
         max: 99999999999,
         extraTime: 135,
@@ -50,7 +50,7 @@ describe('progression utilities', () => {
     it('handles invalid ranks gracefully', () => {
       expect(generateLevel(0)).toEqual({
         rank: 1,
-        name: 'Newcomer',
+        name: 'Doodle',
         min: 0,
         max: 99,
         extraTime: 0,
@@ -58,7 +58,7 @@ describe('progression utilities', () => {
 
       expect(generateLevel(-1)).toEqual({
         rank: 1,
-        name: 'Newcomer',
+        name: 'Doodle',
         min: 0,
         max: 99,
         extraTime: 0,
@@ -82,10 +82,10 @@ describe('progression utilities', () => {
     });
 
     it('handles edge cases correctly', () => {
-      expect(getLevelByScore(0).name).toBe('Newcomer');
-      expect(getLevelByScore(1).name).toBe('Newcomer');
-      expect(getLevelByScore(99).name).toBe('Newcomer');
-      expect(getLevelByScore(100).name).toBe('Apprentice');
+      expect(getLevelByScore(0).name).toBe('Doodle');
+      expect(getLevelByScore(1).name).toBe('Doodle');
+      expect(getLevelByScore(99).name).toBe('Doodle');
+      expect(getLevelByScore(100).name).toBe('Sketch');
     });
 
     it('calculates extraTime correctly', () => {
@@ -106,13 +106,13 @@ describe('progression utilities', () => {
     it('handles negative scores', () => {
       const result = getLevelByScore(-1);
       expect(result.rank).toBe(1);
-      expect(result.name).toBe('Newcomer');
+      expect(result.name).toBe('Doodle');
     });
 
     it('handles undefined score', () => {
       const result = getLevelByScore();
       expect(result.rank).toBe(1);
-      expect(result.name).toBe('Newcomer');
+      expect(result.name).toBe('Doodle');
     });
   });
 });

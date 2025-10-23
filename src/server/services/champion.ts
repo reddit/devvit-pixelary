@@ -4,7 +4,7 @@ import { isWordBanned, banWord } from './dictionary';
 import { REDIS_KEYS } from './redis';
 import type { T1 } from '@devvit/shared-types/tid.js';
 import { isT1 } from '@devvit/shared-types/tid.js';
-import { DEFAULT_WORD_SCORE } from '../../shared/constants';
+import { DEFAULT_WORD_SCORE } from '../constants';
 
 /**
  * Sets the champion comment for a word in the current subreddit

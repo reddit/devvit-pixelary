@@ -1,11 +1,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@components/Button';
 import { PixelSymbol } from '@components/PixelSymbol';
-import {
-  DRAWING_COLORS,
-  EXTENDED_DRAWING_COLORS,
-  DRAWING_DURATION,
-} from '@shared/constants';
+import { DRAWING_COLORS, EXTENDED_DRAWING_COLORS } from '@client/constants';
+import { DRAWING_DURATION } from '@shared/constants';
 import { PixelFont } from '@components/PixelFont';
 import { DrawingData, DrawingUtils } from '@shared/schema/drawing';
 import { getContrastColor } from '@shared/utils/color';
