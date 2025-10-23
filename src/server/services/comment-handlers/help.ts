@@ -8,9 +8,9 @@ export async function handleHelp(
     `I can respond to the following commands:\n\n` +
     `• \`!words <optional page number>\` - Show dictionary\n` +
     `  \`!words\` or \`!words 2\` - Show page 1 or specific page\n\n` +
-    `• \`!add <word>\` - Add word to dictionary\n` +
+    `• \`!add <word>\` - Add word to dictionary (Level 2 required)\n` +
     `  \`!add dog\` - Add "dog" to dictionary\n\n` +
-    `• \`!remove <word>\` - Remove word from dictionary\n` +
+    `• \`!remove <word>\` - Remove word from dictionary (Level 2 required)\n` +
     `  \`!remove cat\` - Remove "cat" from dictionary\n\n` +
     `• \`!stats <word>\` - Show word statistics\n` +
     `  \`!stats meatloaf\` - Show statistics for "meatloaf"\n\n` +

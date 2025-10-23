@@ -67,7 +67,7 @@ describe('Drawing Service', () => {
       });
 
       expect(result.correct).toBe(true);
-      expect(result.points).toBe(2);
+      expect(result.points).toBe(5);
     });
 
     it('returns incorrect guess result for wrong guess', async () => {

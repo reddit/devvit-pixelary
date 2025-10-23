@@ -17,26 +17,32 @@ import type { T1, T3 } from '@devvit/shared-types/tid.js';
  * @returns The created post ID
  */
 export async function createPinnedPost(title: string): Promise<T3> {
-  // Create a new post unit
-  const post = await createPost(title, {
-    type: 'pinned',
-  });
-
-  // Pin the new post
-  await post.sticky(1);
-
-  // Schedule pinned comment creation
   try {
-    await scheduler.runJob({
-      name: 'CREATE_PINNED_POST_COMMENT',
-      data: { postId: post.id },
-      runAt: new Date(), // Run immediately
+    // Create a new post unit
+    const post = await createPost(title, {
+      type: 'pinned',
     });
-  } catch (error) {
-    // Don't throw - post was created successfully, comment can be created manually
-  }
 
-  return post.id;
+    // Pin the new post
+    await post.sticky(1);
+
+    // Schedule pinned comment creation
+    try {
+      await scheduler.runJob({
+        name: 'CREATE_PINNED_POST_COMMENT',
+        data: { postId: post.id },
+        runAt: new Date(), // Run immediately
+      });
+    } catch (error) {
+      console.error('Failed to schedule pinned comment creation:', error);
+      // Don't throw - post was created successfully, comment can be created manually
+    }
+
+    return post.id;
+  } catch (error) {
+    console.error('Error in createPinnedPost:', error);
+    throw error;
+  }
 }
 
 /**

@@ -1,11 +1,25 @@
 import type { CommandContext, CommandResult } from '../comment-commands';
 import { addWord, getAllBannedWords } from '../dictionary';
+import { getScore, getLevelByScore } from '../progression';
 
 export async function handleAdd(
   args: string[],
   context: CommandContext
 ): Promise<CommandResult> {
   try {
+    // Check user level - requires Level 2 (100+ points)
+    if (context.authorId) {
+      const userScore = await getScore(context.authorId);
+      const userLevel = getLevelByScore(userScore);
+
+      if (userLevel.rank < 2) {
+        return {
+          success: false,
+          error: 'Requires Level 2 to add words.',
+        };
+      }
+    }
+
     if (args.length === 0) {
       return {
         success: false,

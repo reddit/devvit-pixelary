@@ -12,6 +12,11 @@ export async function handlePinnedPostSubmit(
   res: Response
 ): Promise<void> {
   try {
+    console.log('Pinned post submit request received:', {
+      body: req.body,
+      subredditName: context.subredditName,
+    });
+
     // Creating pinned post
     const { title } = req.body;
 
@@ -24,13 +29,18 @@ export async function handlePinnedPostSubmit(
       return;
     }
 
+    console.log('Creating pinned post with title:', title);
+
     // Create the pinned post using the service
     const postId = await createPinnedPost(title);
+
+    console.log('Pinned post created successfully:', postId);
 
     res.json({
       navigateTo: `https://reddit.com/r/${context.subredditName}/comments/${postId}`,
     });
   } catch (error) {
+    console.error('Error creating pinned post:', error);
     res.status(500).json({
       status: 'error',
       message: 'Failed to create pinned post',

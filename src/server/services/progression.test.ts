@@ -128,7 +128,7 @@ describe('Leaderboard Service', () => {
     });
 
     it('schedules level up job when user levels up', async () => {
-      vi.mocked(redis.zIncrBy).mockResolvedValue(2); // Level 2 threshold
+      vi.mocked(redis.zIncrBy).mockResolvedValue(100); // Level 2 threshold
 
       await incrementScore('t2_testuser', 1);
 
@@ -136,7 +136,7 @@ describe('Leaderboard Service', () => {
         name: 'USER_LEVEL_UP',
         data: {
           userId: 't2_testuser',
-          score: 2,
+          score: 100,
           level: expect.any(Object),
           subredditName: 'testsubreddit',
         },
@@ -148,22 +148,20 @@ describe('Leaderboard Service', () => {
   describe('getLevelByScore', () => {
     it('returns correct level for score', () => {
       expect(getLevelByScore(0).rank).toBe(1);
-      expect(getLevelByScore(1).rank).toBe(1);
-      expect(getLevelByScore(2).rank).toBe(2);
-      expect(getLevelByScore(4).rank).toBe(3);
+      expect(getLevelByScore(50).rank).toBe(1);
+      expect(getLevelByScore(100).rank).toBe(2);
+      expect(getLevelByScore(1000).rank).toBe(3);
     });
 
     it('handles edge cases', () => {
       expect(getLevelByScore(-100).rank).toBe(1);
-      expect(getLevelByScore(999999).rank).toBe(
-        LEVELS[LEVELS.length - 1]!.rank
-      );
+      expect(getLevelByScore(999999).rank).toBe(5); // Level 5 (Master)
     });
   });
 
   describe('getUserLevel', () => {
     it('returns user level for score', () => {
-      const level = getUserLevel(2);
+      const level = getUserLevel(100);
       expect(level.rank).toBe(2);
     });
   });

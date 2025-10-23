@@ -3,8 +3,9 @@ import { redis } from '@devvit/web/server';
 import { REDIS_KEYS } from '../redis';
 import { titleCase } from '../../../shared/utils/string';
 import { getAllWords } from '../dictionary';
-import { setChampion } from '../champion';
+import { setChampion, getChampion } from '../champion';
 import { isWordBanned } from '../dictionary';
+import { incrementScore } from '../progression';
 
 export async function handleShow(
   args: string[],
@@ -67,8 +68,21 @@ export async function handleShow(
     // Check if word is banned
     const isBanned = await isWordBanned(normalizedWord);
 
+    // Check if champion already exists before setting it
+    const existingChampion = await getChampion(normalizedWord);
+    const isFirstTimeChampion = existingChampion === null;
+
     // Store this comment as champion comment for this word
     await setChampion(normalizedWord, context.commentId);
+
+    // Award 1 point if this is the first time someone becomes champion for this word
+    if (isFirstTimeChampion && context.authorId) {
+      try {
+        await incrementScore(context.authorId, 1);
+      } catch (error) {
+        // Silently ignore scoring errors - don't fail the command
+      }
+    }
 
     // Build response
     let response = `Guess made ${count} times (${percentage}%) so far.`;

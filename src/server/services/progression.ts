@@ -1,6 +1,6 @@
 import { redis, scheduler, context } from '@devvit/web/server';
-import { LEVELS } from '../../shared/constants';
 import { getUsername, REDIS_KEYS } from './redis';
+import { getLevelByScore as getLevelByScoreUtil } from '../../shared/utils/progression';
 import type { T2 } from '@devvit/shared-types/tid.js';
 import type { Level } from '../../shared/types';
 
@@ -103,36 +103,12 @@ export async function incrementScore(
 }
 
 /**
- * Get the level by score
+ * Get the level by score (delegates to shared utility)
  * @param score - The score
  * @returns The level
  */
-
 export function getLevelByScore(score: number): Level {
-  // Handle negative scores - return level 1
-  if (score < 0) {
-    return LEVELS[0]!;
-  }
-
-  // Binary search for the appropriate level
-  let left = 0;
-  let right = LEVELS.length - 1;
-
-  while (left <= right) {
-    const mid = Math.floor((left + right) / 2);
-    const level = LEVELS[mid]!;
-
-    if (score >= level.min && score <= level.max) {
-      return level;
-    } else if (score < level.min) {
-      right = mid - 1;
-    } else {
-      left = mid + 1;
-    }
-  }
-
-  // If score is higher than max level, return the highest level
-  return LEVELS[LEVELS.length - 1]!;
+  return getLevelByScoreUtil(score);
 }
 
 export function getUserLevel(score: number): Level {

@@ -10,10 +10,9 @@ export const DEFAULT_PINNED_POST_TITLE = "Let's play Pixelary!";
  * Rewards
  */
 
-export const AUTHOR_REWARD_SUBMIT = 10;
+export const AUTHOR_REWARD_SUBMIT = 25;
 export const AUTHOR_REWARD_CORRECT_GUESS = 1;
-export const GUESSER_REWARD_SOLVE = 2;
-export const GUESSER_REWARD_FIRST_SOLVE = 10;
+export const GUESSER_REWARD_SOLVE = 5;
 
 /*
  * Timers
@@ -44,28 +43,21 @@ export const DRAWING_COLORS: readonly HEX[] = [
  * Levels
  */
 
+export const EXTRA_TIME_PER_LEVEL = 15;
+
+// First 10 named levels (order of magnitude progression: 10x per level)
+// Levels 11+ are generated dynamically as "Bonus N"
 export const LEVELS = [
-  { rank: 1, name: 'Newcomer', min: 0, max: 1, extraTime: 0 },
-  { rank: 2, name: 'Apprentice', min: 2, max: 3, extraTime: 3 },
-  { rank: 3, name: 'Artist', min: 4, max: 7, extraTime: 6 },
-  { rank: 4, name: 'Creator', min: 8, max: 15, extraTime: 9 },
-  { rank: 5, name: 'Master', min: 16, max: 31, extraTime: 12 },
-  { rank: 6, name: 'Expert', min: 32, max: 63, extraTime: 15 },
-  { rank: 7, name: 'Virtuoso', min: 64, max: 127, extraTime: 18 },
-  { rank: 8, name: 'Legend', min: 128, max: 255, extraTime: 21 },
-  { rank: 9, name: 'Champion', min: 256, max: 511, extraTime: 24 },
-  { rank: 10, name: 'Grandmaster', min: 512, max: 1023, extraTime: 27 },
-  { rank: 11, name: 'Pixelary God', min: 1024, max: 2047, extraTime: 30 },
-  { rank: 12, name: 'Pixelary Deity', min: 2048, max: 4095, extraTime: 33 },
-  { rank: 13, name: 'Pixelary Supreme', min: 4096, max: 8191, extraTime: 36 },
-  {
-    rank: 14,
-    name: 'Pixelary Transcendent',
-    min: 8192,
-    max: 16383,
-    extraTime: 39,
-  },
-  { rank: 15, name: 'Pixelary Eternal', min: 16384, max: 32767, extraTime: 42 },
+  { rank: 1, name: 'Doodle', min: 0, max: 99 },
+  { rank: 2, name: 'Sketch', min: 100, max: 999 },
+  { rank: 3, name: 'Outline', min: 1000, max: 9999 },
+  { rank: 4, name: 'Shade', min: 10000, max: 99999 },
+  { rank: 5, name: 'Paint', min: 100000, max: 999999 },
+  { rank: 6, name: 'Detail', min: 1000000, max: 9999999 },
+  { rank: 7, name: 'Render', min: 10000000, max: 99999999 },
+  { rank: 8, name: 'Frame', min: 100000000, max: 999999999 },
+  { rank: 9, name: 'Exhibit', min: 1000000000, max: 9999999999 },
+  { rank: 10, name: 'Master', min: 10000000000, max: 99999999999 },
 ] as const;
 
 export const DEFAULT_WORD_SCORE = 1;
@@ -78,7 +70,6 @@ export const DEFAULT_WORDS = [
   'Alligator',
   'Ambulance',
   'Anchor',
-  'Anemone',
   'Angel',
   'Ants',
   'Apple',
@@ -112,7 +103,6 @@ export const DEFAULT_WORDS = [
   'Birthday',
   'Blink',
   'Block',
-  'Blocks',
   'Boat',
   'Body',
   'Bone',
@@ -199,7 +189,6 @@ export const DEFAULT_WORDS = [
   'Cube',
   'Cucumber',
   'Curtain',
-  'Curtains',
   'Cyclone',
   'Cycle',
   'Cylinder',
@@ -259,7 +248,6 @@ export const DEFAULT_WORDS = [
   'Firefighter',
   'Fireman',
   'Firework',
-  'Fireworks',
   'Fish',
   'Flag',
   'Flamingo',

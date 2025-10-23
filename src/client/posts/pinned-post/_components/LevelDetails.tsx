@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { LEVELS } from '@shared/constants';
+import { generateLevel, getLevelByScore } from '@shared/utils/progression';
 import { PixelFont } from '@components/PixelFont';
 import { IconButton } from '@components/IconButton';
 import { trpc } from '@client/trpc/client';
@@ -22,29 +23,21 @@ export function LevelDetails({ onClose }: LevelDetailsProps) {
     enabled: true,
   });
 
-  // Calculate initial level index based on user's current level, default to 0 if no profile
-  const getInitialLevelIndex = () => {
-    if (!userProfile) return 0;
-    // Find the level index that matches the user's current level rank
-    const levelIndex = LEVELS.findIndex(
-      (level) => level.rank === userProfile.level
-    );
-    return levelIndex >= 0 ? levelIndex : 0;
+  // Calculate initial level rank based on user's current score, default to 1 if no profile
+  const getInitialLevelRank = () => {
+    if (!userProfile) return 1;
+    const userLevel = getLevelByScore(userProfile.score);
+    return userLevel.rank;
   };
 
-  const [currentLevelIndex, setCurrentLevelIndex] =
-    useState(getInitialLevelIndex);
-  const currentLevel = LEVELS[currentLevelIndex]!;
+  const [currentLevelRank, setCurrentLevelRank] = useState(getInitialLevelRank);
+  const currentLevel = generateLevel(currentLevelRank);
 
-  // Update level index when user profile loads
+  // Update level rank when user profile loads
   useEffect(() => {
     if (userProfile) {
-      const levelIndex = LEVELS.findIndex(
-        (level) => level.rank === userProfile.level
-      );
-      if (levelIndex >= 0) {
-        setCurrentLevelIndex(levelIndex);
-      }
+      const userLevel = getLevelByScore(userProfile.score);
+      setCurrentLevelRank(userLevel.rank);
     }
   }, [userProfile]);
 
@@ -62,14 +55,12 @@ export function LevelDetails({ onClose }: LevelDetailsProps) {
         )
       : 0;
   const nextLevel = () => {
-    if (currentLevelIndex < LEVELS.length - 1) {
-      setCurrentLevelIndex(currentLevelIndex + 1);
-    }
+    setCurrentLevelRank(currentLevelRank + 1);
   };
 
   const prevLevel = () => {
-    if (currentLevelIndex > 0) {
-      setCurrentLevelIndex(currentLevelIndex - 1);
+    if (currentLevelRank > 1) {
+      setCurrentLevelRank(currentLevelRank - 1);
     }
   };
 
@@ -136,10 +127,12 @@ export function LevelDetails({ onClose }: LevelDetailsProps) {
         {/* Rewards */}
         <PixelFont scale={3}>Rewards:</PixelFont>
         <div className="flex flex-col items-start justify-start gap-2 flex-1 h-full">
-          <RewardItem
-            reward={`+${currentLevel.extraTime}s drawing time`}
-            unlocked={overMinimum}
-          />
+          {currentLevel.rank >= 2 && (
+            <RewardItem
+              reward={`+${(currentLevel.rank - 1) * 15}s drawing time`}
+              unlocked={overMinimum}
+            />
+          )}
           <RewardItem
             reward={`Level ${currentLevel.rank} badge`}
             unlocked={overMinimum}
@@ -151,13 +144,13 @@ export function LevelDetails({ onClose }: LevelDetailsProps) {
           <IconButton
             symbol="arrow-left"
             onClick={prevLevel}
-            disabled={currentLevelIndex === 0}
+            disabled={currentLevelRank === 1}
             telemetryEvent="click_level_prev"
           />
           <IconButton
             symbol="arrow-right"
             onClick={nextLevel}
-            disabled={currentLevelIndex === LEVELS.length - 1}
+            disabled={false}
             telemetryEvent="click_level_next"
           />
         </nav>
