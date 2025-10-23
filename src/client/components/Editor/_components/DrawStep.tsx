@@ -339,7 +339,7 @@ export function DrawStep(props: DrawStepProps) {
             isSelected={currentColor === color}
           />
         ))}
-        {userLevel >= 2 && (
+        {userLevel >= 4 && (
           <ColorPickerPlusButton onClick={handleOpenColorPicker} />
         )}
       </div>

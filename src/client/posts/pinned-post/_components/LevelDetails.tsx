@@ -129,16 +129,13 @@ export function LevelDetails({ onClose }: LevelDetailsProps) {
               unlocked={overMinimum}
             />
           )}
-          {currentLevel.rank >= 2 && (
-            <RewardItem reward="Add words" unlocked={overMinimum} />
+          {currentLevel.rank >= 3 && (
+            <RewardItem reward="Add/remove words" unlocked={overMinimum} />
           )}
-          {currentLevel.rank >= 2 && (
-            <RewardItem reward="Remove words" unlocked={overMinimum} />
+          {currentLevel.rank >= 4 && (
+            <RewardItem reward="+35 colors" unlocked={overMinimum} />
           )}
-          <RewardItem
-            reward={`Level ${currentLevel.rank} flair`}
-            unlocked={overMinimum}
-          />
+          <RewardItem reward="Level flair" unlocked={overMinimum} />
         </div>
 
         {/* Navigation */}

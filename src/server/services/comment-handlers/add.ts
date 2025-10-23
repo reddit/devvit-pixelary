@@ -12,10 +12,10 @@ export async function handleAdd(
       const userScore = await getScore(context.authorId);
       const userLevel = getLevelByScore(userScore);
 
-      if (userLevel.rank < 2) {
+      if (userLevel.rank < 3) {
         return {
           success: false,
-          error: 'Requires Level 2 to add words.',
+          error: 'Requires Level 3 to add words.',
         };
       }
     }

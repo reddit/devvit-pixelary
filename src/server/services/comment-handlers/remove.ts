@@ -12,10 +12,10 @@ export async function handleRemove(
       const userScore = await getScore(context.authorId);
       const userLevel = getLevelByScore(userScore);
 
-      if (userLevel.rank < 2) {
+      if (userLevel.rank < 3) {
         return {
           success: false,
-          error: 'Requires Level 2 to remove words.',
+          error: 'Requires Level 3 to remove words.',
         };
       }
     }
