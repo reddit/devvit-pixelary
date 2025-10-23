@@ -66,8 +66,16 @@ export type TelemetryEventType =
   | 'click_refresh_words'
   | 'click_done_drawing'
   | 'click_color_swatch'
+  | 'click_color_picker_plus'
   | 'click_post_drawing'
-  | 'click_cancel_drawing';
+  | 'click_cancel_drawing'
+  // Drawing events
+  | 'drawing_start'
+  | 'drawing_first_pixel'
+  | 'drawing_done_auto'
+  | 'drawing_done_manual'
+  | 'first_pixel_drawn'
+  | 'select_extended_color';
 
 /**
  * Slate system types

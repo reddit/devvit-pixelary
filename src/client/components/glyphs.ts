@@ -336,6 +336,11 @@ const glyphData = {
     'width': 5,
     'height': 7,
   },
+  'plus': {
+    'path': 'M2 1H4V3H6V4H4V6H2V4H0V3H2V1Z',
+    'width': 6,
+    'height': 7,
+  },
 } as const;
 
 export type SupportedGlyph = keyof typeof glyphData;
