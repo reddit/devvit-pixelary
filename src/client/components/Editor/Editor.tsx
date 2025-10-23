@@ -3,8 +3,8 @@ import { WordStep } from './_components/WordStep';
 import { DrawStep } from './_components/DrawStep';
 import { ReviewStep } from './_components/ReviewStep';
 import { trpc } from '@client/trpc/client';
-import { LEVELS, DRAWING_DURATION } from '@shared/constants';
-import type { Level } from '@shared/constants';
+import { DRAWING_DURATION } from '@shared/constants';
+import { generateLevel } from '@shared/utils/progression';
 import type { CandidateWord } from '@shared/schema/pixelary';
 import { DrawingData, DrawingUtils } from '@shared/schema/drawing';
 import { useTelemetry } from '@client/hooks/useTelemetry';
@@ -96,9 +96,7 @@ export function DrawingEditor({ onClose }: DrawingEditorProps) {
   // On load effect
   useEffect(() => {
     if (userProfile) {
-      const userLevel: Level | null = userProfile
-        ? LEVELS.find((l) => l.rank === userProfile.level) || null
-        : null;
+      const userLevel = generateLevel(userProfile.level);
 
       if (userLevel) {
         setTime(DRAWING_DURATION + userLevel.extraTime);
@@ -136,6 +134,7 @@ export function DrawingEditor({ onClose }: DrawingEditorProps) {
           onComplete={handleOnComplete}
           slateId={slateId}
           trackSlateAction={trackSlateAction}
+          userLevel={userProfile?.level || 1}
         />
       )}
       {step === 'review' && candidate && (

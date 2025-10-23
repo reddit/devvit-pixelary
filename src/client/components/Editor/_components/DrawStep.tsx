@@ -21,10 +21,12 @@ interface DrawStepProps {
     word?: string,
     metadata?: Record<string, string | number>
   ) => Promise<void>;
+  userLevel: number;
 }
 
 export function DrawStep(props: DrawStepProps) {
-  const { word, time, onComplete, slateId, trackSlateAction } = props;
+  const { word, time, onComplete, slateId, trackSlateAction, userLevel } =
+    props;
 
   const [startTime] = useState(Date.now());
   const [elapsedTime, setElapsedTime] = useState(0);
@@ -337,7 +339,9 @@ export function DrawStep(props: DrawStepProps) {
             isSelected={currentColor === color}
           />
         ))}
-        <ColorPickerPlusButton onClick={handleOpenColorPicker} />
+        {userLevel >= 2 && (
+          <ColorPickerPlusButton onClick={handleOpenColorPicker} />
+        )}
       </div>
 
       {/* Color Picker Modal */}
