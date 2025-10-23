@@ -12,113 +12,57 @@ export const DRAWING_COLORS: readonly HEX[] = [
 ];
 
 export const EXTENDED_DRAWING_COLORS: readonly HEX[] = [
-  // Grays
-  '#F8F9FA',
-  '#E9ECEF',
-  '#DEE2E6',
-  '#CED4DA',
-  '#ADB5BD',
-  '#6C757D',
-  '#495057',
-  '#343A40',
-  '#212529',
+  // Row 1: Grays and neutrals
+  '#F8F9FA', // light gray
+  '#E9ECEF', // light gray
+  '#6C757D', // medium gray
+  '#495057', // dark gray
+  '#212529', // very dark gray
+  '#8D6E63', // brownish red
+  '#A1887F', // brown
 
-  // Reds
-  '#FF6B6B',
-  '#FF5252',
-  '#F44336',
-  '#E53935',
-  '#D32F2F',
-  '#C62828',
-  '#B71C1C',
-  '#8D6E63',
-  '#795548',
+  // Row 2: Reds and pinks
+  '#FF6B6B', // light red
+  '#F44336', // red
+  '#D32F2F', // dark red
+  '#B71C1C', // darker red
+  '#F48FB1', // light pink
+  '#E91E63', // pink
+  '#C2185B', // dark pink
 
-  // Oranges
-  '#FFB74D',
-  '#FF9800',
-  '#F57C00',
-  '#EF6C00',
-  '#E65100',
-  '#FF7043',
-  '#FF5722',
-  '#D84315',
-  '#BF360C',
+  // Row 3: Oranges and yellows
+  '#FFB74D', // light orange
+  '#FF9800', // orange
+  '#F57C00', // dark orange
+  '#E65100', // darker orange
+  '#FFF176', // light yellow
+  '#FFEB3B', // yellow
+  '#FBC02D', // dark yellow
 
-  // Yellows
-  '#FFF176',
-  '#FFEB3B',
-  '#FDD835',
-  '#FBC02D',
-  '#F9A825',
-  '#F57F17',
-  '#FFD54F',
-  '#FFC107',
-  '#FF8F00',
+  // Row 4: More yellows and greens
+  '#F57F17', // darker yellow
+  '#81C784', // light green
+  '#4CAF50', // green
+  '#388E3C', // dark green
+  '#2E7D32', // darker green
+  '#1B5E20', // darkest green
+  '#4DB6AC', // teal
 
-  // Greens
-  '#81C784',
-  '#66BB6A',
-  '#4CAF50',
-  '#43A047',
-  '#388E3C',
-  '#2E7D32',
-  '#1B5E20',
-  '#8BC34A',
-  '#689F38',
+  // Row 5: Blues and purples
+  '#64B5F6', // light blue
+  '#2196F3', // blue
+  '#1976D2', // dark blue
+  '#1565C0', // darker blue
+  '#0D47A1', // darkest blue
+  '#BA68C8', // light purple
+  '#9C27B0', // purple
 
-  // Blues
-  '#64B5F6',
-  '#42A5F5',
-  '#2196F3',
-  '#1E88E5',
-  '#1976D2',
-  '#1565C0',
-  '#0D47A1',
-  '#29B6F6',
-  '#03A9F4',
-
-  // Purples
-  '#BA68C8',
-  '#AB47BC',
-  '#9C27B0',
-  '#8E24AA',
-  '#7B1FA2',
-  '#6A1B9A',
-  '#4A148C',
-  '#9575CD',
-  '#7E57C2',
-
-  // Pinks
-  '#F48FB1',
-  '#EC407A',
-  '#E91E63',
-  '#D81B60',
-  '#C2185B',
-  '#AD1457',
-  '#880E4F',
-  '#F06292',
-  '#E91E63',
-
-  // Browns
-  '#A1887F',
-  '#8D6E63',
-  '#795548',
-  '#6D4C41',
-  '#5D4037',
-  '#4E342E',
-  '#3E2723',
-  '#BCAAA4',
-  '#A1887F',
-
-  // Teals/Cyans
-  '#4DB6AC',
-  '#26A69A',
-  '#009688',
-  '#00897B',
-  '#00796B',
-  '#00695C',
-  '#004D40',
-  '#80CBC4',
-  '#4DD0E1',
+  // Row 6: More purples and accent colors
+  '#7B1FA2', // dark purple
+  '#4A148C', // darker purple
+  '#9575CD', // indigo
+  '#7E57C2', // deep purple
+  '#26A69A', // teal
+  '#009688', // dark teal
+  '#80CBC4', // light teal
 ];

@@ -402,8 +402,8 @@ function ColorPickerModal(props: ColorPickerModalProps) {
   const { isOpen, onClose, onSelectColor } = props;
 
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Choose Color">
-      <div className="grid grid-cols-6 gap-2 max-h-96 overflow-y-auto">
+    <Modal isOpen={isOpen} onClose={onClose} title="Select a color">
+      <div className="grid grid-cols-7 gap-2">
         {EXTENDED_DRAWING_COLORS.map((color) => (
           <ColorSwatch
             key={color}
