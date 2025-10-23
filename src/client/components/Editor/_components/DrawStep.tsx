@@ -1,13 +1,14 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@components/Button';
 import { PixelSymbol } from '@components/PixelSymbol';
-import { DRAWING_COLORS } from '@shared/constants';
+import { DRAWING_COLORS, EXTENDED_DRAWING_COLORS } from '@shared/constants';
 import { PixelFont } from '@components/PixelFont';
 import { DrawingData, DrawingUtils } from '@shared/schema/drawing';
 import { getContrastColor } from '@shared/utils/color';
 import type { HEX } from '@shared/types';
 import { useTelemetry } from '@client/hooks/useTelemetry';
 import type { SlateAction } from '@shared/types';
+import { Modal } from '@components/Modal';
 
 interface DrawStepProps {
   word: string;
@@ -48,6 +49,9 @@ export function DrawStep(props: DrawStepProps) {
   );
   const hasTrackedFirstPixel = useRef(false);
 
+  // Color picker modal state
+  const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
+
   const canvasInternalSize = 16;
 
   // Timer effect
@@ -71,6 +75,21 @@ export function DrawStep(props: DrawStepProps) {
     void track('click_done_drawing');
     void track('drawing_done_manual');
     onComplete(drawingData);
+  };
+
+  const handleOpenColorPicker = () => {
+    void track('click_color_picker_plus');
+    setIsColorPickerOpen(true);
+  };
+
+  const handleCloseColorPicker = () => {
+    setIsColorPickerOpen(false);
+  };
+
+  const handleSelectExtendedColor = (color: HEX) => {
+    void track('select_extended_color');
+    setCurrentColor(color);
+    setIsColorPickerOpen(false);
   };
 
   // Render canvas
@@ -314,7 +333,15 @@ export function DrawStep(props: DrawStepProps) {
             isSelected={currentColor === color}
           />
         ))}
+        <ColorPickerPlusButton onClick={handleOpenColorPicker} />
       </div>
+
+      {/* Color Picker Modal */}
+      <ColorPickerModal
+        isOpen={isColorPickerOpen}
+        onClose={handleCloseColorPicker}
+        onSelectColor={handleSelectExtendedColor}
+      />
     </main>
   );
 }
@@ -341,5 +368,47 @@ function ColorSwatch(props: ColorSwatchProps) {
         className={`transition-opacity ${isSelected ? 'opacity-100' : 'opacity-0'}`}
       />
     </button>
+  );
+}
+
+interface ColorPickerPlusButtonProps {
+  onClick: () => void;
+}
+
+function ColorPickerPlusButton(props: ColorPickerPlusButtonProps) {
+  const { onClick } = props;
+
+  return (
+    <button
+      onClick={onClick}
+      className="w-8 h-8 border-4 border-black cursor-pointer transition-all flex items-center justify-center hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[4px] active:translate-y-[4px] shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)] active:shadow-none bg-gray-200"
+    >
+      <PixelSymbol type="plus" scale={2} color="#000000" />
+    </button>
+  );
+}
+
+interface ColorPickerModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSelectColor: (color: HEX) => void;
+}
+
+function ColorPickerModal(props: ColorPickerModalProps) {
+  const { isOpen, onClose, onSelectColor } = props;
+
+  return (
+    <Modal isOpen={isOpen} onClose={onClose} title="Choose Color">
+      <div className="grid grid-cols-6 gap-2 max-h-96 overflow-y-auto">
+        {EXTENDED_DRAWING_COLORS.map((color) => (
+          <ColorSwatch
+            key={color}
+            color={color}
+            isSelected={false}
+            onSelect={onSelectColor}
+          />
+        ))}
+      </div>
+    </Modal>
   );
 }
