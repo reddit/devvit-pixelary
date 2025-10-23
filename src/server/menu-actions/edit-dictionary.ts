@@ -13,7 +13,7 @@ export async function handleEditDictionary(
   try {
     console.log('Edit dictionary menu action called');
     console.log('Context subreddit name:', context.subredditName);
-    
+
     const words = await getAllWords();
     console.log('Retrieved words:', words);
 
