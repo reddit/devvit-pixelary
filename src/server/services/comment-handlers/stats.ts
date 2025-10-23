@@ -1,6 +1,9 @@
 import type { CommandResult } from '../comment-commands';
 import { isWordInList } from '../dictionary';
-import { getWordMetrics } from '../slate';
+import { redis, context } from '@devvit/web/server';
+import { REDIS_KEYS } from '../redis';
+import type { WordMetrics } from '../../../shared/types';
+import type { T3 } from '@devvit/shared-types/tid.js';
 
 export async function handleStats(args: string[]): Promise<CommandResult> {
   try {
@@ -35,18 +38,17 @@ export async function handleStats(args: string[]): Promise<CommandResult> {
 
     // Format metrics concisely
     const response = `##### 🎨 Drawer stats
-- Shown: ${metrics.slateImpressions}
-- Picked: ${metrics.slatePicks} (${(metrics.slatePickRate * 100).toFixed(1)}%)
-- Started: ${metrics.drawingStarts}
-- First pixel: ${metrics.drawingFirstPixel}
-- Published: ${metrics.drawingPublishes} (${(metrics.drawingPublishRate * 100).toFixed(1)}%)
-- Manual completion: ${metrics.drawingDoneManual}
-- Auto completion: ${metrics.drawingDoneAuto}
-- Cancelled: ${metrics.drawingCancels}
+- Shown: ${metrics.impressions}
+- Picked: ${metrics.clicks} (${(metrics.clickRate * 100).toFixed(1)}%)
+- Started: ${metrics.starts}
+- Published: ${metrics.publishes} (${(metrics.publishRate * 100).toFixed(1)}%)
+- Guesses: ${metrics.guesses}
+- Skips: ${metrics.skips} (${(metrics.skipRate * 100).toFixed(1)}%)
+- Solves: ${metrics.solves} (${(metrics.solveRate * 100).toFixed(1)}%)
 
 ##### 📈 Social stats
-- Upvotes: ${metrics.postUpvotes}
-- Comments: ${metrics.postComments}`;
+- Upvotes: ${metrics.upvotes}
+- Comments: ${metrics.comments}`;
 
     return {
       success: true,
@@ -57,6 +59,97 @@ export async function handleStats(args: string[]): Promise<CommandResult> {
     return {
       success: false,
       error: 'Failed to retrieve word statistics',
+    };
+  }
+}
+
+/**
+ * Get word metrics for a specific word
+ * @param word - The word to get metrics for
+ * @returns Word metrics with calculated rates
+ */
+export async function getWordMetrics(word: string): Promise<WordMetrics> {
+  try {
+    // Get slate stats for the word
+    const totalStats = await redis.hGetAll(
+      REDIS_KEYS.wordsTotalStats(context.subredditName)
+    );
+
+    // Extract slate metrics
+    const impressions = parseInt(totalStats[`${word}:served`] || '0');
+    const clicks = parseInt(totalStats[`${word}:picked`] || '0');
+    const publishes = parseInt(totalStats[`${word}:posted`] || '0');
+
+    // Get drawing-related metrics for this word
+    const wordDrawings = await redis.zRange(
+      REDIS_KEYS.wordDrawings(word),
+      0,
+      -1
+    );
+
+    let starts = 0;
+    let guesses = 0;
+    let skips = 0;
+    let solves = 0;
+    const upvotes = 0; // Not currently tracked per word
+    const comments = 0; // Not currently tracked per word
+
+    // Aggregate metrics from all drawings of this word
+    for (const drawing of wordDrawings) {
+      const postId = drawing.member as T3;
+
+      const [attempts, solvesCount, skipsCount, guessesCount] =
+        await Promise.all([
+          redis.zCard(REDIS_KEYS.drawingAttempts(postId)),
+          redis.zCard(REDIS_KEYS.drawingSolves(postId)),
+          redis.zCard(REDIS_KEYS.drawingSkips(postId)),
+          redis.zCard(REDIS_KEYS.drawingGuesses(postId)),
+        ]);
+
+      starts += attempts;
+      solves += solvesCount;
+      skips += skipsCount;
+      guesses += guessesCount;
+    }
+
+    // Calculate rates
+    const clickRate = impressions > 0 ? clicks / impressions : 0;
+    const publishRate = impressions > 0 ? publishes / impressions : 0;
+    const skipRate = starts > 0 ? skips / starts : 0;
+    const solveRate = starts > 0 ? solves / starts : 0;
+
+    return {
+      impressions,
+      clicks,
+      clickRate,
+      publishes,
+      publishRate,
+      starts,
+      guesses,
+      skips,
+      solves,
+      skipRate,
+      solveRate,
+      upvotes,
+      comments,
+    };
+  } catch (error) {
+    console.warn('Failed to get word metrics:', error);
+    // Return zero metrics on error
+    return {
+      impressions: 0,
+      clicks: 0,
+      clickRate: 0,
+      publishes: 0,
+      publishRate: 0,
+      starts: 0,
+      guesses: 0,
+      skips: 0,
+      solves: 0,
+      skipRate: 0,
+      solveRate: 0,
+      upvotes: 0,
+      comments: 0,
     };
   }
 }

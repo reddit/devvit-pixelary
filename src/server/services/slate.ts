@@ -698,3 +698,75 @@ export async function updateWordScores() {
 
   console.log('Scores updated!');
 }
+
+/**
+ * Get word metrics for a specific word
+ * @param word - The word to get metrics for
+ * @returns Word metrics with calculated rates
+ */
+export async function getWordMetrics(word: string): Promise<{
+  slateImpressions: number;
+  slatePicks: number;
+  slatePickRate: number;
+  drawingStarts: number;
+  drawingFirstPixel: number;
+  drawingPublishes: number;
+  drawingPublishRate: number;
+  drawingDoneManual: number;
+  drawingDoneAuto: number;
+  drawingCancels: number;
+  postUpvotes: number;
+  postComments: number;
+}> {
+  try {
+    // Get total stats for the word
+    const totalStats = await redis.hGetAll(
+      REDIS_KEYS.wordsTotalStats(context.subredditName)
+    );
+
+    // Extract metrics from the total stats hash
+    const slateImpressions = parseInt(totalStats[`${word}:served`] || '0');
+    const slatePicks = parseInt(totalStats[`${word}:picked`] || '0');
+    const drawingPublishes = parseInt(totalStats[`${word}:posted`] || '0');
+
+    // Calculate rates
+    const slatePickRate =
+      slateImpressions > 0 ? slatePicks / slateImpressions : 0;
+    const drawingPublishRate =
+      slateImpressions > 0 ? drawingPublishes / slateImpressions : 0;
+
+    // For now, return mock data for fields not tracked in the current system
+    // These would need to be implemented if the full metrics are needed
+    return {
+      slateImpressions,
+      slatePicks,
+      slatePickRate,
+      drawingStarts: slatePicks, // Assume each pick leads to a drawing start
+      drawingFirstPixel: slatePicks, // Mock data
+      drawingPublishes,
+      drawingPublishRate,
+      drawingDoneManual: drawingPublishes, // Mock data
+      drawingDoneAuto: 0, // Mock data
+      drawingCancels: Math.max(0, slatePicks - drawingPublishes), // Estimate
+      postUpvotes: 0, // Not tracked in current system
+      postComments: 0, // Not tracked in current system
+    };
+  } catch (error) {
+    console.warn('Failed to get word metrics:', error);
+    // Return zero metrics on error
+    return {
+      slateImpressions: 0,
+      slatePicks: 0,
+      slatePickRate: 0,
+      drawingStarts: 0,
+      drawingFirstPixel: 0,
+      drawingPublishes: 0,
+      drawingPublishRate: 0,
+      drawingDoneManual: 0,
+      drawingDoneAuto: 0,
+      drawingCancels: 0,
+      postUpvotes: 0,
+      postComments: 0,
+    };
+  }
+}
