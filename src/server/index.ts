@@ -14,6 +14,7 @@ import {
   handleUpdateComment,
   handleLogTelemetryKey,
   handleClearDailyTelemetry,
+  handleSlateBandit,
 } from './menu-actions';
 
 // Import form handlers
@@ -22,6 +23,7 @@ import {
   handlePostTypeSelect,
   handleWordsUpdate,
   handleBannedWordsUpdate,
+  handleSlateBanditUpdate,
 } from './forms';
 
 // Import scheduler handlers
@@ -96,6 +98,7 @@ router.post('/internal/menu/set-my-flair', handleSetMyFlair);
 router.post('/internal/menu/update-comment', handleUpdateComment);
 router.post('/internal/menu/log-daily-telemetry', handleLogTelemetryKey);
 router.post('/internal/menu/clear-daily-telemetry', handleClearDailyTelemetry);
+router.post('/internal/menu/slate-bandit', handleSlateBandit);
 
 // ============================================================================
 // FORM HANDLERS
@@ -105,6 +108,7 @@ router.post('/internal/form/post-type-select', handlePostTypeSelect);
 router.post('/internal/form/pinned-post-submit', handlePinnedPostSubmit);
 router.post('/internal/form/words-update', handleWordsUpdate);
 router.post('/internal/form/banned-words-update', handleBannedWordsUpdate);
+router.post('/internal/form/slate-bandit-update', handleSlateBanditUpdate);
 
 // Use router middleware
 app.use(router);

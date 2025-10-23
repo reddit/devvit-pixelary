@@ -6,3 +6,4 @@ export { handleSetMyFlair } from './set-my-flair';
 export { handleUpdateComment } from './update-comment';
 export { handleLogTelemetryKey } from './log-daily-telemetry';
 export { handleClearDailyTelemetry } from './clear-daily-telemetry';
+export { handleSlateBandit } from './slate-bandit';

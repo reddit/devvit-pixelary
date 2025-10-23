@@ -23,7 +23,8 @@
     "postTypeForm": "/internal/form/post-type-select",
     "pinnedPostForm": "/internal/form/pinned-post-submit",
     "wordsUpdateForm": "/internal/form/words-update",
-    "bannedWordsForm": "/internal/form/banned-words-update"
+    "bannedWordsForm": "/internal/form/banned-words-update",
+    "slateBanditForm": "/internal/form/slate-bandit-update"
   },
   "menu": {
     "items": [
@@ -84,6 +85,13 @@
         "location": "subreddit",
         "forUserType": "moderator",
         "endpoint": "/internal/menu/clear-daily-telemetry"
+      },
+      {
+        "label": "[Pixelary] Slate Bandit",
+        "description": "Configure multi-armed bandit parameters for word selection",
+        "location": "subreddit",
+        "forUserType": "moderator",
+        "endpoint": "/internal/menu/slate-bandit"
       }
     ]
   },

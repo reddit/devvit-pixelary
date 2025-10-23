@@ -61,7 +61,7 @@ export const REDIS_KEYS = {
 
   // Slates
   slate: (slateId: string) => `slate:${slateId}`,
-  slateEvents: () => 'slate:events',
+  slateConfig: () => `slate:config`,
 };
 
 const USERNAME_TTL = 30 * 24 * 60 * 60; // 30 days.

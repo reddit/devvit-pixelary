@@ -1,5 +1,6 @@
 import { initializeDictionary } from './dictionary';
 import { ensureFlairTemplates } from '../core/flair';
+import { initializeSlateBanditConfig } from './slate';
 
 /**
  * Setup Pixelary in a subreddit.
@@ -8,7 +9,7 @@ import { ensureFlairTemplates } from '../core/flair';
  */
 
 export async function setupPixelary(subredditName: string): Promise<void> {
-  await initializeDictionary(subredditName);
+  await initializeDictionary();
 
   // Setup flair templates (non-blocking)
   try {
@@ -19,5 +20,16 @@ export async function setupPixelary(subredditName: string): Promise<void> {
       error
     );
     // Don't throw - flair setup should not block app installation
+  }
+
+  // Initialize slate bandit configuration (non-blocking)
+  try {
+    await initializeSlateBanditConfig();
+  } catch (error) {
+    console.error(
+      `Error initializing slate bandit config for r/${subredditName}:`,
+      error
+    );
+    // Don't throw - slate bandit setup should not block app installation
   }
 }

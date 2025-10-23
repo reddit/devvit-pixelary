@@ -4,11 +4,27 @@ import type { T3 } from '@devvit/shared-types/tid.js';
 import { clamp } from '../../shared/utils/numbers';
 import { shuffle } from '../../shared/utils/array';
 
-// Configuration.
+// Default configuration
 const EXPLORATION_RATE = 0.1; // ε-exploration rate
 const Z_SCORE_CLAMP = 3;
 const WEIGHT_PICK_RATE = 1;
 const WEIGHT_POST_RATE = 1;
+
+/*
+ * Slate types
+ */
+
+export type Slate = {
+  slateId: SlateId;
+  words: string[];
+  timestamp: number;
+  word?: string;
+  position?: number;
+  postId?: T3;
+  servedAt?: number;
+  pickedAt?: number;
+  postedAt?: number;
+};
 
 export type SlateId = `slate_${string}`;
 
@@ -35,17 +51,71 @@ export type SlateEventPosted = {
 
 export type SlateEvent = SlateEventServed | SlateEventPicked | SlateEventPosted;
 
-type Slate = {
-  slateId: SlateId;
-  words: string[];
-  timestamp: number;
-  word?: string;
-  position?: number;
-  postId?: T3;
-  servedAt?: number;
-  pickedAt?: number;
-  postedAt?: number;
+export type SlateBanditConfig = {
+  explorationRate: number;
+  zScoreClamp: number;
+  weightPickRate: number;
+  weightPostRate: number;
 };
+
+/**
+ * Get the current slate bandit configuration from Redis
+ */
+export async function getSlateBanditConfig(): Promise<SlateBanditConfig> {
+  const configKey = REDIS_KEYS.slateConfig();
+  const config = await redis.hGetAll(configKey);
+
+  return {
+    explorationRate: config.explorationRate
+      ? parseFloat(config.explorationRate)
+      : EXPLORATION_RATE,
+    zScoreClamp: config.zScoreClamp
+      ? parseFloat(config.zScoreClamp)
+      : Z_SCORE_CLAMP,
+    weightPickRate: config.weightPickRate
+      ? parseFloat(config.weightPickRate)
+      : WEIGHT_PICK_RATE,
+    weightPostRate: config.weightPostRate
+      ? parseFloat(config.weightPostRate)
+      : WEIGHT_POST_RATE,
+  };
+}
+
+/**
+ * Set the slate bandit configuration in Redis
+ */
+
+export async function setSlateBanditConfig(
+  config: SlateBanditConfig
+): Promise<void> {
+  const configKey = REDIS_KEYS.slateConfig();
+  await redis.hSet(configKey, {
+    explorationRate: config.explorationRate.toString(),
+    zScoreClamp: config.zScoreClamp.toString(),
+    weightPickRate: config.weightPickRate.toString(),
+    weightPostRate: config.weightPostRate.toString(),
+  });
+}
+
+/**
+ * Initialize the slate bandit with defaultconfiguration if not set
+ */
+
+export async function initializeSlateBanditConfig(): Promise<void> {
+  const configKey = REDIS_KEYS.slateConfig();
+  const existingKeys = await redis.exists(configKey);
+
+  // Only set defaults if no configuration exists
+  if (existingKeys === 0) {
+    const defaultConfig: SlateBanditConfig = {
+      explorationRate: EXPLORATION_RATE,
+      zScoreClamp: Z_SCORE_CLAMP,
+      weightPickRate: WEIGHT_PICK_RATE,
+      weightPostRate: WEIGHT_POST_RATE,
+    };
+    await setSlateBanditConfig(defaultConfig);
+  }
+}
 
 /**
  * Get the index range for a given bucket
@@ -112,6 +182,7 @@ export async function generateSlate(): Promise<Slate> {
   const slateId: SlateId = `slate_${crypto.randomUUID()}`;
   const slateKey = REDIS_KEYS.slate(slateId);
   const now = Date.now();
+  const config = await getSlateBanditConfig();
 
   // Check out how many words are available
   const wordCount = await redis.zCard(
@@ -151,7 +222,7 @@ export async function generateSlate(): Promise<Slate> {
   if (slateWords.length < 3) throw new Error('Unable to form slate');
 
   // ε-exploration: swap lowest-score slot with most-uncertain word
-  if (Math.random() < EXPLORATION_RATE) {
+  if (Math.random() < config.explorationRate) {
     // Get current scores for the current words.
     const scores = await Promise.all(
       slateWords.map((word) =>
@@ -315,6 +386,7 @@ export async function getWordsActive(): Promise<string[]> {
 export async function updateWordScores() {
   const words = await getWordsActive();
   const timestamp = getPreviousTimestamp();
+  const config = await getSlateBanditConfig();
 
   // Fetch all stats once
   const [allHourlyStats, allTotalStats] = await Promise.all([
@@ -412,11 +484,20 @@ export async function updateWordScores() {
 
     const zPickRate = (wordStat.hourly.pickRate - meanPickRate) / stdPickRate;
     const zPostRate = (wordStat.hourly.postRate - meanPostRate) / stdPostRate;
-    const zPickRateClamped = clamp(zPickRate, -Z_SCORE_CLAMP, Z_SCORE_CLAMP);
-    const zPostRateClamped = clamp(zPostRate, -Z_SCORE_CLAMP, Z_SCORE_CLAMP);
+    const zPickRateClamped = clamp(
+      zPickRate,
+      -config.zScoreClamp,
+      config.zScoreClamp
+    );
+    const zPostRateClamped = clamp(
+      zPostRate,
+      -config.zScoreClamp,
+      config.zScoreClamp
+    );
 
     const drawerScore =
-      WEIGHT_PICK_RATE * zPickRateClamped + WEIGHT_POST_RATE * zPostRateClamped;
+      config.weightPickRate * zPickRateClamped +
+      config.weightPostRate * zPostRateClamped;
     const drawerUncertainty = 1 / Math.sqrt(Math.max(wordStat.total.served, 1));
 
     // Append drawer score and uncertainty to word stats
