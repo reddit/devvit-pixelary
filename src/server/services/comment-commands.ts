@@ -58,7 +58,7 @@ export function parseCommand(text: string): {
 }
 
 /**
- * Process the command and return a reponse message.
+ * Process the command and return a response message.
  */
 
 export async function processCommand(

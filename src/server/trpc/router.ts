@@ -23,6 +23,7 @@ import {
   getDrawings,
   getGuesses,
   getUserDrawingsWithData,
+  getUserDrawingStatus,
 } from '../services/drawing';
 import {
   getLeaderboard,
@@ -114,12 +115,8 @@ export const appRouter = t.router({
       getCandidates: t.procedure.query(async ({ ctx }) => {
         if (!ctx.subredditName) throw new Error('Subreddit not found');
 
-        try {
-          const result = await generateSlate();
-          return result;
-        } catch (error) {
-          throw error;
-        }
+        const result = await generateSlate();
+        return result;
       }),
     }),
 
@@ -254,7 +251,7 @@ export const appRouter = t.router({
     user: t.router({
       getProfile: t.procedure
         .input(z.object({ postId: z.string() }).optional())
-        .query(async ({ ctx }) => {
+        .query(async ({ ctx, input }) => {
           if (!ctx.userId) return null;
 
           const score = await getScore(ctx.userId);
@@ -263,6 +260,21 @@ export const appRouter = t.router({
             getUserLevel(score), // Use cached score
           ]);
 
+          // Get drawing-specific status if postId is provided
+          let drawingStatus = { solved: false, skipped: false, guessCount: 0 };
+          if (input?.postId) {
+            try {
+              assertT3(input.postId);
+              drawingStatus = await getUserDrawingStatus(
+                input.postId,
+                ctx.userId
+              );
+            } catch (error) {
+              // If post doesn't exist or other error, use defaults
+              console.warn('Failed to get drawing status:', error);
+            }
+          }
+
           return {
             username: ctx.username ?? '',
             userId: ctx.userId,
@@ -270,9 +282,9 @@ export const appRouter = t.router({
             level: level.rank,
             levelName: level.name,
             rank,
-            solved: false, // TODO: implement based on postId
-            skipped: false, // TODO: implement based on postId
-            guessCount: 0, // TODO: implement
+            solved: drawingStatus.solved,
+            skipped: drawingStatus.skipped,
+            guessCount: drawingStatus.guessCount,
           };
         }),
 

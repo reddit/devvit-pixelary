@@ -3,6 +3,17 @@ import type { JsonObject } from '@devvit/shared-types/json.js';
 import type { PostData } from '../../shared/schema/index';
 
 /**
+ * Convert PostData to JsonObject safely
+ * @param postData - The post data to convert
+ * @returns JsonObject representation of the post data
+ */
+function postDataToJsonObject(postData: PostData): JsonObject {
+  // Since PostData is already a valid JSON-serializable object,
+  // we can safely convert it by serializing and parsing
+  return JSON.parse(JSON.stringify(postData)) as JsonObject;
+}
+
+/**
  * Create a new custom post unit in the current subreddit
  * @param title - The title of the post
  * @param postData - The post data as a JSON object. Max 2kb.
@@ -44,7 +55,7 @@ export async function createPost(
     },
     subredditName,
     title,
-    postData: postData as JsonObject, // TODO: Fix this type mismatch
+    postData: postDataToJsonObject(postData),
   });
 
   return post;

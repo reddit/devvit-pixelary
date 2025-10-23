@@ -36,11 +36,20 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
 
 // Global error handler
 window.addEventListener('error', (event) => {
-  // Global error handling
+  console.error('Global error caught:', {
+    message: event.message,
+    filename: event.filename,
+    lineno: event.lineno,
+    colno: event.colno,
+    error: event.error,
+  });
 });
 
 window.addEventListener('unhandledrejection', (event) => {
-  // Unhandled promise rejection handling
+  console.error('Unhandled promise rejection:', {
+    reason: event.reason,
+    promise: event.promise,
+  });
 });
 
 const App = () => {

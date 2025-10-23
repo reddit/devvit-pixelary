@@ -54,15 +54,47 @@ export async function removeWord(word: string): Promise<boolean> {
 
 /**
  * Get all words from the dictionary for a given subreddit, or the current subreddit if no subreddit name is provided.
+ * @deprecated Use getAllWordsPaginated for large lists to avoid memory issues
  */
-
 export async function getAllWords(subredditName?: string): Promise<string[]> {
   const subName = subredditName ?? context.subredditName;
   const key = REDIS_KEYS.wordsAll(subName);
-  // TODO: Will break if list gets too long. Paginate before then.
   const entities = await redis.global.zRange(key, 0, -1);
   const words = entities.map((item) => item.member);
   return words;
+}
+
+/**
+ * Get words from the dictionary with pagination support
+ * @param subredditName - The subreddit name (optional, uses current if not provided)
+ * @param offset - Starting index (default: 0)
+ * @param limit - Maximum number of words to return (default: 1000)
+ * @returns Object with words array and total count
+ */
+export async function getAllWordsPaginated(
+  subredditName?: string,
+  offset: number = 0,
+  limit: number = 1000
+): Promise<{
+  words: string[];
+  total: number;
+  hasMore: boolean;
+}> {
+  const subName = subredditName ?? context.subredditName;
+  const key = REDIS_KEYS.wordsAll(subName);
+
+  const [entities, total] = await Promise.all([
+    redis.global.zRange(key, offset, offset + limit - 1),
+    redis.global.zCard(key),
+  ]);
+
+  const words = entities.map((item) => item.member);
+
+  return {
+    words,
+    total,
+    hasMore: offset + limit < total,
+  };
 }
 
 /**
@@ -196,14 +228,44 @@ export async function unbanWord(word: string): Promise<void> {
 
 /**
  * Get all banned words for the current subreddit
+ * @deprecated Use getAllBannedWordsPaginated for large lists to avoid memory issues
  */
-
 export async function getAllBannedWords(): Promise<string[]> {
   const subName = context.subredditName;
   const key = REDIS_KEYS.wordsBanned(subName);
-  // TODO: Will break if list gets too long. Paginate before then.
   const words = await redis.zRange(key, 0, -1);
   return words.map((item) => item.member);
+}
+
+/**
+ * Get banned words with pagination support
+ * @param offset - Starting index (default: 0)
+ * @param limit - Maximum number of words to return (default: 1000)
+ * @returns Object with words array and total count
+ */
+export async function getAllBannedWordsPaginated(
+  offset: number = 0,
+  limit: number = 1000
+): Promise<{
+  words: string[];
+  total: number;
+  hasMore: boolean;
+}> {
+  const subName = context.subredditName;
+  const key = REDIS_KEYS.wordsBanned(subName);
+
+  const [words, total] = await Promise.all([
+    redis.zRange(key, offset, offset + limit - 1),
+    redis.zCard(key),
+  ]);
+
+  const wordMembers = words.map((item) => item.member);
+
+  return {
+    words: wordMembers,
+    total,
+    hasMore: offset + limit < total,
+  };
 }
 
 /**

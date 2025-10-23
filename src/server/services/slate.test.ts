@@ -26,6 +26,11 @@ vi.mock('@devvit/web/server', () => ({
     zCard: vi.fn(),
     zScore: vi.fn(),
     expire: vi.fn(),
+    global: {
+      zRange: vi.fn(),
+      zAdd: vi.fn(),
+      exists: vi.fn(),
+    },
   },
 }));
 
@@ -152,7 +157,7 @@ describe('Slate System', () => {
         { member: 'word3', score: 0.2 },
       ];
 
-      vi.mocked(redis.zRange)
+      vi.mocked(redis.global.zRange)
         .mockResolvedValueOnce(mockWords)
         .mockResolvedValueOnce(mockUncertainties);
 
@@ -169,7 +174,7 @@ describe('Slate System', () => {
     });
 
     it('should throw error if not enough words available', async () => {
-      vi.mocked(redis.zRange).mockResolvedValueOnce([
+      vi.mocked(redis.global.zRange).mockResolvedValueOnce([
         { member: 'word1', score: 1.0 },
         { member: 'word2', score: 0.5 },
       ]);
@@ -198,7 +203,7 @@ describe('Slate System', () => {
         { member: 'word4', score: 0.4 },
       ];
 
-      vi.mocked(redis.zRange)
+      vi.mocked(redis.global.zRange)
         .mockResolvedValueOnce(mockWords)
         .mockResolvedValueOnce(mockUncertainties)
         .mockResolvedValueOnce(mockWords.slice(0, 3)); // For backfill

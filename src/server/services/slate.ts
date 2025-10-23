@@ -68,44 +68,40 @@ export type SlateBanditConfig = {
 export async function getSlateBanditConfig(): Promise<SlateBanditConfig> {
   const configKey = REDIS_KEYS.slateConfig();
 
-  try {
-    const config = await redis.hGetAll(configKey);
+  const config = await redis.hGetAll(configKey);
 
-    const rawConfig = {
-      explorationRate: config.explorationRate
-        ? parseFloat(config.explorationRate)
-        : EXPLORATION_RATE,
-      zScoreClamp: config.zScoreClamp
-        ? parseFloat(config.zScoreClamp)
-        : Z_SCORE_CLAMP,
-      weightPickRate: config.weightPickRate
-        ? parseFloat(config.weightPickRate)
-        : WEIGHT_PICK_RATE,
-      weightPostRate: config.weightPostRate
-        ? parseFloat(config.weightPostRate)
-        : WEIGHT_POST_RATE,
-      ucbConstant: config.ucbConstant
-        ? parseFloat(config.ucbConstant)
-        : UCB_CONSTANT,
-      scoreDecayRate: config.scoreDecayRate
-        ? parseFloat(config.scoreDecayRate)
-        : SCORE_DECAY_RATE,
-    };
+  const rawConfig = {
+    explorationRate: config.explorationRate
+      ? parseFloat(config.explorationRate)
+      : EXPLORATION_RATE,
+    zScoreClamp: config.zScoreClamp
+      ? parseFloat(config.zScoreClamp)
+      : Z_SCORE_CLAMP,
+    weightPickRate: config.weightPickRate
+      ? parseFloat(config.weightPickRate)
+      : WEIGHT_PICK_RATE,
+    weightPostRate: config.weightPostRate
+      ? parseFloat(config.weightPostRate)
+      : WEIGHT_POST_RATE,
+    ucbConstant: config.ucbConstant
+      ? parseFloat(config.ucbConstant)
+      : UCB_CONSTANT,
+    scoreDecayRate: config.scoreDecayRate
+      ? parseFloat(config.scoreDecayRate)
+      : SCORE_DECAY_RATE,
+  };
 
-    // Validate and clamp values
-    const finalConfig = {
-      explorationRate: clamp(rawConfig.explorationRate, 0, 1),
-      zScoreClamp: Math.max(0.1, rawConfig.zScoreClamp),
-      weightPickRate: Math.max(0, rawConfig.weightPickRate),
-      weightPostRate: Math.max(0, rawConfig.weightPostRate),
-      ucbConstant: Math.max(0.1, rawConfig.ucbConstant),
-      scoreDecayRate: clamp(rawConfig.scoreDecayRate, 0, 1),
-    };
+  // Validate and clamp values
+  const finalConfig = {
+    explorationRate: clamp(rawConfig.explorationRate, 0, 1),
+    zScoreClamp: Math.max(0.1, rawConfig.zScoreClamp),
+    weightPickRate: Math.max(0, rawConfig.weightPickRate),
+    weightPostRate: Math.max(0, rawConfig.weightPostRate),
+    ucbConstant: Math.max(0.1, rawConfig.ucbConstant),
+    scoreDecayRate: clamp(rawConfig.scoreDecayRate, 0, 1),
+  };
 
-    return finalConfig;
-  } catch (error) {
-    throw error;
-  }
+  return finalConfig;
 }
 
 /**
@@ -127,54 +123,50 @@ export async function setSlateBanditConfig(
 }
 
 /**
- * Initialize the slate bandit with defaultconfiguration if not set
+ * Initialize the slate bandit with default configuration if not set
  */
 
 export async function initSlateBandit(): Promise<void> {
-  try {
-    const configKey = REDIS_KEYS.slateConfig();
-    const existingKeys = await redis.exists(configKey);
+  const configKey = REDIS_KEYS.slateConfig();
+  const existingKeys = await redis.exists(configKey);
 
-    // Only set defaults if no configuration exists
-    if (existingKeys === 0) {
-      const defaultConfig: SlateBanditConfig = {
-        explorationRate: EXPLORATION_RATE,
-        zScoreClamp: Z_SCORE_CLAMP,
-        weightPickRate: WEIGHT_PICK_RATE,
-        weightPostRate: WEIGHT_POST_RATE,
-        ucbConstant: UCB_CONSTANT,
-        scoreDecayRate: SCORE_DECAY_RATE,
-      };
-      await setSlateBanditConfig(defaultConfig);
-    }
+  // Only set defaults if no configuration exists
+  if (existingKeys === 0) {
+    const defaultConfig: SlateBanditConfig = {
+      explorationRate: EXPLORATION_RATE,
+      zScoreClamp: Z_SCORE_CLAMP,
+      weightPickRate: WEIGHT_PICK_RATE,
+      weightPostRate: WEIGHT_POST_RATE,
+      ucbConstant: UCB_CONSTANT,
+      scoreDecayRate: SCORE_DECAY_RATE,
+    };
+    await setSlateBanditConfig(defaultConfig);
+  }
 
-    // Initialize uncertainty scores for all words if not already set
-    const uncertaintyKey = REDIS_KEYS.wordsUncertainty(context.subredditName);
-    const uncertaintyExists = await redis.global.exists(uncertaintyKey);
+  // Initialize uncertainty scores for all words if not already set
+  const uncertaintyKey = REDIS_KEYS.wordsUncertainty(context.subredditName);
+  const uncertaintyExists = await redis.global.exists(uncertaintyKey);
 
-    if (uncertaintyExists === 0) {
-      // Get all words and set initial uncertainty
-      const allWords = await redis.global.zRange(
-        REDIS_KEYS.wordsAll(context.subredditName),
-        0,
-        -1
+  if (uncertaintyExists === 0) {
+    // Get all words and set initial uncertainty
+    const allWords = await redis.global.zRange(
+      REDIS_KEYS.wordsAll(context.subredditName),
+      0,
+      -1
+    );
+
+    // Only proceed if we have words to initialize
+    if (allWords.length > 0) {
+      const initialUncertainty = 1 / Math.sqrt(10); // Small prior for new words
+
+      await redis.global.zAdd(
+        uncertaintyKey,
+        ...allWords.map((word) => ({
+          member: word.member,
+          score: initialUncertainty,
+        }))
       );
-
-      // Only proceed if we have words to initialize
-      if (allWords.length > 0) {
-        const initialUncertainty = 1 / Math.sqrt(10); // Small prior for new words
-
-        await redis.global.zAdd(
-          uncertaintyKey,
-          ...allWords.map((word) => ({
-            member: word.member,
-            score: initialUncertainty,
-          }))
-        );
-      }
     }
-  } catch (error) {
-    throw error;
   }
 }
 
@@ -183,76 +175,72 @@ export async function initSlateBandit(): Promise<void> {
  */
 
 export async function pickWordsWithUCB(count: number = 3): Promise<string[]> {
-  try {
-    const config = await getSlateBanditConfig();
+  const config = await getSlateBanditConfig();
 
-    // Get all words with their scores and uncertainties
-    const [allWords, uncertainties] = await Promise.all([
-      redis.global.zRange(REDIS_KEYS.wordsAll(context.subredditName), 0, -1),
-      redis.global.zRange(
-        REDIS_KEYS.wordsUncertainty(context.subredditName),
-        0,
-        -1
-      ),
-    ]);
+  // Get all words with their scores and uncertainties
+  const [allWords, uncertainties] = await Promise.all([
+    redis.global.zRange(REDIS_KEYS.wordsAll(context.subredditName), 0, -1),
+    redis.global.zRange(
+      REDIS_KEYS.wordsUncertainty(context.subredditName),
+      0,
+      -1
+    ),
+  ]);
 
-    if (allWords.length < count) {
-      throw new Error(
-        `Not enough words available. Need ${count}, have ${allWords.length}`
-      );
-    }
-
-    // Create UCB scores: score + c * sqrt(ln(total_serves) / serves)
-    const ucbScores: Array<{ word: string; ucbScore: number }> = [];
-
-    for (const word of allWords) {
-      const uncertainty =
-        uncertainties.find((u) => u.member === word.member)?.score ?? 0;
-      const ucbScore = (word.score ?? 0) + config.ucbConstant * uncertainty;
-      ucbScores.push({ word: word.member, ucbScore });
-    }
-
-    // Sort by UCB score (descending)
-    ucbScores.sort((a, b) => b.ucbScore - a.ucbScore);
-
-    // Sample proportionally to UCB scores, but with some randomness
-    const selectedWords: string[] = [];
-    const remainingWords = [...ucbScores];
-
-    for (let i = 0; i < count && remainingWords.length > 0; i++) {
-      // Use weighted random selection based on UCB scores
-      const totalScore = remainingWords.reduce(
-        (sum, w) => sum + Math.max(0, w.ucbScore),
-        0
-      );
-
-      if (totalScore === 0) {
-        // If all scores are negative/zero, pick randomly
-        const randomIndex = Math.floor(Math.random() * remainingWords.length);
-        selectedWords.push(remainingWords[randomIndex]!.word);
-        remainingWords.splice(randomIndex, 1);
-      } else {
-        // Weighted selection
-        let random = Math.random() * totalScore;
-        let selectedIndex = 0;
-
-        for (let j = 0; j < remainingWords.length; j++) {
-          random -= Math.max(0, remainingWords[j]!.ucbScore);
-          if (random <= 0) {
-            selectedIndex = j;
-            break;
-          }
-        }
-
-        selectedWords.push(remainingWords[selectedIndex]!.word);
-        remainingWords.splice(selectedIndex, 1);
-      }
-    }
-
-    return selectedWords;
-  } catch (error) {
-    throw error;
+  if (allWords.length < count) {
+    throw new Error(
+      `Not enough words available. Need ${count}, have ${allWords.length}`
+    );
   }
+
+  // Create UCB scores: score + c * sqrt(ln(total_serves) / serves)
+  const ucbScores: Array<{ word: string; ucbScore: number }> = [];
+
+  for (const word of allWords) {
+    const uncertainty =
+      uncertainties.find((u) => u.member === word.member)?.score ?? 0;
+    const ucbScore = (word.score ?? 0) + config.ucbConstant * uncertainty;
+    ucbScores.push({ word: word.member, ucbScore });
+  }
+
+  // Sort by UCB score (descending)
+  ucbScores.sort((a, b) => b.ucbScore - a.ucbScore);
+
+  // Sample proportionally to UCB scores, but with some randomness
+  const selectedWords: string[] = [];
+  const remainingWords = [...ucbScores];
+
+  for (let i = 0; i < count && remainingWords.length > 0; i++) {
+    // Use weighted random selection based on UCB scores
+    const totalScore = remainingWords.reduce(
+      (sum, w) => sum + Math.max(0, w.ucbScore),
+      0
+    );
+
+    if (totalScore === 0) {
+      // If all scores are negative/zero, pick randomly
+      const randomIndex = Math.floor(Math.random() * remainingWords.length);
+      selectedWords.push(remainingWords[randomIndex]!.word);
+      remainingWords.splice(randomIndex, 1);
+    } else {
+      // Weighted selection
+      let random = Math.random() * totalScore;
+      let selectedIndex = 0;
+
+      for (let j = 0; j < remainingWords.length; j++) {
+        random -= Math.max(0, remainingWords[j]!.ucbScore);
+        if (random <= 0) {
+          selectedIndex = j;
+          break;
+        }
+      }
+
+      selectedWords.push(remainingWords[selectedIndex]!.word);
+      remainingWords.splice(selectedIndex, 1);
+    }
+  }
+
+  return selectedWords;
 }
 
 /**
@@ -264,58 +252,54 @@ export async function generateSlate(): Promise<Slate> {
   const slateKey = REDIS_KEYS.slate(slateId);
   const now = Date.now();
 
-  try {
-    // Use UCB algorithm to pick words
-    let slateWords = await pickWordsWithUCB(3);
+  // Use UCB algorithm to pick words
+  let slateWords = await pickWordsWithUCB(3);
 
-    // Dedupe if collisions
-    // Shouldn't happen with UCB but safety check
-    slateWords = Array.from(new Set(slateWords));
+  // Dedupe if collisions
+  // Shouldn't happen with UCB but safety check
+  slateWords = Array.from(new Set(slateWords));
 
-    // If dedupe shrank slate, backfill from top words
-    while (slateWords.length < 3) {
-      const backfill = await redis.global.zRange(
-        REDIS_KEYS.wordsAll(context.subredditName),
-        0,
-        10,
-        { by: 'rank', reverse: true }
-      );
-      for (const candidate of backfill) {
-        if (!slateWords.includes(candidate.member)) {
-          slateWords.push(candidate.member);
-          break;
-        }
+  // If dedupe shrank slate, backfill from top words
+  while (slateWords.length < 3) {
+    const backfill = await redis.global.zRange(
+      REDIS_KEYS.wordsAll(context.subredditName),
+      0,
+      10,
+      { by: 'rank', reverse: true }
+    );
+    for (const candidate of backfill) {
+      if (!slateWords.includes(candidate.member)) {
+        slateWords.push(candidate.member);
+        break;
       }
-      if (slateWords.length < 3) break;
     }
-
-    // If we don't have 3 words at this point, just give up
-    if (slateWords.length < 3) {
-      throw new Error(`Unable to fill slate: ${slateWords.join(', ')}`);
-    }
-
-    // Shuffle positions to avoid position bias
-    slateWords = shuffle(slateWords);
-
-    // Create slate object
-    const slate: Slate = {
-      slateId,
-      words: slateWords,
-      timestamp: now,
-    };
-
-    // Persist slate data in Redis
-    await redis.hSet(slateKey, {
-      slateId,
-      words: JSON.stringify(slateWords),
-      timestamp: now.toString(),
-    });
-    await redis.expire(slateKey, 90 * 24 * 60 * 60); // 90 days TTL
-
-    return slate;
-  } catch (error) {
-    throw error;
+    if (slateWords.length < 3) break;
   }
+
+  // If we don't have 3 words at this point, just give up
+  if (slateWords.length < 3) {
+    throw new Error(`Unable to fill slate: ${slateWords.join(', ')}`);
+  }
+
+  // Shuffle positions to avoid position bias
+  slateWords = shuffle(slateWords);
+
+  // Create slate object
+  const slate: Slate = {
+    slateId,
+    words: slateWords,
+    timestamp: now,
+  };
+
+  // Persist slate data in Redis
+  await redis.hSet(slateKey, {
+    slateId,
+    words: JSON.stringify(slateWords),
+    timestamp: now.toString(),
+  });
+  await redis.expire(slateKey, 90 * 24 * 60 * 60); // 90 days TTL
+
+  return slate;
 }
 
 /**
@@ -698,23 +682,25 @@ export async function updateWordScores() {
   // Apply score decay based on recency
   const decayedWordStats = await applyScoreDecay(wordStats, config);
 
+  // Prepare data for Redis operations
+  const scoreEntries = words.map((word) => ({
+    member: word,
+    score: decayedWordStats[word]?.drawerScore ?? 0,
+  }));
+
+  const uncertaintyEntries = words.map((word) => ({
+    member: word,
+    score: decayedWordStats[word]?.drawerUncertainty ?? 0,
+  }));
+
   // Save data to Redis + cleanup
   await Promise.all([
     // Scores
-    redis.zAdd(
-      REDIS_KEYS.wordsAll(context.subredditName),
-      ...words.map((word) => ({
-        member: word,
-        score: decayedWordStats[word]?.drawerScore ?? 0,
-      }))
-    ),
+    redis.zAdd(REDIS_KEYS.wordsAll(context.subredditName), ...scoreEntries),
     // Uncertainties
     redis.zAdd(
       REDIS_KEYS.wordsUncertainty(context.subredditName),
-      ...words.map((word) => ({
-        member: word,
-        score: decayedWordStats[word]?.drawerUncertainty ?? 0,
-      }))
+      ...uncertaintyEntries
     ),
     // Cleanup hourly stats in 90 days
     redis.expire(

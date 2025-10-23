@@ -54,47 +54,37 @@ export const createDrawing = async (options: {
   // Run all operations in parallel
   await Promise.all([
     // Save post data and additional metadata to redis. Largely so we can fetch the drawing post later from other contexts.
-    (async () => {
-      await redis.hSet(REDIS_KEYS.drawing(postId), {
-        type: 'drawing',
-        postId,
-        createdAt: post.createdAt.getTime().toString(),
-        word,
-        dictionary,
-        drawing: JSON.stringify(drawing),
-        authorId,
-        authorName,
-      });
-    })(),
+    redis.hSet(REDIS_KEYS.drawing(postId), {
+      type: 'drawing',
+      postId,
+      createdAt: post.createdAt.getTime().toString(),
+      word,
+      dictionary,
+      drawing: JSON.stringify(drawing),
+      authorId,
+      authorName,
+    }),
 
     // Award points for submission
-    (async () => {
-      await incrementScore(authorId, AUTHOR_REWARD_SUBMIT);
-    })(),
+    incrementScore(authorId, AUTHOR_REWARD_SUBMIT),
 
     // Add to list of drawings for this word
-    (async () => {
-      await redis.zAdd(REDIS_KEYS.wordDrawings(word), {
-        member: postId,
-        score: currentTime,
-      });
-    })(),
+    redis.zAdd(REDIS_KEYS.wordDrawings(word), {
+      member: postId,
+      score: currentTime,
+    }),
 
     // Add to all drawings list
-    (async () => {
-      await redis.zAdd(REDIS_KEYS.allDrawings(), {
-        member: postId,
-        score: currentTime,
-      });
-    })(),
+    redis.zAdd(REDIS_KEYS.allDrawings(), {
+      member: postId,
+      score: currentTime,
+    }),
 
     // Add to list of drawings for this user
-    (async () => {
-      await redis.zAdd(REDIS_KEYS.userDrawings(authorId), {
-        member: postId,
-        score: currentTime,
-      });
-    })(),
+    redis.zAdd(REDIS_KEYS.userDrawings(authorId), {
+      member: postId,
+      score: currentTime,
+    }),
   ]);
 
   // Schedule pinned comment job (non-blocking - don't fail if this fails)
@@ -448,6 +438,33 @@ export async function hasCompletedDrawing(
 }
 
 /**
+ * Get user's completion status for a specific drawing
+ * @param postId - The post ID of the drawing to check
+ * @param userId - The user ID to check
+ * @returns Object with solved, skipped, and guessCount status
+ */
+export async function getUserDrawingStatus(
+  postId: T3,
+  userId: T2
+): Promise<{
+  solved: boolean;
+  skipped: boolean;
+  guessCount: number;
+}> {
+  const [solved, skipped, guessCount] = await Promise.all([
+    redis.zScore(REDIS_KEYS.drawingSolves(postId), userId),
+    redis.zScore(REDIS_KEYS.drawingSkips(postId), userId),
+    redis.zScore(REDIS_KEYS.drawingAttempts(postId), userId),
+  ]);
+
+  return {
+    solved: solved !== null,
+    skipped: skipped !== null,
+    guessCount: guessCount ?? 0,
+  };
+}
+
+/**
  * Submit a guess for a drawing post
  * @param postId - The ID of the drawing post to submit the guess for
  * @param username - The username of the user who is submitting the guess
@@ -476,9 +493,9 @@ export async function submitGuess(options: {
     redis.hGet(REDIS_KEYS.drawing(postId), 'authorId'),
   ]);
 
-  // Check if user exists in the sets (explicit check for both null and undefined)
-  const isInSolvedSet = solved !== null && solved !== undefined;
-  const isInSkippedSet = skipped !== null && skipped !== undefined;
+  // Check if user exists in the sets
+  const isInSolvedSet = solved != null;
+  const isInSkippedSet = skipped != null;
 
   // Clean up inconsistent data - user shouldn't be in both solved and skipped
   if (isInSolvedSet && isInSkippedSet) {
@@ -503,14 +520,14 @@ export async function submitGuess(options: {
     ),
   ]);
 
-  // Get updated stats after all Redis operations complete
-  const updatedStats = await getGuesses(postId);
-
   // Check if guess is correct (case-insensitive)
   const isCorrect = guess.toLowerCase().trim() === word.toLowerCase().trim();
   const channelName = `post-${postId}`;
 
   // Handle comment update cooldown logic for ALL guesses (not just correct ones)
+  // NOTE: This logic has a potential race condition where concurrent guesses could
+  // schedule multiple updates. Consider using Redis locks or atomic operations
+  // for production at scale.
   const now = Date.now();
   const ONE_MINUTE = 60 * 1000;
 
@@ -552,6 +569,9 @@ export async function submitGuess(options: {
   // else: Within cooldown AND job already scheduled - do nothing
 
   if (!isCorrect) {
+    // Get updated stats for incorrect guess
+    const updatedStats = await getGuesses(postId);
+
     // Broadcast guess event to all clients watching this post
     await realtime.send(channelName, {
       type: 'guess_submitted',
