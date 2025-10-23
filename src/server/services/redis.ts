@@ -33,6 +33,8 @@ export const REDIS_KEYS = {
   wordsTotalStats: (subredditName: string) => `words:total:${subredditName}`,
   wordsUncertainty: (subredditName: string) =>
     `words:uncertainty:${subredditName}`,
+  wordsLastServed: (subredditName: string) =>
+    `words:lastServed:${subredditName}`,
 
   // Champions
   championWord: (commentId: T1) => `champion:word:${commentId}`,
