@@ -1,6 +1,8 @@
 import type { Request, Response } from 'express';
 import { context } from '@devvit/web/server';
-import { setupPixelary } from '../services/setup';
+import { initDictionary } from '../services/dictionary';
+import { initFlairTemplates } from '../core/flair';
+import { initSlateBandit } from '../services/slate';
 
 /**
  * App lifecycle trigger handlers
@@ -13,7 +15,7 @@ export async function handleAppInstall(
 ): Promise<void> {
   try {
     // Run setup for the subreddit
-    await setupPixelary(context.subredditName);
+    await setupPixelary();
 
     res.json({
       status: 'success',
@@ -33,8 +35,8 @@ export async function handleAppUpgrade(
   res: Response
 ): Promise<void> {
   try {
-    // Run setup for the subreddit (idempotent)
-    await setupPixelary(context.subredditName);
+    // Run setup for the subreddit
+    await setupPixelary();
 
     res.json({
       status: 'success',
@@ -47,4 +49,14 @@ export async function handleAppUpgrade(
       message: 'Failed to upgrade Pixelary',
     });
   }
+}
+
+/**
+ * Setup Pixelary in the current subreddit. This function is idempotent and can be called multiple times.
+ */
+
+async function setupPixelary(): Promise<void> {
+  await initDictionary();
+  await initFlairTemplates();
+  await initSlateBandit();
 }

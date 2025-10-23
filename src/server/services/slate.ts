@@ -101,7 +101,7 @@ export async function setSlateBanditConfig(
  * Initialize the slate bandit with defaultconfiguration if not set
  */
 
-export async function initializeSlateBanditConfig(): Promise<void> {
+export async function initSlateBandit(): Promise<void> {
   const configKey = REDIS_KEYS.slateConfig();
   const existingKeys = await redis.exists(configKey);
 

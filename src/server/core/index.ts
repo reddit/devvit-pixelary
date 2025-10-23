@@ -1,6 +1,6 @@
 export { createPost } from './post';
 export {
-  ensureFlairTemplates,
+  initFlairTemplates,
   setUserFlair,
   setPostFlair,
   getDifficultyFromStats,

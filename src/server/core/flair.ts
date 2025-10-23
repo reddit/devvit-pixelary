@@ -1,4 +1,4 @@
-import { reddit, redis, scheduler } from '@devvit/web/server';
+import { context, reddit, redis, scheduler } from '@devvit/web/server';
 import type { T2, T3 } from '@devvit/shared-types/tid.js';
 import type { Level } from '../../shared/types';
 import { REDIS_KEYS } from '../services/redis';
@@ -36,9 +36,8 @@ interface DrawingStats {
  * Ensure all required flair templates exist for the subreddit
  * Creates missing templates and saves their IDs to Redis
  */
-export async function ensureFlairTemplates(
-  subredditName: string
-): Promise<void> {
+export async function initFlairTemplates(): Promise<void> {
+  const subredditName = context.subredditName;
   try {
     // Check if flair is enabled by trying to get templates
     const [userTemplates, postTemplates] = await Promise.all([

@@ -189,7 +189,7 @@ export async function getRandomWords(count: number = 3): Promise<string[]> {
  * Initialize the dictionary in the current subreddit. It's idempotent, so it can be called multiple times without causing issues.
  */
 
-export async function initializeDictionary(): Promise<void> {
+export async function initDictionary(): Promise<void> {
   const subredditName = context.subredditName;
 
   const [words, _communityAdditions] = await Promise.all([
