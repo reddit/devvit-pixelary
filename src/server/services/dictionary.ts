@@ -78,6 +78,66 @@ export async function replaceAllWords(words: string[]): Promise<void> {
 }
 
 /**
+ * Update the word list while preserving existing scores for unchanged words.
+ * New words get the default score, removed words are deleted, unchanged words keep their scores.
+ */
+
+export async function updateWordsPreservingScores(
+  words: string[]
+): Promise<void> {
+  const subName = context.subredditName;
+  const key = REDIS_KEYS.wordsAll(subName);
+
+  // Get current words with their scores
+  const currentWords = await redis.global.zRange(key, 0, -1);
+  const currentWordMap = new Map(
+    currentWords.map((item) => [item.member, item.score])
+  );
+
+  // Normalize new words and filter out banned ones
+  const normalizedWords = words.map((word) => normalizeWord(word));
+  const bannedWords = await getAllBannedWords();
+  const filteredWords = normalizedWords.filter(
+    (word) => !bannedWords.includes(word)
+  );
+
+  // Create sets for comparison
+  const currentWordSet = new Set(currentWordMap.keys());
+  const newWordSet = new Set(filteredWords);
+
+  // Find words to remove (in current but not in new)
+  const wordsToRemove = [...currentWordSet].filter(
+    (word) => !newWordSet.has(word)
+  );
+
+  // Find words to add (in new but not in current)
+  const wordsToAdd = filteredWords.filter((word) => !currentWordSet.has(word));
+
+  // Execute updates in parallel
+  const promises: Promise<unknown>[] = [];
+
+  // Remove words that are no longer in the list
+  if (wordsToRemove.length > 0) {
+    promises.push(redis.global.zRem(key, wordsToRemove));
+  }
+
+  // Add new words with default score
+  if (wordsToAdd.length > 0) {
+    promises.push(
+      redis.global.zAdd(
+        key,
+        ...wordsToAdd.map((word) => ({
+          member: word,
+          score: DEFAULT_WORD_SCORE,
+        }))
+      )
+    );
+  }
+
+  await Promise.all(promises);
+}
+
+/**
  * Check if a word is in the dictionary for the current subreddit.
  */
 
@@ -192,29 +252,25 @@ export async function getRandomWords(count: number = 3): Promise<string[]> {
 export async function initDictionary(): Promise<void> {
   const subredditName = context.subredditName;
 
-  try {
-    const wordsKey = REDIS_KEYS.wordsAll(subredditName);
+  const wordsKey = REDIS_KEYS.wordsAll(subredditName);
 
-    const [words, _communityAdditions] = await Promise.all([
-      redis.global.exists(wordsKey),
-      redis.global.zAdd(REDIS_KEYS.communities(), {
-        member: subredditName,
-        score: Date.now(),
-      }),
-    ]);
+  const [words, _communityAdditions] = await Promise.all([
+    redis.global.exists(wordsKey),
+    redis.global.zAdd(REDIS_KEYS.communities(), {
+      member: subredditName,
+      score: Date.now(),
+    }),
+  ]);
 
-    if (words !== 0) {
-      return; // Already initialized
-    }
-
-    await redis.global.zAdd(
-      REDIS_KEYS.wordsAll(subredditName),
-      ...DEFAULT_WORDS.map((word) => ({
-        member: word,
-        score: DEFAULT_WORD_SCORE,
-      }))
-    );
-  } catch (error) {
-    throw error;
+  if (words !== 0) {
+    return; // Already initialized
   }
+
+  await redis.global.zAdd(
+    REDIS_KEYS.wordsAll(subredditName),
+    ...DEFAULT_WORDS.map((word) => ({
+      member: word,
+      score: DEFAULT_WORD_SCORE,
+    }))
+  );
 }

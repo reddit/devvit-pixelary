@@ -1,13 +1,11 @@
 import type { Request, Response } from 'express';
 import { updateWordsPreservingScores } from '../services/dictionary';
-import { context } from '@devvit/web/server';
 
 /**
- * Form handler for words replacement
- * Replaces the community dictionary with new words
+ * Form handler for editing dictionary
+ * Replaces the community dictionary with new words from the text list
  */
-
-export async function handleWordsUpdate(
+export async function handleEditDictionaryForm(
   req: Request,
   res: Response
 ): Promise<void> {
@@ -22,18 +20,24 @@ export async function handleWordsUpdate(
       return;
     }
 
-    // Parse and clean words
-    const wordList = words.split(',').map((word: string) => word.trim());
+    // Parse and clean words from comma-separated text
+    const wordList = words
+      .split(',')
+      .map((word: string) => word.trim())
+      .filter(Boolean);
     await updateWordsPreservingScores(wordList);
 
     res.json({
-      showToast: 'Updated!',
+      showToast: {
+        text: 'Dictionary updated successfully!',
+        appearance: 'success',
+      },
     });
   } catch (error) {
     console.error(`Error updating dictionary: ${error}`);
     res.status(400).json({
       status: 'error',
-      message: 'Failed to update',
+      message: 'Failed to update dictionary',
     });
   }
 }

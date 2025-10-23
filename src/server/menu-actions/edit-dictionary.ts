@@ -11,7 +11,11 @@ export async function handleEditDictionary(
   res: Response
 ): Promise<void> {
   try {
-    const words = await getAllWords(context.subredditId);
+    console.log('Edit dictionary menu action called');
+    console.log('Context subreddit name:', context.subredditName);
+    
+    const words = await getAllWords();
+    console.log('Retrieved words:', words);
 
     res.json({
       showForm: {

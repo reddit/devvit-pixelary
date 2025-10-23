@@ -25,6 +25,7 @@ import {
   handleWordsUpdate,
   handleBannedWordsUpdate,
   handleSlateBanditUpdate,
+  handleEditDictionaryForm,
 } from './forms';
 
 // Import scheduler handlers
@@ -111,6 +112,7 @@ router.post('/internal/form/pinned-post-submit', handlePinnedPostSubmit);
 router.post('/internal/form/words-update', handleWordsUpdate);
 router.post('/internal/form/banned-words-update', handleBannedWordsUpdate);
 router.post('/internal/form/slate-bandit-update', handleSlateBanditUpdate);
+router.post('/internal/form/edit-dictionary', handleEditDictionaryForm);
 
 // Use router middleware
 app.use(router);

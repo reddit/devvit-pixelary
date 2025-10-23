@@ -24,7 +24,8 @@
     "pinnedPostForm": "/internal/form/pinned-post-submit",
     "wordsUpdateForm": "/internal/form/words-update",
     "bannedWordsForm": "/internal/form/banned-words-update",
-    "slateBanditForm": "/internal/form/slate-bandit-update"
+    "slateBanditForm": "/internal/form/slate-bandit-update",
+    "editDictionaryForm": "/internal/form/edit-dictionary"
   },
   "menu": {
     "items": [
