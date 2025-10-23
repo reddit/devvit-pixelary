@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { LEVELS } from '@shared/constants';
 import { generateLevel, getLevelByScore } from '@shared/utils/progression';
+import { abbreviateNumber } from '@shared/utils/numbers';
 import { PixelFont } from '@components/PixelFont';
 import { IconButton } from '@components/IconButton';
 import { trpc } from '@client/trpc/client';
@@ -104,14 +105,14 @@ export function LevelDetails({ onClose }: LevelDetailsProps) {
                   ? 'text-[var(--color-brand-orangered)]'
                   : 'text-black/40'
               }
-            >{`${currentLevel.min} XP`}</PixelFont>
+            >{`${abbreviateNumber(currentLevel.min)} XP`}</PixelFont>
             <PixelFont
               className={
                 overMaximum
                   ? 'text-[var(--color-brand-orangered)]'
                   : 'text-black/40'
               }
-            >{`${currentLevel.max} XP`}</PixelFont>
+            >{`${abbreviateNumber(currentLevel.max)} XP`}</PixelFont>
             {overMinimum && !overMaximum && (
               <PixelFont
                 className={`${
