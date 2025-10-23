@@ -39,9 +39,11 @@ export async function handleBannedWords(
     });
   } catch (error) {
     console.error(`Error loading banned words: ${error}`);
-    res.status(400).json({
-      status: 'error',
-      message: 'Failed to load banned words',
+    res.json({
+      showToast: {
+        text: 'Failed to load banned words',
+        appearance: 'error',
+      },
     });
   }
 }

@@ -65,9 +65,11 @@ export async function handleSlateBandit(
     });
   } catch (error) {
     console.error(`Error loading slate bandit config: ${error}`);
-    res.status(400).json({
-      status: 'error',
-      message: 'Failed to load configuration',
+    res.json({
+      showToast: {
+        text: 'Failed to load configuration',
+        appearance: 'error',
+      },
     });
   }
 }

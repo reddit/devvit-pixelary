@@ -2,10 +2,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { appRouter } from './router';
 import { redis } from '@devvit/web/server';
 import {
-  createMockCandidateWord,
   createMockDictionary,
   createMockUserProfile,
-  createMockDrawingSubmitInput,
   createMockGuessSubmitInput,
 } from '../../shared/test-utils';
 
@@ -58,6 +56,7 @@ vi.mock('@devvit/web/server', () => {
     reddit: {
       getPostById: vi.fn(async () => ({ setPostData: vi.fn(async () => {}) })),
       getModerators: vi.fn(async () => ({ all: vi.fn(async () => []) })),
+      getCurrentUsername: vi.fn(async () => 'testuser'),
     },
     realtime: { send: vi.fn(async () => {}) },
     redis: {
@@ -104,6 +103,7 @@ vi.mock('@devvit/web/server', () => {
       zRank: vi.fn(),
       zCard: vi.fn(),
       zRange: vi.fn(),
+      zIncrBy: vi.fn(),
       isRateLimited: vi.fn(),
     },
     scheduler: {
@@ -112,38 +112,52 @@ vi.mock('@devvit/web/server', () => {
       runEvery: vi.fn(),
       cancelJob: vi.fn(),
     },
-  } as {
-    postId: string | null;
-    subredditName: string;
-    username: string | null;
-    redis: typeof redis;
-    scheduler: {
-      runAfter: (delay: number, job: unknown) => Promise<void>;
-      runAt: (time: Date, job: unknown) => Promise<void>;
-      runEvery: (interval: number, job: unknown) => Promise<void>;
-      cancelJob: (jobId: string) => Promise<void>;
-    };
+    context: {
+      postId: 't3_abc',
+      subredditName: 'testsub',
+      subredditId: 't5_testsub',
+      userId: 't2_user123',
+      postData: null,
+    },
   };
 });
 
 describe('appRouter', () => {
   const ctx = {
     postId: 't3_abc' as `t3_${string}`,
-    subredditName: 'sub',
-    username: 'user',
+    subredditName: 'testsub',
+    username: 'testuser',
     userId: 't2_user123' as `t2_${string}`,
-    subredditId: 't5_sub' as `t5_${string}`,
-    postData: { type: 'drawing' as const },
+    subredditId: 't5_testsub' as `t5_${string}`,
+    postData: {
+      type: 'drawing' as const,
+      word: 'test',
+      drawing: {
+        data: 'test',
+        colors: ['#FFFFFF'] as string[],
+        bg: 0,
+        size: 16,
+      },
+      dictionary: 'main',
+      authorId: 't2_user123',
+      authorName: 'testuser',
+    },
     reddit: {
       getPostById: vi.fn(async () => ({ setPostData: vi.fn(async () => {}) })),
       getModerators: vi.fn(async () => ({ all: vi.fn(async () => []) })),
+      getCurrentUsername: vi.fn(async () => 'testuser'),
     },
     scheduler: {
-      runJob: vi.fn(async () => 'job123'),
+      runAfter: vi.fn(),
+      runAt: vi.fn(),
+      runEvery: vi.fn(),
+      cancelJob: vi.fn(),
     },
     realtime: { send: vi.fn(async () => {}) },
-  } as const;
-  const caller = appRouter.createCaller(ctx as unknown);
+  };
+  const caller = appRouter.createCaller(
+    ctx as unknown as Parameters<typeof appRouter.createCaller>[0]
+  );
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -166,7 +180,6 @@ describe('appRouter', () => {
         JSON.stringify(createMockUserProfile())
       );
       vi.mocked(redis.zScore).mockResolvedValue(1000);
-      vi.mocked(redis.zRevRank).mockResolvedValue(5);
       vi.mocked(redis.zRank).mockResolvedValue(5);
       vi.mocked(redis.zCard).mockResolvedValue(100);
     });
@@ -225,8 +238,10 @@ describe('appRouter', () => {
 
   describe('Error handling', () => {
     it('handles missing context gracefully', async () => {
-      const invalidCtx = { ...ctx, subredditName: undefined };
-      const invalidCaller = appRouter.createCaller(invalidCtx as unknown);
+      const invalidCtx = { ...ctx, subredditName: null as string | null };
+      const invalidCaller = appRouter.createCaller(
+        invalidCtx as unknown as Parameters<typeof appRouter.createCaller>[0]
+      );
 
       // Should not throw, but may return different results
       const res = await invalidCaller.system.ping();

@@ -34,9 +34,11 @@ export async function handlePostCreate(
     });
   } catch (error) {
     console.error(`Error showing post creation form: ${error}`);
-    res.status(400).json({
-      status: 'error',
-      message: 'Failed to show post creation form',
+    res.json({
+      showToast: {
+        text: 'Failed to show post creation form',
+        appearance: 'error',
+      },
     });
   }
 }

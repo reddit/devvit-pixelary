@@ -44,6 +44,39 @@ export const appRouter = t.router({
 
   // Pixelary-specific endpoints
   app: t.router({
+    // System endpoints
+    system: t.router({
+      initialize: t.procedure.mutation(async ({ ctx }) => {
+        if (!ctx.subredditName) throw new Error('Subreddit not found');
+
+        // Import initialization functions
+        const { initDictionary } = await import('../services/dictionary');
+        const { initFlairTemplates } = await import('../core/flair');
+        const { initSlateBandit } = await import('../services/slate');
+
+        // Run initialization
+        await initDictionary();
+        await initFlairTemplates();
+        await initSlateBandit();
+
+        return { success: true, message: 'Pixelary initialized successfully' };
+      }),
+
+      status: t.procedure.query(async ({ ctx }) => {
+        if (!ctx.subredditName) throw new Error('Subreddit not found');
+
+        // Check if dictionary is initialized
+        const words = await getAllWords();
+        const isInitialized = words.length > 0;
+
+        return {
+          initialized: isInitialized,
+          wordCount: words.length,
+          subreddit: ctx.subredditName,
+        };
+      }),
+    }),
+
     // Dictionary endpoints
     dictionary: t.router({
       get: t.procedure.query(async ({ ctx }) => {

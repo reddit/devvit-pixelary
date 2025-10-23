@@ -39,9 +39,11 @@ export async function handleEditDictionary(
     });
   } catch (error) {
     console.error(`Error loading dictionary: ${error}`);
-    res.status(400).json({
-      status: 'error',
-      message: 'Failed to load dictionary',
+    res.json({
+      showToast: {
+        text: 'Failed to load dictionary',
+        appearance: 'error',
+      },
     });
   }
 }

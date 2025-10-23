@@ -92,6 +92,13 @@
         "location": "subreddit",
         "forUserType": "moderator",
         "endpoint": "/internal/menu/slate-bandit"
+      },
+      {
+        "label": "[Pixelary] Initialize",
+        "description": "Initialize the app with default words and settings",
+        "location": "subreddit",
+        "forUserType": "moderator",
+        "endpoint": "/internal/menu/initialize"
       }
     ]
   },
