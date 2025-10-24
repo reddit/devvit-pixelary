@@ -34,7 +34,7 @@ interface DrawingStats {
 
 /**
  * Ensure all required flair templates exist for the subreddit
- * Creates missing templates and saves their IDs to Redis
+ * Creates missing templates and updates existing ones, saves their IDs to Redis
  */
 export async function initFlairTemplates(): Promise<void> {
   const subredditName = context.subredditName;
@@ -50,19 +50,38 @@ export async function initFlairTemplates(): Promise<void> {
       // User flair is not enabled - this is informational only
     }
 
-    // Create post flair templates (we still need these for post difficulty flair)
+    // Create or update post flair templates
     await Promise.all(
       FLAIR_CONFIG.post.templates.map(async (template) => {
         const existing = postTemplates.find((t) => t.text === template.text);
 
-        const templateId =
-          existing?.id ??
-          (
-            await reddit.createPostFlairTemplate({
-              subredditName,
-              text: template.text,
-            })
-          ).id;
+        let templateId: string;
+
+        if (existing) {
+          // Update existing template to ensure it matches current configuration
+          const updatedTemplate = await existing.edit({
+            text: template.text,
+            // Add other properties as needed for styling
+            backgroundColor: 'transparent',
+            textColor: 'dark',
+            allowableContent: 'all',
+            modOnly: false,
+            allowUserEdits: false,
+          });
+          templateId = updatedTemplate.id;
+        } else {
+          // Create new template
+          const newTemplate = await reddit.createPostFlairTemplate({
+            subredditName,
+            text: template.text,
+            backgroundColor: 'transparent',
+            textColor: 'dark',
+            allowableContent: 'all',
+            modOnly: false,
+            allowUserEdits: false,
+          });
+          templateId = newTemplate.id;
+        }
 
         await redis.set(
           REDIS_KEYS.flairTemplates.post(template.difficulty),
