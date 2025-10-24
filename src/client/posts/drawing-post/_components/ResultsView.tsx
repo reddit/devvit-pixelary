@@ -2,8 +2,6 @@ import { Button } from '@components/Button';
 import { PixelSymbol } from '@components/PixelSymbol';
 import { Drawing } from '@components/Drawing';
 import { Lightbox } from '@components/Lightbox';
-import { ProgressBar } from '@components/ProgressBar';
-import { getLevelByScore } from '@src/shared/utils/progression';
 import { trpc } from '@client/trpc/client';
 import { abbreviateNumber } from '@shared/utils/numbers';
 import { DrawingData } from '@shared/schema/drawing';
@@ -22,7 +20,6 @@ interface ResultsViewProps {
   dictionaryName?: string | undefined;
   currentSubreddit?: string | undefined;
   onDrawSomething: () => void;
-  earnedPoints?: number | null;
   stats?: PostGuesses | null;
   isLoading?: boolean;
   postId?: string;
@@ -35,7 +32,6 @@ export function ResultsView({
   dictionaryName,
   currentSubreddit,
   onDrawSomething,
-  earnedPoints,
   stats,
   isLoading,
   postId,
@@ -48,9 +44,6 @@ export function ResultsView({
   useEffect(() => {
     void track('view_results');
   }, []);
-
-  // Get current user profile for level progress calculation
-  const { data: userProfile } = trpc.app.user.getProfile.useQuery();
 
   // Get allowed words for this subreddit
   const { data: allowedWords = [] } = trpc.app.post.getAllowedWords.useQuery();
@@ -75,31 +68,6 @@ export function ResultsView({
       // Server will handle permission checks, so we can ignore errors silently
     }
   };
-
-  // Helper function to calculate level progress percentage
-  const getLevelProgressPercentage = (score: number): number => {
-    const currentLevel = getLevelByScore(score);
-    const levelProgress = score - currentLevel.min;
-    const levelMax = currentLevel.max - currentLevel.min;
-    return Math.min(100, Math.max(0, (levelProgress / levelMax) * 100));
-  };
-
-  // Show points toast when component mounts with earned points
-  useEffect(() => {
-    if (earnedPoints && earnedPoints > 0 && userProfile) {
-      const attachment = (
-        <ProgressBar
-          percentage={getLevelProgressPercentage(userProfile.score)}
-          width={200}
-          height={8}
-        />
-      );
-      success(`+${earnedPoints} points!`, {
-        duration: 2500,
-        attachment,
-      });
-    }
-  }, [earnedPoints, success, userProfile]);
 
   const guesses = stats?.guesses || {};
   const guessCount = stats?.guessCount || 0;

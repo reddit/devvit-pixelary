@@ -3,12 +3,15 @@ import { useQueryClient } from '@tanstack/react-query';
 import { GuessView } from './_components/GuessView';
 import { ResultsView } from './_components/ResultsView';
 import { DrawingEditor } from '@components/Editor/Editor';
+import { Confetti } from '@components/Confetti';
+import { ProgressBar } from '@components/ProgressBar';
 import { trpc } from '@client/trpc/client';
 import { context } from '@devvit/web/client';
 import { useToastHelpers } from '@components/ToastManager';
 import { useRealtimeStats } from '@client/hooks/useRealtimeStats';
 import { DrawingPostDataExtended } from '@shared/schema/pixelary';
 import { useTelemetry } from '@client/hooks/useTelemetry';
+import { getLevelByScore } from '@src/shared/utils/progression';
 
 type DrawingPostProps = {
   postData: DrawingPostDataExtended | undefined;
@@ -18,7 +21,7 @@ type DrawingState = 'unsolved' | 'guessing' | 'solved' | 'skipped' | 'author';
 
 export const DrawingPost = ({ postData: propPostData }: DrawingPostProps) => {
   const currentPostId = context.postId;
-  const { error: showErrorToast } = useToastHelpers();
+  const { error: showErrorToast, success } = useToastHelpers();
 
   // Telemetry
   const { track } = useTelemetry();
@@ -51,6 +54,7 @@ export const DrawingPost = ({ postData: propPostData }: DrawingPostProps) => {
   const [feedback, setFeedback] = useState<boolean | null>(null);
   const [showEditor, setShowEditor] = useState(false);
   const [earnedPoints, setEarnedPoints] = useState<number | null>(null);
+  const [showConfetti, setShowConfetti] = useState(false);
   const { data: userProfile } = trpc.app.user.getProfile.useQuery(
     currentPostId ? { postId: currentPostId } : undefined,
     { enabled: true }
@@ -124,6 +128,31 @@ export const DrawingPost = ({ postData: propPostData }: DrawingPostProps) => {
     }
   }, [currentState]);
 
+  // Show points toast when earnedPoints changes
+  useEffect(() => {
+    if (earnedPoints && earnedPoints > 0 && userProfile) {
+      const attachment = (
+        <ProgressBar
+          percentage={getLevelProgressPercentage(userProfile.score)}
+          width={200}
+          height={8}
+        />
+      );
+      success(`+${earnedPoints} points!`, {
+        duration: 2500,
+        attachment,
+      });
+    }
+  }, [earnedPoints, success, userProfile]);
+
+  // Helper function to calculate level progress percentage
+  const getLevelProgressPercentage = (score: number): number => {
+    const currentLevel = getLevelByScore(score);
+    const levelProgress = score - currentLevel.min;
+    const levelMax = currentLevel.max - currentLevel.min;
+    return Math.min(100, Math.max(0, (levelProgress / levelMax) * 100));
+  };
+
   const handleGuess = async (guess: string) => {
     if (!currentPostId || !word) {
       return;
@@ -149,6 +178,8 @@ export const DrawingPost = ({ postData: propPostData }: DrawingPostProps) => {
         if (result.points > 0) {
           setEarnedPoints(result.points);
         }
+        // Trigger confetti animation
+        setShowConfetti(true);
       }
     } catch (err) {
       showErrorToast('Failed to submit guess. Please try again.', {
@@ -202,18 +233,20 @@ export const DrawingPost = ({ postData: propPostData }: DrawingPostProps) => {
     currentState === 'author'
   ) {
     return (
-      <ResultsView
-        drawing={drawingData!}
-        word={word!}
-        authorUsername={postData?.authorName}
-        dictionaryName={dictionaryName}
-        currentSubreddit={currentSubreddit}
-        onDrawSomething={handleDrawSomething}
-        earnedPoints={earnedPoints}
-        stats={stats}
-        isLoading={isLoading}
-        postId={currentPostId}
-      />
+      <>
+        <ResultsView
+          drawing={drawingData!}
+          word={word!}
+          authorUsername={postData?.authorName}
+          dictionaryName={dictionaryName}
+          currentSubreddit={currentSubreddit}
+          onDrawSomething={handleDrawSomething}
+          stats={stats}
+          isLoading={isLoading}
+          postId={currentPostId}
+        />
+        {showConfetti && <Confetti />}
+      </>
     );
   }
 
