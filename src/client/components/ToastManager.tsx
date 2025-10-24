@@ -12,6 +12,7 @@ import { Toast, ToastConfig, ToastPosition } from './Toast';
 export interface ToastData extends Omit<ToastConfig, 'id'> {
   id: string;
   timestamp: number;
+  height?: number;
 }
 
 interface ToastContextType {
@@ -19,6 +20,7 @@ interface ToastContextType {
   hideToast: (id: string) => void;
   hideAllToasts: () => void;
   getToastCount: () => number;
+  updateToastHeight: (id: string, height: number) => void;
 }
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
@@ -103,6 +105,16 @@ export function ToastProvider({
     return toastQueue.toasts.length;
   }, [toastQueue.toasts.length]);
 
+  // Update toast height
+  const updateToastHeight = useCallback((id: string, height: number) => {
+    setToastQueue((prev) => ({
+      ...prev,
+      toasts: prev.toasts.map((toast) =>
+        toast.id === id ? { ...toast, height } : toast
+      ),
+    }));
+  }, []);
+
   // Memoized context value to prevent unnecessary re-renders
   const contextValue = useMemo(
     () => ({
@@ -110,8 +122,9 @@ export function ToastProvider({
       hideToast,
       hideAllToasts,
       getToastCount,
+      updateToastHeight,
     }),
-    [showToast, hideToast, hideAllToasts, getToastCount]
+    [showToast, hideToast, hideAllToasts, getToastCount, updateToastHeight]
   );
 
   // Group toasts by position for better rendering
@@ -138,15 +151,25 @@ export function ToastProvider({
       {children}
       {/* Render toasts grouped by position */}
       {Object.entries(toastsByPosition).map(([, toasts]) =>
-        toasts.map((toast, index) => (
-          <Toast
-            key={toast.id}
-            {...toast}
-            onClose={hideToast}
-            index={index}
-            totalToasts={toasts.length}
-          />
-        ))
+        toasts.map((toast, index) => {
+          // Calculate heights of previous toasts for proper stacking
+          const previousToastHeights = toasts
+            .slice(0, index)
+            .map((prevToast) => prevToast.height || 80) // Default height if not measured yet
+            .reverse(); // Reverse to get correct stacking order
+
+          return (
+            <Toast
+              key={toast.id}
+              {...toast}
+              onClose={hideToast}
+              index={index}
+              totalToasts={toasts.length}
+              previousToastHeights={previousToastHeights}
+              onHeightChange={(height) => updateToastHeight(toast.id, height)}
+            />
+          );
+        })
       )}
     </ToastContext.Provider>
   );

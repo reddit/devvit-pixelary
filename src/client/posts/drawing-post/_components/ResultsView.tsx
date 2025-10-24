@@ -2,7 +2,8 @@ import { Button } from '@components/Button';
 import { PixelSymbol } from '@components/PixelSymbol';
 import { Drawing } from '@components/Drawing';
 import { Lightbox } from '@components/Lightbox';
-import { LevelProgressAttachment } from '@components/LevelProgressAttachment';
+import { ProgressBar } from '@components/ProgressBar';
+import { getLevelByScore } from '@src/shared/utils/progression';
 import { trpc } from '@client/trpc/client';
 import { abbreviateNumber } from '@shared/utils/numbers';
 import { DrawingData } from '@shared/schema/drawing';
@@ -75,36 +76,24 @@ export function ResultsView({
     }
   };
 
-  // Early return if essential data is missing
-  if (!drawing || !word) {
-    return (
-      <main className="fixed inset-0 flex flex-col items-center justify-center h-full p-6 gap-6">
-        <div className="w-full h-[14px] skeleton" />
-        <div className="w-72 h-[14px] skeleton" />
-        <div className="w-full max-w-lg flex flex-col gap-2 h-full flex-1">
-          {Array.from({ length: 5 }, (_, index) => (
-            <div
-              key={`loading-${index}`}
-              className="w-full h-1/5 bg-white/25"
-            />
-          ))}
-        </div>
-        <div className="w-[200px] h-[14px] skeleton" />
-        <div className="w-[200px] h-[40px] skeleton" />
-      </main>
-    );
-  }
+  // Helper function to calculate level progress percentage
+  const getLevelProgressPercentage = (score: number): number => {
+    const currentLevel = getLevelByScore(score);
+    const levelProgress = score - currentLevel.min;
+    const levelMax = currentLevel.max - currentLevel.min;
+    return Math.min(100, Math.max(0, (levelProgress / levelMax) * 100));
+  };
 
   // Show points toast when component mounts with earned points
   useEffect(() => {
     if (earnedPoints && earnedPoints > 0 && userProfile) {
       const attachment = (
-        <LevelProgressAttachment
-          newScore={userProfile.score}
-          earnedPoints={earnedPoints}
+        <ProgressBar
+          percentage={getLevelProgressPercentage(userProfile.score)}
+          width={200}
+          height={8}
         />
       );
-
       success(`+${earnedPoints} points!`, {
         duration: 2500,
         attachment,
@@ -153,7 +142,6 @@ export function ResultsView({
           )}
         </div>
       </header>
-
       {/* Guess and Player Count */}
       {!isLoading ? (
         <PixelFont>
@@ -164,7 +152,6 @@ export function ResultsView({
       ) : (
         <div className="w-72 h-[14px] skeleton" />
       )}
-
       {/* Guesses */}
       <div className="w-full max-w-lg flex flex-col gap-2 h-full flex-1">
         {Array.from({ length: 5 }, (_, index) => {
@@ -189,10 +176,8 @@ export function ResultsView({
           return <GuessRow key={`blank-${index}`} />;
         })}
       </div>
-
       {/* Secondary CTA */}
       <PixelFont>See comments for more!</PixelFont>
-
       {/* Primary CTA */}
       <Button
         onClick={onDrawSomething}
@@ -201,7 +186,6 @@ export function ResultsView({
       >
         DRAW SOMETHING
       </Button>
-
       {/* Lightbox */}
       <Lightbox
         isOpen={isLightboxOpen}

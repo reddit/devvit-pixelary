@@ -38,6 +38,8 @@ interface ToastProps extends Omit<ToastConfig, 'onClose'> {
   onClose: (id: string) => void;
   index: number;
   totalToasts: number;
+  previousToastHeights?: number[];
+  onHeightChange?: (height: number) => void;
 }
 
 // Production-grade ID generation using crypto API
@@ -76,6 +78,8 @@ export function Toast({
   onClose,
   index,
   totalToasts: _totalToasts,
+  previousToastHeights = [],
+  onHeightChange,
 }: ToastProps) {
   const [isVisible, setIsVisible] = useState(false);
   const [isExiting, setIsExiting] = useState(false);
@@ -87,7 +91,7 @@ export function Toast({
   const toastStyles = useMemo(() => {
     const baseStyles = `
       fixed max-w-sm cursor-pointer
-      bg-white border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)]
+      bg-white border-4 p-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)]
       transition-all duration-${TOAST_CONFIG.ANIMATION_DURATION} ease-out
       focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
     `;
@@ -126,23 +130,26 @@ export function Toast({
       },
     }[position];
 
-    // Add stacking offset
-    const stackOffset = index * TOAST_CONFIG.STACK_OFFSET;
+    // Calculate cumulative height offset from previous toasts
+    const cumulativeHeight = previousToastHeights.reduce(
+      (sum, height) => sum + height + 8,
+      0
+    ); // 8px gap between toasts
 
     if (position.includes('top')) {
       return {
         ...basePosition,
-        top: (basePosition.top as number) + stackOffset,
+        top: (basePosition.top as number) + cumulativeHeight,
       };
     } else if (position.includes('bottom')) {
       return {
         ...basePosition,
-        bottom: (basePosition.bottom as number) + stackOffset,
+        bottom: (basePosition.bottom as number) + cumulativeHeight,
       };
     }
 
     return basePosition;
-  }, [position, index]);
+  }, [position, index, previousToastHeights]);
 
   const typeStyles = useMemo(() => {
     // Use neutral style for all toast types
@@ -212,12 +219,13 @@ export function Toast({
     return () => clearTimeout(showTimer);
   }, []);
 
-  // Focus management for accessibility
+  // Measure and report height when toast becomes visible
   useEffect(() => {
-    if (isVisible && toastRef.current) {
-      toastRef.current.focus();
+    if (isVisible && toastRef.current && onHeightChange) {
+      const height = toastRef.current.offsetHeight;
+      onHeightChange(height);
     }
-  }, [isVisible]);
+  }, [isVisible, onHeightChange]);
 
   const toastContent = (
     <div
@@ -234,8 +242,8 @@ export function Toast({
       aria-live={ARIA_CONFIG.LIVE_REGION}
       aria-label={`${type} notification: ${message}`}
     >
-      <div className="flex flex-col">
-        <div className="flex items-center gap-3 p-4">
+      <div className="flex flex-col gap-2 justify-center items-center">
+        <div className="flex items-center gap-2">
           <PixelFont scale={2} className="flex-1">
             {message}
           </PixelFont>
@@ -249,9 +257,7 @@ export function Toast({
             </button>
           )}
         </div>
-        {attachment && (
-          <div className="border-t-2 border-black px-4 pb-4">{attachment}</div>
-        )}
+        {attachment}
       </div>
     </div>
   );

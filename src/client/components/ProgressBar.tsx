@@ -1,3 +1,6 @@
+import { useEffect, useState } from 'react';
+import { clamp } from '@src/shared/utils/numbers';
+
 interface ProgressBarProps {
   percentage: number;
   width?: number;
@@ -11,7 +14,12 @@ export function ProgressBar({
   height = 8,
   className = '',
 }: ProgressBarProps) {
-  const clampedPercentage = Math.max(0, Math.min(100, percentage));
+  const [displayPercentage, setDisplayPercentage] = useState(0);
+
+  useEffect(() => {
+    const clampedPercentage = clamp(percentage, 0, 100);
+    setDisplayPercentage(clampedPercentage);
+  }, [percentage]);
 
   return (
     <div
@@ -29,11 +37,10 @@ export function ProgressBar({
 
       {/* Progress fill */}
       <div
-        className="absolute inset-y-0 left-0 transition-all duration-300 min-w-1"
+        className="absolute left-0 top-0 bottom-0 transition-all duration-600 ease-in"
         style={{
           backgroundColor: '#FF4500',
-          width: `${clampedPercentage}%`,
-          height: `${height}px`,
+          width: `${displayPercentage}%`,
         }}
       />
     </div>
