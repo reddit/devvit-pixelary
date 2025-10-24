@@ -6,6 +6,8 @@ import { trpc } from '@client/trpc/client';
 import { abbreviateNumber } from '@shared/utils/numbers';
 import { DrawingData } from '@shared/schema/drawing';
 import { PixelFont } from '@components/PixelFont';
+import { CyclingMessage } from '@components/CyclingMessage';
+import { AUTHOR_REWARD_SUBMIT } from '@shared/constants';
 import { obfuscateString } from '@shared/utils/string';
 import { titleCase } from '@shared/utils/string';
 import { useState, useEffect } from 'react';
@@ -145,7 +147,13 @@ export function ResultsView({
         })}
       </div>
       {/* Secondary CTA */}
-      <PixelFont>See comments for more!</PixelFont>
+      <CyclingMessage
+        messages={[
+          'See comments for more',
+          `Draw for ${AUTHOR_REWARD_SUBMIT} points`,
+          'Join r/Pixelary today',
+        ]}
+      />
       {/* Primary CTA */}
       <Button
         onClick={onDrawSomething}
