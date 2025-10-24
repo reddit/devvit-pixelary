@@ -19,27 +19,6 @@ export function getTelemetryDateKey(date?: Date): string {
   return targetDate.toISOString().split('T')[0]!;
 }
 
-/**
- * Generate date keys for a range of dates
- * Useful for analysis and bulk operations
- * @param startDate - Start date (inclusive)
- * @param endDate - End date (inclusive)
- * @returns Array of date keys in YYYY-MM-DD format
- */
-export function getTelemetryDateKeys(startDate: Date, endDate: Date): string[] {
-  const keys: string[] = [];
-
-  for (
-    let date = new Date(startDate);
-    date <= endDate;
-    date.setDate(date.getDate() + 1)
-  ) {
-    keys.push(getTelemetryDateKey(date));
-  }
-
-  return keys;
-}
-
 export type PostType = 'drawing' | 'pinned';
 export type EventType =
   // ============================================================================
@@ -176,69 +155,6 @@ export async function getEventStats(
     return result;
   } catch (error) {
     return {};
-  }
-}
-
-/**
- * Get event stats for today
- */
-export async function getTodayEventStats(
-  postType?: PostType
-): Promise<Record<string, number>> {
-  const today = getTelemetryDateKey();
-  return getEventStats(today, postType);
-}
-
-/**
- * Get event stats for a date range
- */
-export async function getEventStatsRange(
-  startDate: string,
-  endDate: string,
-  postType?: PostType
-): Promise<Record<string, Record<string, number>>> {
-  const result: Record<string, Record<string, number>> = {};
-
-  try {
-    const start = new Date(startDate);
-    const end = new Date(endDate);
-
-    for (
-      let date = new Date(start);
-      date <= end;
-      date.setDate(date.getDate() + 1)
-    ) {
-      const dateStr = getTelemetryDateKey(date);
-      result[dateStr] = await getEventStats(dateStr, postType);
-    }
-
-    return result;
-  } catch (error) {
-    return {};
-  }
-}
-
-/**
- * Calculate CTR (Click Through Rate) for a specific event
- * CTR = clicks / views
- */
-export async function calculateCTR(
-  date: string,
-  postType: PostType,
-  viewEvent: EventType,
-  clickEvent: EventType
-): Promise<number> {
-  try {
-    const stats = await getEventStats(date, postType);
-    const viewKey = `${postType}:${viewEvent}`;
-    const clickKey = `${postType}:${clickEvent}`;
-
-    const views = stats[viewKey] || 0;
-    const clicks = stats[clickKey] || 0;
-
-    return views > 0 ? clicks / views : 0;
-  } catch (error) {
-    return 0;
   }
 }
 

@@ -312,19 +312,6 @@ export async function saveLastCommentUpdate(
 }
 
 /**
- * Get the next scheduled job ID for a drawing post
- * @param postId - The ID of the drawing post to get the scheduled job ID for
- * @returns The scheduled job ID, or null if none is scheduled
- */
-export async function getNextScheduledJobId(
-  postId: T3
-): Promise<string | null> {
-  const key = REDIS_KEYS.drawing(postId);
-  const result = await redis.hGet(key, 'nextScheduledJobId');
-  return result || null;
-}
-
-/**
  * Save the next scheduled job ID for a drawing post
  * @param postId - The ID of the drawing post to save the scheduled job ID for
  * @param jobId - The job ID of the scheduled update
@@ -441,24 +428,6 @@ export async function getUserDrawingsWithData(
   });
 
   return drawings;
-}
-
-/**
- * Check if a user has completed a drawing. Completed means they have solved or skipped the drawing.
- * @param postId - The post ID of the drawing to check
- * @param userId - The user ID to check
- * @returns `true` if the user has completed the drawing, `false` otherwise
- */
-export async function hasCompletedDrawing(
-  postId: T3,
-  userId: T2
-): Promise<boolean> {
-  const [solved, skipped] = await Promise.all([
-    redis.zScore(REDIS_KEYS.drawingSolves(postId), userId),
-    redis.zScore(REDIS_KEYS.drawingSkips(postId), userId),
-  ]);
-
-  return solved !== null || skipped !== null;
 }
 
 /**
