@@ -22,7 +22,7 @@ interface ResultsViewProps {
   currentSubreddit?: string | undefined;
   onDrawSomething: () => void;
   earnedPoints?: number | null;
-  stats?: PostGuesses;
+  stats?: PostGuesses | null;
   isLoading?: boolean;
   postId?: string;
 }

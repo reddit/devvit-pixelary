@@ -36,7 +36,6 @@ export function ReviewStep(props: ReviewStepProps) {
     drawing,
     onCancel,
     onSuccess,
-    slateId,
     trackSlateAction,
   } = props;
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
@@ -93,7 +92,6 @@ export function ReviewStep(props: ReviewStepProps) {
 
   const handleCancel = () => {
     void track('click_cancel_drawing');
-    void track('drawing_cancel');
     setShowCancelConfirm(true);
   };
 

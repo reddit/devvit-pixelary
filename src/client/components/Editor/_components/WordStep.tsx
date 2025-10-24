@@ -1,9 +1,7 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { CARD_DRAW_DURATION } from '@shared/constants';
-import type { CandidateWord } from '@shared/schema/pixelary';
 import { PixelFont } from '@components/PixelFont';
 import { PixelSymbol } from '@components/PixelSymbol';
-import { context } from '@devvit/web/client';
 import { useTelemetry } from '@client/hooks/useTelemetry';
 import type { SlateAction } from '@shared/types';
 
@@ -56,7 +54,7 @@ export function WordStep(props: WordStepProps) {
       // Track impression after ensuring context is updated
       // Use setTimeout to ensure React state update has completed
       setTimeout(() => {
-        trackSlateAction('slate_served').catch((error) => {
+        trackSlateAction('slate_served').catch(() => {
           // Failed to track slate served
         });
       }, 0);

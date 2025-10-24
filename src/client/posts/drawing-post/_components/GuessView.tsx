@@ -11,10 +11,10 @@ import { useTelemetry } from '@client/hooks/useTelemetry';
 
 interface GuessViewProps {
   drawing: DrawingData;
-  onGuess: (guess: string, createComment: boolean) => Promise<void>;
+  onGuess: (guess: string) => Promise<void>;
   onGiveUp: () => Promise<void>;
   feedback?: boolean | null;
-  stats?: PostGuesses;
+  stats?: PostGuesses | null;
   isLoading?: boolean;
 }
 

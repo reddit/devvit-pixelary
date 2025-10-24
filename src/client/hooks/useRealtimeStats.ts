@@ -75,7 +75,11 @@ class RealtimeManager {
 
 const realtimeManager = new RealtimeManager();
 
-export function useRealtimeStats(postId: string) {
+export function useRealtimeStats(postId: string): {
+  stats: PostGuesses | null;
+  isLoading: boolean;
+  updateStats: (stats: PostGuesses | null) => void;
+} {
   const queryClient = useQueryClient();
   const [optimisticStats, setOptimisticStats] = useState<StatsData | null>(
     null
@@ -88,7 +92,7 @@ export function useRealtimeStats(postId: string) {
   );
 
   // Use optimistic stats if available, otherwise fall back to initial stats
-  const stats = optimisticStats || initialStats;
+  const stats = optimisticStats || initialStats || null;
 
   // Handle realtime updates
   useEffect(() => {

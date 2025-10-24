@@ -19,12 +19,14 @@ type DrawingState = 'unsolved' | 'guessing' | 'solved' | 'skipped' | 'author';
 export const DrawingPost = ({ postData: propPostData }: DrawingPostProps) => {
   const currentPostId = context.postId;
   const { error: showErrorToast } = useToastHelpers();
-  const { track } = useTelemetry();
 
-  // Track drawing post view on mount
+  // Telemetry
+  const { track } = useTelemetry();
   useEffect(() => {
     void track('view_drawing_post');
   }, []);
+
+  // Grab data
   const { data: fetchedPostData } = trpc.app.post.getDrawing.useQuery(
     { postId: currentPostId || '' },
     { enabled: !!currentPostId && !propPostData }

@@ -74,7 +74,12 @@ export type TelemetryEventType =
   | 'drawing_done_auto'
   | 'drawing_done_manual'
   | 'first_pixel_drawn'
-  | 'select_extended_color';
+  | 'select_extended_color'
+  // Post events (specific taxonomy)
+  | 'post_impression' // Post viewed (affects social metrics)
+  | 'post_guess' // User submitted guess
+  | 'post_solve' // User solved the drawing
+  | 'post_skip'; // User gave up/skipped
 
 /**
  * Slate system types

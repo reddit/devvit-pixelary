@@ -12,12 +12,13 @@ interface LeaderboardProps {
 }
 
 export function Leaderboard({ onClose }: LeaderboardProps) {
+  // Telemetry
   const { track } = useTelemetry();
-
-  // Track leaderboard view on mount
   useEffect(() => {
     void track('view_leaderboard');
   }, []);
+
+  // Grab data
   const { data: leaderboard = [], isLoading } =
     trpc.app.leaderboard.getTop.useQuery({ limit: 10 });
   const { data: userRank } = trpc.app.user.getRank.useQuery();

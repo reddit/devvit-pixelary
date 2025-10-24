@@ -47,7 +47,7 @@ export function LevelProgressAttachment({
         </PixelFont>
         {!isMaxLevel && (
           <PixelFont scale={1} className="text-gray-600">
-            {String(pointsToNextLevel)} to next level
+            {`${pointsToNextLevel} to next level`}
           </PixelFont>
         )}
       </div>
@@ -61,13 +61,13 @@ export function LevelProgressAttachment({
           className="flex-1"
         />
         <PixelFont scale={1} className="text-gray-600 min-w-fit">
-          {String(Math.round(animatedPercentage))}%
+          {`${Math.round(animatedPercentage)}%`}
         </PixelFont>
       </div>
 
       {/* Points earned indicator */}
       <PixelFont scale={1} className="text-gray-500 text-center">
-        +{String(earnedPoints)} points earned
+        {`+${earnedPoints} points earned`}
       </PixelFont>
     </div>
   );

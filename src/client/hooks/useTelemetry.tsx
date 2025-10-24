@@ -6,7 +6,7 @@ interface TelemetryContextType {
   track: (
     eventType: TelemetryEventType,
     metadata?: Record<string, string | number>
-  ) => Promise<void>;
+  ) => Promise<{ ok: boolean }>;
 }
 
 const TelemetryContext = createContext<TelemetryContextType | null>(null);

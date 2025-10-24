@@ -20,7 +20,10 @@
     "baseUrl": "../../",
 
     // Only validate, do not emit files
-    "noEmit": true
+    "noEmit": true,
+
+    // Add Vite types for import.meta.env
+    "types": ["vite/client"]
   },
   // https://github.com/Microsoft/TypeScript/issues/25636
   "include": ["**/*", "**/*.json", "../../vitest.config.ts"],

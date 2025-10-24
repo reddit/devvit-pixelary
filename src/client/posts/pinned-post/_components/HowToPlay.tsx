@@ -8,14 +8,14 @@ interface HowToPlayProps {
 }
 
 export function HowToPlay({ onClose }: HowToPlayProps) {
+  // Telemetry
   const { track } = useTelemetry();
-
-  // Track how to play view on mount
   useEffect(() => {
     void track('view_how_to_play');
   }, []);
+
   return (
-    <CardLayout title="How to play" onClose={onClose}>
+    <CardLayout title="How to Play" onClose={onClose}>
       <PixelFont scale={3}>Draw words</PixelFont>
       <div className="h-1" />
       <PixelFont scale={3}>for others</PixelFont>

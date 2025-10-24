@@ -22,20 +22,23 @@ export function Menu(props: MenuProps) {
   const { onDraw, onMyDrawings, onLeaderboard, onHowToPlay, onLevelClick } =
     props;
 
+  // Telemetry
   const { track } = useTelemetry();
-
-  // Track menu view on mount
   useEffect(() => {
     void track('view_menu');
   }, []);
 
+  // Grab data
   const { data: userProfile } = trpc.app.user.getProfile.useQuery(undefined, {
     enabled: true,
   });
+
+  // Get user level
   const userLevel: Level | null = userProfile
     ? LEVELS.find((l) => l.rank === userProfile.level) || null
     : null;
 
+  // Calculate progress percentage
   const progressPercentage =
     userLevel && userProfile
       ? ((userProfile.score - userLevel.min) /
@@ -66,7 +69,7 @@ export function Menu(props: MenuProps) {
           variant="secondary"
           telemetryEvent="click_my_drawings"
         >
-          My drawings
+          My Drawings
         </Button>
 
         <Button
@@ -84,7 +87,7 @@ export function Menu(props: MenuProps) {
           variant="secondary"
           telemetryEvent="click_how_to_play"
         >
-          How to play
+          How to Play
         </Button>
       </nav>
 

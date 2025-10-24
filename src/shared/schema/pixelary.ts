@@ -62,8 +62,8 @@ export const PostGuessesSchema = z.object({
   guesses: z.record(z.string(), z.number().int()),
   wordCount: z.number().int(),
   guessCount: z.number().int(),
-  playerCount: z.number().int().optional(),
-  solvedCount: z.number().int().optional(),
+  playerCount: z.number().int(),
+  solvedCount: z.number().int(),
 });
 export type PostGuesses = z.infer<typeof PostGuessesSchema>;
 

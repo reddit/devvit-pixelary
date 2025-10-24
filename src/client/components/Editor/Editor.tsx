@@ -4,7 +4,6 @@ import { DrawStep } from './_components/DrawStep';
 import { ReviewStep } from './_components/ReviewStep';
 import { trpc } from '@client/trpc/client';
 import { DRAWING_DURATION } from '@shared/constants';
-import { generateLevel } from '@shared/utils/progression';
 import type { CandidateWord } from '@shared/schema/pixelary';
 import { DrawingData, DrawingUtils } from '@shared/schema/drawing';
 import { useTelemetry } from '@client/hooks/useTelemetry';

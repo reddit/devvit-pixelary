@@ -13,12 +13,13 @@ interface MyDrawingsProps {
 }
 
 export function MyDrawings({ onClose }: MyDrawingsProps) {
+  // Telemetry
   const { track } = useTelemetry();
-
-  // Track my drawings view on mount
   useEffect(() => {
     void track('view_my_drawings');
   }, []);
+
+  // Grab data
   const { data: drawings = [], isLoading } = trpc.app.user.getDrawings.useQuery(
     { limit: 20 }
   );

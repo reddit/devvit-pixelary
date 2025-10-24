@@ -1,11 +1,11 @@
-import React, { Component, ErrorInfo, ReactNode } from 'react';
+import { Component, ErrorInfo, ReactNode } from 'react';
 import { PixelFont } from './PixelFont';
 import { Button } from './Button';
 
 interface ErrorBoundaryState {
   hasError: boolean;
-  error?: Error;
-  errorInfo?: ErrorInfo;
+  error: Error | undefined;
+  errorInfo: ErrorInfo | undefined;
 }
 
 interface ErrorBoundaryProps {
@@ -23,11 +23,11 @@ export class ErrorBoundary extends Component<
 > {
   constructor(props: ErrorBoundaryProps) {
     super(props);
-    this.state = { hasError: false };
+    this.state = { hasError: false, error: undefined, errorInfo: undefined };
   }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {
-    return { hasError: true, error };
+    return { hasError: true, error, errorInfo: undefined };
   }
 
   override componentDidCatch(error: Error, errorInfo: ErrorInfo) {
