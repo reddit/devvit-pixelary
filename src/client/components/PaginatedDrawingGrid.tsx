@@ -27,15 +27,14 @@ export function PaginatedDrawingGrid({
       const tileSize = 87;
       const gap = 12;
 
-      // Calculate tiles per row
+      // Calculate maximum tiles per row based on screen width
       const availableWidth = width - padding;
-      const tilesPerRowCalculated = Math.floor(
-        availableWidth / (tileSize + gap)
-      );
-      setTilesPerRow(Math.max(1, tilesPerRowCalculated));
+      const maxTilesPerRow = Math.floor(availableWidth / (tileSize + gap));
+      setTilesPerRow(Math.max(1, maxTilesPerRow));
 
-      // Always use 4 rows
-      setTilesPerPage(tilesPerRowCalculated * 4);
+      // Calculate tiles per page based on available space
+      // Use 4 rows as before, but allow fewer columns if needed
+      setTilesPerPage(maxTilesPerRow * 4);
     };
 
     calculateLayout();
@@ -73,24 +72,35 @@ export function PaginatedDrawingGrid({
   const hasNextPage = currentPage < totalPages;
   const hasPrevPage = currentPage > 1;
 
+  // Calculate actual columns needed for current page
+  const actualColumns = Math.min(tilesPerRow, currentDrawings.length);
+  const actualRows = Math.ceil(currentDrawings.length / tilesPerRow);
+
   return (
     <div className="flex flex-col h-full">
       {/* Drawing Tiles */}
       <div
-        className="flex-1 grid gap-3 justify-center"
+        className="flex-1 flex flex-col gap-3 justify-center items-center"
         style={{
-          gridTemplateColumns: `repeat(${tilesPerRow}, 87px)`,
-          gridTemplateRows: `repeat(4, 87px)`,
+          minHeight: `${actualRows * (87 + 12) - 12}px`, // Account for gaps
         }}
       >
-        {currentDrawings.map((drawing) => (
-          <Drawing
-            key={drawing.postId}
-            data={drawing.drawing}
-            size={87}
-            onClick={() => onDrawingClick(drawing.postId)}
-          />
-        ))}
+        <div
+          className="grid gap-3 justify-center"
+          style={{
+            gridTemplateColumns: `repeat(${actualColumns}, 87px)`,
+            gridTemplateRows: `repeat(${actualRows}, 87px)`,
+          }}
+        >
+          {currentDrawings.map((drawing) => (
+            <Drawing
+              key={drawing.postId}
+              data={drawing.drawing}
+              size={87}
+              onClick={() => onDrawingClick(drawing.postId)}
+            />
+          ))}
+        </div>
       </div>
 
       {/* Pagination Controls */}
