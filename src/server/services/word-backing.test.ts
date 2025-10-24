@@ -16,28 +16,28 @@ vi.mock('@devvit/web/server', () => ({
 
 // Mock the dictionary service
 vi.mock('./dictionary', () => ({
-  banWord: vi.fn(),
   isWordBanned: vi.fn().mockResolvedValue(false),
+  removeWord: vi.fn(),
 }));
 
 import { redis, context } from '@devvit/web/server';
 import {
-  setChampion,
-  getChampion,
-  isChampion,
-  removeChampion,
-  handleChampionDelete,
-} from './champion';
+  setWordBacking,
+  getWordBacking,
+  isWordBacked,
+  removeWordBacking,
+  handleWordBackingDelete,
+} from './word-backing';
 import { REDIS_KEYS } from './redis';
-import { banWord } from './dictionary';
+import { removeWord } from './dictionary';
 
-describe('Champion Service', () => {
+describe('Word Backing Service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  describe('setChampion', () => {
-    it('should set a new champion for a word', async () => {
+  describe('setWordBacking', () => {
+    it('should set a new backing for a word', async () => {
       const word = 'test';
       const commentId = 't1_comment123' as const;
 
@@ -45,30 +45,26 @@ describe('Champion Service', () => {
       vi.mocked(redis.set).mockResolvedValue('OK');
       vi.mocked(redis.del).mockResolvedValue(0);
 
-      await setChampion(word, commentId);
+      await setWordBacking(word, commentId);
 
-      expect(redis.zAdd).toHaveBeenCalledWith(
-        REDIS_KEYS.wordsChampioned('testsub'),
-        { member: 'Test', score: 1 }
-      );
       expect(redis.set).toHaveBeenCalledWith(
-        REDIS_KEYS.wordChampion('Test'),
+        REDIS_KEYS.wordBacking('Test'),
         commentId
       );
       expect(redis.set).toHaveBeenCalledWith(
-        REDIS_KEYS.championWord(commentId),
+        REDIS_KEYS.wordBackingComment(commentId),
         'Test'
       );
     });
 
-    it('should replace existing champion and clean up previous champion', async () => {
+    it('should replace existing backing and clean up previous backing', async () => {
       const word = 'test';
       const commentId = 't1_comment123' as const;
       const previousCommentId = 't1_previous123' as const;
 
-      // Mock getChampion to return a previous champion
+      // Mock getWordBacking to return a previous backing
       vi.mocked(redis.get).mockImplementation((key) => {
-        if (key === REDIS_KEYS.wordChampion('Test')) {
+        if (key === REDIS_KEYS.wordBacking('Test')) {
           return Promise.resolve(previousCommentId);
         }
         return Promise.resolve(null);
@@ -78,14 +74,14 @@ describe('Champion Service', () => {
       vi.mocked(redis.set).mockResolvedValue('OK');
       vi.mocked(redis.del).mockResolvedValue(1);
 
-      await setChampion(word, commentId);
+      await setWordBacking(word, commentId);
 
       expect(redis.del).toHaveBeenCalledWith(
-        REDIS_KEYS.championWord(previousCommentId)
+        REDIS_KEYS.wordBackingComment(previousCommentId)
       );
     });
 
-    it('should not set champion if word is banned', async () => {
+    it('should not set backing if word is banned', async () => {
       const word = 'banned';
       const commentId = 't1_comment123' as const;
 
@@ -93,7 +89,7 @@ describe('Champion Service', () => {
       const { isWordBanned } = await import('./dictionary');
       vi.mocked(isWordBanned).mockResolvedValue(true);
 
-      await setChampion(word, commentId);
+      await setWordBacking(word, commentId);
 
       expect(redis.zAdd).not.toHaveBeenCalled();
       expect(redis.set).not.toHaveBeenCalled();
@@ -103,41 +99,43 @@ describe('Champion Service', () => {
       const word = 'test';
       const commentId = 't1_comment123' as const;
 
-      vi.mocked(redis.zAdd).mockRejectedValue(new Error('Redis error'));
+      vi.mocked(redis.set).mockRejectedValue(new Error('Redis error'));
 
-      await expect(setChampion(word, commentId)).rejects.toThrow('Redis error');
+      await expect(setWordBacking(word, commentId)).rejects.toThrow(
+        'Redis error'
+      );
     });
   });
 
-  describe('getChampion', () => {
-    it('should return champion comment ID for a word', async () => {
+  describe('getWordBacking', () => {
+    it('should return backing comment ID for a word', async () => {
       const word = 'test';
       const commentId = 't1_comment123' as const;
 
       vi.mocked(redis.get).mockResolvedValue(commentId);
 
-      const result = await getChampion(word);
+      const result = await getWordBacking(word);
 
-      expect(redis.get).toHaveBeenCalledWith(REDIS_KEYS.wordChampion('Test'));
+      expect(redis.get).toHaveBeenCalledWith(REDIS_KEYS.wordBacking('Test'));
       expect(result).toBe(commentId);
     });
 
-    it('should return null if no champion exists', async () => {
+    it('should return null if no backing exists', async () => {
       const word = 'test';
 
       vi.mocked(redis.get).mockResolvedValue(null);
 
-      const result = await getChampion(word);
+      const result = await getWordBacking(word);
 
       expect(result).toBeNull();
     });
 
-    it('should return null if champion ID is invalid', async () => {
+    it('should return null if backing ID is invalid', async () => {
       const word = 'test';
 
       vi.mocked(redis.get).mockResolvedValue('invalid_id');
 
-      const result = await getChampion(word);
+      const result = await getWordBacking(word);
 
       expect(result).toBeNull();
     });
@@ -148,32 +146,32 @@ describe('Champion Service', () => {
 
       vi.mocked(redis.get).mockResolvedValue(commentId);
 
-      await getChampion(word);
+      await getWordBacking(word);
 
-      expect(redis.get).toHaveBeenCalledWith(REDIS_KEYS.wordChampion('Test'));
+      expect(redis.get).toHaveBeenCalledWith(REDIS_KEYS.wordBacking('Test'));
     });
   });
 
-  describe('isChampion', () => {
-    it('should return true if comment is a champion', async () => {
+  describe('isWordBacked', () => {
+    it('should return true if comment is a backing', async () => {
       const commentId = 't1_comment123' as const;
 
       vi.mocked(redis.get).mockResolvedValue('test');
 
-      const result = await isChampion(commentId);
+      const result = await isWordBacked(commentId);
 
       expect(redis.get).toHaveBeenCalledWith(
-        REDIS_KEYS.championWord(commentId)
+        REDIS_KEYS.wordBackingComment(commentId)
       );
       expect(result).toBe(true);
     });
 
-    it('should return false if comment is not a champion', async () => {
+    it('should return false if comment is not a backing', async () => {
       const commentId = 't1_comment123' as const;
 
       vi.mocked(redis.get).mockResolvedValue(undefined);
 
-      const result = await isChampion(commentId);
+      const result = await isWordBacked(commentId);
 
       expect(result).toBe(false);
     });
@@ -183,14 +181,14 @@ describe('Champion Service', () => {
 
       vi.mocked(redis.get).mockResolvedValue('');
 
-      const result = await isChampion(commentId);
+      const result = await isWordBacked(commentId);
 
       expect(result).toBe(true);
     });
   });
 
-  describe('removeChampion', () => {
-    it('should remove champion and clean up all related keys', async () => {
+  describe('removeWordBacking', () => {
+    it('should remove backing and clean up all related keys', async () => {
       const word = 'test';
       const commentId = 't1_comment123' as const;
 
@@ -198,24 +196,20 @@ describe('Champion Service', () => {
       vi.mocked(redis.zRem).mockResolvedValue(1);
       vi.mocked(redis.del).mockResolvedValue(1);
 
-      await removeChampion(word);
+      await removeWordBacking(word);
 
-      expect(redis.zRem).toHaveBeenCalledWith(
-        REDIS_KEYS.wordsChampioned('testsub'),
-        ['Test']
-      );
-      expect(redis.del).toHaveBeenCalledWith(REDIS_KEYS.wordChampion('Test'));
+      expect(redis.del).toHaveBeenCalledWith(REDIS_KEYS.wordBacking('Test'));
       expect(redis.del).toHaveBeenCalledWith(
-        REDIS_KEYS.championWord(commentId)
+        REDIS_KEYS.wordBackingComment(commentId)
       );
     });
 
-    it('should handle case when no champion exists', async () => {
+    it('should handle case when no backing exists', async () => {
       const word = 'test';
 
       vi.mocked(redis.get).mockResolvedValue(null);
 
-      await removeChampion(word);
+      await removeWordBacking(word);
 
       expect(redis.zRem).not.toHaveBeenCalled();
       expect(redis.del).not.toHaveBeenCalled();
@@ -229,59 +223,59 @@ describe('Champion Service', () => {
       vi.mocked(redis.zRem).mockResolvedValue(1);
       vi.mocked(redis.del).mockResolvedValue(1);
 
-      await removeChampion(word);
+      await removeWordBacking(word);
 
-      expect(redis.zRem).toHaveBeenCalledWith(
-        REDIS_KEYS.wordsChampioned('testsub'),
-        ['Test']
+      expect(redis.del).toHaveBeenCalledWith(REDIS_KEYS.wordBacking('Test'));
+      expect(redis.del).toHaveBeenCalledWith(
+        REDIS_KEYS.wordBackingComment(commentId)
       );
     });
   });
 
-  describe('handleChampionDelete', () => {
-    it('should ban word and remove champion when comment is deleted', async () => {
+  describe('handleWordBackingDelete', () => {
+    it('should ban word and remove backing when comment is deleted', async () => {
       const commentId = 't1_comment123' as const;
       const word = 'test';
 
-      // Mock the champion word lookup
+      // Mock the backing word lookup
       vi.mocked(redis.get).mockImplementation((key) => {
-        if (key === REDIS_KEYS.championWord(commentId)) {
+        if (key === REDIS_KEYS.wordBackingComment(commentId)) {
           return Promise.resolve(word);
         }
-        if (key === REDIS_KEYS.wordChampion('Test')) {
+        if (key === REDIS_KEYS.wordBacking('Test')) {
           return Promise.resolve(commentId);
         }
         return Promise.resolve(null);
       });
 
-      vi.mocked(banWord).mockResolvedValue();
+      vi.mocked(removeWord).mockResolvedValue(true);
       vi.mocked(redis.zRem).mockResolvedValue(1);
       vi.mocked(redis.del).mockResolvedValue(1);
 
-      await handleChampionDelete(commentId);
+      await handleWordBackingDelete(commentId);
 
       expect(redis.get).toHaveBeenCalledWith(
-        REDIS_KEYS.championWord(commentId)
+        REDIS_KEYS.wordBackingComment(commentId)
       );
-      expect(banWord).toHaveBeenCalledWith(word);
+      expect(removeWord).toHaveBeenCalledWith(word);
       expect(redis.zRem).toHaveBeenCalledWith(
-        REDIS_KEYS.wordsChampioned('testsub'),
+        REDIS_KEYS.wordsUncertainty('testsub'),
         ['Test']
       );
-      expect(redis.del).toHaveBeenCalledWith(REDIS_KEYS.wordChampion('Test'));
+      expect(redis.del).toHaveBeenCalledWith(REDIS_KEYS.wordBacking('Test'));
       expect(redis.del).toHaveBeenCalledWith(
-        REDIS_KEYS.championWord(commentId)
+        REDIS_KEYS.wordBackingComment(commentId)
       );
     });
 
-    it('should do nothing if comment is not a champion', async () => {
+    it('should do nothing if comment is not a backing', async () => {
       const commentId = 't1_comment123' as const;
 
       vi.mocked(redis.get).mockResolvedValue(null);
 
-      await handleChampionDelete(commentId);
+      await handleWordBackingDelete(commentId);
 
-      expect(banWord).not.toHaveBeenCalled();
+      expect(removeWord).not.toHaveBeenCalled();
       expect(redis.zRem).not.toHaveBeenCalled();
       expect(redis.del).not.toHaveBeenCalled();
     });
@@ -291,20 +285,20 @@ describe('Champion Service', () => {
 
       vi.mocked(redis.get).mockRejectedValue(new Error('Redis error'));
 
-      await expect(handleChampionDelete(commentId)).rejects.toThrow(
+      await expect(handleWordBackingDelete(commentId)).rejects.toThrow(
         'Redis error'
       );
     });
 
-    it('should handle banWord errors', async () => {
+    it('should handle removeWord errors', async () => {
       const commentId = 't1_comment123' as const;
       const word = 'test';
 
       vi.mocked(redis.get).mockResolvedValue(word);
-      vi.mocked(banWord).mockRejectedValue(new Error('Ban error'));
+      vi.mocked(removeWord).mockRejectedValue(new Error('Remove error'));
 
-      await expect(handleChampionDelete(commentId)).rejects.toThrow(
-        'Ban error'
+      await expect(handleWordBackingDelete(commentId)).rejects.toThrow(
+        'Remove error'
       );
     });
   });

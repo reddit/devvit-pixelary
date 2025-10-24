@@ -77,7 +77,7 @@ export async function processCommand(
     case '!remove':
       return handlers.handleRemove(args, context);
     case '!stats':
-      return handlers.handleStats(args);
+      return handlers.handleStats(args, context);
     case '!score':
       return handlers.handleScore(args, context);
     case '!show':

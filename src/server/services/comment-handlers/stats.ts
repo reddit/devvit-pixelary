@@ -1,12 +1,16 @@
-import type { CommandResult } from '../comment-commands';
+import type { CommandContext, CommandResult } from '../comment-commands';
 import { isWordInList } from '../dictionary';
+import { setWordBacking } from '../word-backing';
 import { redis, context } from '@devvit/web/server';
 import { REDIS_KEYS } from '../redis';
 import type { WordMetrics } from '../../../shared/types';
 import type { T3 } from '@devvit/shared-types/tid.js';
 import { normalizeWord } from '../../../shared/utils/string';
 
-export async function handleStats(args: string[]): Promise<CommandResult> {
+export async function handleStats(
+  args: string[],
+  commandContext: CommandContext
+): Promise<CommandResult> {
   try {
     if (args.length === 0) {
       return {
@@ -31,6 +35,9 @@ export async function handleStats(args: string[]): Promise<CommandResult> {
         error: `Word not found. See \`!words\`.`,
       };
     }
+
+    // Add word to backed words list (for deobfuscation)
+    await setWordBacking(word, commandContext.commentId);
 
     // Get word metrics
     const metrics = await getWordMetrics(word);

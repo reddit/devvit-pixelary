@@ -3,7 +3,7 @@ import { redis } from '@devvit/web/server';
 import { REDIS_KEYS } from '../redis';
 import { titleCase } from '../../../shared/utils/string';
 import { getWords } from '../dictionary';
-import { setChampion, getChampion } from '../champion';
+import { getWordBacking, setWordBacking } from '../word-backing';
 import { isWordBanned } from '../dictionary';
 import { incrementScore } from '../progression';
 
@@ -68,15 +68,15 @@ export async function handleShow(
     // Check if word is banned
     const isBanned = await isWordBanned(normalizedWord);
 
-    // Check if champion already exists before setting it
-    const existingChampion = await getChampion(normalizedWord);
-    const isFirstTimeChampion = existingChampion === null;
+    // Check if word backing already exists before setting it
+    const existingBacking = await getWordBacking(normalizedWord);
+    const isFirstTimeBacking = existingBacking === null;
 
-    // Store this comment as champion comment for this word
-    await setChampion(normalizedWord, context.commentId);
+    // Store this comment as word backing comment for this word
+    await setWordBacking(normalizedWord, context.commentId);
 
-    // Award 1 point if this is the first time someone becomes champion for this word
-    if (isFirstTimeChampion && context.authorId) {
+    // Award 1 point if this is the first time someone backs this word
+    if (isFirstTimeBacking && context.authorId) {
       try {
         await incrementScore(context.authorId, 1);
       } catch (error) {

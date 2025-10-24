@@ -24,8 +24,6 @@ export const REDIS_KEYS = {
   // Words
   wordsAll: (subredditName: string) => `words:all:${subredditName}`,
   wordsBanned: (subredditName: string) => `words:banned:${subredditName}`,
-  wordsChampioned: (subredditName: string) =>
-    `words:championed:${subredditName}`,
   wordsActive: (subredditName: string, timestamp: string) =>
     `words:active:${subredditName}:${timestamp}`,
   wordsHourlyStats: (subredditName: string, timestamp: string) =>
@@ -36,11 +34,11 @@ export const REDIS_KEYS = {
   wordsLastServed: (subredditName: string) =>
     `words:lastServed:${subredditName}`,
 
-  // Champions
-  championWord: (commentId: T1) => `champion:word:${commentId}`,
+  // Word backing
+  wordBackingComment: (commentId: T1) => `word:backing:comment:${commentId}`,
 
   // Word
-  wordChampion: (word: string) => `word:champion:${word}`,
+  wordBacking: (word: string) => `word:backing:${word}`,
   wordDrawings: (word: string) => `word:drawings:${word}`,
 
   // Communities

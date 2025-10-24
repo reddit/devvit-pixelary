@@ -17,10 +17,28 @@ vi.mock('../dictionary', () => ({
   isWordInList: vi.fn().mockResolvedValue(true),
 }));
 
+// Mock the word-backing service
+vi.mock('../word-backing', () => ({
+  setWordBacking: vi.fn().mockResolvedValue(undefined),
+}));
+
 import { redis, context } from '@devvit/web/server';
 import { handleStats, getWordMetrics } from './stats';
 import { REDIS_KEYS } from './redis';
 import { isWordInList } from '../dictionary';
+import { setWordBacking } from '../word-backing';
+
+// Mock context for tests
+const mockContext = {
+  commentId: 't1_test123' as const,
+  postId: 't3_test456' as const,
+  authorId: 't2_test789' as const,
+  authorName: 'testuser',
+  subredditName: 'testsub',
+  subredditId: 't5_testsub' as const,
+  userId: 't2_test789' as const,
+  username: 'testuser',
+};
 
 describe('Stats Comment Handler', () => {
   beforeEach(() => {
@@ -301,7 +319,7 @@ describe('Stats Comment Handler', () => {
       });
       vi.mocked(redis.zRange).mockResolvedValue([]);
 
-      const result = await handleStats(args);
+      const result = await handleStats(args, mockContext);
 
       expect(result.success).toBe(true);
       expect(result.response).toContain('100');
@@ -313,7 +331,7 @@ describe('Stats Comment Handler', () => {
     it('should handle missing word argument', async () => {
       const args: string[] = [];
 
-      const result = await handleStats(args);
+      const result = await handleStats(args, mockContext);
 
       expect(result.success).toBe(true); // Should return success with usage message
       expect(result.response).toContain('Usage');
@@ -325,7 +343,7 @@ describe('Stats Comment Handler', () => {
       // Mock isWordInList to return false
       vi.mocked(isWordInList).mockResolvedValue(false);
 
-      const result = await handleStats(args);
+      const result = await handleStats(args, mockContext);
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('Word not found');
@@ -340,7 +358,7 @@ describe('Stats Comment Handler', () => {
       // Mock Redis to throw an error
       vi.mocked(redis.hGetAll).mockRejectedValue(new Error('Database error'));
 
-      const result = await handleStats(args);
+      const result = await handleStats(args, mockContext);
 
       // The service handles Redis errors gracefully by returning zero metrics
       expect(result.success).toBe(true);
@@ -368,7 +386,7 @@ describe('Stats Comment Handler', () => {
         .mockResolvedValueOnce(7) // drawingSkips
         .mockResolvedValueOnce(30); // drawingGuesses
 
-      const result = await handleStats(args);
+      const result = await handleStats(args, mockContext);
 
       expect(result.success).toBe(true);
       expect(result.response).toContain('33.0%');

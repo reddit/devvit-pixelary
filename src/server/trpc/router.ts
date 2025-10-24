@@ -175,8 +175,8 @@ export const appRouter = t.router({
 
       getAllowedWords: t.procedure.query(async ({ ctx }) => {
         if (!ctx.subredditName) throw new Error('Subreddit not found');
-        const result = await getWords(ctx.subredditName, 0, 10000);
-        return result.words;
+        // Return empty array since we don't need any allow list
+        return [];
       }),
 
       revealGuess: t.procedure

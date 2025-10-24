@@ -11,6 +11,8 @@ vi.mock('@devvit/web/server', () => ({
     sMembers: vi.fn(),
     sIsMember: vi.fn(),
     del: vi.fn(),
+    get: vi.fn(),
+    set: vi.fn(),
     hGetAll: vi.fn(),
     hSet: vi.fn(),
     exists: vi.fn(),

@@ -17,6 +17,7 @@ export async function addWord(word: string): Promise<boolean> {
     member: normalizedWord,
     score: DEFAULT_WORD_SCORE,
   });
+
   return result > 0;
 }
 

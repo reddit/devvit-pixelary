@@ -2,6 +2,7 @@ import type { CommandContext, CommandResult } from '../comment-commands';
 import { addWord, getBannedWords } from '../dictionary';
 import { getScore, getLevelByScore } from '../progression';
 import { hasReward } from '../../../shared/rewards';
+import { setWordBacking } from '../word-backing';
 
 export async function handleAdd(
   args: string[],
@@ -51,6 +52,9 @@ export async function handleAdd(
     const success = await addWord(word);
 
     if (success) {
+      // Set word backing for the added word
+      await setWordBacking(word, context.commentId);
+
       return {
         success: true,
         response: `Added "${word}". Removed if comment deleted.`,

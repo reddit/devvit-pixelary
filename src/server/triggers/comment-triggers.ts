@@ -5,7 +5,7 @@ import {
   isCommand,
   parseCommand,
 } from '../services/comment-commands';
-import { handleChampionDelete } from '../services/champion';
+import { handleWordBackingDelete } from '../services/word-backing';
 import { processCommand } from '../services/comment-commands';
 
 /**
@@ -81,7 +81,8 @@ export async function handleCommentDelete(
       return;
     }
 
-    await handleChampionDelete(commentId);
+    // Clean up word backing (covers dictionary words and other word backing)
+    await handleWordBackingDelete(commentId);
 
     res.json({ status: 'processed' });
   } catch (error) {
