@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { getAllWordsPaginated } from '../services/dictionary';
+import { getWords } from '../services/dictionary';
 
 /**
  * Menu action handler for showing a form to view and edit the word list
@@ -10,7 +10,7 @@ export async function handleEditWords(
   res: Response
 ): Promise<void> {
   try {
-    const { words } = await getAllWordsPaginated();
+    const { words } = await getWords();
     res.json({
       showForm: {
         name: 'editWordsForm',

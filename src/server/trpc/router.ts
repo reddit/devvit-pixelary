@@ -4,10 +4,10 @@ import { z } from 'zod';
 import type { T3 } from '@devvit/shared-types/tid.js';
 import { assertT3 } from '@devvit/shared-types/tid.js';
 import {
-  getAllWords,
+  getWords,
   addWord,
   removeWord,
-  getAllBannedWords,
+  getBannedWords,
 } from '../services/dictionary';
 import {
   generateSlate,
@@ -67,12 +67,12 @@ export const appRouter = t.router({
         if (!ctx.subredditName) throw new Error('Subreddit not found');
 
         // Check if dictionary is initialized
-        const words = await getAllWords();
-        const isInitialized = words.length > 0;
+        const wordsResult = await getWords(ctx.subredditName, 0, 1);
+        const isInitialized = wordsResult.total > 0;
 
         return {
           initialized: isInitialized,
-          wordCount: words.length,
+          wordCount: wordsResult.total,
           subreddit: ctx.subredditName,
         };
       }),
@@ -82,7 +82,8 @@ export const appRouter = t.router({
     dictionary: t.router({
       get: t.procedure.query(async ({ ctx }) => {
         if (!ctx.subredditName) throw new Error('Subreddit not found');
-        return await getAllWords();
+        const result = await getWords(ctx.subredditName, 0, 10000);
+        return result.words;
       }),
 
       add: t.procedure
@@ -109,7 +110,8 @@ export const appRouter = t.router({
 
       getBanned: t.procedure.query(async ({ ctx }) => {
         if (!ctx.subredditName) throw new Error('Subreddit not found');
-        return await getAllBannedWords();
+        const result = await getBannedWords(0, 10000);
+        return result.words;
       }),
 
       getCandidates: t.procedure.query(async ({ ctx }) => {
@@ -173,7 +175,8 @@ export const appRouter = t.router({
 
       getAllowedWords: t.procedure.query(async ({ ctx }) => {
         if (!ctx.subredditName) throw new Error('Subreddit not found');
-        return await getAllWords(ctx.subredditName);
+        const result = await getWords(ctx.subredditName, 0, 10000);
+        return result.words;
       }),
 
       revealGuess: t.procedure

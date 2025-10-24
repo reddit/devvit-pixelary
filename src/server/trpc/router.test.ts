@@ -8,10 +8,18 @@ import {
 } from '../../shared/test-utils';
 
 vi.mock('../services/dictionary', () => ({
-  getAllWords: vi.fn(async () => ['cat', 'dog', 'tree']),
+  getWords: vi.fn(async () => ({
+    words: ['cat', 'dog', 'tree'],
+    total: 3,
+    hasMore: false,
+  })),
   addWord: vi.fn(async () => true),
   removeWord: vi.fn(async () => true),
-  getAllBannedWords: vi.fn(async () => []),
+  getBannedWords: vi.fn(async () => ({
+    words: [],
+    total: 0,
+    hasMore: false,
+  })),
   getAllowedWords: vi.fn(async () => ['cat', 'dog', 'tree']),
 }));
 

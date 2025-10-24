@@ -36,16 +36,14 @@ import {
   addWord,
   addWords,
   removeWord,
-  getAllWords,
-  getAllWordsPaginated,
+  getWords,
   replaceAllWords,
   updateWordsPreservingScores,
   isWordInList,
   banWord,
   banWords,
   unbanWord,
-  getAllBannedWords,
-  getAllBannedWordsPaginated,
+  getBannedWords,
   replaceBannedWords,
   isWordBanned,
   getRandomWords,
@@ -141,49 +139,7 @@ describe('Dictionary Service', () => {
     });
   });
 
-  describe('getAllWords', () => {
-    it('should return all words from the dictionary', async () => {
-      const mockWords = [
-        { member: 'Word1', score: 1 },
-        { member: 'Word2', score: 1 },
-        { member: 'Word3', score: 1 },
-      ];
-      vi.mocked(redis.global.zRange).mockResolvedValue(mockWords);
-
-      const result = await getAllWords();
-
-      expect(redis.global.zRange).toHaveBeenCalledWith(
-        REDIS_KEYS.wordsAll('testsub'),
-        0,
-        -1
-      );
-      expect(result).toEqual(['Word1', 'Word2', 'Word3']);
-    });
-
-    it('should return empty array when no words exist', async () => {
-      vi.mocked(redis.global.zRange).mockResolvedValue([]);
-
-      const result = await getAllWords();
-
-      expect(result).toEqual([]);
-    });
-
-    it('should handle custom subreddit name', async () => {
-      const mockWords = [{ member: 'Word1', score: 1 }];
-      vi.mocked(redis.global.zRange).mockResolvedValue(mockWords);
-
-      const result = await getAllWords('custom-sub');
-
-      expect(redis.global.zRange).toHaveBeenCalledWith(
-        REDIS_KEYS.wordsAll('custom-sub'),
-        0,
-        -1
-      );
-      expect(result).toEqual(['Word1']);
-    });
-  });
-
-  describe('getAllWordsPaginated', () => {
+  describe('getWords', () => {
     it('should return paginated words with correct metadata', async () => {
       const mockWords = [
         { member: 'Word1', score: 1 },
@@ -192,7 +148,7 @@ describe('Dictionary Service', () => {
       vi.mocked(redis.global.zRange).mockResolvedValue(mockWords);
       vi.mocked(redis.global.zCard).mockResolvedValue(3);
 
-      const result = await getAllWordsPaginated('testsub', 0, 2);
+      const result = await getWords('testsub', 0, 2);
 
       expect(result.words).toEqual(['Word1', 'Word2']);
       expect(result.total).toBe(3);
@@ -207,7 +163,7 @@ describe('Dictionary Service', () => {
       vi.mocked(redis.global.zRange).mockResolvedValue(mockWords);
       vi.mocked(redis.global.zCard).mockResolvedValue(2);
 
-      const result = await getAllWordsPaginated('testsub', 0, 10);
+      const result = await getWords('testsub', 0, 10);
 
       expect(result.words).toEqual(['Word1', 'Word2']);
       expect(result.total).toBe(2);
@@ -218,7 +174,7 @@ describe('Dictionary Service', () => {
       vi.mocked(redis.global.zRange).mockResolvedValue([]);
       vi.mocked(redis.global.zCard).mockResolvedValue(0);
 
-      const result = await getAllWordsPaginated('testsub', 0, 10);
+      const result = await getWords('testsub', 0, 10);
 
       expect(result.words).toEqual([]);
       expect(result.total).toBe(0);
@@ -408,34 +364,7 @@ describe('Dictionary Service', () => {
     });
   });
 
-  describe('getAllBannedWords', () => {
-    it('should return all banned words', async () => {
-      const mockBannedWords = [
-        { member: 'banned1', score: 1 },
-        { member: 'banned2', score: 1 },
-      ];
-      vi.mocked(redis.zRange).mockResolvedValue(mockBannedWords);
-
-      const result = await getAllBannedWords();
-
-      expect(redis.zRange).toHaveBeenCalledWith(
-        REDIS_KEYS.wordsBanned('testsub'),
-        0,
-        -1
-      );
-      expect(result).toEqual(['banned1', 'banned2']);
-    });
-
-    it('should return empty array when no banned words', async () => {
-      vi.mocked(redis.zRange).mockResolvedValue([]);
-
-      const result = await getAllBannedWords();
-
-      expect(result).toEqual([]);
-    });
-  });
-
-  describe('getAllBannedWordsPaginated', () => {
+  describe('getBannedWords', () => {
     it('should return paginated banned words', async () => {
       const mockBannedWords = [
         { member: 'banned1', score: 1 },
@@ -445,7 +374,7 @@ describe('Dictionary Service', () => {
       vi.mocked(redis.zRange).mockResolvedValue(mockBannedWords);
       vi.mocked(redis.zCard).mockResolvedValue(3);
 
-      const result = await getAllBannedWordsPaginated(0, 2);
+      const result = await getBannedWords(0, 2);
 
       expect(redis.zRange).toHaveBeenCalledWith(
         REDIS_KEYS.wordsBanned('testsub'),

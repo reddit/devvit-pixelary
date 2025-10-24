@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { getAllBannedWordsPaginated } from '../services/dictionary';
+import { getBannedWords } from '../services/dictionary';
 
 /**
  * Menu action handler for showing a form to view and edit the banned words list
@@ -10,7 +10,7 @@ export async function handleEditBannedWords(
   res: Response
 ): Promise<void> {
   try {
-    const { words: bannedWords } = await getAllBannedWordsPaginated();
+    const { words: bannedWords } = await getBannedWords();
 
     res.json({
       showForm: {

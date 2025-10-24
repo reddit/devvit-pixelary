@@ -11,7 +11,11 @@ vi.mock('./progression', () => ({
 // Mock the dictionary service
 vi.mock('./dictionary', () => ({
   addWord: vi.fn().mockResolvedValue(true),
-  getAllBannedWords: vi.fn().mockResolvedValue([]),
+  getBannedWords: vi.fn().mockResolvedValue({
+    words: [],
+    total: 0,
+    hasMore: false,
+  }),
   removeWord: vi.fn().mockResolvedValue(true),
 }));
 

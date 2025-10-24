@@ -27,9 +27,9 @@ export async function addWord(word: string): Promise<boolean> {
 export async function addWords(words: string[]): Promise<void> {
   const subName = context.subredditName;
   const normalizedWords = words.map((word) => normalizeWord(word));
-  const bannedWords = await getAllBannedWords();
+  const bannedWordsResult = await getBannedWords(0, 10000);
   const filteredWords = normalizedWords.filter(
-    (word) => !bannedWords.includes(word)
+    (word) => !bannedWordsResult.words.includes(word)
   );
   await redis.global.zAdd(
     REDIS_KEYS.wordsAll(subName),
@@ -53,25 +53,13 @@ export async function removeWord(word: string): Promise<boolean> {
 }
 
 /**
- * Get all words from the dictionary for a given subreddit, or the current subreddit if no subreddit name is provided.
- * @deprecated Use getAllWordsPaginated for large lists to avoid memory issues
- */
-export async function getAllWords(subredditName?: string): Promise<string[]> {
-  const subName = subredditName ?? context.subredditName;
-  const key = REDIS_KEYS.wordsAll(subName);
-  const entities = await redis.global.zRange(key, 0, -1);
-  const words = entities.map((item) => item.member);
-  return words;
-}
-
-/**
  * Get words from the dictionary with pagination support
  * @param subredditName - The subreddit name (optional, uses current if not provided)
  * @param offset - Starting index (default: 0)
  * @param limit - Maximum number of words to return (default: 1000)
  * @returns Object with words array and total count
  */
-export async function getAllWordsPaginated(
+export async function getWords(
   subredditName?: string,
   offset: number = 0,
   limit: number = 1000
@@ -128,9 +116,9 @@ export async function updateWordsPreservingScores(
 
   // Normalize new words and filter out banned ones
   const normalizedWords = words.map((word) => normalizeWord(word));
-  const bannedWords = await getAllBannedWords();
+  const bannedWordsResult = await getBannedWords(0, 10000);
   const filteredWords = normalizedWords.filter(
-    (word) => !bannedWords.includes(word)
+    (word) => !bannedWordsResult.words.includes(word)
   );
 
   // Create sets for comparison
@@ -227,23 +215,12 @@ export async function unbanWord(word: string): Promise<void> {
 }
 
 /**
- * Get all banned words for the current subreddit
- * @deprecated Use getAllBannedWordsPaginated for large lists to avoid memory issues
- */
-export async function getAllBannedWords(): Promise<string[]> {
-  const subName = context.subredditName;
-  const key = REDIS_KEYS.wordsBanned(subName);
-  const words = await redis.zRange(key, 0, -1);
-  return words.map((item) => item.member);
-}
-
-/**
  * Get banned words with pagination support
  * @param offset - Starting index (default: 0)
  * @param limit - Maximum number of words to return (default: 1000)
  * @returns Object with words array and total count
  */
-export async function getAllBannedWordsPaginated(
+export async function getBannedWords(
   offset: number = 0,
   limit: number = 1000
 ): Promise<{
@@ -301,8 +278,8 @@ export async function isWordBanned(word: string): Promise<boolean> {
  */
 
 export async function getRandomWords(count: number = 3): Promise<string[]> {
-  const words = await getAllWords();
-  const shuffled = shuffle(words);
+  const wordsResult = await getWords(context.subredditName, 0, 10000);
+  const shuffled = shuffle(wordsResult.words);
   const result = shuffled.slice(0, count);
   return result;
 }

@@ -2,7 +2,7 @@ import type { CommandContext, CommandResult } from '../comment-commands';
 import { redis } from '@devvit/web/server';
 import { REDIS_KEYS } from '../redis';
 import { titleCase } from '../../../shared/utils/string';
-import { getAllWords } from '../dictionary';
+import { getWords } from '../dictionary';
 import { setChampion, getChampion } from '../champion';
 import { isWordBanned } from '../dictionary';
 import { incrementScore } from '../progression';
@@ -60,8 +60,8 @@ export async function handleShow(
       totalGuesses > 0 ? Math.round((count / totalGuesses) * 100) : 0;
 
     // Check if word is in dictionary
-    const dictionaryWords = await getAllWords();
-    const isInDictionary = dictionaryWords.some(
+    const dictionaryResult = await getWords(context.subredditName, 0, 10000);
+    const isInDictionary = dictionaryResult.words.some(
       (dictWord) => dictWord.toLowerCase() === normalizedWord.toLowerCase()
     );
 
