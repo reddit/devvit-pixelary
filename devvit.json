@@ -25,34 +25,35 @@
     "wordsUpdateForm": "/internal/form/words-update",
     "bannedWordsForm": "/internal/form/banned-words-update",
     "slateBanditForm": "/internal/form/slate-bandit-update",
-    "editDictionaryForm": "/internal/form/edit-dictionary"
+    "editWordsForm": "/internal/form/edit-words",
+    "editBannedWordsForm": "/internal/form/edit-banned-words"
   },
   "menu": {
     "items": [
       {
-        "label": "[Pixelary] New Post",
-        "description": "pixelary-beta",
+        "label": "[Pixelary] Create New Post",
+        "description": "Start the new post creation flow",
         "location": "subreddit",
         "forUserType": "moderator",
-        "endpoint": "/internal/menu/post-create"
+        "endpoint": "/internal/menu/create-new-post"
       },
       {
-        "label": "[Pixelary] Word List",
-        "description": "View and bulk update the word list",
+        "label": "[Pixelary] Edit Words",
+        "description": "View and edit the word list",
         "location": "subreddit",
         "forUserType": "moderator",
-        "endpoint": "/internal/menu/edit-dictionary"
+        "endpoint": "/internal/menu/edit-words"
       },
       {
-        "label": "[Pixelary] Banned Words List",
-        "description": "View and bulk update the banned words list",
+        "label": "[Pixelary] Edit Banned Words",
+        "description": "View and edit the banned words list",
         "location": "subreddit",
         "forUserType": "moderator",
-        "endpoint": "/internal/menu/banned-words"
+        "endpoint": "/internal/menu/edit-banned-words"
       },
       {
-        "label": "[Pixelary] View Word",
-        "description": "Reveals the word for you only",
+        "label": "[Pixelary] Reveal Word",
+        "description": "Reveals the word for a drawing post for you only",
         "location": "post",
         "forUserType": "moderator",
         "postFilter": "currentApp",
@@ -60,46 +61,39 @@
       },
       {
         "label": "[Pixelary] Update Pinned Comment",
-        "description": "Refreshes the pinned comment content",
+        "description": "Manually update the pinned comment content",
         "location": "post",
         "forUserType": "moderator",
         "postFilter": "currentApp",
-        "endpoint": "/internal/menu/update-comment"
+        "endpoint": "/internal/menu/update-pinned-comment"
       },
       {
-        "label": "[Pixelary] Set My Flair",
-        "description": "Refreshes your user flair",
+        "label": "[Pixelary] Update User Flair",
+        "description": "Manually update your user flair",
         "location": "subreddit",
         "forUserType": "user",
-        "endpoint": "/internal/menu/set-my-flair"
+        "endpoint": "/internal/menu/update-user-flair"
       },
       {
-        "label": "[Pixelary] Log Daily Telemetry",
-        "description": "Logs the telemetry Redis key for today",
+        "label": "[Pixelary] Log Telemetry",
+        "description": "Print today's telemetry data to server logs",
         "location": "subreddit",
         "forUserType": "moderator",
-        "endpoint": "/internal/menu/log-daily-telemetry"
+        "endpoint": "/internal/menu/telemetry-log"
       },
       {
-        "label": "[Pixelary] Clear Daily Telemetry",
-        "description": "Clears the telemetry data for today",
+        "label": "[Pixelary] Clear Telemetry",
+        "description": "Clear today's telemetry data",
         "location": "subreddit",
         "forUserType": "moderator",
-        "endpoint": "/internal/menu/clear-daily-telemetry"
+        "endpoint": "/internal/menu/telemetry-clear"
       },
       {
         "label": "[Pixelary] Slate Bandit",
-        "description": "Configure multi-armed bandit parameters for word selection",
+        "description": "Configure word selection parameters",
         "location": "subreddit",
         "forUserType": "moderator",
         "endpoint": "/internal/menu/slate-bandit"
-      },
-      {
-        "label": "[Pixelary] Initialize",
-        "description": "Initialize the app with default words and settings",
-        "location": "subreddit",
-        "forUserType": "moderator",
-        "endpoint": "/internal/menu/initialize"
       }
     ]
   },

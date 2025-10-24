@@ -2,10 +2,10 @@ import type { Request, Response } from 'express';
 import { updateWordsPreservingScores } from '../services/dictionary';
 
 /**
- * Form handler for editing dictionary
- * Replaces the community dictionary with new words from the text list
+ * Form handler for editing words
+ * Replaces the community word list with new words from the text list
  */
-export async function handleEditDictionaryForm(
+export async function handleEditWordsForm(
   req: Request,
   res: Response
 ): Promise<void> {
@@ -29,15 +29,15 @@ export async function handleEditDictionaryForm(
 
     res.json({
       showToast: {
-        text: 'Dictionary updated successfully!',
+        text: 'Words updated successfully!',
         appearance: 'success',
       },
     });
   } catch (error) {
-    console.error(`Error updating dictionary: ${error}`);
+    console.error(`Error updating words: ${error}`);
     res.status(400).json({
       status: 'error',
-      message: 'Failed to update dictionary',
+      message: 'Failed to update words',
     });
   }
 }

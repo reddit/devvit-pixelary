@@ -3,9 +3,9 @@ import { context } from '@devvit/web/server';
 import { getDrawing } from '../services/drawing';
 
 /**
- * Menu action handler for revealing word
- * Shows the word for a drawing post
+ * Menu action handler for revealing the word for a drawing post
  */
+
 export async function handleRevealWord(
   _req: Request,
   res: Response

@@ -265,7 +265,7 @@ export async function savePinnedCommentId(
  * @param postId - The ID of the post to get the pinned comment ID for
  * @returns The pinned comment ID if it exists, null otherwise
  */
-export async function getPostPinnedCommentId(postId: T3): Promise<T1 | null> {
+export async function getPinnedCommentId(postId: T3): Promise<T1 | null> {
   // First check if it's a drawing post
   const drawingData = await getDrawing(postId);
   if (drawingData?.pinnedCommentId) {

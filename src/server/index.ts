@@ -6,16 +6,15 @@ import { createContext } from './trpc/context';
 
 // Import menu actions
 import {
-  handlePostCreate,
-  handleEditDictionary,
-  handleBannedWords,
+  handleCreateNewPost,
+  handleEditWords,
+  handleEditBannedWords,
   handleRevealWord,
-  handleSetMyFlair,
-  handleUpdateComment,
-  handleLogTelemetryKey,
-  handleClearDailyTelemetry,
+  handleUpdateUserFlair,
+  handleUpdatePinnedComment,
+  handleTelemetryLog,
+  handleTelemetryClear,
   handleSlateBandit,
-  handleInitializeApp,
 } from './menu-actions';
 
 // Import form handlers
@@ -25,7 +24,7 @@ import {
   handleWordsUpdate,
   handleBannedWordsUpdate,
   handleSlateBanditUpdate,
-  handleEditDictionaryForm,
+  handleEditWordsForm,
 } from './forms';
 
 // Import scheduler handlers
@@ -92,16 +91,15 @@ router.post('/internal/scheduler/update-word-scores', handleUpdateWords);
 // MENU ACTIONS
 // ============================================================================
 
-router.post('/internal/menu/post-create', handlePostCreate);
-router.post('/internal/menu/edit-dictionary', handleEditDictionary);
-router.post('/internal/menu/banned-words', handleBannedWords);
+router.post('/internal/menu/create-new-post', handleCreateNewPost);
+router.post('/internal/menu/edit-words', handleEditWords);
+router.post('/internal/menu/edit-banned-words', handleEditBannedWords);
 router.post('/internal/menu/reveal-word', handleRevealWord);
-router.post('/internal/menu/set-my-flair', handleSetMyFlair);
-router.post('/internal/menu/update-comment', handleUpdateComment);
-router.post('/internal/menu/log-daily-telemetry', handleLogTelemetryKey);
-router.post('/internal/menu/clear-daily-telemetry', handleClearDailyTelemetry);
+router.post('/internal/menu/update-user-flair', handleUpdateUserFlair);
+router.post('/internal/menu/update-pinned-comment', handleUpdatePinnedComment);
+router.post('/internal/menu/telemetry-log', handleTelemetryLog);
+router.post('/internal/menu/telemetry-clear', handleTelemetryClear);
 router.post('/internal/menu/slate-bandit', handleSlateBandit);
-router.post('/internal/menu/initialize', handleInitializeApp);
 
 // ============================================================================
 // FORM HANDLERS
@@ -112,20 +110,10 @@ router.post('/internal/form/pinned-post-submit', handlePinnedPostSubmit);
 router.post('/internal/form/words-update', handleWordsUpdate);
 router.post('/internal/form/banned-words-update', handleBannedWordsUpdate);
 router.post('/internal/form/slate-bandit-update', handleSlateBanditUpdate);
-router.post('/internal/form/edit-dictionary', handleEditDictionaryForm);
+router.post('/internal/form/edit-words', handleEditWordsForm);
 
 // Use router middleware
 app.use(router);
-
-// Public telemetry endpoint for Beacon API (no auth required)
-router.post('/api/telemetry/public', async (req, res) => {
-  try {
-    const { eventType } = req.body;
-    res.json({ ok: true });
-  } catch (error) {
-    res.status(500).json({ error: 'Telemetry failed' });
-  }
-});
 
 // Mount tRPC
 app.use(
@@ -136,7 +124,8 @@ app.use(
 // Get port, create, and start the server
 const port = getServerPort();
 const server = createServer(app);
-server.on('error', (err) => {
+server.on('error', (error) => {
   // Server error handling
+  console.error(`server error; ${error}`);
 });
 server.listen(port);

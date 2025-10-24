@@ -4,17 +4,17 @@ import {
   getDrawing,
   getDrawingCommentData,
   generateDrawingCommentText,
-  getPostPinnedCommentId,
+  getPinnedCommentId,
   saveLastCommentUpdate,
   clearNextScheduledJobId,
 } from '../services/drawing';
 import { updatePinnedPostComment } from '../services/pinned-post';
+import type { T1 } from '@devvit/shared-types/tid.js';
 
 /**
- * Menu action handler for updating pinned comments on both drawing and pinned posts
- * Moderator access is enforced by Devvit configuration
+ * Menu action handler for updating the pinned comment for a drawing post or pinned post
  */
-export async function handleUpdateComment(
+export async function handleUpdatePinnedComment(
   _req: Request,
   res: Response
 ): Promise<void> {
@@ -28,11 +28,11 @@ export async function handleUpdateComment(
       return;
     }
 
-    // Get the pinned comment ID for this post (works for both drawing and pinned posts)
-    const pinnedCommentId = await getPostPinnedCommentId(postId);
+    // Get the pinned comment ID for this post
+    const pinnedCommentId = await getPinnedCommentId(postId);
     if (!pinnedCommentId) {
       res.json({
-        showToast: 'No pinned comment found for this post',
+        showToast: 'No comment found',
       });
       return;
     }
@@ -46,9 +46,7 @@ export async function handleUpdateComment(
       const commentText = generateDrawingCommentText(stats);
 
       // Update the pinned comment
-      const comment = await reddit.getCommentById(
-        pinnedCommentId as `t1_${string}`
-      );
+      const comment = await reddit.getCommentById(pinnedCommentId as T1);
       await comment.edit({ text: commentText });
     } else {
       // It's a pinned post - use the dedicated update method
@@ -64,7 +62,8 @@ export async function handleUpdateComment(
     }
 
     res.json({
-      showToast: 'Updated!',
+      showToast: 'Comment updated',
+      appearance: 'success',
     });
   } catch (error) {
     console.error(`Error updating comment: ${error}`);

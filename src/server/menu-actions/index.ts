@@ -1,10 +1,9 @@
-export { handlePostCreate } from './post-create';
-export { handleEditDictionary } from './edit-dictionary';
-export { handleBannedWords } from './banned-words';
+export { handleCreateNewPost } from './create-new-post';
+export { handleEditWords } from './edit-words';
+export { handleEditBannedWords } from './edit-banned-words';
 export { handleRevealWord } from './reveal-word';
-export { handleSetMyFlair } from './set-my-flair';
-export { handleUpdateComment } from './update-comment';
-export { handleLogTelemetryKey } from './log-daily-telemetry';
-export { handleClearDailyTelemetry } from './clear-daily-telemetry';
+export { handleUpdateUserFlair } from './update-user-flair';
+export { handleUpdatePinnedComment } from './update-pinned-comment';
+export { handleTelemetryLog } from './telemetry-log';
+export { handleTelemetryClear } from './telemetry-clear';
 export { handleSlateBandit } from './slate-bandit';
-export { handleInitializeApp } from './initialize';

@@ -1,25 +1,24 @@
 import type { Request, Response } from 'express';
-import { getAllBannedWords } from '../services/dictionary';
-import { context } from '@devvit/web/server';
+import { getAllBannedWordsPaginated } from '../services/dictionary';
 
 /**
- * Menu action handler for banned words management
- * Shows a form for editing banned words
+ * Menu action handler for showing a form to view and edit the banned words list
  */
-export async function handleBannedWords(
+
+export async function handleEditBannedWords(
   _req: Request,
   res: Response
 ): Promise<void> {
   try {
-    const bannedWords = await getAllBannedWords(context.subredditId);
+    const { words: bannedWords } = await getAllBannedWordsPaginated();
 
     res.json({
       showForm: {
-        name: 'bannedWordsForm',
+        name: 'editBannedWordsForm',
         form: {
-          title: 'Banned words',
+          title: 'Edit banned words',
           description:
-            'Prevent certain words from being added to the dictionary.',
+            'These words can not be added to the word list or appear in the guesses shown.',
           fields: [
             {
               type: 'paragraph',
@@ -28,8 +27,8 @@ export async function handleBannedWords(
               lineHeight: 8,
               required: true,
               defaultValue: bannedWords.join(', '),
-              placeholder: 'Meatloaf, Meat loaf, ...',
-              helpText: 'Separate by commas',
+              placeholder: 'Apple, Banana, Meat Loaf, ...',
+              helpText: 'Separate by commas. Case insensitive.',
             },
           ],
           acceptLabel: 'Save',

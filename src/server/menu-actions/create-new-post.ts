@@ -4,7 +4,7 @@ import type { Request, Response } from 'express';
  * Menu action handler for creating new posts
  * Shows a form for selecting post type
  */
-export async function handlePostCreate(
+export async function handleCreateNewPost(
   _req: Request,
   res: Response
 ): Promise<void> {
