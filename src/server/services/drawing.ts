@@ -457,9 +457,23 @@ export async function getUserDrawingStatus(
     redis.zScore(REDIS_KEYS.drawingAttempts(postId), userId),
   ]);
 
+  // Clean up inconsistent data - user shouldn't be in both solved and skipped
+  const isInSolvedSet = solved != null; // Use != to check for both null and undefined
+  const isInSkippedSet = skipped != null; // Use != to check for both null and undefined
+
+  if (isInSolvedSet && isInSkippedSet) {
+    // Remove from skipped set (solved takes precedence)
+    await redis.zRem(REDIS_KEYS.drawingSkips(postId), [userId]);
+    return {
+      solved: true,
+      skipped: false,
+      guessCount: guessCount ?? 0,
+    };
+  }
+
   return {
-    solved: solved !== null,
-    skipped: skipped !== null,
+    solved: isInSolvedSet,
+    skipped: isInSkippedSet,
     guessCount: guessCount ?? 0,
   };
 }

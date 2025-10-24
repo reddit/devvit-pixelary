@@ -77,45 +77,41 @@ afterEach(() => {
 });
 
 describe('Confetti', () => {
-  it('renders nothing when not active', () => {
-    render(<Confetti isActive={false} />);
-    expect(screen.queryByTestId('confetti-canvas')).not.toBeInTheDocument();
-  });
-
-  it('renders canvas when active', () => {
-    render(<Confetti isActive={true} />);
+  it('renders canvas when mounted', () => {
+    render(<Confetti />);
     const canvas = screen.getByTestId('confetti-canvas');
     expect(canvas).toBeInTheDocument();
-    expect(canvas).toHaveClass(
-      'fixed',
-      'inset-0',
-      'pointer-events-none',
-      'z-50'
-    );
+    expect(canvas).toHaveClass('fixed', 'inset-0', 'pointer-events-none');
   });
 
   it('applies correct styling', () => {
-    render(<Confetti isActive={true} />);
+    render(<Confetti />);
     const canvas = screen.getByTestId('confetti-canvas');
     expect(canvas).toHaveStyle({
       imageRendering: 'pixelated',
     });
   });
 
-  it('accepts custom pixel size', () => {
-    render(<Confetti isActive={true} pixelSize={16} />);
+  it('accepts custom count', () => {
+    render(<Confetti count={50} />);
     const canvas = screen.getByTestId('confetti-canvas');
     expect(canvas).toBeInTheDocument();
   });
 
-  it('accepts custom duration', () => {
-    render(<Confetti isActive={true} duration={5000} />);
+  it('accepts custom speed', () => {
+    render(<Confetti speed={5} />);
+    const canvas = screen.getByTestId('confetti-canvas');
+    expect(canvas).toBeInTheDocument();
+  });
+
+  it('accepts custom delay', () => {
+    render(<Confetti delay={200} />);
     const canvas = screen.getByTestId('confetti-canvas');
     expect(canvas).toBeInTheDocument();
   });
 
   it('uses default props when not provided', () => {
-    render(<Confetti isActive={true} />);
+    render(<Confetti />);
     const canvas = screen.getByTestId('confetti-canvas');
     expect(canvas).toBeInTheDocument();
   });

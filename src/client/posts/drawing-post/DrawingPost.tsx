@@ -69,7 +69,7 @@ export const DrawingPost = ({ postData: propPostData }: DrawingPostProps) => {
 
       // Invalidate user profile to update score
       void queryClient.invalidateQueries({
-        queryKey: ['pixelary', 'user', 'profile'],
+        queryKey: ['pixelary', 'user', 'profile', { postId: variables.postId }],
       });
 
       // Invalidate leaderboard
@@ -89,7 +89,7 @@ export const DrawingPost = ({ postData: propPostData }: DrawingPostProps) => {
     onSuccess: (_: unknown, variables: { postId: string }) => {
       // Invalidate user profile to update skipped status
       void queryClient.invalidateQueries({
-        queryKey: ['pixelary', 'user', 'profile'],
+        queryKey: ['pixelary', 'user', 'profile', { postId: variables.postId }],
       });
 
       // Invalidate post data to update skip count
@@ -133,13 +133,15 @@ export const DrawingPost = ({ postData: propPostData }: DrawingPostProps) => {
     if (earnedPoints && earnedPoints > 0 && userProfile) {
       const attachment = (
         <ProgressBar
-          percentage={getLevelProgressPercentage(userProfile.score)}
+          percentage={getLevelProgressPercentage(
+            userProfile.score + earnedPoints
+          )}
           width={200}
           height={8}
         />
       );
       success(`+${earnedPoints} points!`, {
-        duration: 2500,
+        duration: 3000,
         attachment,
       });
     }

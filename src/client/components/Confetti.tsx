@@ -28,13 +28,15 @@ const CONFETTI_COLORS = [
 export function Confetti({
   count = 100,
   speed = 3,
-  delay = 100,
+  delay = 20,
 }: ConfettiProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number | undefined>(undefined);
   const [particles, setParticles] = useState<ConfettiParticle[]>([]);
   const [isAnimating, setIsAnimating] = useState(false);
   const [spawnedCount, setSpawnedCount] = useState(0);
+  const lastSpawnTime = useRef<number>(0);
+  const lastFrameTime = useRef<number>(0);
 
   // Initialize canvas
   useEffect(() => {
@@ -44,13 +46,9 @@ export function Confetti({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Set canvas size with DPI scaling
-    const dpr = window.devicePixelRatio || 1;
-    canvas.width = window.innerWidth * dpr;
-    canvas.height = window.innerHeight * dpr;
-    canvas.style.width = window.innerWidth + 'px';
-    canvas.style.height = window.innerHeight + 'px';
-    ctx.scale(dpr, dpr);
+    // Set canvas size to match viewport
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
   }, []);
 
   // Start animation on mount
@@ -70,13 +68,19 @@ export function Confetti({
       return;
     }
 
-    const animate = () => {
+    const animate = (currentTime: number) => {
       setParticles((prevParticles) => {
-        const currentTime = Date.now();
+        const deltaTime = lastFrameTime.current
+          ? (currentTime - lastFrameTime.current) / 1000
+          : 0.016;
+        lastFrameTime.current = currentTime;
         let newParticles = [...prevParticles];
 
         // Spawn new particles gradually (every delay ms, up to count total)
-        if (spawnedCount < count && currentTime % delay < 16) {
+        if (
+          spawnedCount < count &&
+          currentTime - lastSpawnTime.current >= delay
+        ) {
           const spawnCount = Math.min(1, count - spawnedCount); // Spawn 1 at a time
           const additionalParticles: ConfettiParticle[] = [];
 
@@ -87,28 +91,28 @@ export function Confetti({
             additionalParticles.push({
               x: Math.random() * window.innerWidth,
               y: -20, // Start at the top
-              vy: Math.random() * speed + speed, // Fall down at random speed (speed to speed*2)
+              vy: (Math.random() * speed + speed) * 50, // Scale up for delta time (speed to speed*2) * 50
               color: CONFETTI_COLORS[colorIndex]!,
-              width: 8,
-              height: 24,
+              width: 4,
+              height: 12,
               life: 1.0,
             });
           }
 
           newParticles = [...newParticles, ...additionalParticles];
           setSpawnedCount((prev) => prev + spawnCount);
+          lastSpawnTime.current = currentTime;
         }
 
         const updatedParticles = newParticles
           .map((particle) => {
-            particle.y += particle.vy;
-            particle.life = Math.max(0, particle.life - 0.002); // Fade out over time
+            particle.y += particle.vy * deltaTime; // Scale by delta time
+            particle.life = Math.max(0, particle.life - 0.002 * deltaTime); // Fade out over time
 
             return particle;
           })
           .filter((particle) => {
             return (
-              typeof window !== 'undefined' &&
               particle.y < window.innerHeight + 50 &&
               particle.x > -50 &&
               particle.x < window.innerWidth + 50 &&
@@ -139,19 +143,6 @@ export function Confetti({
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
-    // Update canvas size if needed
-    const dpr = window.devicePixelRatio || 1;
-    const expectedWidth = window.innerWidth * dpr;
-    const expectedHeight = window.innerHeight * dpr;
-
-    if (canvas.width !== expectedWidth || canvas.height !== expectedHeight) {
-      canvas.width = expectedWidth;
-      canvas.height = expectedHeight;
-      canvas.style.width = window.innerWidth + 'px';
-      canvas.style.height = window.innerHeight + 'px';
-      ctx.scale(dpr, dpr);
-    }
-
     // Clear canvas
     ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
 
@@ -179,15 +170,8 @@ export function Confetti({
       const canvas = canvasRef.current;
       if (!canvas) return;
 
-      const ctx = canvas.getContext('2d');
-      if (!ctx) return;
-
-      const dpr = window.devicePixelRatio || 1;
-      canvas.width = window.innerWidth * dpr;
-      canvas.height = window.innerHeight * dpr;
-      canvas.style.width = window.innerWidth + 'px';
-      canvas.style.height = window.innerHeight + 'px';
-      ctx.scale(dpr, dpr);
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
     };
 
     window.addEventListener('resize', handleResize);
@@ -214,6 +198,8 @@ export function Confetti({
       data-testid="confetti-canvas"
       style={{
         imageRendering: 'pixelated',
+        width: '100vw',
+        height: '100vh',
       }}
     />
   );
