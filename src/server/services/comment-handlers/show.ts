@@ -3,7 +3,7 @@ import { redis } from '@devvit/web/server';
 import { REDIS_KEYS } from '../redis';
 import { titleCase } from '../../../shared/utils/string';
 import { getWords } from '../dictionary';
-import { getWordBacking, setWordBacking } from '../word-backing';
+import { getBacker, addBacker } from '../word-backing';
 import { isWordBanned } from '../dictionary';
 import { incrementScore } from '../progression';
 
@@ -69,11 +69,11 @@ export async function handleShow(
     const isBanned = await isWordBanned(normalizedWord);
 
     // Check if word backing already exists before setting it
-    const existingBacking = await getWordBacking(normalizedWord);
+    const existingBacking = await getBacker(normalizedWord);
     const isFirstTimeBacking = existingBacking === null;
 
     // Store this comment as word backing comment for this word
-    await setWordBacking(normalizedWord, context.commentId);
+    await addBacker(normalizedWord, context.commentId);
 
     // Award 1 point if this is the first time someone backs this word
     if (isFirstTimeBacking && context.authorId) {

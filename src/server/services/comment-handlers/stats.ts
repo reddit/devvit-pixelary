@@ -1,6 +1,6 @@
 import type { CommandContext, CommandResult } from '../comment-commands';
 import { isWordInList } from '../dictionary';
-import { setWordBacking } from '../word-backing';
+import { addBacker } from '../word-backing';
 import { redis, context } from '@devvit/web/server';
 import { REDIS_KEYS } from '../redis';
 import type { WordMetrics } from '../../../shared/types';
@@ -37,7 +37,7 @@ export async function handleStats(
     }
 
     // Add word to backed words list (for deobfuscation)
-    await setWordBacking(word, commandContext.commentId);
+    await addBacker(word, commandContext.commentId);
 
     // Get word metrics
     const metrics = await getWordMetrics(word);

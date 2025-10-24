@@ -22,10 +22,9 @@ vi.mock('./dictionary', () => ({
 
 import { redis, context } from '@devvit/web/server';
 import {
-  setWordBacking,
-  getWordBacking,
-  isWordBacked,
-  removeWordBacking,
+  addBacker,
+  getBacker,
+  removeBacker,
   handleWordBackingDelete,
 } from './word-backing';
 import { REDIS_KEYS } from './redis';
@@ -36,7 +35,7 @@ describe('Word Backing Service', () => {
     vi.clearAllMocks();
   });
 
-  describe('setWordBacking', () => {
+  describe('addBacker', () => {
     it('should set a new backing for a word', async () => {
       const word = 'test';
       const commentId = 't1_comment123' as const;
@@ -45,7 +44,7 @@ describe('Word Backing Service', () => {
       vi.mocked(redis.set).mockResolvedValue('OK');
       vi.mocked(redis.del).mockResolvedValue(0);
 
-      await setWordBacking(word, commentId);
+      await addBacker(word, commentId);
 
       expect(redis.set).toHaveBeenCalledWith(
         REDIS_KEYS.wordBacking('Test'),
@@ -62,7 +61,7 @@ describe('Word Backing Service', () => {
       const commentId = 't1_comment123' as const;
       const previousCommentId = 't1_previous123' as const;
 
-      // Mock getWordBacking to return a previous backing
+      // Mock getBacker to return a previous backing
       vi.mocked(redis.get).mockImplementation((key) => {
         if (key === REDIS_KEYS.wordBacking('Test')) {
           return Promise.resolve(previousCommentId);
@@ -74,7 +73,7 @@ describe('Word Backing Service', () => {
       vi.mocked(redis.set).mockResolvedValue('OK');
       vi.mocked(redis.del).mockResolvedValue(1);
 
-      await setWordBacking(word, commentId);
+      await addBacker(word, commentId);
 
       expect(redis.del).toHaveBeenCalledWith(
         REDIS_KEYS.wordBackingComment(previousCommentId)
@@ -89,7 +88,7 @@ describe('Word Backing Service', () => {
       const { isWordBanned } = await import('./dictionary');
       vi.mocked(isWordBanned).mockResolvedValue(true);
 
-      await setWordBacking(word, commentId);
+      await addBacker(word, commentId);
 
       expect(redis.zAdd).not.toHaveBeenCalled();
       expect(redis.set).not.toHaveBeenCalled();
@@ -101,20 +100,18 @@ describe('Word Backing Service', () => {
 
       vi.mocked(redis.set).mockRejectedValue(new Error('Redis error'));
 
-      await expect(setWordBacking(word, commentId)).rejects.toThrow(
-        'Redis error'
-      );
+      await expect(addBacker(word, commentId)).rejects.toThrow('Redis error');
     });
   });
 
-  describe('getWordBacking', () => {
+  describe('getBacker', () => {
     it('should return backing comment ID for a word', async () => {
       const word = 'test';
       const commentId = 't1_comment123' as const;
 
       vi.mocked(redis.get).mockResolvedValue(commentId);
 
-      const result = await getWordBacking(word);
+      const result = await getBacker(word);
 
       expect(redis.get).toHaveBeenCalledWith(REDIS_KEYS.wordBacking('Test'));
       expect(result).toBe(commentId);
@@ -125,7 +122,7 @@ describe('Word Backing Service', () => {
 
       vi.mocked(redis.get).mockResolvedValue(null);
 
-      const result = await getWordBacking(word);
+      const result = await getBacker(word);
 
       expect(result).toBeNull();
     });
@@ -135,7 +132,7 @@ describe('Word Backing Service', () => {
 
       vi.mocked(redis.get).mockResolvedValue('invalid_id');
 
-      const result = await getWordBacking(word);
+      const result = await getBacker(word);
 
       expect(result).toBeNull();
     });
@@ -146,48 +143,13 @@ describe('Word Backing Service', () => {
 
       vi.mocked(redis.get).mockResolvedValue(commentId);
 
-      await getWordBacking(word);
+      await getBacker(word);
 
       expect(redis.get).toHaveBeenCalledWith(REDIS_KEYS.wordBacking('Test'));
     });
   });
 
-  describe('isWordBacked', () => {
-    it('should return true if comment is a backing', async () => {
-      const commentId = 't1_comment123' as const;
-
-      vi.mocked(redis.get).mockResolvedValue('test');
-
-      const result = await isWordBacked(commentId);
-
-      expect(redis.get).toHaveBeenCalledWith(
-        REDIS_KEYS.wordBackingComment(commentId)
-      );
-      expect(result).toBe(true);
-    });
-
-    it('should return false if comment is not a backing', async () => {
-      const commentId = 't1_comment123' as const;
-
-      vi.mocked(redis.get).mockResolvedValue(undefined);
-
-      const result = await isWordBacked(commentId);
-
-      expect(result).toBe(false);
-    });
-
-    it('should return true if word is empty string', async () => {
-      const commentId = 't1_comment123' as const;
-
-      vi.mocked(redis.get).mockResolvedValue('');
-
-      const result = await isWordBacked(commentId);
-
-      expect(result).toBe(true);
-    });
-  });
-
-  describe('removeWordBacking', () => {
+  describe('removeBacker', () => {
     it('should remove backing and clean up all related keys', async () => {
       const word = 'test';
       const commentId = 't1_comment123' as const;
@@ -196,7 +158,7 @@ describe('Word Backing Service', () => {
       vi.mocked(redis.zRem).mockResolvedValue(1);
       vi.mocked(redis.del).mockResolvedValue(1);
 
-      await removeWordBacking(word);
+      await removeBacker(word);
 
       expect(redis.del).toHaveBeenCalledWith(REDIS_KEYS.wordBacking('Test'));
       expect(redis.del).toHaveBeenCalledWith(
@@ -209,7 +171,7 @@ describe('Word Backing Service', () => {
 
       vi.mocked(redis.get).mockResolvedValue(null);
 
-      await removeWordBacking(word);
+      await removeBacker(word);
 
       expect(redis.zRem).not.toHaveBeenCalled();
       expect(redis.del).not.toHaveBeenCalled();
@@ -223,7 +185,7 @@ describe('Word Backing Service', () => {
       vi.mocked(redis.zRem).mockResolvedValue(1);
       vi.mocked(redis.del).mockResolvedValue(1);
 
-      await removeWordBacking(word);
+      await removeBacker(word);
 
       expect(redis.del).toHaveBeenCalledWith(REDIS_KEYS.wordBacking('Test'));
       expect(redis.del).toHaveBeenCalledWith(

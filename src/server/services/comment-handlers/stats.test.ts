@@ -19,14 +19,14 @@ vi.mock('../dictionary', () => ({
 
 // Mock the word-backing service
 vi.mock('../word-backing', () => ({
-  setWordBacking: vi.fn().mockResolvedValue(undefined),
+  addBacker: vi.fn().mockResolvedValue(undefined),
 }));
 
 import { redis, context } from '@devvit/web/server';
 import { handleStats, getWordMetrics } from './stats';
 import { REDIS_KEYS } from './redis';
 import { isWordInList } from '../dictionary';
-import { setWordBacking } from '../word-backing';
+import { addBacker } from '../word-backing';
 
 // Mock context for tests
 const mockContext = {

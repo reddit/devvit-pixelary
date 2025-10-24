@@ -2,7 +2,7 @@ import type { CommandContext, CommandResult } from '../comment-commands';
 import { addWord, getBannedWords } from '../dictionary';
 import { getScore, getLevelByScore } from '../progression';
 import { hasReward } from '../../../shared/rewards';
-import { setWordBacking } from '../word-backing';
+import { addBacker } from '../word-backing';
 
 export async function handleAdd(
   args: string[],
@@ -53,7 +53,7 @@ export async function handleAdd(
 
     if (success) {
       // Set word backing for the added word
-      await setWordBacking(word, context.commentId);
+      await addBacker(word, context.commentId);
 
       return {
         success: true,
