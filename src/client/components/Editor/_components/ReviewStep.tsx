@@ -10,6 +10,7 @@ import { navigateTo } from '@devvit/web/client';
 import { useTelemetry } from '@client/hooks/useTelemetry';
 import { useEffect } from 'react';
 import type { SlateAction } from '@shared/types';
+import { renderDrawingToCanvas } from '@shared/utils/drawing';
 
 interface ReviewStepProps {
   word: string;
@@ -27,6 +28,34 @@ interface ReviewStepProps {
     word?: string,
     metadata?: Record<string, string | number>
   ) => Promise<void>;
+}
+
+/**
+ * Generate a PNG data URL from DrawingData
+ * @param drawingData - The drawing data to convert to PNG
+ * @returns Base64-encoded PNG data URL
+ */
+function generatePNGFromDrawing(drawingData: DrawingData): string {
+  // Create an off-screen canvas
+  const canvas = document.createElement('canvas');
+  canvas.width = 256;
+  canvas.height = 256;
+
+  const ctx = canvas.getContext('2d');
+  if (!ctx) return '';
+
+  // Disable image smoothing for crisp pixels
+  ctx.imageSmoothingEnabled = false;
+
+  // Create a temporary canvas for the original drawing
+  const tempCanvas = document.createElement('canvas');
+  renderDrawingToCanvas(drawingData, tempCanvas);
+
+  // Scale the drawing to 256x256
+  ctx.drawImage(tempCanvas, 0, 0, 256, 256);
+
+  // Convert to PNG data URL
+  return canvas.toDataURL('image/png');
 }
 
 export function ReviewStep(props: ReviewStepProps) {
@@ -67,10 +96,14 @@ export function ReviewStep(props: ReviewStepProps) {
     void track('click_post_drawing');
 
     try {
+      // Generate PNG from drawing data
+      const imageData = generatePNGFromDrawing(drawing);
+
       const result = await submitDrawing.mutateAsync({
         word,
         dictionary: dictionaryName,
         drawing: drawing,
+        imageData,
       });
 
       if (result.success) {

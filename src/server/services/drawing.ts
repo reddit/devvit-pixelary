@@ -5,6 +5,7 @@ import {
   context,
   reddit,
   cache,
+  media,
 } from '@devvit/web/server';
 import { incrementScore } from './progression';
 import { titleCase } from '../../shared/utils/string';
@@ -20,6 +21,7 @@ import {
   GUESSER_REWARD_SOLVE,
 } from '../../shared/constants';
 import { REDIS_KEYS } from './redis';
+import type { MediaAsset } from '@devvit/web/server';
 
 /**
  * Create a new drawing post
@@ -32,8 +34,26 @@ export const createDrawing = async (options: {
   drawing: DrawingData;
   authorName: string;
   authorId: T2;
+  imageData?: string;
 }) => {
-  const { word, dictionary, drawing, authorName, authorId } = options;
+  const { word, dictionary, drawing, authorName, authorId, imageData } =
+    options;
+
+  // Upload image to Reddit if imageData is provided
+  let imageUrl: string | undefined;
+  if (imageData) {
+    try {
+      const mediaResponse: MediaAsset = await media.upload({
+        url: imageData,
+        type: 'image',
+      });
+      // Extract the URL from the MediaAsset
+      imageUrl = mediaResponse.mediaUrl;
+    } catch (error) {
+      console.warn('Failed to upload image:', error);
+      // Continue without image if upload fails
+    }
+  }
 
   // Create Reddit post unit
   const postData = {
@@ -45,7 +65,11 @@ export const createDrawing = async (options: {
     authorName,
   };
 
-  const post = await createPost(`What did u/${authorName} draw?`, postData);
+  const post = await createPost(
+    `What did u/${authorName} draw?`,
+    postData,
+    imageUrl
+  );
 
   const postId = post.id;
   const currentDate = new Date();

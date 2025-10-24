@@ -17,11 +17,13 @@ function postDataToJsonObject(postData: PostData): JsonObject {
  * Create a new custom post unit in the current subreddit
  * @param title - The title of the post
  * @param postData - The post data as a JSON object. Max 2kb.
+ * @param imageUrl - Optional Reddit-hosted image URL to include in the post
  * @returns The created Post object from the Reddit API.
  */
 export async function createPost(
   title: string,
-  postData: PostData
+  postData: PostData,
+  imageUrl?: string
 ): Promise<Post> {
   const { subredditName } = context;
   if (!subredditName) {
@@ -39,11 +41,20 @@ export async function createPost(
     );
   }
 
+  const userGeneratedContent: {
+    text: string;
+    imageUrls?: string[];
+  } = {
+    text: 'Pixelary',
+  };
+
+  // Add image URL if provided
+  if (imageUrl) {
+    userGeneratedContent.imageUrls = [imageUrl];
+  }
+
   const post = await reddit.submitCustomPost({
-    userGeneratedContent: {
-      text: 'Pixelary',
-      // HACK: This does not pass the actual UGC. Will need to investigate generating an image to pass here instead.
-    },
+    userGeneratedContent,
     splash: {
       appDisplayName: 'Pixelary',
       backgroundUri: 'transparent.png', // HACK: Avoids default pattern

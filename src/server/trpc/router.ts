@@ -144,6 +144,7 @@ export const appRouter = t.router({
             word: z.string(),
             dictionary: z.string(),
             drawing: DrawingDataSchema,
+            imageData: z.string().optional(),
           })
         )
         .mutation(async ({ ctx, input }) => {
@@ -160,6 +161,7 @@ export const appRouter = t.router({
             drawing: input.drawing,
             authorName: ctx.username,
             authorId: ctx.userId,
+            ...(input.imageData && { imageData: input.imageData }),
           });
 
           return {
