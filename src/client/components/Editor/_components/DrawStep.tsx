@@ -56,7 +56,7 @@ export function DrawStep(props: DrawStepProps) {
   // Color picker modal state
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
 
-  const canvasInternalSize = 16;
+  const canvasInternalSize = 256;
 
   // Timer effect
   useEffect(() => {
@@ -143,8 +143,8 @@ export function DrawStep(props: DrawStepProps) {
       for (let y = 0; y < drawingData.size; y++) {
         const isEven = (x + y) % 2 === 0;
         ctx.fillStyle = isEven
-          ? 'var(--color-checkerboard-light)'
-          : 'var(--color-checkerboard-dark)';
+          ? 'rgba(255, 255, 255, 0.05)'
+          : 'rgba(0, 0, 0, 0.05)';
         ctx.fillRect(x * pixelSize, y * pixelSize, pixelSize, pixelSize);
       }
     }
