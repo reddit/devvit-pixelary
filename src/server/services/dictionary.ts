@@ -48,8 +48,10 @@ export async function addWords(words: string[]): Promise<void> {
 export async function removeWord(word: string): Promise<boolean> {
   const subName = context.subredditName;
   const normalizedWord = normalizeWord(word);
-  const key = REDIS_KEYS.wordsAll(subName);
-  const removed = await redis.global.zRem(key, [normalizedWord]);
+  const [removed, _removedUncertainty] = await Promise.all([
+    redis.global.zRem(REDIS_KEYS.wordsAll(subName), [normalizedWord]),
+    redis.zRem(REDIS_KEYS.wordsUncertainty(subName), [normalizedWord]),
+  ]);
   return removed > 0;
 }
 
@@ -183,6 +185,7 @@ export async function banWord(word: string): Promise<void> {
       score: DEFAULT_WORD_SCORE,
     }),
     redis.global.zRem(REDIS_KEYS.wordsAll(subName), [normalizedWord]),
+    redis.zRem(REDIS_KEYS.wordsUncertainty(subName), [normalizedWord]),
   ]);
 }
 
@@ -202,6 +205,7 @@ export async function banWords(words: string[]): Promise<void> {
       }))
     ),
     redis.global.zRem(REDIS_KEYS.wordsAll(subName), normalizedWords),
+    redis.zRem(REDIS_KEYS.wordsUncertainty(subName), normalizedWords),
   ]);
 }
 

@@ -5,8 +5,18 @@ import {
   isCommand,
   parseCommand,
 } from '../services/comment-commands';
-import { handleWordBackingDelete } from '../services/word-backing';
+import { getBackedWord, removeBacker } from '../services/word-backing';
 import { processCommand } from '../services/comment-commands';
+import { banWord } from '../services/dictionary';
+
+// EventSource enum values from Reddit API
+enum EventSource {
+  UNKNOWN_EVENT_SOURCE = 0,
+  USER = 1,
+  ADMIN = 2,
+  MODERATOR = 3,
+  UNRECOGNIZED = -1,
+}
 
 /**
  * Comment trigger handlers
@@ -71,7 +81,7 @@ export async function handleCommentDelete(
   res: Response
 ): Promise<void> {
   try {
-    const { commentId } = req.body;
+    const { commentId, source } = req.body;
 
     if (!commentId) {
       res.status(400).json({
@@ -81,8 +91,18 @@ export async function handleCommentDelete(
       return;
     }
 
-    // Clean up word backing (covers dictionary words and other word backing)
-    await handleWordBackingDelete(commentId);
+    const backedWord = await getBackedWord(commentId);
+    const deletedByUser = source === EventSource.USER;
+
+    if (backedWord && deletedByUser) {
+      // The user deleted their own comment. Let's assume positive intent and only remove the backing so that another user can back it again later.
+      await removeBacker(backedWord);
+    }
+
+    if (backedWord && !deletedByUser) {
+      // A moderator, admin, or an unknown source deleted the comment, so we assume the word is bad and ban it from being added again.
+      await Promise.all([removeBacker(backedWord), banWord(backedWord)]);
+    }
 
     res.json({ status: 'processed' });
   } catch (error) {

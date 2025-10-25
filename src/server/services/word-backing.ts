@@ -1,12 +1,11 @@
-import { context, redis } from '@devvit/web/server';
+import { redis } from '@devvit/web/server';
 import { normalizeWord } from '../../shared/utils/string';
-import { isWordBanned, removeWord } from './dictionary';
+import { isWordBanned } from './dictionary';
 import { REDIS_KEYS } from './redis';
 import { isT1, type T1 } from '@devvit/shared-types/tid.js';
 
 /**
- * Sets the backing comment for a word in the current subreddit
- * This can be used for dictionary words or any word that needs public comment backing
+ * Adds a comment as a backer for a word so that it may be seen by other users in the game interface.
  */
 
 export async function addBacker(word: string, commentId: T1): Promise<void> {
@@ -19,6 +18,7 @@ export async function addBacker(word: string, commentId: T1): Promise<void> {
   // Bail if word is banned
   if (isBanned) return;
 
+  // Otherwise, add the comment as the new backer for the word.
   const promises: Promise<unknown>[] = [
     redis.set(REDIS_KEYS.wordBacking(normalizedWord), commentId),
     redis.set(REDIS_KEYS.wordBackingComment(commentId), normalizedWord),
@@ -59,19 +59,12 @@ export async function removeBacker(word: string): Promise<void> {
 }
 
 /**
- * Handle the deletion of a word backing comment
+ * Get the word backed for a commentId if it exists
  */
 
-export async function handleWordBackingDelete(commentId: T1): Promise<void> {
+export async function getBackedWord(
+  commentId: T1
+): Promise<string | undefined> {
   const word = await redis.get(REDIS_KEYS.wordBackingComment(commentId));
-  if (!word) return; // Not a word backing comment
-
-  const normalizedWord = normalizeWord(word);
-  const subredditName = context.subredditName;
-
-  await Promise.all([
-    removeWord(word),
-    removeBacker(word),
-    redis.zRem(REDIS_KEYS.wordsUncertainty(subredditName), [normalizedWord]),
-  ]);
+  return word ? normalizeWord(word) : undefined;
 }
