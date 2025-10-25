@@ -1,5 +1,6 @@
 import type { T5, T3, T1, T2 } from '@devvit/shared-types/tid.js';
 import * as handlers from './comment-handlers';
+import { getBackedWord, removeBacker } from './word-backing';
 
 export type CommandContext = {
   commentId: T1;
@@ -90,4 +91,53 @@ export async function processCommand(
         error: 'Unknown command',
       };
   }
+}
+
+/**
+ * Handle comment edit business logic
+ * Determines what action to take when a comment is edited
+ */
+export async function handleCommentEdit(
+  commentId: T1,
+  previousBody: string,
+  newBody: string,
+  context: Omit<CommandContext, 'commentId'>
+): Promise<CommandResult> {
+  const wasCommand = isCommand(previousBody);
+  const isNowCommand = isCommand(newBody);
+
+  // Get existing word backing for this comment
+  const backedWord = await getBackedWord(commentId);
+
+  // Create full context for command processing
+  const fullContext: CommandContext = {
+    ...context,
+    commentId,
+  };
+
+  if (wasCommand && !isNowCommand) {
+    // Command → Non-command: Remove backing
+    if (backedWord) {
+      await removeBacker(backedWord);
+    }
+    return { success: true };
+  }
+
+  if (!wasCommand && isNowCommand) {
+    // Non-command → Command: Process new command
+    const { command, args } = parseCommand(newBody);
+    return await processCommand(command, args, fullContext);
+  }
+
+  if (wasCommand && isNowCommand) {
+    // Command → Command: Remove old backing, process new command
+    if (backedWord) {
+      await removeBacker(backedWord);
+    }
+    const { command, args } = parseCommand(newBody);
+    return await processCommand(command, args, fullContext);
+  }
+
+  // Non-command → Non-command: No action needed
+  return { success: true };
 }

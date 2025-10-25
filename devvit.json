@@ -101,7 +101,8 @@
     "onAppInstall": "/internal/trigger/app-install",
     "onAppUpgrade": "/internal/trigger/app-upgrade",
     "onCommentCreate": "/internal/trigger/comment-create",
-    "onCommentDelete": "/internal/trigger/comment-delete"
+    "onCommentDelete": "/internal/trigger/comment-delete",
+    "onCommentUpdate": "/internal/trigger/comment-update"
   },
   "scheduler": {
     "tasks": {

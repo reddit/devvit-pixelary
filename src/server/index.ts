@@ -43,6 +43,7 @@ import {
   handleAppUpgrade,
   handleCommentCreate,
   handleCommentDelete,
+  handleCommentUpdate,
   handleTestRealtime,
   handleTestScheduler,
 } from './triggers';
@@ -64,6 +65,7 @@ router.post('/internal/trigger/app-install', handleAppInstall);
 router.post('/internal/trigger/app-upgrade', handleAppUpgrade);
 router.post('/internal/trigger/comment-create', handleCommentCreate);
 router.post('/internal/trigger/comment-delete', handleCommentDelete);
+router.post('/internal/trigger/comment-update', handleCommentUpdate);
 router.post('/internal/trigger/test-realtime', handleTestRealtime);
 router.post('/internal/trigger/test-scheduler', handleTestScheduler);
 

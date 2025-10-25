@@ -4,6 +4,7 @@ import {
   CommandContext,
   isCommand,
   parseCommand,
+  handleCommentEdit,
 } from '../services/comment-commands';
 import { getBackedWord, removeBacker } from '../services/word-backing';
 import { processCommand } from '../services/comment-commands';
@@ -72,6 +73,53 @@ export async function handleCommentCreate(
     res.status(400).json({
       status: 'error',
       message: 'Failed to process comment',
+    });
+  }
+}
+
+export async function handleCommentUpdate(
+  req: Request,
+  res: Response
+): Promise<void> {
+  try {
+    const { comment, author, subreddit, previousBody } = req.body;
+
+    if (!comment || !author || author.name === context.appName) {
+      res.json({ status: 'ignored' });
+      return;
+    }
+
+    // Create command context
+    const commandContext: Omit<CommandContext, 'commentId'> = {
+      authorName: author.name,
+      authorId: author.id,
+      subredditName: subreddit.name,
+      subredditId: subreddit.id,
+      postId: comment.postId,
+      timestamp: Date.now(),
+    };
+
+    // Process comment edit
+    const result = await handleCommentEdit(
+      comment.id,
+      previousBody,
+      comment.body,
+      commandContext
+    );
+
+    if (result.success && result.response) {
+      // Reply to the comment
+      await reddit.submitComment({
+        text: result.response,
+        id: comment.id,
+      });
+    }
+
+    res.json({ status: 'processed' });
+  } catch (error) {
+    res.status(400).json({
+      status: 'error',
+      message: 'Failed to process comment update',
     });
   }
 }
