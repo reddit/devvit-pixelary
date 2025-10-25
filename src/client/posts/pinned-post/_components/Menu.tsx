@@ -1,5 +1,3 @@
-import { LEVELS } from '@shared/constants';
-import type { Level } from '@shared/types';
 import { PixelFont } from '@components/PixelFont';
 import { Counter } from '@components/Counter';
 import { Button } from '@components/Button';
@@ -33,18 +31,8 @@ export function Menu(props: MenuProps) {
     enabled: true,
   });
 
-  // Get user level
-  const userLevel: Level | null = userProfile
-    ? LEVELS.find((l) => l.rank === userProfile.level) || null
-    : null;
-
-  // Calculate progress percentage
-  const progressPercentage =
-    userLevel && userProfile
-      ? ((userProfile.score - userLevel.min) /
-          (userLevel.max - userLevel.min)) *
-        100
-      : 0;
+  // Get progress percentage from user profile
+  const progressPercentage = userProfile?.levelProgressPercentage ?? 0;
 
   return (
     <main className="absolute inset-0 flex flex-col items-center justify-evenly min-h-screen px-4">
@@ -101,7 +89,7 @@ export function Menu(props: MenuProps) {
       >
         <div className="flex relative">
           <PixelFont scale={2}>Level </PixelFont>
-          <Counter value={userLevel?.rank} scale={2} />
+          <Counter value={userProfile?.level} scale={2} />
           <div className="absolute -right-5 level-arrow">
             <PixelSymbol
               type="arrow-right"

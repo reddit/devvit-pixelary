@@ -126,4 +126,14 @@ export async function getRank(userId: T2): Promise<number> {
   return rank ?? -1; // -1 if user not found
 }
 
-// Utility function for calculating level progress percentage
+/**
+ * Calculate level progress percentage for a given score
+ * @param score - The user's score
+ * @returns Progress percentage (0-100)
+ */
+export function getLevelProgressPercentage(score: number): number {
+  const currentLevel = getLevelByScore(score);
+  const levelProgress = score - currentLevel.min;
+  const levelMax = currentLevel.max - currentLevel.min;
+  return Math.min(100, Math.max(0, (levelProgress / levelMax) * 100));
+}

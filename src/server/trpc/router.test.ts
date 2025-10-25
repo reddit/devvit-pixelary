@@ -57,6 +57,7 @@ vi.mock('../services/progression', () => ({
   getScore: vi.fn(async () => 100),
   getRank: vi.fn(async () => 1),
   getUserLevel: vi.fn(async () => ({ rank: 1, name: 'Newcomer' })),
+  getLevelProgressPercentage: vi.fn(() => 50),
 }));
 
 vi.mock('@devvit/web/server', () => {

@@ -33,6 +33,7 @@ import {
   getScore,
   getRank,
   getUserLevel,
+  getLevelProgressPercentage,
 } from '../services/progression';
 import { isAdmin, isModerator } from '../services/redis';
 import { DrawingDataSchema } from '../../shared/schema/pixelary';
@@ -316,6 +317,7 @@ export const appRouter = t.router({
             score,
             level: level.rank,
             levelName: level.name,
+            levelProgressPercentage: getLevelProgressPercentage(score),
             rank,
             solved: drawingStatus.solved,
             skipped: drawingStatus.skipped,

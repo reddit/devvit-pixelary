@@ -27,6 +27,5 @@
   },
   // https://github.com/Microsoft/TypeScript/issues/25636
   "include": ["**/*", "**/*.json", "../../vitest.config.ts"],
-  "exclude": ["**/*.test.ts"],
   "references": [{ "path": "../shared" }, { "path": "../server" }]
 }
