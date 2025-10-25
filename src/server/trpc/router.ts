@@ -38,7 +38,7 @@ import {
 import { isAdmin, isModerator } from '../services/redis';
 import { DrawingDataSchema } from '../../shared/schema/pixelary';
 import { trackEventFromContext } from '../services/telemetry';
-import type { EventType } from '../services/telemetry';
+import type { TelemetryEventType } from '../../shared/types';
 
 const t = initTRPC.context<Context>().create();
 
@@ -487,7 +487,7 @@ export const appRouter = t.router({
             // Fire-and-forget telemetry tracking with automatic post type detection
             const metadata = 'metadata' in input ? input.metadata : {};
             await trackEventFromContext(
-              input.eventType as EventType,
+              input.eventType as TelemetryEventType,
               ctx.postData,
               metadata
             );

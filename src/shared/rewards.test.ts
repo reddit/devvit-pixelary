@@ -83,26 +83,26 @@ describe('rewards system', () => {
     });
 
     it('returns correct labels for extra_word_time', () => {
-      expect(getRewardLabel('extra_word_time', 2)).toBe('+2s word time');
-      expect(getRewardLabel('extra_word_time', 3)).toBe('+4s word time');
-      expect(getRewardLabel('extra_word_time', 4)).toBe('+6s word time');
-      expect(getRewardLabel('extra_word_time', 10)).toBe('+18s word time');
+      expect(getRewardLabel('extra_word_time', 2)).toBe('+2s selection time');
+      expect(getRewardLabel('extra_word_time', 3)).toBe('+4s selection time');
+      expect(getRewardLabel('extra_word_time', 4)).toBe('+6s selection time');
+      expect(getRewardLabel('extra_word_time', 10)).toBe('+18s selection time');
     });
 
     it('returns static labels for non-computed rewards', () => {
       expect(getRewardLabel('add_remove_words', 3)).toBe('Add/remove words');
       expect(getRewardLabel('add_remove_words', 10)).toBe('Add/remove words');
-      expect(getRewardLabel('extended_colors', 4)).toBe('+35 colors');
-      expect(getRewardLabel('extended_colors', 10)).toBe('+35 colors');
-      expect(getRewardLabel('level_flair', 1)).toBe('Level flair');
-      expect(getRewardLabel('level_flair', 10)).toBe('Level flair');
+      expect(getRewardLabel('extended_colors', 4)).toBe('+35 more colors');
+      expect(getRewardLabel('extended_colors', 10)).toBe('+35 more colors');
+      expect(getRewardLabel('level_flair', 1)).toBe('Level user flair');
+      expect(getRewardLabel('level_flair', 10)).toBe('Level user flair');
     });
 
     it('handles edge cases', () => {
       expect(getRewardLabel('extra_drawing_time', 1)).toBe('+0s drawing time');
       expect(getRewardLabel('extra_drawing_time', 0)).toBe('+0s drawing time');
-      expect(getRewardLabel('extra_word_time', 1)).toBe('+0s word time');
-      expect(getRewardLabel('extra_word_time', 0)).toBe('+0s word time');
+      expect(getRewardLabel('extra_word_time', 1)).toBe('+0s selection time');
+      expect(getRewardLabel('extra_word_time', 0)).toBe('+0s selection time');
     });
   });
 

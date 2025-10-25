@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { DrawingEditor } from '../../components/Editor/Editor';
 import { MyDrawings } from './_components/MyDrawings';
 import { Leaderboard } from './_components/Leaderboard';
-import { HowToPlay } from './_components/HowToPlay';
+import { MyRewards } from './_components/MyRewards';
 import { LevelDetails } from './_components/LevelDetails';
 import { Menu } from './_components/Menu';
 import { trpc } from '../../trpc/client';
@@ -12,7 +12,7 @@ type Page =
   | 'drawing'
   | 'my-drawings'
   | 'leaderboard'
-  | 'how-to-play'
+  | 'my-rewards'
   | 'level-details';
 
 export function PinnedPost() {
@@ -51,7 +51,7 @@ export function PinnedPost() {
           onDraw={() => goToPage('drawing')}
           onMyDrawings={() => goToPage('my-drawings')}
           onLeaderboard={() => goToPage('leaderboard')}
-          onHowToPlay={() => goToPage('how-to-play')}
+          onHowToPlay={() => goToPage('my-rewards')}
           onLevelClick={() => goToPage('level-details')}
         />
       );
@@ -61,8 +61,8 @@ export function PinnedPost() {
       return <MyDrawings onClose={handleClose} />;
     case 'leaderboard':
       return <Leaderboard onClose={handleClose} />;
-    case 'how-to-play':
-      return <HowToPlay onClose={handleClose} />;
+    case 'my-rewards':
+      return <MyRewards onClose={handleClose} />;
     case 'level-details':
       return <LevelDetails onClose={handleClose} />;
     default:

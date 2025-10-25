@@ -1,5 +1,6 @@
 import { redis } from '@devvit/web/server';
 import { REDIS_KEYS } from './redis';
+import type { PostType, TelemetryEventType } from '../../shared/types';
 
 /**
  * Telemetry service for tracking UI events
@@ -19,68 +20,9 @@ export function getTelemetryDateKey(date?: Date): string {
   return targetDate.toISOString().split('T')[0]!;
 }
 
-export type PostType = 'drawing' | 'pinned';
-export type EventType =
-  // ============================================================================
-  // GENERIC TELEMETRY EVENTS (UI tracking only, no word metrics impact)
-  // ============================================================================
-  // View events
-  | 'view_menu'
-  | 'view_my_drawings'
-  | 'view_leaderboard'
-  | 'view_how_to_play'
-  | 'view_level_details'
-  | 'view_drawing_post'
-  | 'view_guess'
-  | 'view_results'
-  | 'view_editor'
-  | 'view_word_step'
-  | 'view_draw_step'
-  | 'view_review_step'
-  // Click events
-  | 'click_draw'
-  | 'click_my_drawings'
-  | 'click_leaderboard'
-  | 'click_how_to_play'
-  | 'click_level_details'
-  | 'click_close_my_drawings'
-  | 'click_drawing_tile'
-  | 'click_start_drawing'
-  | 'click_close_leaderboard'
-  | 'click_close_how_to_play'
-  | 'click_close_level_details'
-  | 'click_level_prev'
-  | 'click_level_next'
-  | 'click_guess_submit'
-  | 'click_give_up'
-  | 'click_draw_something'
-  | 'click_close_results'
-  | 'click_word_candidate'
-  | 'click_refresh_words'
-  | 'click_done_drawing'
-  | 'click_color_swatch'
-  | 'click_post_drawing'
-  | 'click_cancel_drawing'
-  // Drawing events
-  | 'drawing_start'
-  | 'drawing_first_pixel'
-  | 'drawing_end_manual'
-  | 'drawing_end_auto' // Ran out of time
-  | 'drawing_publish' // Drawing is posted
-  | 'drawing_cancel'
-  // Post events (specific taxonomy)
-  | 'post_impression' // Post viewed (affects social metrics)
-  | 'post_guess' // User submitted guess
-  | 'post_solve' // User solved the drawing
-  | 'post_skip'; // User gave up/skipped
-
-/**
- * Track a telemetry event with optional metadata
- * Fire-and-forget operation that never blocks
- */
 export async function trackEvent(
   postType: PostType,
-  eventType: EventType,
+  eventType: TelemetryEventType,
   date?: Date,
   metadata?: Record<string, string | number>
 ): Promise<void> {
@@ -117,7 +59,7 @@ export async function trackEvent(
  * Fire-and-forget operation that never blocks
  */
 export async function trackEventFromContext(
-  eventType: EventType,
+  eventType: TelemetryEventType,
   postData: { type: 'drawing' | 'pinned' } | null,
   metadata?: Record<string, string | number>
 ): Promise<void> {

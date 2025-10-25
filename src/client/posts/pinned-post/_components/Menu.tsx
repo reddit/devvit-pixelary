@@ -61,21 +61,21 @@ export function Menu(props: MenuProps) {
         </Button>
 
         <Button
+          onClick={onHowToPlay}
+          size="medium"
+          variant="secondary"
+          telemetryEvent="click_my_rewards"
+        >
+          My Rewards
+        </Button>
+
+        <Button
           onClick={onLeaderboard}
           size="medium"
           variant="secondary"
           telemetryEvent="click_leaderboard"
         >
           Leaderboard
-        </Button>
-
-        <Button
-          onClick={onHowToPlay}
-          size="medium"
-          variant="secondary"
-          telemetryEvent="click_how_to_play"
-        >
-          How to Play
         </Button>
       </nav>
 
