@@ -9,18 +9,16 @@ import { trpc } from '@client/trpc/client';
 import { context } from '@devvit/web/client';
 import { useToastHelpers } from '@components/ToastManager';
 import { useRealtimeStats } from '@client/hooks/useRealtimeStats';
-import { DrawingPostDataExtended } from '@shared/schema/pixelary';
 import { useTelemetry } from '@client/hooks/useTelemetry';
 import { getLevelByScore } from '@src/shared/utils/progression';
 import { AUTHOR_REWARD_SUBMIT } from '@shared/constants';
-
-type DrawingPostProps = {
-  postData: DrawingPostDataExtended | undefined;
-};
+import { getPostData } from '@client/utils/context';
+import type { DrawingPostData } from '@src/shared/schema';
 
 type DrawingState = 'unsolved' | 'guessing' | 'solved' | 'skipped' | 'author';
 
-export const DrawingPost = ({ postData: propPostData }: DrawingPostProps) => {
+export const DrawingPost = () => {
+  const postData = getPostData<DrawingPostData>();
   const currentPostId = context.postId;
   const { error: showErrorToast, success } = useToastHelpers();
 
@@ -29,15 +27,6 @@ export const DrawingPost = ({ postData: propPostData }: DrawingPostProps) => {
   useEffect(() => {
     void track('view_drawing_post');
   }, []);
-
-  // Grab data
-  const { data: fetchedPostData } = trpc.app.post.getDrawing.useQuery(
-    { postId: currentPostId || '' },
-    { enabled: !!currentPostId && !propPostData }
-  );
-
-  // Use prop data if available, otherwise use fetched data
-  const postData = propPostData || fetchedPostData;
 
   // Fetch realtime stats for both child components
   const { stats, isLoading } = useRealtimeStats(currentPostId || '');

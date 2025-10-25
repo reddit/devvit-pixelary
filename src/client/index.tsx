@@ -5,13 +5,14 @@ import { PinnedPost } from './posts/pinned-post/PinnedPost';
 import { trpc } from './trpc/client';
 import { httpBatchLink } from '@trpc/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { context } from '@devvit/web/client';
+import { getPostData } from './utils/context';
 import type { DrawingPostDataExtended } from '../shared/schema';
 import './index.css';
 import { Background } from './components/Background';
 import { ToastProvider } from './components/ToastManager';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { TelemetryProvider } from './hooks/useTelemetry';
+import { PixelFont } from './components/PixelFont';
 
 const queryClient = new QueryClient();
 const trpcClient = trpc.createClient({
@@ -53,34 +54,17 @@ window.addEventListener('unhandledrejection', (event) => {
 });
 
 const App = () => {
-  const postData = context.postData;
+  const postData = getPostData();
 
-  if (!postData?.type) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <div className="text-gray-600">Loading post data...</div>
-        </div>
-      </div>
-    );
-  }
-
-  switch (postData.type) {
+  switch (postData?.type) {
     case 'drawing':
-      return <DrawingPost postData={postData as DrawingPostDataExtended} />;
+      return <DrawingPost />;
     case 'pinned':
       return <PinnedPost />;
     default:
       return (
-        <div className="flex items-center justify-center h-screen">
-          <div className="text-center">
-            <div className="text-error text-xl font-bold mb-2">
-              Unknown Post Type
-            </div>
-            <div className="text-gray-600">
-              Post type "{String(postData.type)}" is not supported
-            </div>
-          </div>
+        <div className="flex items-center justify-center h-full w-full">
+          <PixelFont>Unknown post type</PixelFont>
         </div>
       );
   }
