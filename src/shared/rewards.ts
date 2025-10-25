@@ -4,6 +4,7 @@
 
 export type RewardType =
   | 'extra_drawing_time'
+  | 'extra_word_time'
   | 'extended_colors'
   | 'add_remove_words'
   | 'level_flair';
@@ -20,17 +21,22 @@ const REWARDS: Record<RewardType, RewardConfig> = {
     getLabel: (level) => `+${Math.max(0, (level - 1) * 15)}s drawing time`,
     getValue: (level) => Math.max(0, (level - 1) * 15), // Returns seconds as number
   },
+  extra_word_time: {
+    minLevel: 2,
+    getLabel: (level) => `+${Math.max(0, (level - 1) * 2)}s selection time`,
+    getValue: (level) => Math.max(0, (level - 1) * 2), // Returns seconds as number
+  },
   add_remove_words: {
     minLevel: 3,
     getLabel: () => 'Add/remove words',
   },
   extended_colors: {
     minLevel: 4,
-    getLabel: () => '+35 colors',
+    getLabel: () => '+35 more colors',
   },
   level_flair: {
     minLevel: 1,
-    getLabel: () => 'Level flair',
+    getLabel: () => 'Level user flair',
   },
 };
 
@@ -83,4 +89,11 @@ export function getRewardsByLevel(level: number): RewardType[] {
  */
 export function getExtraDrawingTime(level: number): number {
   return getRewardValue(level, 'extra_drawing_time') ?? 0;
+}
+
+/**
+ * Convenience helper to get extra word selection time for a level
+ */
+export function getExtraWordTime(level: number): number {
+  return getRewardValue(level, 'extra_word_time') ?? 0;
 }

@@ -122,6 +122,7 @@ export function DrawingEditor({ onClose }: DrawingEditorProps) {
           isLoading={isSlateLoading}
           refreshCandidates={refreshCandidates}
           trackSlateAction={trackSlateAction}
+          userLevel={userProfile?.level || 1}
         />
       )}
       {step === 'draw' && candidate && (

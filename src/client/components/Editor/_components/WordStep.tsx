@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { CARD_DRAW_DURATION } from '@shared/constants';
+import { getExtraWordTime } from '@shared/rewards';
 import { PixelFont } from '@components/PixelFont';
 import { PixelSymbol } from '@components/PixelSymbol';
 import { useTelemetry } from '@client/hooks/useTelemetry';
@@ -16,6 +17,7 @@ interface WordStepProps {
     word?: string,
     metadata?: Record<string, string | number>
   ) => Promise<void>;
+  userLevel: number;
 }
 
 export function WordStep(props: WordStepProps) {
@@ -26,6 +28,7 @@ export function WordStep(props: WordStepProps) {
     isLoading,
     refreshCandidates,
     trackSlateAction,
+    userLevel,
   } = props;
 
   // State management
@@ -79,9 +82,12 @@ export function WordStep(props: WordStepProps) {
     return () => clearInterval(timer);
   }, [startTime]);
 
+  // Calculate total word selection time with reward
+  const totalWordTime = CARD_DRAW_DURATION + getExtraWordTime(userLevel);
+
   // Auto-select effect
   useEffect(() => {
-    const remainingTime = CARD_DRAW_DURATION * 1000 - elapsedTime;
+    const remainingTime = totalWordTime * 1000 - elapsedTime;
     if (remainingTime <= 0 && words.length > 0 && words[0]) {
       // Track auto-select before selecting
       void trackSlateAction('slate_picked', words[0], {
@@ -89,12 +95,12 @@ export function WordStep(props: WordStepProps) {
       });
       selectCandidate(words[0]);
     }
-  }, [elapsedTime, selectCandidate, words, trackSlateAction]);
+  }, [elapsedTime, selectCandidate, words, trackSlateAction, totalWordTime]);
 
   // Derived state
   const secondsLeft = Math.max(
     0,
-    Math.round(CARD_DRAW_DURATION - elapsedTime / 1000)
+    Math.round(totalWordTime - elapsedTime / 1000)
   );
 
   return (
