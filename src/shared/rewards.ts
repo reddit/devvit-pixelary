@@ -36,7 +36,7 @@ const REWARDS: Record<RewardType, RewardConfig> = {
   },
   level_flair: {
     minLevel: 1,
-    getLabel: () => 'User flair',
+    getLabel: () => 'Level user flair',
   },
 };
 

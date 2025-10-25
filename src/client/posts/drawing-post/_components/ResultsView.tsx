@@ -44,6 +44,7 @@ export function ResultsView({
   // Track results view on mount
   useEffect(() => {
     void track('view_results');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Mutation for revealing guesses

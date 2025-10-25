@@ -32,6 +32,7 @@ export function MyRewards({ onClose }: MyRewardsProps) {
   const { track } = useTelemetry();
   useEffect(() => {
     void track('view_my_rewards');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Get user profile data

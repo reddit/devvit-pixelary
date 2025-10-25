@@ -34,6 +34,7 @@ export function GuessView({
   // Track guess view on mount
   useEffect(() => {
     void track('post_impression');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleGuessSubmit = async () => {

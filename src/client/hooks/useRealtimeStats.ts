@@ -122,6 +122,7 @@ export function useRealtimeStats(postId: string): {
         cleanup();
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [postId]);
 
   // Reset optimistic stats when initial data changes (e.g., page refresh)

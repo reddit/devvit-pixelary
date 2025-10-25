@@ -16,6 +16,7 @@ export function Leaderboard({ onClose }: LeaderboardProps) {
   const { track } = useTelemetry();
   useEffect(() => {
     void track('view_leaderboard');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Grab data

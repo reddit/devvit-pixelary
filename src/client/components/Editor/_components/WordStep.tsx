@@ -41,6 +41,7 @@ export function WordStep(props: WordStepProps) {
   // Track word step view on mount
   useEffect(() => {
     void track('view_word_step');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Debug slate data
@@ -62,6 +63,7 @@ export function WordStep(props: WordStepProps) {
         });
       }, 0);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [slateId, isLoading]);
 
   // Start timer when words load

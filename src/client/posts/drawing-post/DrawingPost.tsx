@@ -26,6 +26,7 @@ export const DrawingPost = () => {
   const { track } = useTelemetry();
   useEffect(() => {
     void track('view_drawing_post');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Fetch realtime stats for both child components
@@ -184,6 +185,7 @@ export const DrawingPost = () => {
     if (shouldCheckFirstView) {
       void isAuthorFirstView.mutateAsync({ postId: currentPostId });
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     isAuthor,
     currentPostId,

@@ -18,6 +18,7 @@ export function LevelDetails({ onClose }: LevelDetailsProps) {
   // Track level details view on mount
   useEffect(() => {
     void track('view_level_details');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   // Get user profile to show their actual progress
   const { data: userProfile } = trpc.app.user.getProfile.useQuery(undefined, {

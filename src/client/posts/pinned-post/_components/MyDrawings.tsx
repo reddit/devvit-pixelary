@@ -17,6 +17,7 @@ export function MyDrawings({ onClose }: MyDrawingsProps) {
   const { track } = useTelemetry();
   useEffect(() => {
     void track('view_my_drawings');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Grab data

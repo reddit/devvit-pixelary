@@ -74,6 +74,7 @@ export function ReviewStep(props: ReviewStepProps) {
   // Track review step view on mount
   useEffect(() => {
     void track('view_review_step');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const submitDrawing = trpc.app.post.submitDrawing.useMutation({
     onSuccess: () => {

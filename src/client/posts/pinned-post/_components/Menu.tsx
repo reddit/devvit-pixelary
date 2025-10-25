@@ -24,6 +24,7 @@ export function Menu(props: MenuProps) {
   const { track } = useTelemetry();
   useEffect(() => {
     void track('view_menu');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Grab data

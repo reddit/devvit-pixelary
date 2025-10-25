@@ -113,7 +113,7 @@ export function Toast({
         : 'opacity-0 translate-x-full';
 
     return `${baseStyles} ${positionStyles[position]} ${visibilityStyles}`;
-  }, [position, index, isVisible, isExiting]);
+  }, [position, isVisible, isExiting]);
 
   // Calculate dynamic positioning for stacking
   const dynamicPosition = useMemo(() => {
@@ -149,12 +149,12 @@ export function Toast({
     }
 
     return basePosition;
-  }, [position, index, previousToastHeights]);
+  }, [position, previousToastHeights]);
 
   const typeStyles = useMemo(() => {
     // Use neutral style for all toast types
     return 'bg-white border-black text-black';
-  }, [type]);
+  }, []);
 
   // Cleanup function
   const cleanup = useCallback(() => {

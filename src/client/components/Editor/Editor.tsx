@@ -32,6 +32,7 @@ export function DrawingEditor({ onClose }: DrawingEditorProps) {
   // Track editor view on mount
   useEffect(() => {
     void track('view_editor');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // tRPC hooks
@@ -67,7 +68,7 @@ export function DrawingEditor({ onClose }: DrawingEditorProps) {
   useEffect(() => {
     trackSlateActionRef.current = trackSlateActionMutation.mutateAsync;
     subredditNameRef.current = context.subredditName;
-  }, [trackSlateActionMutation.mutateAsync, context.subredditName]);
+  }, [trackSlateActionMutation.mutateAsync]);
 
   // Track slate action function
   const trackSlateAction = useCallback(

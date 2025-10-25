@@ -49,12 +49,9 @@ export function SlateProvider({ children }: { children: React.ReactNode }) {
     [slateId, trackSlateActionMutation]
   );
 
-  const memoizedSetSlateId = useCallback(
-    (newSlateId: string | null) => {
-      setSlateId(newSlateId);
-    },
-    [slateId]
-  );
+  const memoizedSetSlateId = useCallback((newSlateId: string | null) => {
+    setSlateId(newSlateId);
+  }, []);
 
   return (
     <SlateContext.Provider

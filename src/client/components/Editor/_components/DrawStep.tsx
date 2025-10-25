@@ -71,7 +71,8 @@ export function DrawStep(props: DrawStepProps) {
     }, 100);
 
     return () => clearInterval(timer);
-  }, [startTime, time, onComplete, track, trackSlateAction, word]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [startTime, time, onComplete, word]);
 
   const secondsLeft = Math.max(
     0,
@@ -185,7 +186,8 @@ export function DrawStep(props: DrawStepProps) {
         }
       }
     },
-    [currentColor, track]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [currentColor]
   );
 
   const handleMouseDown = useCallback(
@@ -241,6 +243,7 @@ export function DrawStep(props: DrawStepProps) {
         }
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [currentColor]
   );
 
@@ -277,6 +280,7 @@ export function DrawStep(props: DrawStepProps) {
         }
       }
     },
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     [isDrawing, currentColor]
   );
 
