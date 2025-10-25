@@ -39,7 +39,7 @@ export function Button({
       : 'bg-black border-black text-white hover:bg-gray-800 cursor-pointer active:bg-gray-900',
     secondary: disabled
       ? 'bg-gray-200 border-gray-300 text-gray-500 cursor-not-allowed'
-      : 'bg-[#56CCF2] border-black text-black hover:bg-[#4AB8D9] cursor-pointer active:bg-[#3FA3C6]',
+      : 'bg-brand-background border-black text-black hover:bg-brand-background/90 cursor-pointer active:bg-brand-background/80',
     white: disabled
       ? 'bg-gray-200 border-gray-300 text-gray-500 cursor-not-allowed'
       : 'bg-white border-black text-black hover:bg-gray-100 cursor-pointer active:bg-gray-200',
@@ -71,7 +71,7 @@ export function Button({
     <button
       onClick={disabled ? undefined : handleClick}
       disabled={disabled}
-      className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[4px] active:translate-y-[4px] shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)] active:shadow-none ${className}`}
+      className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[4px] active:translate-y-[4px] shadow-pixel hover:shadow-pixel-sm active:shadow-none ${className}`}
       title={title}
     >
       {leadingIcon && <PixelSymbol type={leadingIcon} />}

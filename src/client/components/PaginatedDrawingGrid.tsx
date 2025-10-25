@@ -116,7 +116,7 @@ export function PaginatedDrawingGrid({
           <div className="w-8 h-8" />
         )}
 
-        <div className="flex items-center justify-center flex-1 text-[var(--color-brand-secondary)]">
+        <div className="flex items-center justify-center flex-1 text-brand-secondary">
           <PixelFont>{`Page ${currentPage} of ${totalPages}`}</PixelFont>
         </div>
 

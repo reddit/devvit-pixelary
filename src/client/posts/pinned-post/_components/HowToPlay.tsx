@@ -20,11 +20,11 @@ export function HowToPlay({ onClose }: HowToPlayProps) {
       <div className="h-1" />
       <PixelFont scale={3}>for others</PixelFont>
       <div className="h-4" />
-      <PixelFont scale={2} className="text-slate-600">
+      <PixelFont scale={2} className="text-muted">
         Earn points if they
       </PixelFont>
       <div className="h-1" />
-      <PixelFont scale={2} className="text-slate-600">
+      <PixelFont scale={2} className="text-muted">
         guess correctly!
       </PixelFont>
     </CardLayout>

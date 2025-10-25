@@ -32,7 +32,7 @@ export function IconButton({
       : 'bg-black border-black text-white hover:bg-gray-800 cursor-pointer active:bg-gray-900',
     secondary: disabled
       ? 'bg-gray-200 border-gray-300 text-gray-500 cursor-not-allowed'
-      : 'bg-[#56CCF2] border-black text-black hover:bg-[#4AB8D9] cursor-pointer active:bg-[#3FA3C6]',
+      : 'bg-brand-background border-black text-black hover:bg-brand-background/90 cursor-pointer active:bg-brand-background/80',
   };
 
   const sizeClasses = {
@@ -65,7 +65,7 @@ export function IconButton({
     <button
       onClick={disabled ? undefined : handleClick}
       disabled={disabled}
-      className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${shadowClasses} shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)] active:shadow-none ${className}`}
+      className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${shadowClasses} shadow-pixel hover:shadow-pixel-sm active:shadow-none ${className}`}
     >
       <PixelSymbol
         type={symbol}
@@ -73,11 +73,11 @@ export function IconButton({
         color={
           variant === 'primary'
             ? disabled
-              ? '#9ca3af'
-              : '#ffffff'
+              ? 'currentColor'
+              : 'currentColor'
             : disabled
-              ? '#9ca3af'
-              : '#000000'
+              ? 'currentColor'
+              : 'currentColor'
         }
       />
     </button>

@@ -101,9 +101,9 @@ export function LevelDetails({ onClose }: LevelDetailsProps) {
         {/* XP Bar */}
         <div className="flex flex-col items-start justify-start gap-2 w-full mb-6">
           {/* Progress Bar */}
-          <div className="flex w-full h-2 relative bg-black/20">
+          <div className="flex w-full h-2 relative bg-black-20">
             <div
-              className="absolute left-0 top-0 h-full bg-[var(--color-brand-orangered)] transition-all duration-300"
+              className="absolute left-0 top-0 h-full bg-brand-orangered transition-all duration-300"
               style={{ width: `${progressPercentage}%` }}
             />
           </div>
@@ -113,28 +113,20 @@ export function LevelDetails({ onClose }: LevelDetailsProps) {
             <div className="flex flex-row items-center justify-start gap-3">
               <PixelFont
                 className={
-                  overMinimum
-                    ? 'text-[var(--color-brand-orangered)]'
-                    : 'text-black/40'
+                  overMinimum ? 'text-brand-orangered' : 'text-black-40'
                 }
               >{`${abbreviateNumber(overMinimum ? (userProfile?.score ?? 0) : currentLevel.min)}`}</PixelFont>
               {overMinimum && !overMaximum && (
                 <PixelFont
                   className={
-                    overMinimum
-                      ? 'text-[var(--color-brand-orangered)]'
-                      : 'text-black/40'
+                    overMinimum ? 'text-brand-orangered' : 'text-black-40'
                   }
                 >{`(${progressPercentage.toFixed(1)}%)`}</PixelFont>
               )}
             </div>
 
             <PixelFont
-              className={
-                overMaximum
-                  ? 'text-[var(--color-brand-orangered)]'
-                  : 'text-black/40'
-              }
+              className={overMaximum ? 'text-brand-orangered' : 'text-black-40'}
             >{`${abbreviateNumber(currentLevel.max)}`}</PixelFont>
           </div>
         </div>
@@ -182,11 +174,9 @@ function RewardItem(props: RewardItemProps) {
     <div className="flex flex-row items-center justify-start gap-3">
       <PixelSymbol
         type={unlocked ? 'checkmark' : 'x'}
-        className={
-          unlocked ? 'text-[var(--color-brand-orangered)]' : 'text-black/20'
-        }
+        className={unlocked ? 'text-brand-orangered' : 'text-black-20'}
       />
-      <PixelFont className={unlocked ? 'text-black' : 'text-black/50'}>
+      <PixelFont className={unlocked ? 'text-black' : 'text-black-50'}>
         {reward}
       </PixelFont>
     </div>

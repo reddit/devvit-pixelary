@@ -75,7 +75,7 @@ export function GuessView({
         />
         {/* Feedback overlay - covers whole game area */}
         <div
-          className={`absolute inset-0 flex items-center justify-center bg-[#ff4500]/70 transition-opacity pointer-events-none ${
+          className={`absolute inset-0 flex items-center justify-center bg-brand-orangered/70 transition-opacity pointer-events-none ${
             feedback === false ? 'opacity-100' : 'opacity-0'
           }`}
         >
@@ -106,7 +106,7 @@ export function GuessView({
           <div className="w-[232.5px] h-[17.5px] skeleton" />
         )}
         {!isLoading ? (
-          <PixelFont className="text-[var(--color-brand-secondary)]">
+          <PixelFont className="text-brand-secondary">
             {`${solvePercentage}% solved it`}
           </PixelFont>
         ) : (

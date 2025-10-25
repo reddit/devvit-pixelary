@@ -32,7 +32,7 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
 
   const modalContent = (
     <div
-      className="fixed inset-0 flex items-center p-2 justify-center bg-black/70"
+      className="fixed inset-0 flex items-center p-2 justify-center bg-black-70"
       onClick={onClose}
     >
       {/* Modal container */}
@@ -46,7 +46,7 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
         </div>
 
         {/* Content */}
-        <div className="flex flex-col items-start justify-start text-[var(--color-brand-secondary)] gap-6">
+        <div className="flex flex-col items-start justify-start text-brand-secondary gap-6">
           {children}
         </div>
 

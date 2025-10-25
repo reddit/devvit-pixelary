@@ -53,8 +53,8 @@ export function Drawing({
 
   // Fixed size rendering
   const clickableClasses = onClick
-    ? 'cursor-pointer shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,0.3)] active:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[4px] active:translate-y-[4px] transition-all'
-    : 'shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)]';
+    ? 'cursor-pointer shadow-pixel hover:shadow-pixel-sm active:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[4px] active:translate-y-[4px] transition-all'
+    : 'shadow-pixel';
 
   return (
     <div className={`relative ${className}`} onClick={onClick}>

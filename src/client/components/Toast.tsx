@@ -91,7 +91,7 @@ export function Toast({
   const toastStyles = useMemo(() => {
     const baseStyles = `
       fixed max-w-sm cursor-pointer
-      bg-white border-4 p-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,0.3)]
+      bg-white border-4 p-4 border-black shadow-pixel
       transition-all duration-${TOAST_CONFIG.ANIMATION_DURATION} ease-out
       focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2
     `;

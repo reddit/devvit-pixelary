@@ -21,7 +21,7 @@ export function CardLayout(props: CardLayoutProps) {
       </header>
 
       {/* Card */}
-      <div className="flex-1 w-full h-full relative bg-white p-4 flex flex-col items-center justify-center shadow-[4px_4px_0px_0px_rgba(0,0,0,0.2)]">
+      <div className="flex-1 w-full h-full relative bg-white p-4 flex flex-col items-center justify-center shadow-pixel">
         {children}
       </div>
     </main>

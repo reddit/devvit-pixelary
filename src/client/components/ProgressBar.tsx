@@ -28,18 +28,16 @@ export function ProgressBar({
     >
       {/* Background */}
       <div
-        className="absolute inset-0"
+        className="absolute inset-0 bg-black-20"
         style={{
-          backgroundColor: 'rgba(0, 0, 0, 0.2)',
           height: `${height}px`,
         }}
       />
 
       {/* Progress fill */}
       <div
-        className="absolute left-0 top-0 bottom-0 transition-all duration-600 ease-in"
+        className="absolute left-0 top-0 bottom-0 transition-all duration-600 ease-in bg-brand-orangered"
         style={{
-          backgroundColor: '#FF4500',
           width: `${displayPercentage}%`,
         }}
       />

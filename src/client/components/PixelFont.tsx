@@ -25,7 +25,7 @@ export function PixelFont({
   backgroundColor = 'transparent',
   gap = 1,
   shadow = false,
-  shadowColor = 'rgba(0, 0, 0, 0.3)',
+  shadowColor = 'var(--color-shadow)',
   shadowOffset = { x: 2, y: 2 },
   className = '',
   onPress,

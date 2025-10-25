@@ -96,12 +96,12 @@ export function ResultsView({
           {/* Word */}
           <PixelFont>{word}</PixelFont>
           {/* Author */}
-          <PixelFont className="text-[var(--color-brand-secondary)]">
+          <PixelFont className="text-brand-secondary">
             {`By u/${authorUsername}`}
           </PixelFont>
           {/* Dictionary Tag */}
           {showTag && (
-            <div className="flex items-center gap-2 text-[var(--color-brand-secondary)]">
+            <div className="flex items-center gap-2 text-brand-secondary">
               <PixelSymbol type="clock" />
               <PixelFont>{`${dictionaryName} event`}</PixelFont>
             </div>
@@ -181,7 +181,7 @@ function GuessRow(props: GuessRowProps) {
 
   // Check if this is an empty row (no data provided)
   if (guess === undefined || count === undefined || percentage === undefined) {
-    return <div className="w-full h-1/5 bg-white/25" />;
+    return <div className="w-full h-1/5 bg-white-25" />;
   }
 
   const handleClick = () => {
@@ -192,7 +192,7 @@ function GuessRow(props: GuessRowProps) {
 
   return (
     <div
-      className="flex items-center gap-3 px-3 justify-between w-full h-1/5 bg-white/25 relative"
+      className="flex items-center gap-3 px-3 justify-between w-full h-1/5 bg-white-25 relative"
       onClick={handleClick}
     >
       <div
@@ -203,10 +203,10 @@ function GuessRow(props: GuessRowProps) {
       <PixelFont className="relative">{guess}</PixelFont>
 
       <div className="relative flex items-center gap-3">
-        <PixelFont className="text-[var(--color-brand-tertiary)]">
+        <PixelFont className="text-brand-tertiary">
           {abbreviateNumber(count)}
         </PixelFont>
-        <PixelFont className="text-[var(--color-brand-secondary)]">
+        <PixelFont className="text-brand-secondary">
           {`${percentage}%`}
         </PixelFont>
       </div>

@@ -74,7 +74,7 @@ const App = () => {
       return (
         <div className="flex items-center justify-center h-screen">
           <div className="text-center">
-            <div className="text-red-600 text-xl font-bold mb-2">
+            <div className="text-error text-xl font-bold mb-2">
               Unknown Post Type
             </div>
             <div className="text-gray-600">

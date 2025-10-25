@@ -83,14 +83,12 @@ function LeaderboardRow({
     >
       {/* Rank + Username */}
       <div className="flex items-center gap-2 w-full flex-1 justify-start overflow-hidden">
-        <PixelFont className="text-[var(--color-brand-secondary)]">
-          {`${rank}.`}
-        </PixelFont>
+        <PixelFont className="text-brand-secondary">{`${rank}.`}</PixelFont>
         <PixelFont>{username}</PixelFont>
       </div>
 
       {/* Score */}
-      <div className="flex items-center gap-2 text-[var(--color-brand-secondary)]">
+      <div className="flex items-center gap-2 text-brand-secondary">
         <PixelFont>{abbreviateNumber(score)}</PixelFont>
         <PixelSymbol type="star" />
       </div>

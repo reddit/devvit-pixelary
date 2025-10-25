@@ -51,11 +51,11 @@ export class ErrorBoundary extends Component<
         <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
           <div className="max-w-2xl w-full">
             {/* Main Error Card */}
-            <div className="bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,0.3)] p-8">
+            <div className="bg-white border-4 border-black shadow-pixel-lg p-8">
               {/* Error Icon */}
               <div className="text-center mb-6">
                 <div className="text-6xl mb-4">⚠️</div>
-                <PixelFont scale={3} className="text-red-600">
+                <PixelFont scale={3} className="text-error">
                   Oops! Something went wrong
                 </PixelFont>
               </div>
@@ -69,7 +69,7 @@ export class ErrorBoundary extends Component<
                   <div className="bg-gray-100 border-2 border-gray-300 p-4 rounded">
                     <PixelFont
                       scale={1}
-                      className="text-red-600 font-mono text-left"
+                      className="text-error font-mono text-left"
                     >
                       {this.state.error.message}
                     </PixelFont>
@@ -93,7 +93,7 @@ export class ErrorBoundary extends Component<
                       Show Error Details (Development)
                     </PixelFont>
                   </summary>
-                  <div className="bg-gray-900 text-green-400 p-4 rounded border-2 border-gray-600 font-mono text-xs overflow-auto max-h-64">
+                  <div className="bg-gray-900 text-success p-4 rounded border-2 border-gray-600 font-mono text-xs overflow-auto max-h-64">
                     <div className="mb-2">
                       <strong>Error:</strong> {this.state.error?.toString()}
                     </div>
