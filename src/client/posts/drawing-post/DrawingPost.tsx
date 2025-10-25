@@ -12,6 +12,7 @@ import { useRealtimeStats } from '@client/hooks/useRealtimeStats';
 import { DrawingPostDataExtended } from '@shared/schema/pixelary';
 import { useTelemetry } from '@client/hooks/useTelemetry';
 import { getLevelByScore } from '@src/shared/utils/progression';
+import { AUTHOR_REWARD_SUBMIT } from '@shared/constants';
 
 type DrawingPostProps = {
   postData: DrawingPostDataExtended | undefined;
@@ -99,6 +100,8 @@ export const DrawingPost = ({ postData: propPostData }: DrawingPostProps) => {
     },
   });
 
+  const markAuthorViewed = trpc.app.post.markAuthorViewed.useMutation();
+
   // Update state based on user's interaction with this post
   useEffect(() => {
     if (userProfile && postData) {
@@ -154,6 +157,59 @@ export const DrawingPost = ({ postData: propPostData }: DrawingPostProps) => {
     const levelMax = currentLevel.max - currentLevel.min;
     return Math.min(100, Math.max(0, (levelProgress / levelMax) * 100));
   };
+
+  // Show welcome toast for author on first view
+  useEffect(() => {
+    if (
+      postData &&
+      context.userId &&
+      postData.authorId === context.userId &&
+      currentPostId &&
+      userProfile &&
+      !markAuthorViewed.isPending &&
+      !markAuthorViewed.isSuccess &&
+      !markAuthorViewed.isError
+    ) {
+      // Call the mutation to mark author as viewed
+      void markAuthorViewed.mutateAsync(
+        { postId: currentPostId },
+        {
+          onSuccess: (result) => {
+            if (result.firstView) {
+              // Show welcome toast with progress bar
+              const attachment = (
+                <ProgressBar
+                  percentage={getLevelProgressPercentage(
+                    userProfile.score + AUTHOR_REWARD_SUBMIT
+                  )}
+                  width={200}
+                  height={8}
+                />
+              );
+              success(`+${AUTHOR_REWARD_SUBMIT} points!`, {
+                duration: 3000,
+                attachment,
+              });
+
+              // Show confetti
+              setShowConfetti(true);
+            }
+          },
+          onError: (error) => {
+            console.error('markAuthorViewed error:', error);
+          },
+        }
+      );
+    }
+  }, [
+    postData?.authorId,
+    context.userId,
+    currentPostId,
+    userProfile?.score,
+    markAuthorViewed.isPending,
+    markAuthorViewed.isSuccess,
+    markAuthorViewed.isError,
+  ]);
 
   const handleGuess = async (guess: string) => {
     if (!currentPostId || !word) {

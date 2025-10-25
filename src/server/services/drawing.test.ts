@@ -10,6 +10,9 @@ vi.mock('@devvit/web/server', () => ({
     zIncrBy: vi.fn(),
     zCard: vi.fn(),
     zRange: vi.fn(),
+    exists: vi.fn(),
+    set: vi.fn(),
+    expire: vi.fn(),
   },
   scheduler: {
     runJob: vi.fn(),
@@ -40,7 +43,12 @@ vi.mock('./redis', () => ({
   },
 }));
 
-import { submitGuess, getGuesses } from './drawing';
+import {
+  submitGuess,
+  getGuesses,
+  hasAuthorViewedPost,
+  markAuthorPostViewed,
+} from './drawing';
 import { redis } from '@devvit/web/server';
 
 describe('Drawing Service', () => {
@@ -110,6 +118,74 @@ describe('Drawing Service', () => {
       expect(result.wordCount).toBe(2);
       expect(result.guessCount).toBe(7);
       expect(result.playerCount).toBe(10);
+    });
+  });
+
+  describe('hasAuthorViewedPost', () => {
+    it('returns true when author has viewed post', async () => {
+      vi.mocked(redis.exists).mockResolvedValue(1);
+
+      const result = await hasAuthorViewedPost('t3_test123');
+
+      expect(result).toBe(true);
+      expect(redis.exists).toHaveBeenCalledWith(
+        'drawing:t3_test123:author_viewed'
+      );
+    });
+
+    it('returns false when author has not viewed post', async () => {
+      vi.mocked(redis.exists).mockResolvedValue(0);
+
+      const result = await hasAuthorViewedPost('t3_test123');
+
+      expect(result).toBe(false);
+      expect(redis.exists).toHaveBeenCalledWith(
+        'drawing:t3_test123:author_viewed'
+      );
+    });
+  });
+
+  describe('markAuthorPostViewed', () => {
+    it('returns firstView true when marking first view', async () => {
+      vi.mocked(redis.exists).mockResolvedValue(0);
+      vi.mocked(redis.set).mockResolvedValue('OK');
+      vi.mocked(redis.expire).mockResolvedValue(1 as unknown as void);
+
+      const result = await markAuthorPostViewed('t3_test123', 't2_author123');
+
+      expect(result.firstView).toBe(true);
+      expect(redis.exists).toHaveBeenCalledWith(
+        'drawing:t3_test123:author_viewed'
+      );
+      expect(redis.set).toHaveBeenCalledWith(
+        'drawing:t3_test123:author_viewed',
+        't2_author123'
+      );
+      expect(redis.expire).toHaveBeenCalledWith(
+        'drawing:t3_test123:author_viewed',
+        30 * 24 * 60 * 60
+      );
+    });
+
+    it('returns firstView false when marking subsequent view', async () => {
+      vi.mocked(redis.exists).mockResolvedValue(1);
+      vi.mocked(redis.set).mockResolvedValue('OK');
+      vi.mocked(redis.expire).mockResolvedValue(1 as unknown as void);
+
+      const result = await markAuthorPostViewed('t3_test123', 't2_author123');
+
+      expect(result.firstView).toBe(false);
+      expect(redis.exists).toHaveBeenCalledWith(
+        'drawing:t3_test123:author_viewed'
+      );
+      expect(redis.set).toHaveBeenCalledWith(
+        'drawing:t3_test123:author_viewed',
+        't2_author123'
+      );
+      expect(redis.expire).toHaveBeenCalledWith(
+        'drawing:t3_test123:author_viewed',
+        30 * 24 * 60 * 60
+      );
     });
   });
 });

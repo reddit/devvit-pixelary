@@ -24,6 +24,7 @@ import {
   getGuesses,
   getUserDrawingsWithData,
   getUserDrawingStatus,
+  markAuthorPostViewed,
 } from '../services/drawing';
 import {
   getLeaderboard,
@@ -206,6 +207,22 @@ export const appRouter = t.router({
             revealed: true,
             guess: input.guess,
           };
+        }),
+
+      markAuthorViewed: t.procedure
+        .input(z.object({ postId: z.string() }))
+        .mutation(async ({ ctx, input }) => {
+          if (!ctx.userId) {
+            throw new Error('Must be logged in');
+          }
+
+          assertT3(input.postId);
+          const result = await markAuthorPostViewed(
+            input.postId as T3,
+            ctx.userId
+          );
+
+          return result;
         }),
     }),
 

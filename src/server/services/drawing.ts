@@ -884,3 +884,37 @@ function generateLiveStatsSection(
 - ${stats.skips} skips (${stats.skipPercentage}% skip rate)
 - ${stats.solves} solves (${stats.solvedPercentage}% solved rate)`;
 }
+
+/**
+ * Check if the author has viewed their own post before
+ * @param postId - The ID of the drawing post
+ * @returns True if the author has viewed their post before
+ */
+export async function hasAuthorViewedPost(postId: T3): Promise<boolean> {
+  const key = `drawing:${postId}:author_viewed`;
+  const hasViewed = await redis.exists(key);
+  return hasViewed === 1;
+}
+
+/**
+ * Mark that the author has viewed their own post
+ * @param postId - The ID of the drawing post
+ * @param userId - The user ID to mark as viewed
+ * @returns Object indicating if this was the first view
+ */
+export async function markAuthorPostViewed(
+  postId: T3,
+  userId: T2
+): Promise<{ firstView: boolean }> {
+  const key = `drawing:${postId}:author_viewed`;
+
+  // Check if this is the first view
+  const hasViewed = await redis.exists(key);
+  const firstView = hasViewed === 0;
+
+  // Mark as viewed (set with TTL of 30 days)
+  await redis.set(key, userId);
+  await redis.expire(key, 30 * 24 * 60 * 60);
+
+  return { firstView };
+}
