@@ -24,7 +24,7 @@ import {
   getGuesses,
   getUserDrawingsWithData,
   getUserDrawingStatus,
-  markAuthorPostViewed,
+  isAuthorFirstView,
 } from '../services/drawing';
 import {
   getLeaderboard,
@@ -209,7 +209,7 @@ export const appRouter = t.router({
           };
         }),
 
-      markAuthorViewed: t.procedure
+      isAuthorFirstView: t.procedure
         .input(z.object({ postId: z.string() }))
         .mutation(async ({ ctx, input }) => {
           if (!ctx.userId) {
@@ -217,12 +217,9 @@ export const appRouter = t.router({
           }
 
           assertT3(input.postId);
-          const result = await markAuthorPostViewed(
-            input.postId as T3,
-            ctx.userId
-          );
+          const firstView = await isAuthorFirstView(input.postId as T3);
 
-          return result;
+          return { firstView };
         }),
     }),
 

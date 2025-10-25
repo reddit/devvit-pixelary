@@ -8,6 +8,7 @@ import {
   media,
 } from '@devvit/web/server';
 import { incrementScore } from './progression';
+import { REDIS_KEYS } from './redis';
 import { titleCase } from '../../shared/utils/string';
 import type { DrawingPostDataExtended } from '../../shared/schema/pixelary';
 import { createPost } from '../core/post';
@@ -20,7 +21,6 @@ import {
   AUTHOR_REWARD_SUBMIT,
   GUESSER_REWARD_SOLVE,
 } from '../../shared/constants';
-import { REDIS_KEYS } from './redis';
 import type { MediaAsset } from '@devvit/web/server';
 
 /**
@@ -886,35 +886,10 @@ function generateLiveStatsSection(
 }
 
 /**
- * Check if the author has viewed their own post before
- * @param postId - The ID of the drawing post
- * @returns True if the author has viewed their post before
+ * Checks if this is the author's first time viewing their drawing post. If so, it will increment the view count and return `true`. Otherwise, it will return `false`.
  */
-export async function hasAuthorViewedPost(postId: T3): Promise<boolean> {
-  const key = `drawing:${postId}:author_viewed`;
-  const hasViewed = await redis.exists(key);
-  return hasViewed === 1;
-}
-
-/**
- * Mark that the author has viewed their own post
- * @param postId - The ID of the drawing post
- * @param userId - The user ID to mark as viewed
- * @returns Object indicating if this was the first view
- */
-export async function markAuthorPostViewed(
-  postId: T3,
-  userId: T2
-): Promise<{ firstView: boolean }> {
-  const key = `drawing:${postId}:author_viewed`;
-
-  // Check if this is the first view
-  const hasViewed = await redis.exists(key);
-  const firstView = hasViewed === 0;
-
-  // Mark as viewed (set with TTL of 30 days)
-  await redis.set(key, userId);
-  await redis.expire(key, 30 * 24 * 60 * 60);
-
-  return { firstView };
+export async function isAuthorFirstView(postId: T3): Promise<boolean> {
+  const key = REDIS_KEYS.authorViews(postId);
+  const views = await redis.incrBy(key, 1);
+  return views === 1;
 }

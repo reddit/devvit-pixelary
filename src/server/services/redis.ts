@@ -13,6 +13,7 @@ export const REDIS_KEYS = {
   drawingAttempts: (postId: T3) => `drawing:attempts:${postId}`,
   drawingSolves: (postId: T3) => `drawing:solves:${postId}`,
   drawingSkips: (postId: T3) => `drawing:skips:${postId}`,
+  authorViews: (postId: T3) => `drawing:author_views:${postId}`,
   allDrawings: () => 'drawings:all',
 
   // Users

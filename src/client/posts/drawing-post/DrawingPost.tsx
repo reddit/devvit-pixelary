@@ -100,16 +100,40 @@ export const DrawingPost = ({ postData: propPostData }: DrawingPostProps) => {
     },
   });
 
-  const markAuthorViewed = trpc.app.post.markAuthorViewed.useMutation();
+  const isAuthor =
+    postData && context.userId && postData.authorId === context.userId;
+
+  const isAuthorFirstView = trpc.app.post.isAuthorFirstView.useMutation({
+    onSuccess: (result) => {
+      if (result.firstView && userProfile) {
+        // Show welcome toast with progress bar
+        const attachment = (
+          <ProgressBar
+            percentage={getLevelProgressPercentage(
+              userProfile.score + AUTHOR_REWARD_SUBMIT
+            )}
+            width={200}
+            height={8}
+          />
+        );
+        success(`+${AUTHOR_REWARD_SUBMIT} points!`, {
+          duration: 3000,
+          attachment,
+        });
+
+        // Show confetti
+        setShowConfetti(true);
+      }
+    },
+    onError: (error) => {
+      console.error('isAuthorFirstView error:', error);
+    },
+  });
 
   // Update state based on user's interaction with this post
   useEffect(() => {
     if (userProfile && postData) {
-      // Check if current user is the author of this post using context.userId directly
-      const currentUserId = context.userId;
-      const postAuthorId = postData.authorId;
-
-      if (currentUserId && postAuthorId && currentUserId === postAuthorId) {
+      if (isAuthor) {
         setCurrentState('author');
       } else {
         // Check user's server state
@@ -122,7 +146,7 @@ export const DrawingPost = ({ postData: propPostData }: DrawingPostProps) => {
         }
       }
     }
-  }, [userProfile, postData]);
+  }, [userProfile, postData, isAuthor]);
 
   // Clear earned points when transitioning away from solved state
   useEffect(() => {
@@ -160,55 +184,24 @@ export const DrawingPost = ({ postData: propPostData }: DrawingPostProps) => {
 
   // Show welcome toast for author on first view
   useEffect(() => {
-    if (
-      postData &&
-      context.userId &&
-      postData.authorId === context.userId &&
+    const shouldCheckFirstView =
+      isAuthor &&
       currentPostId &&
       userProfile &&
-      !markAuthorViewed.isPending &&
-      !markAuthorViewed.isSuccess &&
-      !markAuthorViewed.isError
-    ) {
-      // Call the mutation to mark author as viewed
-      void markAuthorViewed.mutateAsync(
-        { postId: currentPostId },
-        {
-          onSuccess: (result) => {
-            if (result.firstView) {
-              // Show welcome toast with progress bar
-              const attachment = (
-                <ProgressBar
-                  percentage={getLevelProgressPercentage(
-                    userProfile.score + AUTHOR_REWARD_SUBMIT
-                  )}
-                  width={200}
-                  height={8}
-                />
-              );
-              success(`+${AUTHOR_REWARD_SUBMIT} points!`, {
-                duration: 3000,
-                attachment,
-              });
+      !isAuthorFirstView.isPending &&
+      !isAuthorFirstView.isSuccess &&
+      !isAuthorFirstView.isError;
 
-              // Show confetti
-              setShowConfetti(true);
-            }
-          },
-          onError: (error) => {
-            console.error('markAuthorViewed error:', error);
-          },
-        }
-      );
+    if (shouldCheckFirstView) {
+      void isAuthorFirstView.mutateAsync({ postId: currentPostId });
     }
   }, [
-    postData?.authorId,
-    context.userId,
+    isAuthor,
     currentPostId,
     userProfile?.score,
-    markAuthorViewed.isPending,
-    markAuthorViewed.isSuccess,
-    markAuthorViewed.isError,
+    isAuthorFirstView.isPending,
+    isAuthorFirstView.isSuccess,
+    isAuthorFirstView.isError,
   ]);
 
   const handleGuess = async (guess: string) => {
