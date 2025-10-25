@@ -9,7 +9,7 @@ import {
 } from '@devvit/web/server';
 import { incrementScore } from './progression';
 import { REDIS_KEYS } from './redis';
-import { titleCase } from '../../shared/utils/string';
+import { normalizeWord } from '../../shared/utils/string';
 import type { DrawingPostDataExtended } from '../../shared/schema/pixelary';
 import { createPost } from '../core/post';
 import { setPostFlair } from '../core/flair';
@@ -504,31 +504,26 @@ export async function submitGuess(options: {
   const isInSolvedSet = solved != null;
   const isInSkippedSet = skipped != null;
 
-  // Clean up inconsistent data - user shouldn't be in both solved and skipped
-  if (isInSolvedSet && isInSkippedSet) {
-    // Remove from skipped set (solved takes precedence)
-    await redis.zRem(REDIS_KEYS.drawingSkips(postId), [userId]);
-  }
-
-  // Don't allow guesses if user has already solved (but allow if only skipped)
-  if (!word || !authorId || !isT2(authorId) || isInSolvedSet) {
+  // Don't allow guesses if user has already solved or skipped
+  if (
+    !word ||
+    !authorId ||
+    !isT2(authorId) ||
+    isInSolvedSet ||
+    isInSkippedSet
+  ) {
     return empty;
   }
 
   // Increment counters and store the guess
   await Promise.all([
-    // Always increment user attempts (zIncrBy will add if not exists, increment if exists)
     redis.zIncrBy(REDIS_KEYS.drawingAttempts(postId), userId, 1),
     redis.zIncrBy(REDIS_KEYS.wordDrawings(word), postId, 1),
-    redis.zIncrBy(
-      REDIS_KEYS.drawingGuesses(postId),
-      titleCase(guess.trim()),
-      1
-    ),
+    redis.zIncrBy(REDIS_KEYS.drawingGuesses(postId), normalizeWord(guess), 1),
   ]);
 
   // Check if guess is correct (case-insensitive)
-  const isCorrect = guess.toLowerCase().trim() === word.toLowerCase().trim();
+  const isCorrect = normalizeWord(guess) === normalizeWord(word);
   const channelName = `post-${postId}`;
 
   // Handle comment update cooldown logic for ALL guesses (not just correct ones)
