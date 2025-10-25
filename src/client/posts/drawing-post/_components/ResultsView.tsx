@@ -96,12 +96,12 @@ export function ResultsView({
           {/* Word */}
           <PixelFont>{word}</PixelFont>
           {/* Author */}
-          <PixelFont className="text-brand-secondary">
+          <PixelFont className="text-secondary">
             {`By u/${authorUsername}`}
           </PixelFont>
           {/* Dictionary Tag */}
           {showTag && (
-            <div className="flex items-center gap-2 text-brand-secondary">
+            <div className="flex items-center gap-2 text-secondary">
               <PixelSymbol type="clock" />
               <PixelFont>{`${dictionaryName} event`}</PixelFont>
             </div>
@@ -203,12 +203,10 @@ function GuessRow(props: GuessRowProps) {
       <PixelFont className="relative">{guess}</PixelFont>
 
       <div className="relative flex items-center gap-3">
-        <PixelFont className="text-brand-tertiary">
+        <PixelFont className="text-tertiary">
           {abbreviateNumber(count)}
         </PixelFont>
-        <PixelFont className="text-brand-secondary">
-          {`${percentage}%`}
-        </PixelFont>
+        <PixelFont className="text-secondary">{`${percentage}%`}</PixelFont>
       </div>
     </div>
   );

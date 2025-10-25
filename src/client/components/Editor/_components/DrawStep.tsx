@@ -294,7 +294,7 @@ export function DrawStep(props: DrawStepProps) {
       <header className="flex flex-row items-center justify-center h-min w-full gap-3">
         <div className="flex flex-col items-start justify-center gap-1 w-full h-full flex-1">
           <PixelFont scale={2.5}>{word}</PixelFont>
-          <div className="flex flex-row items-center gap-2 text-brand-secondary">
+          <div className="flex flex-row items-center gap-2 text-secondary">
             <PixelSymbol type="clock" />
             <PixelFont scale={2}>{`${secondsLeft}s left`}</PixelFont>
           </div>
@@ -320,7 +320,7 @@ export function DrawStep(props: DrawStepProps) {
         />
         {DrawingUtils.isEmpty(drawingData) && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <PixelFont scale={2} className="text-brand-tertiary">
+            <PixelFont scale={2} className="text-tertiary">
               Tap to draw
             </PixelFont>
           </div>

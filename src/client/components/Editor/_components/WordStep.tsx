@@ -121,30 +121,18 @@ export function WordStep(props: WordStepProps) {
         <PixelSymbol
           scale={3}
           type="arrow-right"
-          className={
-            secondsLeft > 2
-              ? 'text-brand-tertiary'
-              : 'text-[var(--color-brand-orangered)]'
-          }
+          className={secondsLeft > 2 ? 'text-tertiary' : 'text-orangered'}
         />
         <PixelFont
           scale={3}
-          className={
-            secondsLeft > 2
-              ? 'text-brand-primary'
-              : 'text-[var(--color-brand-orangered)]'
-          }
+          className={secondsLeft > 2 ? 'text-primary' : 'text-orangered'}
         >
           {secondsLeft.toString()}
         </PixelFont>
         <PixelSymbol
           scale={3}
           type="arrow-left"
-          className={
-            secondsLeft > 2
-              ? 'text-brand-tertiary'
-              : 'text-[var(--color-brand-orangered)]'
-          }
+          className={secondsLeft > 2 ? 'text-tertiary' : 'text-orangered'}
         />
       </div>
 
@@ -156,7 +144,7 @@ export function WordStep(props: WordStepProps) {
         }}
         className="flex items-center hover:opacity-70 transition-opacity p-6 fixed right-0 bottom-0 cursor-pointer"
       >
-        <PixelSymbol scale={3} type="undo" className="text-brand-secondary" />
+        <PixelSymbol scale={3} type="undo" className="text-secondary" />
       </button>
     </main>
   );
@@ -203,7 +191,7 @@ function WordCandidate(props: WordCandidateProps) {
             scale={2}
             type="arrow-right"
             color="currentColor"
-            className="text-brand-orangered animate-nudge-right"
+            className="text-orangered animate-nudge-right"
           />
         )}
         {isLoading || !word ? (
@@ -216,7 +204,7 @@ function WordCandidate(props: WordCandidateProps) {
             scale={2}
             type="arrow-left"
             color="currentColor"
-            className="text-brand-orangered animate-nudge-left"
+            className="text-orangered animate-nudge-left"
           />
         )}
       </div>

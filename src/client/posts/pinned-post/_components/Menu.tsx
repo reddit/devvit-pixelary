@@ -106,7 +106,7 @@ export function Menu(props: MenuProps) {
             <PixelSymbol
               type="arrow-right"
               scale={2}
-              className="text-brand-tertiary"
+              className="text-tertiary"
             />
           </div>
         </div>

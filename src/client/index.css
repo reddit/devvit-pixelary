@@ -2,13 +2,13 @@
 
 @theme {
   /* Brand colors */
-  --color-brand-primary: #000000;
-  --color-brand-secondary: #07495f;
-  --color-brand-tertiary: #0e92be;
-  --color-brand-weak: #b2b2b2;
-  --color-brand-background: #56ccf2;
-  --color-brand-background-highlight: rgba(255, 255, 255, 0.1);
-  --color-brand-orangered: #ff4500;
+  --color-primary: #000000;
+  --color-secondary: #07495f;
+  --color-tertiary: #0e92be;
+  --color-weak: #b2b2b2;
+  --color-background: #56ccf2;
+  --color-background-highlight: rgba(255, 255, 255, 0.1);
+  --color-orangered: #ff4500;
   --color-shadow: rgba(0, 0, 0, 0.3);
   --color-skeleton: rgba(0, 0, 0, 0.2);
 
@@ -56,7 +56,7 @@
   /* CSS Custom Properties */
   :root {
     font-family: monospace;
-    color: var(--color-brand-primary);
+    color: var(--color-primary);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
@@ -185,15 +185,15 @@
   @keyframes count-pulse {
     0% {
       transform: scale(1);
-      color: var(--color-brand-primary);
+      color: var(--color-primary);
     }
     50% {
       transform: scale(1.15);
-      color: var(--color-brand-orangered);
+      color: var(--color-orangered);
     }
     100% {
       transform: scale(1);
-      color: var(--color-brand-primary);
+      color: var(--color-primary);
     }
   }
 

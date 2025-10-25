@@ -142,7 +142,7 @@ export function ReviewStep(props: ReviewStepProps) {
       <Drawing data={drawing} size={256} />
 
       {/* Instructions */}
-      <div className="flex flex-col items-center justify-center gap-1 text-center text-brand-secondary">
+      <div className="flex flex-col items-center justify-center gap-1 text-center text-secondary">
         <PixelFont scale={2}>Post your drawing</PixelFont>
         <PixelFont scale={2}>and earn points for</PixelFont>
         <PixelFont scale={2}>every correct guess!</PixelFont>

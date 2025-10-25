@@ -47,7 +47,7 @@ export function Leaderboard({ onClose }: LeaderboardProps) {
                 rank={userRank.rank}
                 username={userRank.username}
                 score={userRank.score}
-                className="border-t-2 border-t-[var(--color-brand-tertiary)]"
+                className="border-t-2 border-t-tertiary"
               />
             )}
           </>
@@ -83,12 +83,12 @@ function LeaderboardRow({
     >
       {/* Rank + Username */}
       <div className="flex items-center gap-2 w-full flex-1 justify-start overflow-hidden">
-        <PixelFont className="text-brand-secondary">{`${rank}.`}</PixelFont>
+        <PixelFont className="text-secondary">{`${rank}.`}</PixelFont>
         <PixelFont>{username}</PixelFont>
       </div>
 
       {/* Score */}
-      <div className="flex items-center gap-2 text-brand-secondary">
+      <div className="flex items-center gap-2 text-secondary">
         <PixelFont>{abbreviateNumber(score)}</PixelFont>
         <PixelSymbol type="star" />
       </div>

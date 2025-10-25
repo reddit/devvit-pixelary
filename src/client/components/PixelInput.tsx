@@ -268,13 +268,13 @@ export const PixelInput = forwardRef<PixelInputRef, PixelInputProps>(
                 <PixelFont scale={2}>{value}</PixelFont>
                 {/* Blinking cursor - always at the end */}
                 {isFocused && showCursor && (
-                  <div className="w-1 h-6 bg-brand-orangered animate-pulse" />
+                  <div className="w-1 h-6 bg-orangered animate-pulse" />
                 )}
               </>
             ) : (
               <>
                 {/* Character-by-character animated placeholder */}
-                <div className="text-brand-weak">
+                <div className="text-weak">
                   <PixelFont scale={2}>
                     {placeholderPhrases[currentPhraseIndex]?.slice(
                       0,
@@ -288,7 +288,7 @@ export const PixelInput = forwardRef<PixelInputRef, PixelInputProps>(
 
           {/* Cursor for placeholder - positioned outside the clipped container */}
           {!value && isFocused && showCursor && (
-            <div className="w-1 h-6 bg-brand-orangered animate-pulse absolute left-4 top-1/2 transform -translate-y-1/2" />
+            <div className="w-1 h-6 bg-orangered animate-pulse absolute left-4 top-1/2 transform -translate-y-1/2" />
           )}
 
           {/* Clear button - only show when there's text and showClearButton is true */}

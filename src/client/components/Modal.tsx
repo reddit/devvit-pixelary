@@ -46,7 +46,7 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
         </div>
 
         {/* Content */}
-        <div className="flex flex-col items-start justify-start text-brand-secondary gap-6">
+        <div className="flex flex-col items-start justify-start text-secondary gap-6">
           {children}
         </div>
 
