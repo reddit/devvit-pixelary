@@ -11,14 +11,21 @@ describe('CyclingMessage', () => {
   });
 
   afterEach(() => {
-    vi.runOnlyPendingTimers();
+    act(() => {
+      vi.runOnlyPendingTimers();
+    });
     vi.useRealTimers();
     vi.useFakeTimers();
   });
 
   it('renders the first message initially', () => {
     const messages = ['First message', 'Second message'];
-    render(<CyclingMessage messages={messages} />);
+
+    act(() => {
+      render(<CyclingMessage messages={messages} />);
+      // Flush any immediate timers
+      vi.runOnlyPendingTimers();
+    });
 
     // Check that the component renders and has the correct aria-label
     expect(screen.getByLabelText('Cycling message')).toBeInTheDocument();
@@ -26,7 +33,12 @@ describe('CyclingMessage', () => {
 
   it('cycles through messages after interval', () => {
     const messages = ['First message', 'Second message', 'Third message'];
-    render(<CyclingMessage messages={messages} intervalMs={3000} />);
+
+    act(() => {
+      render(<CyclingMessage messages={messages} intervalMs={3000} />);
+      // Flush any immediate timers
+      vi.runOnlyPendingTimers();
+    });
 
     // Initially shows first message
     expect(screen.getByLabelText('Cycling message')).toBeInTheDocument();
@@ -47,7 +59,12 @@ describe('CyclingMessage', () => {
 
   it('cycles back to first message after last message', () => {
     const messages = ['First', 'Second'];
-    render(<CyclingMessage messages={messages} intervalMs={3000} />);
+
+    act(() => {
+      render(<CyclingMessage messages={messages} intervalMs={3000} />);
+      // Flush any immediate timers
+      vi.runOnlyPendingTimers();
+    });
 
     // Cycle through all messages
     act(() => {
@@ -68,7 +85,12 @@ describe('CyclingMessage', () => {
 
   it('handles single message without cycling', () => {
     const messages = ['Only message'];
-    render(<CyclingMessage messages={messages} />);
+
+    act(() => {
+      render(<CyclingMessage messages={messages} />);
+      // Flush any immediate timers
+      vi.runOnlyPendingTimers();
+    });
 
     expect(screen.getByLabelText('Cycling message')).toBeInTheDocument();
 
@@ -81,22 +103,42 @@ describe('CyclingMessage', () => {
   });
 
   it('handles empty messages array', () => {
-    const { container } = render(<CyclingMessage messages={[]} />);
+    let container: HTMLElement;
+
+    act(() => {
+      const result = render(<CyclingMessage messages={[]} />);
+      container = result.container;
+      // Flush any immediate timers
+      vi.runOnlyPendingTimers();
+    });
+
     expect(container.firstChild).toBeNull();
   });
 
   it('applies custom className', () => {
     const messages = ['Test message'];
-    const { container } = render(
-      <CyclingMessage messages={messages} className="custom-class" />
-    );
+    let container: HTMLElement;
+
+    act(() => {
+      const result = render(
+        <CyclingMessage messages={messages} className="custom-class" />
+      );
+      container = result.container;
+      // Flush any immediate timers
+      vi.runOnlyPendingTimers();
+    });
 
     expect(container.firstChild).toHaveClass('custom-class');
   });
 
   it('uses custom interval duration', () => {
     const messages = ['First', 'Second'];
-    render(<CyclingMessage messages={messages} intervalMs={1000} />);
+
+    act(() => {
+      render(<CyclingMessage messages={messages} intervalMs={1000} />);
+      // Flush any immediate timers
+      vi.runOnlyPendingTimers();
+    });
 
     expect(screen.getByLabelText('Cycling message')).toBeInTheDocument();
 
@@ -111,7 +153,12 @@ describe('CyclingMessage', () => {
 
   it('has proper accessibility attributes', () => {
     const messages = ['Accessible message'];
-    render(<CyclingMessage messages={messages} />);
+
+    act(() => {
+      render(<CyclingMessage messages={messages} />);
+      // Flush any immediate timers
+      vi.runOnlyPendingTimers();
+    });
 
     const container = screen.getByLabelText('Cycling message');
     expect(container).toHaveAttribute('aria-live', 'polite');
