@@ -3,6 +3,8 @@ import type { Context } from './context';
 import { z } from 'zod';
 import type { T3 } from '@devvit/shared-types/tid.js';
 import { assertT3 } from '@devvit/shared-types/tid.js';
+import { redis } from '@devvit/web/server';
+import { REDIS_KEYS } from '../services/redis';
 import {
   getWords,
   addWord,
@@ -195,11 +197,31 @@ export const appRouter = t.router({
             return { success: false, revealed: false };
           }
 
-          // Return the guess for privileged users
+          // Get all guesses for this post to find the original word
+          const { obfuscateString } = await import('../../shared/utils/string');
+
+          // Get the raw guesses (before obfuscation)
+          const rawGuesses = await redis.zRange(
+            REDIS_KEYS.drawingGuesses(input.postId as T3),
+            0,
+            -1,
+            { reverse: true, by: 'rank' }
+          );
+
+          // Find the original word that matches the obfuscated input
+          let originalWord = input.guess;
+          for (const guess of rawGuesses) {
+            if (obfuscateString(guess.member) === input.guess) {
+              originalWord = guess.member;
+              break;
+            }
+          }
+
+          // Return the original word for privileged users
           return {
             success: true,
             revealed: true,
-            guess: input.guess,
+            guess: originalWord,
           };
         }),
 
