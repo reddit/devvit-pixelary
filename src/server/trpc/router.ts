@@ -174,12 +174,6 @@ export const appRouter = t.router({
           };
         }),
 
-      getAllowedWords: t.procedure.query(async ({ ctx }) => {
-        if (!ctx.subredditName) throw new Error('Subreddit not found');
-        // Return empty array since we don't need any allow list
-        return [];
-      }),
-
       revealGuess: t.procedure
         .input(
           z.object({

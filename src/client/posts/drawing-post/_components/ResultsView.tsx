@@ -8,7 +8,6 @@ import { DrawingData } from '@shared/schema/drawing';
 import { PixelFont } from '@components/PixelFont';
 import { CyclingMessage } from '@components/CyclingMessage';
 import { AUTHOR_REWARD_SUBMIT } from '@shared/constants';
-import { obfuscateString } from '@shared/utils/string';
 import { titleCase } from '@shared/utils/string';
 import { useState, useEffect } from 'react';
 import { useToastHelpers } from '@components/ToastManager';
@@ -47,9 +46,6 @@ export function ResultsView({
     void track('view_results');
   }, []);
 
-  // Get allowed words for this subreddit
-  const { data: allowedWords = [] } = trpc.app.post.getAllowedWords.useQuery();
-
   // Mutation for revealing guesses
   const revealGuess = trpc.app.post.revealGuess.useMutation();
 
@@ -64,7 +60,7 @@ export function ResultsView({
 
       // Show toast if server revealed the guess
       if (result.revealed) {
-        success(normalizedGuess, { duration: 2000 });
+        success(result.guess || normalizedGuess, { duration: 2000 });
       }
     } catch (error) {
       // Server will handle permission checks, so we can ignore errors silently
@@ -137,7 +133,6 @@ export function ResultsView({
                   guess={guess}
                   count={count}
                   percentage={percentage}
-                  allowedWords={allowedWords}
                   onGuessClick={handleGuessRowClick}
                 />
               );
@@ -178,32 +173,16 @@ interface GuessRowProps {
   guess?: string;
   count?: number;
   percentage?: number;
-  obfuscate?: boolean;
-  allowedWords?: string[];
   onGuessClick?: (guess: string) => void;
 }
 
 function GuessRow(props: GuessRowProps) {
-  const {
-    guess,
-    count,
-    percentage,
-    obfuscate = false,
-    allowedWords = [],
-    onGuessClick,
-  } = props;
+  const { guess, count, percentage, onGuessClick } = props;
 
   // Check if this is an empty row (no data provided)
   if (guess === undefined || count === undefined || percentage === undefined) {
     return <div className="w-full h-1/5 bg-white/25" />;
   }
-
-  // Determine if word should be obfuscated
-  const normalizedGuess = titleCase(guess.trim());
-  const isAllowed = allowedWords.some(
-    (allowedWord) => allowedWord.toLowerCase() === normalizedGuess.toLowerCase()
-  );
-  const shouldObfuscate = obfuscate || !isAllowed;
 
   const handleClick = () => {
     if (onGuessClick && guess) {
@@ -217,17 +196,11 @@ function GuessRow(props: GuessRowProps) {
       onClick={handleClick}
     >
       <div
-        className={`absolute inset-y-0 left-0 bg-white transition-all duration-300 ${
-          shouldObfuscate ? 'text-[var(--color-brand-secondary)]' : ''
-        }`}
+        className="absolute inset-y-0 left-0 bg-white transition-all duration-300"
         style={{ width: `${percentage}%` }}
       />
 
-      <PixelFont className="relative">
-        {shouldObfuscate && guess
-          ? obfuscateString(normalizedGuess)
-          : normalizedGuess}
-      </PixelFont>
+      <PixelFont className="relative">{guess}</PixelFont>
 
       <div className="relative flex items-center gap-3">
         <PixelFont className="text-[var(--color-brand-tertiary)]">

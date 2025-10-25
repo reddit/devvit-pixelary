@@ -1,6 +1,6 @@
-import { redis } from '@devvit/web/server';
+import { redis, cache } from '@devvit/web/server';
 import { normalizeWord } from '../../shared/utils/string';
-import { isWordBanned } from './dictionary';
+import { isWordBanned, isWordInList } from './dictionary';
 import { REDIS_KEYS } from './redis';
 import { isT1, type T1 } from '@devvit/shared-types/tid.js';
 
@@ -67,4 +67,29 @@ export async function getBackedWord(
 ): Promise<string | undefined> {
   const word = await redis.get(REDIS_KEYS.wordBackingComment(commentId));
   return word ? normalizeWord(word) : undefined;
+}
+
+/**
+ * Check if a word should be shown unobfuscated
+ * Returns true if the word is in the dictionary OR has been backed
+ * Cached for 5 minutes to improve performance
+ */
+export async function shouldShowWord(word: string): Promise<boolean> {
+  const normalizedWord = normalizeWord(word);
+
+  return await cache(
+    async () => {
+      // Check if backed
+      const backer = await getBacker(normalizedWord);
+      if (backer) return true;
+
+      // Check if in dictionary
+      const inDictionary = await isWordInList(normalizedWord);
+      return inDictionary;
+    },
+    {
+      key: `should_show:${normalizedWord}`,
+      ttl: 15, // 15 seconds
+    }
+  );
 }

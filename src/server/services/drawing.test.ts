@@ -13,6 +13,7 @@ vi.mock('@devvit/web/server', () => ({
     zRange: vi.fn(),
     exists: vi.fn(),
     set: vi.fn(),
+    get: vi.fn(),
     expire: vi.fn(),
     incrBy: vi.fn(),
   },
@@ -29,6 +30,14 @@ vi.mock('./progression', () => ({
   incrementScore: vi.fn(),
 }));
 
+vi.mock('./word-backing', () => ({
+  shouldShowWord: vi.fn().mockResolvedValue(true),
+}));
+
+vi.mock('./dictionary', () => ({
+  isWordInList: vi.fn().mockResolvedValue(true),
+}));
+
 vi.mock('../core/post', () => ({
   createPost: vi.fn(),
 }));
@@ -42,6 +51,7 @@ vi.mock('./redis', () => ({
     drawingSkips: (postId: string) => `skips:${postId}`,
     authorViews: (postId: string) => `d:author_views:${postId}`,
     wordDrawings: (word: string) => `d:w:${word}`,
+    wordBacking: (word: string) => `word:backing:${word}`,
     commentUpdateLock: (postId: string) => `comment_update_lock:${postId}`,
     scores: () => 'scores',
   },
@@ -116,9 +126,13 @@ describe('Drawing Service', () => {
       vi.mocked(redis.zCard).mockResolvedValueOnce(10); // playerCount
       vi.mocked(redis.zCard).mockResolvedValueOnce(3); // solvedCount
 
+      // Mock shouldShowWord to return false so words get obfuscated
+      const { shouldShowWord } = await import('./word-backing');
+      vi.mocked(shouldShowWord).mockResolvedValue(false);
+
       const result = await getGuesses('t3_test123', 10);
 
-      expect(result.guesses).toEqual({ test: 5, wrong: 2 });
+      expect(result.guesses).toEqual({ 't**t': 5, 'w***g': 2 });
       expect(result.wordCount).toBe(2);
       expect(result.guessCount).toBe(7);
       expect(result.playerCount).toBe(10);

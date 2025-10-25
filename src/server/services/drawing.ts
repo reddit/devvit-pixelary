@@ -9,7 +9,8 @@ import {
 } from '@devvit/web/server';
 import { incrementScore } from './progression';
 import { REDIS_KEYS } from './redis';
-import { normalizeWord } from '../../shared/utils/string';
+import { normalizeWord, obfuscateString } from '../../shared/utils/string';
+import { shouldShowWord } from './word-backing';
 import type { DrawingPostDataExtended } from '../../shared/schema/pixelary';
 import { createPost } from '../core/post';
 import { setPostFlair } from '../core/flair';
@@ -699,8 +700,21 @@ export async function getGuesses(
   );
   const wordCount = Object.keys(guesses).length;
 
+  // Batch check which words should be shown
+  const words = Object.keys(guesses);
+  const showChecks = await Promise.all(
+    words.map((word) => shouldShowWord(word))
+  );
+
+  // Obfuscate words that shouldn't be shown
+  const obfuscatedGuesses: Record<string, number> = {};
+  words.forEach((word, i) => {
+    const displayWord = showChecks[i] ? word : obfuscateString(word);
+    obfuscatedGuesses[displayWord] = guesses[word]!;
+  });
+
   return {
-    guesses,
+    guesses: obfuscatedGuesses,
     wordCount,
     guessCount,
     playerCount: stats.playerCount,
