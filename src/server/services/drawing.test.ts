@@ -5,6 +5,7 @@ vi.mock('@devvit/web/server', () => ({
   redis: {
     zScore: vi.fn(),
     hGet: vi.fn(),
+    hGetAll: vi.fn(),
     hSet: vi.fn(),
     zAdd: vi.fn(),
     zIncrBy: vi.fn(),
@@ -19,7 +20,7 @@ vi.mock('@devvit/web/server', () => ({
     runJob: vi.fn(),
   },
   realtime: {
-    send: vi.fn(),
+    send: vi.fn(() => Promise.resolve()),
   },
   cache: vi.fn((fn) => fn()), // Mock cache to just execute the function
 }));
@@ -41,6 +42,7 @@ vi.mock('./redis', () => ({
     drawingSkips: (postId: string) => `skips:${postId}`,
     authorViews: (postId: string) => `d:author_views:${postId}`,
     wordDrawings: (word: string) => `d:w:${word}`,
+    commentUpdateLock: (postId: string) => `comment_update_lock:${postId}`,
     scores: () => 'scores',
   },
 }));
@@ -57,8 +59,10 @@ describe('Drawing Service', () => {
   describe('submitGuess', () => {
     it('returns correct guess result for correct guess', async () => {
       vi.mocked(redis.zScore).mockResolvedValue(undefined); // Not solved yet
-      vi.mocked(redis.hGet).mockResolvedValueOnce('test'); // word
-      vi.mocked(redis.hGet).mockResolvedValueOnce('t2_author123'); // authorId
+      vi.mocked(redis.hGetAll).mockResolvedValue({
+        word: 'test',
+        authorId: 't2_author123',
+      });
       vi.mocked(redis.zAdd).mockResolvedValue(1); // drawingAttempts
       vi.mocked(redis.zIncrBy).mockResolvedValue(1); // wordDrawings and drawingGuesses
       vi.mocked(redis.zAdd).mockResolvedValue(1); // drawingSolves
@@ -78,8 +82,10 @@ describe('Drawing Service', () => {
 
     it('returns incorrect guess result for wrong guess', async () => {
       vi.mocked(redis.zScore).mockResolvedValue(undefined); // Not solved yet
-      vi.mocked(redis.hGet).mockResolvedValueOnce('correct'); // word
-      vi.mocked(redis.hGet).mockResolvedValueOnce('t2_author123'); // authorId
+      vi.mocked(redis.hGetAll).mockResolvedValue({
+        word: 'correct',
+        authorId: 't2_author123',
+      });
       vi.mocked(redis.zAdd).mockResolvedValue(1); // drawingAttempts
       vi.mocked(redis.zIncrBy).mockResolvedValue(1); // wordDrawings and drawingGuesses
       vi.mocked(redis.zCard).mockResolvedValue(1); // playerCount

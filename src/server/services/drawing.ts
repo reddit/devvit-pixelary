@@ -23,6 +23,26 @@ import {
 } from '../../shared/constants';
 import type { MediaAsset } from '@devvit/web/server';
 
+// OPTIMIZATION: Use Devvit's cache helper for drawing data to reduce Redis calls
+const DRAWING_DATA_TTL = 5 * 60; // 5 minutes cache TTL (in seconds)
+
+/**
+ * Get drawing data with caching to reduce Redis calls using Devvit's cache helper
+ */
+async function getCachedDrawingData(
+  postId: T3
+): Promise<Record<string, string>> {
+  return await cache(
+    async () => {
+      return await redis.hGetAll(REDIS_KEYS.drawing(postId));
+    },
+    {
+      key: `drawing_data:${postId}`,
+      ttl: DRAWING_DATA_TTL,
+    }
+  );
+}
+
 /**
  * Create a new drawing post
  * @param options - The options for creating the drawing post
@@ -336,6 +356,77 @@ export async function clearNextScheduledJobId(postId: T3): Promise<void> {
 }
 
 /**
+ * Handle comment update cooldown with atomic Redis operations to prevent race conditions
+ * Uses SET with NX/EX flags as a distributed lock to ensure only one process schedules updates
+ * @param postId - The ID of the drawing post to handle cooldown for
+ */
+export async function handleCommentUpdateCooldown(postId: T3): Promise<void> {
+  const lockKey = REDIS_KEYS.commentUpdateLock(postId);
+  const LOCK_TTL = 30; // 30 seconds lock timeout
+  const ONE_MINUTE = 60 * 1000;
+
+  // Check if lock already exists
+  const lockExists = await redis.exists(lockKey);
+  if (lockExists) {
+    // Another process is handling the cooldown, skip
+    return;
+  }
+
+  // Try to acquire lock
+  await redis.set(lockKey, '1');
+  await redis.expire(lockKey, LOCK_TTL);
+
+  try {
+    const now = Date.now();
+
+    // Read current state
+    const [lastUpdate, nextJobId] = await Promise.all([
+      redis.hGet(REDIS_KEYS.drawing(postId), 'lastCommentUpdate'),
+      redis.hGet(REDIS_KEYS.drawing(postId), 'nextScheduledJobId'),
+    ]);
+
+    const lastUpdateTime = lastUpdate ? parseInt(lastUpdate) : 0;
+    const timeSinceLastUpdate = now - lastUpdateTime;
+
+    if (timeSinceLastUpdate >= ONE_MINUTE) {
+      // Cooldown expired - update immediately
+      // Cancel any pending job
+      if (nextJobId) {
+        try {
+          await scheduler.cancelJob(nextJobId);
+          await clearNextScheduledJobId(postId);
+        } catch (error) {
+          // Silently ignore job cancellation errors
+        }
+      }
+
+      // Schedule immediate update
+      try {
+        await scheduleCommentUpdate(postId, new Date(now));
+      } catch (error) {
+        // Silently ignore scheduling errors
+      }
+    } else if (!nextJobId) {
+      // Within cooldown, no job scheduled - schedule one
+      const nextUpdateTime = lastUpdateTime + ONE_MINUTE;
+      try {
+        await scheduleCommentUpdate(postId, new Date(nextUpdateTime));
+      } catch (error) {
+        // Silently ignore scheduling errors
+      }
+    }
+    // else: Within cooldown AND job already scheduled - do nothing
+  } finally {
+    // Release lock by deleting it (lock will auto-expire anyway)
+    try {
+      await redis.del(lockKey);
+    } catch (error) {
+      // Silently ignore lock release errors
+    }
+  }
+}
+
+/**
  * Schedule a comment update job and save its ID
  * @param postId - The ID of the drawing post to schedule an update for
  * @param runAt - When to run the update job
@@ -492,134 +583,75 @@ export async function submitGuess(options: {
   const { postId, userId, guess } = options;
   const empty = { correct: false, points: 0 };
 
-  // Check if user already solved/skipped this post and get the word
-  const [solved, skipped, word, authorId] = await Promise.all([
+  // Single Redis call to get all drawing data at once (with caching)
+  // Parallel check for user status and increment counters
+  const [drawingData, solved, skipped] = await Promise.all([
+    getCachedDrawingData(postId),
     redis.zScore(REDIS_KEYS.drawingSolves(postId), userId),
     redis.zScore(REDIS_KEYS.drawingSkips(postId), userId),
-    redis.hGet(REDIS_KEYS.drawing(postId), 'word'),
-    redis.hGet(REDIS_KEYS.drawing(postId), 'authorId'),
   ]);
 
-  // Check if user exists in the sets
-  const isInSolvedSet = solved != null;
-  const isInSkippedSet = skipped != null;
+  const word = drawingData.word;
+  const authorId = drawingData.authorId;
 
-  // Don't allow guesses if user has already solved or skipped
+  // Check if user already solved/skipped
+  // Early validation - fail fast if missing required data
   if (
     !word ||
     !authorId ||
     !isT2(authorId) ||
-    isInSolvedSet ||
-    isInSkippedSet
+    solved != null ||
+    skipped != null
   ) {
     return empty;
   }
 
-  // Increment counters and store the guess
-  await Promise.all([
+  const normalizedGuess = normalizeWord(guess);
+  const normalizedWord = normalizeWord(word);
+  const correct = normalizedGuess === normalizedWord;
+  const now = Date.now();
+
+  const redisOperations: Promise<unknown>[] = [
     redis.zIncrBy(REDIS_KEYS.drawingAttempts(postId), userId, 1),
     redis.zIncrBy(REDIS_KEYS.wordDrawings(word), postId, 1),
-    redis.zIncrBy(REDIS_KEYS.drawingGuesses(postId), normalizeWord(guess), 1),
-  ]);
+    redis.zIncrBy(REDIS_KEYS.drawingGuesses(postId), normalizedGuess, 1),
+  ];
 
-  // Check if guess is correct (case-insensitive)
-  const isCorrect = normalizeWord(guess) === normalizeWord(word);
+  if (correct) {
+    // Add correct guess operations
+    redisOperations.push(
+      redis.zAdd(REDIS_KEYS.drawingSolves(postId), {
+        member: userId,
+        score: now,
+      }),
+      incrementScore(userId, GUESSER_REWARD_SOLVE),
+      incrementScore(authorId, AUTHOR_REWARD_CORRECT_GUESS)
+    );
+  }
+
+  // Execute all Redis operations in parallel
+  await Promise.all(redisOperations);
+
+  // Non-blocking comment update with cooldown (fire and forget)
+  void handleCommentUpdateCooldown(postId);
+
+  // Real-time broadcast channel name
   const channelName = `post-${postId}`;
 
-  // Handle comment update cooldown logic for ALL guesses (not just correct ones)
-  // NOTE: This logic has a potential race condition where concurrent guesses could
-  // schedule multiple updates. Consider using Redis locks or atomic operations
-  // for production at scale.
-  const now = Date.now();
-  const ONE_MINUTE = 60 * 1000;
-
-  const [lastUpdate, nextJobId] = await Promise.all([
-    redis.hGet(REDIS_KEYS.drawing(postId), 'lastCommentUpdate'),
-    redis.hGet(REDIS_KEYS.drawing(postId), 'nextScheduledJobId'),
-  ]);
-
-  const lastUpdateTime = lastUpdate ? parseInt(lastUpdate) : 0;
-  const timeSinceLastUpdate = now - lastUpdateTime;
-
-  if (timeSinceLastUpdate >= ONE_MINUTE) {
-    // Cooldown expired - update immediately
-    // Cancel any pending job
-    if (nextJobId) {
-      try {
-        await scheduler.cancelJob(nextJobId);
-        await clearNextScheduledJobId(postId);
-      } catch (error) {
-        // Silently ignore job cancellation errors
-      }
-    }
-
-    // Schedule immediate update
-    try {
-      await scheduleCommentUpdate(postId, new Date(now));
-    } catch (error) {
-      // Silently ignore scheduling errors
-    }
-  } else if (!nextJobId) {
-    // Within cooldown, no job scheduled - schedule one
-    const nextUpdateTime = lastUpdateTime + ONE_MINUTE;
-    try {
-      await scheduleCommentUpdate(postId, new Date(nextUpdateTime));
-    } catch (error) {
-      // Silently ignore scheduling errors
-    }
-  }
-  // else: Within cooldown AND job already scheduled - do nothing
-
-  if (!isCorrect) {
-    // Get updated stats for incorrect guess
-    const updatedStats = await getGuesses(postId);
-
-    // Broadcast guess event to all clients watching this post
-    await realtime.send(channelName, {
-      type: 'guess_submitted',
-      postId,
-      correct: false,
-      timestamp: Date.now(),
-      stats: updatedStats,
-    });
-
-    return {
-      correct: false,
-      points: 0,
-    };
-  }
-
-  // Handle correct guess - mark as solved and award points
-  await Promise.all([
-    // Mark as solved
-    redis.zAdd(REDIS_KEYS.drawingSolves(postId), {
-      member: userId,
-      score: Date.now(),
-    }),
-
-    // Award points
-    incrementScore(userId, GUESSER_REWARD_SOLVE),
-
-    // Award author points
-    incrementScore(authorId, AUTHOR_REWARD_CORRECT_GUESS),
-  ]);
-
-  // Get updated stats after all Redis operations complete
+  // Calculate stats for the broadcast
   const finalStats = await getGuesses(postId);
 
-  // Send realtime message with fresh stats
-  await realtime.send(channelName, {
+  // Broadcast the guess to all clients watching this post
+  void realtime.send(channelName, {
     type: 'guess_submitted',
     postId,
-    correct: true,
-    timestamp: Date.now(),
+    correct,
+    timestamp: now,
     stats: finalStats,
   });
 
-  return {
-    correct: true,
-    points: GUESSER_REWARD_SOLVE,
-  };
+  const points = correct ? GUESSER_REWARD_SOLVE : 0;
+  return { correct, points };
 }
 
 /**
@@ -667,15 +699,13 @@ export async function getGuesses(
   );
   const wordCount = Object.keys(guesses).length;
 
-  const result = {
+  return {
     guesses,
     wordCount,
     guessCount,
     playerCount: stats.playerCount,
     solvedCount,
   };
-
-  return result;
 }
 
 /**

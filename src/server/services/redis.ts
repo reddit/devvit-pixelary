@@ -47,6 +47,7 @@ export const REDIS_KEYS = {
 
   // Comment
   comment: (postId: T3) => `comment:${postId}`,
+  commentUpdateLock: (postId: T3) => `comment_update_lock:${postId}`,
 
   // Progression system
   scores: () => 'scores',
