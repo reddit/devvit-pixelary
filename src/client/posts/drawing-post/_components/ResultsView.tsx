@@ -84,7 +84,7 @@ export function ResultsView({
     dictionaryName !== `r/${currentSubreddit}`;
 
   return (
-    <main className="fixed inset-0 flex flex-col items-center justify-center h-full p-6 gap-6">
+    <main className="absolute inset-0 flex flex-col items-center justify-center h-full p-6 gap-6">
       {/* Header */}
       <header className="flex flex-row items-center justify-center gap-4">
         <Drawing

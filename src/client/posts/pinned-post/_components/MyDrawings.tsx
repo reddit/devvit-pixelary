@@ -25,7 +25,7 @@ export function MyDrawings({ onClose }: MyDrawingsProps) {
   );
 
   return (
-    <main className="fixed inset-0 flex flex-col p-4 gap-4">
+    <main className="absolute inset-0 flex flex-col p-4 gap-4">
       {/* Header */}
       <header className="shrink-0 w-full flex flex-row items-center justify-between">
         <PixelFont scale={2.5}>My Drawings</PixelFont>

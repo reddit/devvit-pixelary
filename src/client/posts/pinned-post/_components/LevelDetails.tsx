@@ -80,7 +80,7 @@ export function LevelDetails({ onClose }: LevelDetailsProps) {
   const overMaximum = (userProfile?.score ?? 0) >= currentLevel.max;
 
   return (
-    <main className="fixed inset-0 flex flex-col items-center justify-center p-6">
+    <main className="absolute inset-0 flex flex-col items-center justify-center p-6">
       <div className="flex flex-col items-start justify-start gap-6 w-full h-full p-6 bg-white pixel-shadow">
         {/* Header */}
         <header className="flex flex-row items-start justify-between gap-2 w-full">

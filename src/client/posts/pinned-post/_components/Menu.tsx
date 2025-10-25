@@ -47,7 +47,7 @@ export function Menu(props: MenuProps) {
       : 0;
 
   return (
-    <main className="fixed inset-0 flex flex-col items-center justify-evenly min-h-screen px-4">
+    <main className="absolute inset-0 flex flex-col items-center justify-evenly min-h-screen px-4">
       {/* Logo + Wordmark */}
       <div className="flex flex-col items-center gap-4">
         <Logo size={64} />
