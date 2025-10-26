@@ -87,7 +87,7 @@ describe('Comment command system', () => {
 
       // !show now works as a backing utility and doesn't require postId
       expect(result.success).toBe(true);
-      expect(result.response).toContain('Backed. Unmasked in results.');
+      expect(result.response).toContain('This word is now visible.');
     });
   });
 

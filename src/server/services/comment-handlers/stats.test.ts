@@ -22,11 +22,9 @@ vi.mock('../word-backing', () => ({
   addBacker: vi.fn().mockResolvedValue(undefined),
 }));
 
-import { redis, context } from '@devvit/web/server';
+import { redis } from '@devvit/web/server';
 import { handleStats, getWordMetrics } from './stats';
-import { REDIS_KEYS } from './redis';
 import { isWordInList } from '../dictionary';
-import { addBacker } from '../word-backing';
 
 // Mock context for tests
 const mockContext = {
@@ -38,6 +36,7 @@ const mockContext = {
   subredditId: 't5_testsub' as const,
   userId: 't2_test789' as const,
   username: 'testuser',
+  timestamp: Date.now(),
 };
 
 describe('Stats Comment Handler', () => {
