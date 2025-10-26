@@ -3,6 +3,7 @@ import {
   getLeaderboard,
   getScore,
   incrementScore,
+  setScore,
   getLevelByScore,
   getUserLevel,
   getRank,
@@ -17,6 +18,8 @@ vi.mock('@devvit/web/server', () => ({
     zScore: vi.fn(),
     zIncrBy: vi.fn(),
     zRank: vi.fn(),
+    zAdd: vi.fn(),
+    set: vi.fn(),
   },
   scheduler: {
     runJob: vi.fn(),
@@ -31,6 +34,7 @@ vi.mock('./redis', () => ({
   getUsername: vi.fn(),
   REDIS_KEYS: {
     scores: () => 'scores',
+    userLevelUpClaim: (userId: string) => `user:${userId}:levelup`,
   },
 }));
 
@@ -142,6 +146,80 @@ describe('Leaderboard Service', () => {
         },
         runAt: expect.any(Date),
       });
+    });
+  });
+
+  describe('setScore', () => {
+    beforeEach(() => {
+      vi.clearAllMocks();
+    });
+
+    it('sets user score to new value', async () => {
+      vi.mocked(redis.zScore).mockResolvedValueOnce(50); // old score
+      vi.mocked(redis.zAdd).mockResolvedValue(undefined);
+
+      const result = await setScore('t2_testuser', 200);
+
+      expect(result).toBe(200);
+      expect(redis.zAdd).toHaveBeenCalledWith('scores', {
+        member: 't2_testuser',
+        score: 200,
+      });
+    });
+
+    it('updates claimed level when leveling down', async () => {
+      vi.mocked(redis.zScore).mockResolvedValueOnce(1000); // Level 3
+      vi.mocked(redis.zAdd).mockResolvedValue(undefined);
+
+      await setScore('t2_testuser', 50); // Level 1
+
+      expect(redis.set).toHaveBeenCalledWith('user:t2_testuser:levelup', '1');
+    });
+
+    it('updates claimed level when staying same level', async () => {
+      vi.mocked(redis.zScore).mockResolvedValueOnce(100); // Level 2
+      vi.mocked(redis.zAdd).mockResolvedValue(undefined);
+
+      await setScore('t2_testuser', 150); // Still Level 2
+
+      expect(redis.set).toHaveBeenCalledWith('user:t2_testuser:levelup', '2');
+    });
+
+    it('does not update claimed level when leveling up', async () => {
+      vi.mocked(redis.zScore).mockResolvedValueOnce(50); // Level 1
+      vi.mocked(redis.zAdd).mockResolvedValue(undefined);
+
+      await setScore('t2_testuser', 1000); // Level 3
+
+      // Should NOT call redis.set for claiming
+      expect(redis.set).not.toHaveBeenCalled();
+    });
+
+    it('schedules level up job when user levels up', async () => {
+      vi.mocked(redis.zScore).mockResolvedValueOnce(0);
+      vi.mocked(redis.zAdd).mockResolvedValue(undefined);
+
+      await setScore('t2_testuser', 100); // Level 2
+
+      expect(scheduler.runJob).toHaveBeenCalledWith({
+        name: 'USER_LEVEL_UP',
+        data: {
+          userId: 't2_testuser',
+          score: 100,
+          level: expect.any(Object),
+          subredditName: 'testsubreddit',
+        },
+        runAt: expect.any(Date),
+      });
+    });
+
+    it('does not schedule level up job when user levels down', async () => {
+      vi.mocked(redis.zScore).mockResolvedValueOnce(1000); // Level 3
+      vi.mocked(redis.zAdd).mockResolvedValue(undefined);
+
+      await setScore('t2_testuser', 50); // Level 1
+
+      expect(scheduler.runJob).not.toHaveBeenCalled();
     });
   });
 

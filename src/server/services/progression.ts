@@ -82,10 +82,17 @@ export async function setScore(userId: T2, score: number): Promise<number> {
   const oldScore = await getScore(userId);
   await redis.zAdd(key, { member: userId, score });
   const level = getLevelByScore(score);
+  const oldLevel = getLevelByScore(oldScore);
 
-  // Reset claimed level to match new level
-  const newClaimedKey = REDIS_KEYS.userLevelUpClaim(userId);
-  await redis.set(newClaimedKey, level.rank.toString());
+  // Update claimed level if user leveled up
+  if (level.rank > oldLevel.rank) {
+    // Keep the old claimed level so the modal will show
+    // Don't update it here - let the user claim the new level
+  } else {
+    // User stayed at same level or went down, update claimed level to match
+    const newClaimedKey = REDIS_KEYS.userLevelUpClaim(userId);
+    await redis.set(newClaimedKey, level.rank.toString());
+  }
 
   const didUserLevelUp = level.min > (oldScore ?? 0);
 
