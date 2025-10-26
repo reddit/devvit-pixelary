@@ -2,8 +2,11 @@ import { Confetti } from './Confetti';
 import { PixelFont } from './PixelFont';
 import { Button } from './Button';
 import { PixelSymbol } from './PixelSymbol';
+import { ModalScrim } from './ModalScrim';
+import { ModalBody } from './ModalBody';
 import { getRewardsByLevel, getRewardLabel } from '@shared/rewards';
 import type { RewardType } from '@shared/rewards';
+import { createPortal } from 'react-dom';
 
 interface LevelUpModalProps {
   level: number;
@@ -12,54 +15,50 @@ interface LevelUpModalProps {
 
 export function LevelUpModal({ level, onClaim }: LevelUpModalProps) {
   const rewards = getRewardsByLevel(level);
+  const rewardCount = rewards.length;
 
-  return (
-    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black-70 pointer-events-auto">
+  const content = (
+    <ModalScrim persistent>
       {/* Continuous confetti background */}
       <div className="fixed inset-0">
         <Confetti count={Infinity} delay={10} speed={4} />
       </div>
 
-      {/* Modal content */}
-      <div className="relative bg-white flex flex-col gap-6 p-6 items-center justify-center">
+      <ModalBody>
         {/* Title */}
         <PixelFont scale={4} className="text-primary">
           {`Level ${level}!`}
         </PixelFont>
+
+        {/* Description */}
         <div className="flex flex-col items-center gap-3">
-          {/* Description */}
           <PixelFont scale={2} className="text-success">
             You leveled up,
           </PixelFont>
           <PixelFont scale={2} className="text-success">
-            earning rewards!
+            {`earning reward${rewardCount === 1 ? '' : 's'}!`}
           </PixelFont>
         </div>
 
-        {/* Rewards List */}
+        {/* Rewards */}
         <div className="flex flex-col gap-3 w-full">
           {rewards.map((reward: RewardType) => (
             <LevelUpRewardItem key={reward} reward={reward} level={level} />
           ))}
         </div>
 
-        {/* Claim Button */}
+        {/* Claim button */}
         <Button onClick={onClaim} size="large">
-          CLAIM REWARDS
+          {`CLAIM REWARD${rewardCount === 1 ? '' : 'S'}`}
         </Button>
-
-        {/* Border Decorations */}
-        <div className="absolute -top-1 left-1 right-1 h-1 bg-black" />
-        <div className="absolute -bottom-1 left-1 right-1 h-1 bg-black" />
-        <div className="absolute top-1 -left-1 bottom-1 w-1 bg-black" />
-        <div className="absolute top-1 -right-1 bottom-1 w-1 bg-black" />
-        <div className="absolute top-0 left-0 w-1 h-1 bg-black" />
-        <div className="absolute top-0 right-0 w-1 h-1 bg-black" />
-        <div className="absolute bottom-0 left-0 w-1 h-1 bg-black" />
-        <div className="absolute bottom-0 right-0 w-1 h-1 bg-black" />
-      </div>
-    </div>
+      </ModalBody>
+    </ModalScrim>
   );
+
+  const portalRoot = document.getElementById('portal-root');
+  if (!portalRoot) return null;
+
+  return createPortal(content, portalRoot);
 }
 
 interface LevelUpRewardItemProps {
