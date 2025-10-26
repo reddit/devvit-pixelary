@@ -1,6 +1,7 @@
 import { redis } from '@devvit/web/server';
 import { REDIS_KEYS } from './redis';
 import type { PostType, TelemetryEventType } from '../../shared/types';
+import type { PostData } from '../../shared/schema';
 
 /**
  * Telemetry service for tracking UI events
@@ -60,12 +61,17 @@ export async function trackEvent(
  */
 export async function trackEventFromContext(
   eventType: TelemetryEventType,
-  postData: { type: 'drawing' | 'pinned' } | null,
+  postData: PostData | null,
   metadata?: Record<string, string | number>
 ): Promise<void> {
   // Default to 'pinned' if no postData (e.g., in pinned post context)
+  // For collection posts, treat as 'pinned' for telemetry purposes
   const postType: PostType =
-    postData?.type === 'drawing' ? 'drawing' : 'pinned';
+    postData?.type === 'drawing'
+      ? 'drawing'
+      : postData?.type === 'collection'
+        ? 'pinned'
+        : 'pinned';
 
   await trackEvent(postType, eventType, undefined, metadata);
 }

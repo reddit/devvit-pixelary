@@ -2,11 +2,11 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { DrawingPost } from './posts/drawing-post/DrawingPost';
 import { PinnedPost } from './posts/pinned-post/PinnedPost';
+import { CollectionPost } from './posts/collection-post/CollectionPost';
 import { trpc } from './trpc/client';
 import { httpBatchLink } from '@trpc/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { getPostData } from './utils/context';
-import type { DrawingPostDataExtended } from '../shared/schema';
 import './index.css';
 import { Background } from './components/Background';
 import { ToastProvider } from './components/ToastManager';
@@ -61,6 +61,8 @@ const App = () => {
       return <DrawingPost />;
     case 'pinned':
       return <PinnedPost />;
+    case 'collection':
+      return <CollectionPost />;
     default:
       return (
         <div className="flex items-center justify-center h-full w-full">

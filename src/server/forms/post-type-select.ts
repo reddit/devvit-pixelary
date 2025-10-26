@@ -31,11 +31,13 @@ export async function handlePostTypeSelect(
       name: string;
       label: string;
       placeholder?: string;
-      defaultValue?: string;
+      defaultValue?: string | string[];
       required?: boolean;
       options?: Array<{ label: string; value: string }>;
       min?: number;
       max?: number;
+      helpText?: string;
+      lineHeight?: number;
     }> = [];
 
     switch (postTypeValue) {
@@ -62,6 +64,52 @@ export async function handlePostTypeSelect(
             name: 'title',
             label: 'Post Title',
             placeholder: 'Enter post title...',
+            required: true,
+          },
+        ];
+        break;
+      case 'collection':
+        formName = 'collectionPostForm';
+        formTitle = 'Create collection post';
+        formFields = [
+          {
+            type: 'paragraph',
+            name: 'postTitle',
+            label: 'Post title',
+            lineHeight: 2,
+            placeholder: 'Post title',
+            defaultValue: 'Top drawings this week!',
+            required: true,
+          },
+          {
+            type: 'paragraph',
+            name: 'label',
+            label: 'Label',
+            lineHeight: 2,
+            placeholder: 'Shown above drawings',
+            defaultValue: 'Top drawings\nthis week!',
+            required: true,
+            helpText: 'Max 2 lines. Use "\n" for newlines.',
+          },
+          {
+            type: 'number',
+            name: 'numberOfDays',
+            label: 'Number of days',
+            defaultValue: '7',
+            min: 1,
+            max: 365,
+            required: true,
+          },
+          {
+            type: 'select',
+            name: 'numberOfDrawings',
+            label: 'Number of drawings',
+            defaultValue: ['6'],
+            options: [
+              { label: '3 drawings', value: '3' },
+              { label: '6 drawings', value: '6' },
+              { label: '9 drawings', value: '9' },
+            ],
             required: true,
           },
         ];

@@ -144,6 +144,15 @@ export const appRouter = t.router({
           return await getDrawings(postIds);
         }),
 
+      getCollection: t.procedure
+        .input(z.object({ collectionId: z.string() }))
+        .query(async ({ input }) => {
+          const { getCollectionData } = await import(
+            '../services/collection-post'
+          );
+          return await getCollectionData(input.collectionId);
+        }),
+
       submitDrawing: t.procedure
         .input(
           z.object({

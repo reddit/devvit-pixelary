@@ -26,7 +26,8 @@
     "bannedWordsForm": "/internal/form/banned-words-update",
     "slateBanditForm": "/internal/form/slate-bandit-update",
     "editWordsForm": "/internal/form/edit-words",
-    "editBannedWordsForm": "/internal/form/edit-banned-words"
+    "editBannedWordsForm": "/internal/form/edit-banned-words",
+    "collectionPostForm": "/internal/form/collection-post-submit"
   },
   "menu": {
     "items": [

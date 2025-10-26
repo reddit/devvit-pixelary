@@ -4,3 +4,4 @@ export { handleWordsUpdate } from './words-update';
 export { handleBannedWordsUpdate } from './banned-words-update';
 export { handleSlateBanditUpdate } from './slate-bandit-update';
 export { handleEditWordsForm } from './edit-words';
+export { handleCollectionPostSubmit } from './collection-post-submit';

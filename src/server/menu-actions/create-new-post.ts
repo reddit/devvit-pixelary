@@ -23,6 +23,7 @@ export async function handleCreateNewPost(
               options: [
                 { label: 'Drawing Post', value: 'drawing' },
                 { label: 'Pinned Post', value: 'pinned' },
+                { label: 'Collection Post', value: 'collection' },
               ],
               defaultValue: ['pinned'],
               required: true,
