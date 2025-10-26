@@ -15,6 +15,8 @@ import {
   handleTelemetryLog,
   handleTelemetryClear,
   handleSlateBandit,
+  handleSetUserPoints,
+  handleGetUserPoints,
 } from './menu-actions';
 
 // Import form handlers
@@ -26,6 +28,8 @@ import {
   handleSlateBanditUpdate,
   handleEditWordsForm,
   handleCollectionPostSubmit,
+  handleSetUserPointsForm,
+  handleGetUserPointsForm,
 } from './forms';
 
 // Import scheduler handlers
@@ -103,6 +107,8 @@ router.post('/internal/menu/update-pinned-comment', handleUpdatePinnedComment);
 router.post('/internal/menu/telemetry-log', handleTelemetryLog);
 router.post('/internal/menu/telemetry-clear', handleTelemetryClear);
 router.post('/internal/menu/slate-bandit', handleSlateBandit);
+router.post('/internal/menu/set-user-points', handleSetUserPoints);
+router.post('/internal/menu/get-user-points', handleGetUserPoints);
 
 // ============================================================================
 // FORM HANDLERS
@@ -118,6 +124,8 @@ router.post(
   '/internal/form/collection-post-submit',
   handleCollectionPostSubmit
 );
+router.post('/internal/form/set-user-points', handleSetUserPointsForm);
+router.post('/internal/form/get-user-points', handleGetUserPointsForm);
 
 // Use router middleware
 app.use(router);

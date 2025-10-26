@@ -27,7 +27,9 @@
     "slateBanditForm": "/internal/form/slate-bandit-update",
     "editWordsForm": "/internal/form/edit-words",
     "editBannedWordsForm": "/internal/form/edit-banned-words",
-    "collectionPostForm": "/internal/form/collection-post-submit"
+    "collectionPostForm": "/internal/form/collection-post-submit",
+    "setUserPointsForm": "/internal/form/set-user-points",
+    "getUserPointsForm": "/internal/form/get-user-points"
   },
   "menu": {
     "items": [
@@ -95,6 +97,20 @@
         "location": "subreddit",
         "forUserType": "moderator",
         "endpoint": "/internal/menu/slate-bandit"
+      },
+      {
+        "label": "[Pixelary] Set User Points",
+        "description": "Set the exact number of points for a user",
+        "location": "subreddit",
+        "forUserType": "moderator",
+        "endpoint": "/internal/menu/set-user-points"
+      },
+      {
+        "label": "[Pixelary] Get User Points",
+        "description": "View how many points a user has",
+        "location": "subreddit",
+        "forUserType": "user",
+        "endpoint": "/internal/menu/get-user-points"
       }
     ]
   },

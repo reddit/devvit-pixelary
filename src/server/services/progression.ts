@@ -71,6 +71,36 @@ export async function getScore(userId: T2): Promise<number> {
 }
 
 /**
+ * Set the exact score for a user
+ * @param userId - The user ID
+ * @param score - The exact score to set
+ * @returns The score that was set
+ */
+
+export async function setScore(userId: T2, score: number): Promise<number> {
+  const key = REDIS_KEYS.scores();
+  const oldScore = await getScore(userId);
+  await redis.zAdd(key, { member: userId, score });
+  const level = getLevelByScore(score);
+  const didUserLevelUp = level.min > (oldScore ?? 0);
+
+  if (didUserLevelUp) {
+    await scheduler.runJob({
+      name: 'USER_LEVEL_UP',
+      data: {
+        userId,
+        score,
+        level,
+        subredditName: context.subredditName,
+      },
+      runAt: new Date(),
+    });
+  }
+
+  return score;
+}
+
+/**
  * Increment the score for a user
  * @param userId - The user ID
  * @param amount - The number of points to increment
