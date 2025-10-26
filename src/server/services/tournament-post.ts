@@ -1,6 +1,6 @@
 import type { T2, T3, T1 } from '@devvit/shared-types/tid.js';
 import { reddit, redis, media, context } from '@devvit/web/server';
-import { RichTextBuilder } from '@devvit/shared-types/richtext/RichTextBuilder.js';
+import type { MediaAsset } from '@devvit/web/server';
 import { createPost } from '../core/post';
 import { REDIS_KEYS } from './redis';
 import { getRandomWords } from './dictionary';
@@ -134,19 +134,34 @@ export async function submitTournamentDrawing(
   imageData: string
 ): Promise<T1> {
   try {
-    const response = await media.upload({
-      url: imageData,
-      type: 'image',
-    });
+    let response: MediaAsset;
+    try {
+      response = await media.upload({
+        url: imageData,
+        type: 'image',
+      });
+    } catch (mediaError) {
+      console.error('Media upload failed:', mediaError);
+      const mediaErrorMessage =
+        mediaError instanceof Error ? mediaError.message : String(mediaError);
+      throw new Error(`Failed to upload image: ${mediaErrorMessage}`);
+    }
 
-    const comment = await reddit.submitComment({
-      text: `[My submission](${response.mediaUrl})`,
-      //richtext: new RichTextBuilder().image({
-      //  mediaId: response.mediaId,
-      //}),
-      id: postId,
-      runAs: 'USER',
-    });
+    let comment;
+    try {
+      comment = await reddit.submitComment({
+        text: `[My submission](${response.mediaUrl})`,
+        id: postId,
+        runAs: 'USER',
+      });
+    } catch (commentError) {
+      console.error('Comment submission failed:', commentError);
+      const commentErrorMessage =
+        commentError instanceof Error
+          ? commentError.message
+          : String(commentError);
+      throw new Error(`Failed to submit comment: ${commentErrorMessage}`);
+    }
 
     const promises: Promise<unknown>[] = [];
 
@@ -179,7 +194,8 @@ export async function submitTournamentDrawing(
     return comment.id;
   } catch (error) {
     console.error('Failed to submit tournament drawing:', error);
-    throw new Error('Failed to submit tournament drawing');
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    throw new Error(`Failed to submit tournament drawing: ${errorMessage}`);
   }
 }
 
