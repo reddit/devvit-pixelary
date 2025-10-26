@@ -17,6 +17,15 @@ vi.mock('./dictionary', () => ({
     hasMore: false,
   }),
   removeWord: vi.fn().mockResolvedValue(true),
+  isWordBanned: vi.fn().mockResolvedValue(false),
+  isWordInList: vi.fn().mockResolvedValue(false),
+}));
+
+// Mock the word-backing service
+vi.mock('./word-backing', () => ({
+  getBacker: vi.fn().mockResolvedValue(null),
+  addBacker: vi.fn().mockResolvedValue(undefined),
+  shouldShowWord: vi.fn().mockResolvedValue(false),
 }));
 
 describe('Comment command system', () => {
@@ -72,12 +81,13 @@ describe('Comment command system', () => {
       expect(removeResult.error).toContain('Failed to remove word');
     });
 
-    test('should require postId for !show command', async () => {
+    test('should handle !show command without postId', async () => {
       const context = createContext('testuser', 'testsub');
       const result = await processCommand('!show', ['testword'], context);
 
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('Unable to determine post context');
+      // !show now works as a backing utility and doesn't require postId
+      expect(result.success).toBe(true);
+      expect(result.response).toContain('Backed. Unmasked in results.');
     });
   });
 
@@ -101,7 +111,7 @@ describe('Comment command system', () => {
       );
 
       expect(result.success).toBe(false);
-      expect(result.error).toContain('Failed to retrieve word statistics');
+      expect(result.error).toContain('Word not found');
     });
   });
 });
