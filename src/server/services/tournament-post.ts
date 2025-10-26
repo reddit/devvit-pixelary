@@ -1,5 +1,6 @@
 import type { T2, T3, T1 } from '@devvit/shared-types/tid.js';
 import { reddit, redis, media, context } from '@devvit/web/server';
+import { RichTextBuilder } from '@devvit/shared-types/richtext/RichTextBuilder.js';
 import { createPost } from '../core/post';
 import { REDIS_KEYS } from './redis';
 import { getRandomWords } from './dictionary';
@@ -132,51 +133,54 @@ export async function submitTournamentDrawing(
   drawing: DrawingData,
   imageData: string
 ): Promise<T1> {
-  // Upload image to Reddit
-  let imageUrl: string | undefined;
   try {
-    const mediaResponse = await media.upload({
+    const response = await media.upload({
       url: imageData,
       type: 'image',
     });
-    imageUrl = mediaResponse.mediaUrl;
+
+    const comment = await reddit.submitComment({
+      text: `[My submission](${response.mediaUrl})`,
+      //richtext: new RichTextBuilder().image({
+      //  mediaId: response.mediaId,
+      //}),
+      id: postId,
+      runAs: 'USER',
+    });
+
+    const promises: Promise<unknown>[] = [];
+
+    // Store comment ID in sorted set
+    promises.push(
+      redis.zAdd(REDIS_KEYS.tournamentSubmissions(postId), {
+        member: comment.id,
+        score: Date.now(),
+      })
+    );
+
+    // Store comment data
+    promises.push(
+      redis.hSet(REDIS_KEYS.tournamentCommentData(comment.id), {
+        postId,
+        userId,
+        drawing: JSON.stringify(drawing),
+      })
+    );
+
+    // Store user's submission for this post
+    promises.push(
+      redis.hSet(REDIS_KEYS.tournamentUserSubmission(postId, userId), {
+        commentId: comment.id,
+      })
+    );
+
+    await Promise.all(promises);
+
+    return comment.id;
   } catch (error) {
-    console.warn('Failed to upload image:', error);
-    throw new Error('Failed to upload image');
+    console.error('Failed to submit tournament drawing:', error);
+    throw new Error('Failed to submit tournament drawing');
   }
-
-  // Embed image in comment using markdown
-  const commentText = imageUrl
-    ? `![my submission](${imageUrl})`
-    : 'my submission';
-
-  // Submit comment with image
-  const comment = await reddit.submitComment({
-    text: commentText,
-    id: postId,
-  });
-
-  const commentId = comment.id;
-
-  // Store comment ID in sorted set
-  await redis.zAdd(REDIS_KEYS.tournamentSubmissions(postId), {
-    member: commentId,
-    score: Date.now(),
-  });
-
-  // Store comment data
-  await redis.hSet(REDIS_KEYS.tournamentCommentData(commentId), {
-    postId,
-    userId,
-    drawing: JSON.stringify(drawing),
-  });
-
-  // Store user's submission for this post
-  await redis.hSet(REDIS_KEYS.tournamentUserSubmission(postId, userId), {
-    commentId,
-  });
-
-  return commentId;
 }
 
 /**

@@ -16,7 +16,11 @@
     "entry": "index.cjs"
   },
   "permissions": {
-    "realtime": true
+    "realtime": true,
+    "reddit": {
+      "enable": true,
+      "asUser": ["SUBMIT_COMMENT"]
+    }
   },
   "media": {},
   "forms": {
