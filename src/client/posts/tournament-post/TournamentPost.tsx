@@ -7,6 +7,7 @@ import { VotingView } from './_components/VotingView';
 import { PixelFont } from '@components/PixelFont';
 import { Button } from '@components/Button';
 import { useToastHelpers } from '@components/ToastManager';
+import { CyclingMessage } from '@components/CyclingMessage';
 
 type TournamentState = 'loading' | 'browsing' | 'drawing' | 'submitted';
 
@@ -17,9 +18,10 @@ export function TournamentPost() {
   const { success: showSuccessToast } = useToastHelpers();
 
   const { data: tournamentData, isLoading: isLoadingTournament } =
-    trpc.app.tournament.getTournament.useQuery({
-      date: postData?.date,
-    });
+    trpc.app.tournament.getTournament.useQuery(
+      { date: postData?.date || '' },
+      { enabled: !!postData?.date }
+    );
 
   const { data: userSubmission } =
     trpc.app.tournament.getUserSubmission.useQuery(
@@ -37,6 +39,12 @@ export function TournamentPost() {
       enabled: !!tournamentData?.postId,
     }
   );
+
+  const formatStatsLine = (submissionCount: number, playerCount: number) => {
+    const drawingText = submissionCount === 1 ? 'drawing' : 'drawings';
+    const playerText = playerCount === 1 ? 'player' : 'players';
+    return `${submissionCount} ${drawingText} by ${playerCount} ${playerText}`;
+  };
 
   useEffect(() => {
     if (isLoadingTournament) {
@@ -78,8 +86,8 @@ export function TournamentPost() {
         onClose={handleCloseEditor}
         onSuccess={handleEditorSuccess}
         mode="tournament-comment"
-        tournamentPostId={tournamentData.postId}
-        tournamentWord={tournamentData.word}
+        tournamentPostId={tournamentData?.postId || ''}
+        tournamentWord={tournamentData?.word || ''}
       />
     );
   }
@@ -90,32 +98,39 @@ export function TournamentPost() {
   return (
     <div className="absolute flex flex-col gap-6 items-center justify-center h-full w-full p-6">
       <div className="flex flex-col gap-2 items-center justify-center">
-        <PixelFont scale={4}>{tournamentData.word}</PixelFont>
-        <PixelFont scale={2}>Who did it better?</PixelFont>
+        <CyclingMessage
+          messages={[
+            'Word of the Day',
+            'Drawing Challenge',
+            new Date(tournamentData?.date || '').toLocaleDateString('en-US', {
+              month: 'long',
+              day: 'numeric',
+              year: 'numeric',
+            }),
+          ]}
+          className="text-secondary"
+          intervalMs={3000}
+        />
+        <PixelFont scale={4}>{tournamentData?.word}</PixelFont>
       </div>
 
-      {!hasEnoughSubmissions ? (
+      <PixelFont scale={3}>Which is Better?</PixelFont>
+
+      {!hasEnoughSubmissions || !stats ? (
         <div className="flex flex-col gap-4 items-center">
           <PixelFont>Not enough submissions yet</PixelFont>
-          {userSubmission && (
-            <PixelFont className="text-secondary">
-              You've already submitted. Try again?
-            </PixelFont>
-          )}
           <Button onClick={handleDrawSomething} size="large">
-            I CAN DO BETTER
+            DRAW WORD
           </Button>
         </div>
       ) : (
         <>
-          <VotingView postId={tournamentData.postId} />
-          {userSubmission && (
-            <PixelFont className="text-secondary">
-              You've already submitted. Try again?
-            </PixelFont>
-          )}
+          <VotingView postId={tournamentData?.postId || ''} />
+          <PixelFont scale={2} className="text-tertiary">
+            {formatStatsLine(stats.submissionCount, stats.playerCount)}
+          </PixelFont>
           <Button onClick={handleDrawSomething} size="large">
-            I CAN DO BETTER
+            DRAW WORD
           </Button>
         </>
       )}

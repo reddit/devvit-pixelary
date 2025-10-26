@@ -31,23 +31,17 @@ export function VotingView({ postId }: VotingViewProps) {
   });
 
   // Fetch drawings for the pair
-  const {
-    data: leftDrawingData,
-    error: leftError,
-    isLoading: leftLoading,
-  } = trpc.app.tournament.getCommentDrawing.useQuery(
-    { commentId: pair?.[0] || '' },
-    { enabled: !!pair?.[0] }
-  );
+  const { data: leftDrawingData } =
+    trpc.app.tournament.getCommentDrawing.useQuery(
+      { commentId: pair?.[0] || '' },
+      { enabled: !!pair?.[0] }
+    );
 
-  const {
-    data: rightDrawingData,
-    error: rightError,
-    isLoading: rightLoading,
-  } = trpc.app.tournament.getCommentDrawing.useQuery(
-    { commentId: pair?.[1] || '' },
-    { enabled: !!pair?.[1] }
-  );
+  const { data: rightDrawingData } =
+    trpc.app.tournament.getCommentDrawing.useQuery(
+      { commentId: pair?.[1] || '' },
+      { enabled: !!pair?.[1] }
+    );
 
   // Sync pairData to pair state
   useEffect(() => {
@@ -93,38 +87,34 @@ export function VotingView({ postId }: VotingViewProps) {
 
   return (
     <div className="flex flex-col gap-4 items-center w-full max-w-2xl">
-      <div className="grid grid-cols-2 gap-4 w-full">
+      <div className="flex gap-4 items-center justify-center">
         {/* Left drawing */}
         <div className="flex flex-col gap-2 items-center">
-          <div className="border-2 border-gray-300 rounded p-4 aspect-square flex items-center justify-center bg-white">
-            {leftDrawingData ? (
-              <Drawing data={leftDrawingData.drawing} size={200} />
-            ) : (
-              <div className="w-full h-full bg-white-25" />
-            )}
-          </div>
+          {leftDrawingData ? (
+            <Drawing data={leftDrawingData.drawing} size={128} />
+          ) : (
+            <div className="w-32 h-32 bg-white-25" />
+          )}
           <Button
             onClick={() => handleVote(pair?.[0] || '', pair?.[1] || '')}
             disabled={submitVote.isPending || isLoading}
           >
-            THIS ONE
+            THIS
           </Button>
         </div>
 
         {/* Right drawing */}
         <div className="flex flex-col gap-2 items-center">
-          <div className="border-2 border-gray-300 rounded p-4 aspect-square flex items-center justify-center bg-white">
-            {rightDrawingData ? (
-              <Drawing data={rightDrawingData.drawing} size={200} />
-            ) : (
-              <div className="w-full h-full bg-white-25" />
-            )}
-          </div>
+          {rightDrawingData ? (
+            <Drawing data={rightDrawingData.drawing} size={128} />
+          ) : (
+            <div className="w-32 h-32 bg-white-25" />
+          )}
           <Button
             onClick={() => handleVote(pair?.[1] || '', pair?.[0] || '')}
             disabled={submitVote.isPending || isLoading}
           >
-            THIS ONE
+            THAT
           </Button>
         </div>
       </div>

@@ -231,6 +231,7 @@ export async function recordVote(
 export async function getTournamentStats(postId: T3): Promise<{
   submissionCount: number;
   voteCount: number;
+  playerCount: number;
 }> {
   const submissions = await redis.zCard(
     REDIS_KEYS.tournamentSubmissions(postId)
@@ -248,9 +249,22 @@ export async function getTournamentStats(postId: T3): Promise<{
     return sum + (item.score > 0 ? item.score : 0);
   }, 0);
 
+  // Count unique players by checking user IDs in comment data
+  const userIds = new Set<T2>();
+  for (const item of items) {
+    const commentId = item.member as T1;
+    const data = await redis.hGetAll(
+      REDIS_KEYS.tournamentCommentData(commentId)
+    );
+    if (data.userId) {
+      userIds.add(data.userId as T2);
+    }
+  }
+
   return {
     submissionCount: submissions,
     voteCount,
+    playerCount: userIds.size,
   };
 }
 
