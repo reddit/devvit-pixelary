@@ -1,4 +1,7 @@
 import type { Request, Response } from 'express';
+import { context } from '@devvit/web/server';
+import { getUsername } from '../services/redis';
+import type { T2 } from '@devvit/shared-types/tid.js';
 
 /**
  * Menu action handler for getting user points
@@ -10,6 +13,18 @@ export async function handleGetUserPoints(
   res: Response
 ): Promise<void> {
   try {
+    // Get current username
+    const { userId } = context;
+    let defaultUsername = '';
+
+    if (userId) {
+      try {
+        defaultUsername = await getUsername(userId as T2);
+      } catch (error) {
+        console.error(`Error getting username: ${error}`);
+      }
+    }
+
     res.json({
       showForm: {
         name: 'getUserPointsForm',
@@ -24,6 +39,7 @@ export async function handleGetUserPoints(
               placeholder: 'Enter username (without u/)',
               required: true,
               helpText: 'Username without u/ prefix',
+              defaultValue: defaultUsername,
             },
           ],
           acceptLabel: 'Get Points',

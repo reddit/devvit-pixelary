@@ -1,4 +1,8 @@
 import type { Request, Response } from 'express';
+import { context } from '@devvit/web/server';
+import { getScore } from '../services/progression';
+import { getUsername } from '../services/redis';
+import type { T2 } from '@devvit/shared-types/tid.js';
 
 /**
  * Menu action handler for setting user points
@@ -10,6 +14,22 @@ export async function handleSetUserPoints(
   res: Response
 ): Promise<void> {
   try {
+    // Get current user info
+    const { userId } = context;
+    let defaultUsername = '';
+    let defaultPoints = 0;
+
+    if (userId) {
+      try {
+        [defaultUsername, defaultPoints] = await Promise.all([
+          getUsername(userId as T2),
+          getScore(userId as T2),
+        ]);
+      } catch (error) {
+        console.error(`Error getting user info: ${error}`);
+      }
+    }
+
     res.json({
       showForm: {
         name: 'setUserPointsForm',
@@ -24,6 +44,7 @@ export async function handleSetUserPoints(
               placeholder: 'Enter username (without u/)',
               required: true,
               helpText: 'Username without u/ prefix',
+              defaultValue: defaultUsername,
             },
             {
               type: 'number',
@@ -32,6 +53,7 @@ export async function handleSetUserPoints(
               placeholder: '1000',
               required: true,
               helpText: 'The exact number of points to set',
+              defaultValue: defaultPoints,
             },
           ],
           acceptLabel: 'Set Points',
