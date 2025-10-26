@@ -53,7 +53,7 @@ export async function handleScore(
     const isSelf = userId === context.authorId;
 
     // Format response
-    const rankText = rank === -1 ? 'Unranked' : `Rank #${rank}`;
+    const rankText = rank === -1 ? 'Unranked' : `Rank ${rank}`;
     const response = isSelf
       ? `You have ${score} points (Level ${level.rank}, ${rankText})`
       : `u/${username} has ${score} points (Level ${level.rank}, ${rankText})`;
