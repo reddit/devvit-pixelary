@@ -1,4 +1,4 @@
-export { handleCreateNewPost } from './create-new-post';
+export { handleCreatePost } from './create-post';
 export { handleEditWords } from './edit-words';
 export { handleEditBannedWords } from './edit-banned-words';
 export { handleRevealWord } from './reveal-word';

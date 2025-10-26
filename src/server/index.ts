@@ -6,7 +6,7 @@ import { createContext } from './trpc/context';
 
 // Import menu actions
 import {
-  handleCreateNewPost,
+  handleCreatePost,
   handleEditWords,
   handleEditBannedWords,
   handleRevealWord,
@@ -94,7 +94,7 @@ router.post('/internal/scheduler/update-word-scores', handleUpdateWords);
 // MENU ACTIONS
 // ============================================================================
 
-router.post('/internal/menu/create-new-post', handleCreateNewPost);
+router.post('/internal/menu/create-post', handleCreatePost);
 router.post('/internal/menu/edit-words', handleEditWords);
 router.post('/internal/menu/edit-banned-words', handleEditBannedWords);
 router.post('/internal/menu/reveal-word', handleRevealWord);

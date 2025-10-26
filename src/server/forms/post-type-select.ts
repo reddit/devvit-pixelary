@@ -89,7 +89,7 @@ export async function handlePostTypeSelect(
             placeholder: 'Shown above drawings',
             defaultValue: 'Top drawings\nthis week!',
             required: true,
-            helpText: 'Max 2 lines. Use "\n" for newlines.',
+            helpText: 'Max 2 lines. No word wrapping.',
           },
           {
             type: 'number',
@@ -128,7 +128,7 @@ export async function handlePostTypeSelect(
         form: {
           title: formTitle,
           fields: formFields,
-          submitLabel: 'Create Post',
+          acceptLabel: 'Create Post',
         },
       },
     });

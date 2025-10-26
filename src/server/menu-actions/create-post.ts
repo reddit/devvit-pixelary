@@ -4,7 +4,7 @@ import type { Request, Response } from 'express';
  * Menu action handler for creating new posts
  * Shows a form for selecting post type
  */
-export async function handleCreateNewPost(
+export async function handleCreatePost(
   _req: Request,
   res: Response
 ): Promise<void> {
@@ -14,22 +14,23 @@ export async function handleCreateNewPost(
       showForm: {
         name: 'postTypeForm',
         form: {
-          title: 'Create New Post',
+          title: 'Create Pixelary post',
+          description: 'Select a post type to continue.',
           fields: [
             {
               type: 'select',
               name: 'postType',
-              label: 'Post Type',
+              label: 'Post type',
               options: [
-                { label: 'Drawing Post', value: 'drawing' },
-                { label: 'Pinned Post', value: 'pinned' },
-                { label: 'Collection Post', value: 'collection' },
+                { label: 'Pinned post', value: 'pinned' },
+                { label: 'Collection post', value: 'collection' },
+                { label: 'Drawing post', value: 'drawing' },
               ],
               defaultValue: ['pinned'],
               required: true,
             },
           ],
-          submitLabel: 'Next',
+          acceptLabel: 'Continue',
         },
       },
     });

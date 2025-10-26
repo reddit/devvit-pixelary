@@ -32,11 +32,11 @@
   "menu": {
     "items": [
       {
-        "label": "[Pixelary] Create New Post",
+        "label": "[Pixelary] Create Post",
         "description": "Start the new post creation flow",
         "location": "subreddit",
         "forUserType": "moderator",
-        "endpoint": "/internal/menu/create-new-post"
+        "endpoint": "/internal/menu/create-post"
       },
       {
         "label": "[Pixelary] Edit Words",
