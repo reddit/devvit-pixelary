@@ -210,7 +210,7 @@ export async function recordVote(
   postId: T3,
   userId: T2,
   winnerCommentId: T1,
-  loserCommentId: T1
+  _loserCommentId: T1
 ): Promise<void> {
   // Award points for voting
   await incrementScore(userId, TOURNAMENT_REWARD_VOTE);

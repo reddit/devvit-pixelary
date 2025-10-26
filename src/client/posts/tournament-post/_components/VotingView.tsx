@@ -11,13 +11,15 @@ interface VotingViewProps {
 export function VotingView({ postId }: VotingViewProps) {
   const [pair, setPair] = useState<[string, string] | null>(null);
 
-  const { refetch: refetchPair } = trpc.app.tournament.getRandomPair.useQuery(
+  const {
+    refetch: refetchPair,
+    error: pairError,
+    isFetching: isFetchingPair,
+    data: pairData,
+  } = trpc.app.tournament.getRandomPair.useQuery(
     { postId },
     {
       enabled: false,
-      onSuccess: (data) => {
-        setPair(data as [string, string]);
-      },
     }
   );
 
@@ -29,17 +31,33 @@ export function VotingView({ postId }: VotingViewProps) {
   });
 
   // Fetch drawings for the pair
-  const { data: leftDrawingData } =
-    trpc.app.tournament.getCommentDrawing.useQuery(
-      { commentId: pair?.[0] || '' },
-      { enabled: !!pair?.[0] }
-    );
+  const {
+    data: leftDrawingData,
+    error: leftError,
+    isLoading: leftLoading,
+  } = trpc.app.tournament.getCommentDrawing.useQuery(
+    { commentId: pair?.[0] || '' },
+    { enabled: !!pair?.[0] }
+  );
 
-  const { data: rightDrawingData } =
-    trpc.app.tournament.getCommentDrawing.useQuery(
-      { commentId: pair?.[1] || '' },
-      { enabled: !!pair?.[1] }
-    );
+  const {
+    data: rightDrawingData,
+    error: rightError,
+    isLoading: rightLoading,
+  } = trpc.app.tournament.getCommentDrawing.useQuery(
+    { commentId: pair?.[1] || '' },
+    { enabled: !!pair?.[1] }
+  );
+
+  // Sync pairData to pair state
+  useEffect(() => {
+    if (pairData && !pair) {
+      // Validate that pairData is an array with 2 elements
+      if (Array.isArray(pairData) && pairData.length === 2) {
+        setPair(pairData as [string, string]);
+      }
+    }
+  }, [pairData, pair]);
 
   // Fetch initial pair
   useEffect(() => {
@@ -58,6 +76,20 @@ export function VotingView({ postId }: VotingViewProps) {
   };
 
   const isLoading = !pair || !leftDrawingData || !rightDrawingData;
+
+  // Show error message if fetching pair failed
+  if (pairError) {
+    return (
+      <div className="flex flex-col gap-4 items-center">
+        <PixelFont className="text-red-500">
+          {pairError.message || 'Failed to load submissions'}
+        </PixelFont>
+        <Button onClick={() => void refetchPair()} disabled={isFetchingPair}>
+          Retry
+        </Button>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-4 items-center w-full max-w-2xl">
