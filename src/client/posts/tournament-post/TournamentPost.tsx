@@ -100,15 +100,15 @@ export function TournamentPost() {
       <div className="flex flex-col gap-2 items-center justify-center">
         <CyclingMessage
           messages={[
-            'Word of the Day',
-            'Drawing Challenge',
             new Date(tournamentData?.date || '').toLocaleDateString('en-US', {
               month: 'long',
               day: 'numeric',
               year: 'numeric',
             }),
+            'Word of the Day',
+            'Drawing Challenge',
           ]}
-          className="text-secondary"
+          className="text-tertiary"
           intervalMs={3000}
         />
         <PixelFont scale={4}>{tournamentData?.word}</PixelFont>
@@ -120,7 +120,7 @@ export function TournamentPost() {
         <div className="flex flex-col gap-4 items-center">
           <PixelFont>Not enough submissions yet</PixelFont>
           <Button onClick={handleDrawSomething} size="large">
-            DRAW WORD
+            DRAW THE WORD
           </Button>
         </div>
       ) : (
@@ -130,7 +130,7 @@ export function TournamentPost() {
             {formatStatsLine(stats.submissionCount, stats.playerCount)}
           </PixelFont>
           <Button onClick={handleDrawSomething} size="large">
-            DRAW WORD
+            I CAN DO BETTER
           </Button>
         </>
       )}

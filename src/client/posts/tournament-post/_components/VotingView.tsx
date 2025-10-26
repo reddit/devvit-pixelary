@@ -87,9 +87,9 @@ export function VotingView({ postId }: VotingViewProps) {
 
   return (
     <div className="flex flex-col gap-4 items-center w-full max-w-2xl">
-      <div className="flex gap-4 items-center justify-center">
+      <div className="flex gap-3 items-end justify-center">
         {/* Left drawing */}
-        <div className="flex flex-col gap-2 items-center">
+        <div className="flex flex-col gap-3 items-center">
           {leftDrawingData ? (
             <Drawing data={leftDrawingData.drawing} size={128} />
           ) : (
@@ -98,13 +98,17 @@ export function VotingView({ postId }: VotingViewProps) {
           <Button
             onClick={() => handleVote(pair?.[0] || '', pair?.[1] || '')}
             disabled={submitVote.isPending || isLoading}
+            className="w-full"
           >
-            THIS
+            VOTE
           </Button>
         </div>
 
+        {/* "or" text */}
+        <PixelFont className="text-secondary mb-[13px]">or</PixelFont>
+
         {/* Right drawing */}
-        <div className="flex flex-col gap-2 items-center">
+        <div className="flex flex-col gap-3 items-center">
           {rightDrawingData ? (
             <Drawing data={rightDrawingData.drawing} size={128} />
           ) : (
@@ -113,8 +117,9 @@ export function VotingView({ postId }: VotingViewProps) {
           <Button
             onClick={() => handleVote(pair?.[1] || '', pair?.[0] || '')}
             disabled={submitVote.isPending || isLoading}
+            className="w-full"
           >
-            THAT
+            VOTE
           </Button>
         </div>
       </div>
