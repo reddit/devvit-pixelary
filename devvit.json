@@ -109,7 +109,7 @@
         "label": "[Pixelary] Get User Points",
         "description": "View how many points a user has",
         "location": "subreddit",
-        "forUserType": "user",
+        "forUserType": "moderator",
         "endpoint": "/internal/menu/get-user-points"
       }
     ]
