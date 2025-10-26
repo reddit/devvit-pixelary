@@ -78,10 +78,11 @@ export function Confetti({
 
         // Spawn new particles gradually (every delay ms, up to count total)
         if (
-          spawnedCount < count &&
+          (spawnedCount < count || count === Infinity) &&
           currentTime - lastSpawnTime.current >= delay
         ) {
-          const spawnCount = Math.min(1, count - spawnedCount); // Spawn 1 at a time
+          const spawnCount =
+            count === Infinity ? 1 : Math.min(1, count - spawnedCount); // Spawn 1 at a time
           const additionalParticles: ConfettiParticle[] = [];
 
           for (let i = 0; i < spawnCount; i++) {

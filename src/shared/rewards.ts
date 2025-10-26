@@ -97,3 +97,11 @@ export function getExtraDrawingTime(level: number): number {
 export function getExtraWordTime(level: number): number {
   return getRewardValue(level, 'extra_word_time') ?? 0;
 }
+
+/**
+ * Get the minimum level required for a reward
+ */
+export function getRewardMinLevel(reward: RewardType): number {
+  const config = REWARDS[reward];
+  return config.minLevel;
+}

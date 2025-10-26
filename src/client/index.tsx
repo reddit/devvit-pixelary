@@ -13,6 +13,7 @@ import { ToastProvider } from './components/ToastManager';
 import { ErrorBoundary } from './components/ErrorBoundary';
 import { TelemetryProvider } from './hooks/useTelemetry';
 import { PixelFont } from './components/PixelFont';
+import { LevelUpManager } from './components/LevelUpManager';
 
 const queryClient = new QueryClient();
 const trpcClient = trpc.createClient({
@@ -81,7 +82,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         }}
       >
         <Background />
-        <App />
+        <LevelUpManager>
+          <App />
+        </LevelUpManager>
       </ErrorBoundary>
     </Providers>
   </React.StrictMode>

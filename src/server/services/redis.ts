@@ -21,6 +21,7 @@ export const REDIS_KEYS = {
   userMod: (userId: T2) => `user:mod:${userId}`,
   userAdmin: (userId: T2) => `user:admin:${userId}`,
   userDrawings: (userId: T2) => `user:drawings:${userId}`,
+  userLevelUpClaim: (userId: T2) => `user:levelup:${userId}`,
 
   // Words
   wordsAll: (subredditName: string) => `words:all:${subredditName}`,

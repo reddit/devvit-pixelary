@@ -1,4 +1,4 @@
-import { redis, scheduler, context } from '@devvit/web/server';
+import { redis, scheduler, context, realtime } from '@devvit/web/server';
 import { getUsername, REDIS_KEYS } from './redis';
 import { getLevelByScore as getLevelByScoreUtil } from '../../shared/utils/progression';
 import type { T2 } from '@devvit/shared-types/tid.js';
@@ -82,6 +82,11 @@ export async function setScore(userId: T2, score: number): Promise<number> {
   const oldScore = await getScore(userId);
   await redis.zAdd(key, { member: userId, score });
   const level = getLevelByScore(score);
+
+  // Reset claimed level to match new level
+  const newClaimedKey = REDIS_KEYS.userLevelUpClaim(userId);
+  await redis.set(newClaimedKey, level.rank.toString());
+
   const didUserLevelUp = level.min > (oldScore ?? 0);
 
   if (didUserLevelUp) {
@@ -112,9 +117,21 @@ export async function incrementScore(
   amount: number
 ): Promise<number> {
   const key = REDIS_KEYS.scores();
+  const oldScore = await getScore(userId);
   const score = await redis.zIncrBy(key, userId, amount);
   const level = getLevelByScore(score);
-  const didUserLevelUp = level.min > score - amount;
+  const oldLevel = getLevelByScore(oldScore);
+  const didUserLevelUp = level.min > (oldScore ?? 0);
+
+  // Update claimed level if user leveled up
+  if (level.rank > oldLevel.rank && didUserLevelUp) {
+    // Keep the old claimed level so the modal will show
+    // Don't update it here - let the user claim the new level
+  } else if (level.rank === oldLevel.rank) {
+    // User stayed at same level, update claimed level to match
+    const newClaimedKey = REDIS_KEYS.userLevelUpClaim(userId);
+    await redis.set(newClaimedKey, level.rank.toString());
+  }
 
   if (didUserLevelUp) {
     await scheduler.runJob({
@@ -166,4 +183,70 @@ export function getLevelProgressPercentage(score: number): number {
   const levelProgress = score - currentLevel.min;
   const levelMax = currentLevel.max - currentLevel.min;
   return Math.min(100, Math.max(0, (levelProgress / levelMax) * 100));
+}
+
+/**
+ * Get the last claimed level rank for a user
+ * @param userId - The user ID
+ * @returns The last claimed level rank, or null if never claimed
+ */
+export async function getLastClaimedLevel(userId: T2): Promise<number | null> {
+  const key = REDIS_KEYS.userLevelUpClaim(userId);
+  const claimed = await redis.get(key);
+  return claimed ? parseInt(claimed, 10) : null;
+}
+
+/**
+ * Check if user has an unclaimed level-up celebration
+ * @param userId - The user ID
+ * @returns Level data if unclaimed, null otherwise
+ */
+export async function getUnclaimedLevelUp(userId: T2): Promise<{
+  level: number;
+  levelName: string;
+} | null> {
+  const score = await getScore(userId);
+  const currentLevel = getUserLevel(score);
+  const lastClaimed = await getLastClaimedLevel(userId);
+
+  // Don't show level-up for level 1
+  if (currentLevel.rank === 1) {
+    return null;
+  }
+
+  // No level-up if current level hasn't changed
+  if (lastClaimed === currentLevel.rank) {
+    return null;
+  }
+
+  // Has an unclaimed level-up
+  return {
+    level: currentLevel.rank,
+    levelName: currentLevel.name,
+  };
+}
+
+/**
+ * Mark level as claimed and broadcast to realtime
+ * @param userId - The user ID
+ * @param level - The level to claim
+ */
+export async function claimLevelUp(userId: T2, level: number): Promise<void> {
+  const key = REDIS_KEYS.userLevelUpClaim(userId);
+  await redis.set(key, level.toString());
+
+  // Broadcast claim to all open posts for this user
+  await broadcastLevelUpClaimed(userId);
+}
+
+/**
+ * Broadcast level-up claim to user-scoped realtime channel
+ * @param userId - The user ID
+ */
+async function broadcastLevelUpClaimed(userId: T2): Promise<void> {
+  const channelName = `user-${userId}-levelup`;
+  await realtime.send(channelName, {
+    type: 'levelup_claimed',
+    timestamp: Date.now(),
+  });
 }

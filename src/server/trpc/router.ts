@@ -34,6 +34,8 @@ import {
   getRank,
   getUserLevel,
   getLevelProgressPercentage,
+  getUnclaimedLevelUp,
+  claimLevelUp,
 } from '../services/progression';
 import { isAdmin, isModerator } from '../services/redis';
 import { DrawingDataSchema } from '../../shared/schema/pixelary';
@@ -384,6 +386,19 @@ export const appRouter = t.router({
 
         return await isModerator(ctx.userId, ctx.subredditName);
       }),
+
+      getUnclaimedLevelUp: t.procedure.query(async ({ ctx }) => {
+        if (!ctx.userId) return null;
+        return await getUnclaimedLevelUp(ctx.userId);
+      }),
+
+      claimLevelUp: t.procedure
+        .input(z.object({ level: z.number().int() }))
+        .mutation(async ({ ctx, input }) => {
+          if (!ctx.userId) throw new Error('Must be logged in');
+          await claimLevelUp(ctx.userId, input.level);
+          return { success: true };
+        }),
     }),
 
     // Leaderboard endpoints
