@@ -13,6 +13,10 @@ interface LevelUpModalProps {
   onClaim: () => void;
 }
 
+/**
+ * Level up modal component
+ */
+
 export function LevelUpModal({ level, onClaim }: LevelUpModalProps) {
   const rewards = getRewardsByLevel(level);
   const rewardCount = rewards.length;
@@ -43,7 +47,7 @@ export function LevelUpModal({ level, onClaim }: LevelUpModalProps) {
         {/* Rewards */}
         <div className="flex flex-col gap-3 w-full">
           {rewards.map((reward: RewardType) => (
-            <LevelUpRewardItem key={reward} reward={reward} level={level} />
+            <RewardItem key={reward} reward={reward} level={level} />
           ))}
         </div>
 
@@ -61,12 +65,16 @@ export function LevelUpModal({ level, onClaim }: LevelUpModalProps) {
   return createPortal(content, portalRoot);
 }
 
-interface LevelUpRewardItemProps {
+interface RewardItemProps {
   reward: RewardType;
   level: number;
 }
 
-function LevelUpRewardItem({ reward, level }: LevelUpRewardItemProps) {
+/**
+ * Reward item component for the level up modal
+ */
+
+function RewardItem({ reward, level }: RewardItemProps) {
   const label = getRewardLabel(reward, level);
 
   return (
