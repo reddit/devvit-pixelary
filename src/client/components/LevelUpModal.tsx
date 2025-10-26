@@ -17,16 +17,15 @@ interface LevelUpModalProps {
  * Level up modal component
  */
 
-export function LevelUpModal({ level, onClaim }: LevelUpModalProps) {
+export function LevelUpModal(props: LevelUpModalProps) {
+  const { level, onClaim } = props;
   const rewards = getRewardsByLevel(level);
   const rewardCount = rewards.length;
 
   const content = (
     <ModalScrim persistent>
-      {/* Continuous confetti background */}
-      <div className="fixed inset-0">
-        <Confetti count={Infinity} delay={10} speed={4} />
-      </div>
+      {/* Continuous confetti */}
+      <Confetti count={Infinity} delay={10} speed={4} />
 
       <ModalBody>
         {/* Title */}
@@ -74,9 +73,9 @@ interface RewardItemProps {
  * Reward item component for the level up modal
  */
 
-function RewardItem({ reward, level }: RewardItemProps) {
+function RewardItem(props: RewardItemProps) {
+  const { reward, level } = props;
   const label = getRewardLabel(reward, level);
-
   return (
     <div className="flex items-center gap-3">
       <PixelSymbol type="checkmark" className="text-success" scale={2} />
