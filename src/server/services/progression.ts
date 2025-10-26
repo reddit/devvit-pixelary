@@ -203,7 +203,6 @@ export async function getLastClaimedLevel(userId: T2): Promise<number | null> {
  */
 export async function getUnclaimedLevelUp(userId: T2): Promise<{
   level: number;
-  levelName: string;
 } | null> {
   const score = await getScore(userId);
   const currentLevel = getUserLevel(score);
@@ -222,7 +221,6 @@ export async function getUnclaimedLevelUp(userId: T2): Promise<{
   // Has an unclaimed level-up
   return {
     level: currentLevel.rank,
-    levelName: currentLevel.name,
   };
 }
 

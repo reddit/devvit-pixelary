@@ -7,7 +7,6 @@ import type { RewardType } from '@shared/rewards';
 
 type UnclaimedLevelUp = {
   level: number;
-  levelName: string;
 };
 
 type RealtimeMessage = {

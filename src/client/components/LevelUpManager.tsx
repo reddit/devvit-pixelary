@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useContext } from 'react';
+import React, { useContext } from 'react';
 import { LevelUpModal } from './LevelUpModal';
 import { useLevelUpClaim } from '../hooks/useLevelUpClaim';
 import { context } from '@devvit/web/client';
 
 const LevelUpContext = React.createContext<{
-  unclaimedLevel: { level: number; levelName: string } | null;
+  unclaimedLevel: { level: number } | null;
   hasUnclaimedLevel: boolean;
 }>({ unclaimedLevel: null, hasUnclaimedLevel: false });
 
@@ -31,11 +31,7 @@ export function LevelUpManager({ children }: { children: React.ReactNode }) {
     >
       {children}
       {!isLoading && unclaimedLevel && (
-        <LevelUpModal
-          level={unclaimedLevel.level}
-          levelName={unclaimedLevel.levelName}
-          onClaim={handleClaim}
-        />
+        <LevelUpModal level={unclaimedLevel.level} onClaim={handleClaim} />
       )}
     </LevelUpContext.Provider>
   );

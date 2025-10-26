@@ -7,11 +7,10 @@ import type { RewardType } from '@shared/rewards';
 
 interface LevelUpModalProps {
   level: number;
-  levelName: string;
   onClaim: () => void;
 }
 
-export function LevelUpModal({ level, levelName, onClaim }: LevelUpModalProps) {
+export function LevelUpModal({ level, onClaim }: LevelUpModalProps) {
   const rewards = getRewardsByLevel(level);
 
   return (
@@ -22,35 +21,34 @@ export function LevelUpModal({ level, levelName, onClaim }: LevelUpModalProps) {
       </div>
 
       {/* Modal content */}
-      <div className="relative bg-white flex flex-col gap-6 p-8 items-center justify-center max-w-md">
-        {/* Header */}
-        <div className="flex flex-col items-center gap-2">
-          <PixelFont scale={4} className="text-primary">
-            Level {level}!
+      <div className="relative bg-white flex flex-col gap-6 p-6 items-center justify-center">
+        {/* Title */}
+        <PixelFont scale={4} className="text-primary">
+          {`Level ${level}!`}
+        </PixelFont>
+        <div className="flex flex-col items-center gap-3">
+          {/* Description */}
+          <PixelFont scale={2} className="text-success">
+            You leveled up,
           </PixelFont>
-          <PixelFont scale={3} className="text-black-60">
-            {levelName}
+          <PixelFont scale={2} className="text-success">
+            earning rewards!
           </PixelFont>
         </div>
 
-        {/* Perks section */}
-        <div className="flex flex-col gap-2 w-full items-start">
-          <PixelFont scale={2} className="text-black-60">
-            Your perks:
-          </PixelFont>
-          <div className="flex flex-col gap-2 w-full">
-            {rewards.map((reward: RewardType) => (
-              <LevelUpRewardItem key={reward} reward={reward} level={level} />
-            ))}
-          </div>
+        {/* Rewards List */}
+        <div className="flex flex-col gap-3 w-full">
+          {rewards.map((reward: RewardType) => (
+            <LevelUpRewardItem key={reward} reward={reward} level={level} />
+          ))}
         </div>
 
-        {/* Claim button */}
+        {/* Claim Button */}
         <Button onClick={onClaim} size="large">
-          Claim
+          CLAIM REWARDS
         </Button>
 
-        {/* Border decorations */}
+        {/* Border Decorations */}
         <div className="absolute -top-1 left-1 right-1 h-1 bg-black" />
         <div className="absolute -bottom-1 left-1 right-1 h-1 bg-black" />
         <div className="absolute top-1 -left-1 bottom-1 w-1 bg-black" />
@@ -73,7 +71,7 @@ function LevelUpRewardItem({ reward, level }: LevelUpRewardItemProps) {
   const label = getRewardLabel(reward, level);
 
   return (
-    <div className="flex items-center gap-3 p-3 bg-white border border-black-20">
+    <div className="flex items-center gap-3">
       <PixelSymbol type="checkmark" className="text-success" scale={2} />
       <PixelFont scale={2}>{label}</PixelFont>
     </div>
