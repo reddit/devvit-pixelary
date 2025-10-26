@@ -21,7 +21,10 @@ function getRewardMinLevel(reward: string): number {
     extra_drawing_time: 2,
     extra_word_time: 2,
     add_remove_words: 3,
-    extended_colors: 4,
+    extended_colors_tier_1: 2,
+    extended_colors_tier_2: 3,
+    extended_colors_tier_3: 4,
+    extended_colors_tier_4: 5,
     level_flair: 1,
   };
   return levelMap[reward] ?? 1;

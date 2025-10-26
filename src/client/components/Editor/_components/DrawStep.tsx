@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@components/Button';
 import { PixelSymbol } from '@components/PixelSymbol';
-import { DRAWING_COLORS, EXTENDED_DRAWING_COLORS } from '@client/constants';
+import { DRAWING_COLORS, getAvailableExtendedColors } from '@client/constants';
 import { DRAWING_DURATION } from '@shared/constants';
 import { PixelFont } from '@components/PixelFont';
 import { DrawingData, DrawingUtils } from '@shared/schema/drawing';
@@ -10,7 +10,6 @@ import type { HEX } from '@shared/types';
 import { useTelemetry } from '@client/hooks/useTelemetry';
 import type { SlateAction } from '@shared/types';
 import { Modal } from '@components/Modal';
-import { hasReward } from '@shared/rewards';
 
 interface DrawStepProps {
   word: string;
@@ -344,7 +343,7 @@ export function DrawStep(props: DrawStepProps) {
             isSelected={currentColor === color}
           />
         ))}
-        {hasReward(userLevel, 'extended_colors') && (
+        {userLevel >= 2 && (
           <ColorPickerPlusButton onClick={handleOpenColorPicker} />
         )}
       </div>
@@ -355,6 +354,7 @@ export function DrawStep(props: DrawStepProps) {
         onClose={handleCloseColorPicker}
         onSelectColor={handleSelectExtendedColor}
         currentColor={currentColor}
+        userLevel={userLevel}
       />
     </main>
   );
@@ -407,15 +407,17 @@ interface ColorPickerModalProps {
   onClose: () => void;
   onSelectColor: (color: HEX) => void;
   currentColor: HEX;
+  userLevel: number;
 }
 
 function ColorPickerModal(props: ColorPickerModalProps) {
-  const { isOpen, onClose, onSelectColor, currentColor } = props;
+  const { isOpen, onClose, onSelectColor, currentColor, userLevel } = props;
+  const availableColors = getAvailableExtendedColors(userLevel);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Select a color">
       <div className="grid grid-cols-7 gap-2">
-        {EXTENDED_DRAWING_COLORS.map((color) => (
+        {availableColors.map((color) => (
           <ColorSwatch
             key={color}
             color={color}
