@@ -25,6 +25,7 @@ export async function handleCreatePost(
                 { label: 'Pinned post', value: 'pinned' },
                 { label: 'Collection post', value: 'collection' },
                 { label: 'Drawing post', value: 'drawing' },
+                { label: 'Tournament post', value: 'tournament' },
               ],
               defaultValue: ['pinned'],
               required: true,

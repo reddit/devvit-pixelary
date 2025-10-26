@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { WordStep } from './_components/WordStep';
 import { DrawStep } from './_components/DrawStep';
 import { ReviewStep } from './_components/ReviewStep';
+import { TournamentReviewStep } from './_components/TournamentReviewStep';
 import { trpc } from '@client/trpc/client';
 import { DRAWING_DURATION } from '@shared/constants';
 import type { CandidateWord } from '@shared/schema/pixelary';
@@ -13,13 +14,25 @@ import { getExtraDrawingTime } from '@shared/rewards';
 
 interface DrawingEditorProps {
   onClose: () => void;
+  onSuccess?: () => void;
+  mode?: 'post' | 'tournament-comment';
+  tournamentPostId?: string;
+  tournamentWord?: string;
 }
 
 type Step = 'word' | 'draw' | 'review';
 
-export function DrawingEditor({ onClose }: DrawingEditorProps) {
-  // State management
-  const [step, setStep] = useState<Step>('word');
+export function DrawingEditor({
+  onClose,
+  onSuccess,
+  mode = 'post',
+  tournamentPostId,
+  tournamentWord,
+}: DrawingEditorProps) {
+  // State management - skip word step if tournament word is provided
+  const [step, setStep] = useState<Step>(
+    mode === 'tournament-comment' && tournamentWord ? 'draw' : 'word'
+  );
   const [time, setTime] = useState<number>(DRAWING_DURATION);
   const [candidate, setCandidate] = useState<CandidateWord | null>(null);
   const [drawing, setDrawing] = useState<DrawingData>(
@@ -112,6 +125,16 @@ export function DrawingEditor({ onClose }: DrawingEditorProps) {
     setStep('draw');
   }, []);
 
+  // Initialize tournament word on mount if provided
+  useEffect(() => {
+    if (mode === 'tournament-comment' && tournamentWord && !candidate) {
+      setCandidate({
+        word: tournamentWord,
+        dictionaryName: `r/${subredditNameRef.current}`,
+      });
+    }
+  }, [mode, tournamentWord, candidate]);
+
   return (
     <>
       {/* Render current step */}
@@ -137,15 +160,27 @@ export function DrawingEditor({ onClose }: DrawingEditorProps) {
         />
       )}
       {step === 'review' && candidate && (
-        <ReviewStep
-          word={candidate.word}
-          dictionaryName={candidate.dictionaryName}
-          drawing={drawing}
-          onCancel={onClose}
-          onSuccess={onClose}
-          slateId={slateId}
-          trackSlateAction={trackSlateAction}
-        />
+        <>
+          {mode === 'tournament-comment' && tournamentPostId ? (
+            <TournamentReviewStep
+              word={candidate.word}
+              drawing={drawing}
+              onCancel={onClose}
+              {...(onSuccess && { onSuccess })}
+              tournamentPostId={tournamentPostId}
+            />
+          ) : (
+            <ReviewStep
+              word={candidate.word}
+              dictionaryName={candidate.dictionaryName}
+              drawing={drawing}
+              onCancel={onClose}
+              onSuccess={onClose}
+              slateId={slateId}
+              trackSlateAction={trackSlateAction}
+            />
+          )}
+        </>
       )}
     </>
   );

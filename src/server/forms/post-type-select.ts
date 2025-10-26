@@ -114,6 +114,26 @@ export async function handlePostTypeSelect(
           },
         ];
         break;
+      case 'tournament':
+        formName = 'tournamentPostForm';
+        formTitle = 'Create Tournament Post';
+        formFields = [
+          {
+            type: 'string',
+            name: 'date',
+            label: 'Date',
+            placeholder: 'YYYY-MM-DD',
+            defaultValue: new Date().toISOString().split('T')[0] as string,
+            required: true,
+          },
+          {
+            type: 'string',
+            name: 'word',
+            label: 'Word (optional, random if empty)',
+            placeholder: 'Leave empty for random',
+          },
+        ];
+        break;
       default:
         res.status(400).json({
           status: 'error',

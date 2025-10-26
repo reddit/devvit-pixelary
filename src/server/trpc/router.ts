@@ -1,7 +1,7 @@
 import { initTRPC } from '@trpc/server';
 import type { Context } from './context';
 import { z } from 'zod';
-import type { T3 } from '@devvit/shared-types/tid.js';
+import type { T3, T1 } from '@devvit/shared-types/tid.js';
 import { assertT3 } from '@devvit/shared-types/tid.js';
 import { redis } from '@devvit/web/server';
 import { REDIS_KEYS } from '../services/redis';
@@ -520,6 +520,126 @@ export const appRouter = t.router({
           }
 
           return { ok: true };
+        }),
+    }),
+
+    // Tournament endpoints
+    tournament: t.router({
+      getTournament: t.procedure
+        .input(z.object({ date: z.string() }).optional())
+        .query(async ({ ctx, input }) => {
+          if (!ctx.subredditName) throw new Error('Subreddit not found');
+
+          const { getTournamentWord, getTournamentPostId } = await import(
+            '../services/tournament-post'
+          );
+
+          const date = input?.date || new Date().toISOString().split('T')[0];
+          if (!date) throw new Error('Date is required');
+          const word = await getTournamentWord(date);
+          const postId = await getTournamentPostId(date);
+
+          return {
+            word,
+            postId,
+            date,
+          };
+        }),
+
+      submitDrawing: t.procedure
+        .input(
+          z.object({
+            postId: z.string(),
+            drawing: DrawingDataSchema,
+            imageData: z.string(),
+          })
+        )
+        .mutation(async ({ ctx, input }) => {
+          if (!ctx.userId) throw new Error('Must be logged in');
+
+          const { submitTournamentDrawing } = await import(
+            '../services/tournament-post'
+          );
+
+          assertT3(input.postId);
+          const commentId = await submitTournamentDrawing(
+            input.postId,
+            ctx.userId,
+            input.drawing,
+            input.imageData
+          );
+
+          return { success: true, commentId };
+        }),
+
+      getSubmissions: t.procedure
+        .input(z.object({ postId: z.string() }))
+        .query(async ({ input }) => {
+          assertT3(input.postId);
+          const { getTournamentSubmissions } = await import(
+            '../services/tournament-post'
+          );
+          return await getTournamentSubmissions(input.postId);
+        }),
+
+      getRandomPair: t.procedure
+        .input(z.object({ postId: z.string() }))
+        .query(async ({ input }) => {
+          assertT3(input.postId);
+          const { getRandomPair } = await import('../services/tournament-post');
+          return await getRandomPair(input.postId);
+        }),
+
+      submitVote: t.procedure
+        .input(
+          z.object({
+            postId: z.string(),
+            winnerCommentId: z.string(),
+            loserCommentId: z.string(),
+          })
+        )
+        .mutation(async ({ ctx, input }) => {
+          if (!ctx.userId) throw new Error('Must be logged in');
+
+          assertT3(input.postId);
+          const winnerId = input.winnerCommentId as T1;
+          const loserId = input.loserCommentId as T1;
+
+          const { recordVote } = await import('../services/tournament-post');
+          await recordVote(input.postId, ctx.userId, winnerId, loserId);
+
+          return { success: true };
+        }),
+
+      getUserSubmission: t.procedure
+        .input(z.object({ postId: z.string() }))
+        .query(async ({ ctx, input }) => {
+          if (!ctx.userId) return null;
+
+          assertT3(input.postId);
+          const { getUserSubmission } = await import(
+            '../services/tournament-post'
+          );
+          return await getUserSubmission(input.postId, ctx.userId);
+        }),
+
+      getStats: t.procedure
+        .input(z.object({ postId: z.string() }))
+        .query(async ({ input }) => {
+          assertT3(input.postId);
+          const { getTournamentStats } = await import(
+            '../services/tournament-post'
+          );
+          return await getTournamentStats(input.postId);
+        }),
+
+      getCommentDrawing: t.procedure
+        .input(z.object({ commentId: z.string() }))
+        .query(async ({ input }) => {
+          const { getCommentDrawing } = await import(
+            '../services/tournament-post'
+          );
+          return await getCommentDrawing(input.commentId as T1);
         }),
     }),
   }),

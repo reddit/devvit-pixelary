@@ -1,7 +1,12 @@
 import { z } from 'zod';
 
 // Post Data Types (defined first to avoid circular references)
-export const PostTypeSchema = z.enum(['drawing', 'pinned', 'collection']);
+export const PostTypeSchema = z.enum([
+  'drawing',
+  'pinned',
+  'collection',
+  'tournament',
+]);
 export type PostType = z.infer<typeof PostTypeSchema>;
 
 // DrawingPostDataSchema is imported from pixelary.ts
@@ -19,10 +24,19 @@ export const CollectionPostDataSchema = z.object({
 });
 export type CollectionPostData = z.infer<typeof CollectionPostDataSchema>;
 
+export const TournamentPostDataSchema = z.object({
+  type: z.literal('tournament'),
+  word: z.string(),
+  date: z.string(),
+  dictionary: z.string(),
+});
+export type TournamentPostData = z.infer<typeof TournamentPostDataSchema>;
+
 export const PostDataSchema = z.discriminatedUnion('type', [
   DrawingPostDataSchema,
   PinnedPostDataSchema,
   CollectionPostDataSchema,
+  TournamentPostDataSchema,
 ]);
 export type PostData = z.infer<typeof PostDataSchema>;
 

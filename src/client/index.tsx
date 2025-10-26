@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client';
 import { DrawingPost } from './posts/drawing-post/DrawingPost';
 import { PinnedPost } from './posts/pinned-post/PinnedPost';
 import { CollectionPost } from './posts/collection-post/CollectionPost';
+import { TournamentPost } from './posts/tournament-post/TournamentPost';
 import { trpc } from './trpc/client';
 import { httpBatchLink } from '@trpc/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
@@ -64,6 +65,8 @@ const App = () => {
       return <PinnedPost />;
     case 'collection':
       return <CollectionPost />;
+    case 'tournament':
+      return <TournamentPost />;
     default:
       return (
         <div className="flex items-center justify-center h-full w-full">

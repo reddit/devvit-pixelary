@@ -5,5 +5,6 @@ export { handleBannedWordsUpdate } from './banned-words-update';
 export { handleSlateBanditUpdate } from './slate-bandit-update';
 export { handleEditWordsForm } from './edit-words';
 export { handleCollectionPostSubmit } from './collection-post-submit';
+export { handleTournamentPostSubmit } from './tournament-post-submit';
 export { handleSetUserPointsForm } from './user-points-set';
 export { handleGetUserPointsForm } from './user-points-get';

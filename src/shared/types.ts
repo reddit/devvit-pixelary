@@ -26,7 +26,7 @@ export type Level = {
 /**
  * Telemetry types
  */
-export type PostType = 'drawing' | 'pinned';
+export type PostType = 'drawing' | 'pinned' | 'tournament';
 
 export type TelemetryEventType =
   // View events

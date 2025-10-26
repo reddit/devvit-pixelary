@@ -12,6 +12,11 @@ export const AUTHOR_REWARD_SUBMIT = 25;
 export const AUTHOR_REWARD_CORRECT_GUESS = 1;
 export const GUESSER_REWARD_SOLVE = 5;
 
+// Tournament rewards
+export const TOURNAMENT_REWARD_VOTE = 1;
+export const TOURNAMENT_REWARD_TOP_50 = 100;
+export const TOURNAMENT_REWARD_TOP_25 = 100;
+
 /*
  * Timers
  */

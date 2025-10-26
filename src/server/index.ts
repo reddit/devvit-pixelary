@@ -28,6 +28,7 @@ import {
   handleSlateBanditUpdate,
   handleEditWordsForm,
   handleCollectionPostSubmit,
+  handleTournamentPostSubmit,
   handleSetUserPointsForm,
   handleGetUserPointsForm,
 } from './forms';
@@ -126,6 +127,10 @@ router.post(
 );
 router.post('/internal/form/set-user-points', handleSetUserPointsForm);
 router.post('/internal/form/get-user-points', handleGetUserPointsForm);
+router.post(
+  '/internal/form/tournament-post-submit',
+  handleTournamentPostSubmit
+);
 
 // Use router middleware
 app.use(router);
