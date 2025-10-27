@@ -1,7 +1,7 @@
 import type { T2, T3, T1 } from '@devvit/shared-types/tid.js';
 import { reddit, redis, media, context } from '@devvit/web/server';
 import type { MediaAsset } from '@devvit/web/server';
-import { createPost } from '../core/post';
+import { createPost, setPostFlair } from '../core';
 import { REDIS_KEYS } from './redis';
 import { getRandomWords } from './dictionary';
 import type { DrawingData, TournamentPostData } from '../../shared/schema';
@@ -39,10 +39,13 @@ export async function createTournament(): Promise<T3> {
     word,
   };
 
-  const post = await createPost(`Tournament - ${word}`, postData);
+  const post = await createPost(`Drawing tournament - ${word}`, postData);
   if (!post) {
     throw new Error('Failed to create tournament post');
   }
+
+  // Apply tournament flair
+  await setPostFlair(post.id, context.subredditName, 'tournament');
 
   await Promise.all([
     // Store tournament post data

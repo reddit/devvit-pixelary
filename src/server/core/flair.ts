@@ -16,6 +16,11 @@ const FLAIR_CONFIG = {
       { text: '🟡 Medium', difficulty: 'medium', cssClass: 'medium' },
       { text: '🟠 Hard', difficulty: 'hard', cssClass: 'hard' },
       { text: '🔴 Expert', difficulty: 'expert', cssClass: 'expert' },
+      {
+        text: '🎨 Tournament',
+        difficulty: 'tournament',
+        cssClass: 'tournament',
+      },
     ],
   },
 } as const;
