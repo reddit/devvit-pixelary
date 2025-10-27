@@ -274,7 +274,7 @@ export function VotingView({
             className="w-full"
             variant="primary"
           >
-            VOTE
+            PICK
           </Button>
         </div>
 
@@ -318,7 +318,7 @@ export function VotingView({
             className="w-full"
             variant="primary"
           >
-            VOTE
+            PICK
           </Button>
         </div>
       </div>
