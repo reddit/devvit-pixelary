@@ -9,6 +9,10 @@ import {
 import { getBackedWord, removeBacker } from '../services/word-backing';
 import { processCommand } from '../services/comment-commands';
 import { banWord } from '../services/dictionary';
+import {
+  removeTournamentEntry,
+  getTournamentEntry,
+} from '../services/tournament-post';
 
 // EventSource enum values from Reddit API
 enum EventSource {
@@ -63,6 +67,7 @@ export async function handleCommentCreate(
       await reddit.submitComment({
         text: result.response,
         id: comment.id,
+        runAs: 'APP',
       });
     } else if (!result.success) {
       // Command failed
@@ -107,11 +112,24 @@ export async function handleCommentUpdate(
       commandContext
     );
 
-    if (result.success && result.response) {
+    // Check if this is a tournament submission
+    const tournamentEntry = await getTournamentEntry(comment.id);
+    if (tournamentEntry && commandContext.postId) {
+      // It's a tournament submission - remove it
+      await removeTournamentEntry(commandContext.postId, comment.id);
+
+      // Reply to the comment
+      await reddit.submitComment({
+        text: 'Comment edited. Submission removed.',
+        id: comment.id,
+        runAs: 'APP',
+      });
+    } else if (result.success && result.response) {
       // Reply to the comment
       await reddit.submitComment({
         text: result.response,
         id: comment.id,
+        runAs: 'APP',
       });
     }
 
@@ -129,17 +147,21 @@ export async function handleCommentDelete(
   res: Response
 ): Promise<void> {
   try {
-    const { commentId, source } = req.body;
+    const { postId, commentId, source } = req.body;
 
-    if (!commentId) {
+    if (!postId || !commentId) {
       res.status(400).json({
         status: 'error',
-        message: 'Comment ID is required',
+        message: 'postId and commentId are required',
       });
       return;
     }
 
-    const backedWord = await getBackedWord(commentId);
+    const [backedWord] = await Promise.all([
+      getBackedWord(commentId),
+      removeTournamentEntry(postId, commentId),
+    ]);
+
     const deletedByUser = source === EventSource.USER;
 
     if (backedWord && deletedByUser) {

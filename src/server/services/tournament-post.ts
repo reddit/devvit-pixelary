@@ -430,9 +430,21 @@ export async function incrementEntryViews(commentId: T1): Promise<void> {
 }
 
 /**
+ * Remove a tournament entry from the tournament
+ */
+export async function removeTournamentEntry(
+  postId: T3,
+  commentId: T1
+): Promise<void> {
+  await Promise.all([
+    redis.zRem(REDIS_KEYS.tournamentEntries(postId), [commentId]),
+    redis.del(REDIS_KEYS.tournamentEntry(commentId)),
+  ]);
+}
+
+/**
  * Utility function to calculate Elo rating change for winner and loser
  */
-
 function calculateEloChange(
   winnerRating: number,
   loserRating: number
