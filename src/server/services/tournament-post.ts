@@ -173,6 +173,8 @@ export async function submitTournamentEntry(
     }),
     // Store entry data in tournament entry hash
     redis.hSet(entryKey, entryData),
+    // Add user to tournament players set
+    redis.zIncrBy(REDIS_KEYS.tournamentPlayers(postId), context.userId!, 1),
   ]);
 
   return comment.id;
