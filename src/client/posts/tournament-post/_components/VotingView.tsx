@@ -183,28 +183,29 @@ export function VotingView({
   }
 
   return (
-    <div className="flex flex-col gap-6 items-center w-full max-w-2xl">
+    <div className="flex flex-col gap-6 items-center w-full">
       {/* Gallery toggle button */}
       <div className="absolute top-4 right-4">
         <IconButton onClick={onToggleView} symbol="grid" />
       </div>
 
       <div className="flex flex-col gap-2 items-center justify-center">
+        <PixelFont scale={4}>{tournamentData?.word || ''}</PixelFont>
         <CyclingMessage
           messages={[
-            'Tournament',
             'Drawing Challenge',
-            'Vote for Your Favorite',
+            stats && hasEnoughSubmissions
+              ? formatStatsLine(stats.submissionCount, stats.playerCount)
+              : 'No drawings yet',
           ]}
           className="text-tertiary"
           intervalMs={3000}
         />
-        <PixelFont scale={4}>{tournamentData?.word || ''}</PixelFont>
       </div>
 
-      <PixelFont scale={3}>Which is Better?</PixelFont>
+      <PixelFont scale={2.5}>Which is better?!</PixelFont>
 
-      <div className="flex gap-3 items-end justify-center">
+      <div className="flex gap-6 items-center justify-center">
         {/* Left drawing */}
         <div
           className={`flex flex-col gap-3 items-center ${
@@ -239,14 +240,11 @@ export function VotingView({
               !hasEnoughSubmissions
             }
             className="w-full"
-            variant="secondary"
+            variant="primary"
           >
             VOTE
           </Button>
         </div>
-
-        {/* "or" text */}
-        <PixelFont className="text-secondary mb-[13px]">or</PixelFont>
 
         {/* Right drawing */}
         <div
@@ -282,23 +280,17 @@ export function VotingView({
               !hasEnoughSubmissions
             }
             className="w-full"
-            variant="secondary"
+            variant="primary"
           >
             VOTE
           </Button>
         </div>
       </div>
 
-      <PixelFont scale={2} className="text-tertiary">
-        {stats && hasEnoughSubmissions
-          ? formatStatsLine(stats.submissionCount, stats.playerCount)
-          : 'No drawings yet'}
-      </PixelFont>
-
       {/* Action bar */}
       <div className="flex gap-3 items-center">
-        <Button onClick={onDraw} size="large">
-          {hasEnoughSubmissions ? 'I CAN DO BETTER' : 'DRAW THE WORD'}
+        <Button onClick={onDraw} size="large" variant="secondary">
+          DRAW THE WORD
         </Button>
       </div>
     </div>
