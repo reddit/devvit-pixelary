@@ -5,7 +5,7 @@ import { PixelFont } from './PixelFont';
 import { DrawingData } from '../../shared/schema/drawing';
 
 interface PaginatedDrawingGridProps {
-  drawings: Array<{ postId: string; drawing: DrawingData; rating?: number }>;
+  drawings: Array<{ postId: string; drawing: DrawingData }>;
   onDrawingClick: (postId: string) => void;
   isLoading?: boolean;
 }
@@ -93,20 +93,12 @@ export function PaginatedDrawingGrid({
           }}
         >
           {currentDrawings.map((drawing) => (
-            <div key={drawing.postId} className="relative">
-              <Drawing
-                data={drawing.drawing}
-                size={87}
-                onClick={() => onDrawingClick(drawing.postId)}
-              />
-              {drawing.rating !== undefined && (
-                <div className="absolute bottom-0 right-0 bg-tertiary px-1">
-                  <PixelFont className="text-[8px]">
-                    {String(drawing.rating)}
-                  </PixelFont>
-                </div>
-              )}
-            </div>
+            <Drawing
+              key={drawing.postId}
+              data={drawing.drawing}
+              size={87}
+              onClick={() => onDrawingClick(drawing.postId)}
+            />
           ))}
         </div>
       </div>

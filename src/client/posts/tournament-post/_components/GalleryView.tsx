@@ -50,7 +50,6 @@ export function GalleryView({ postId, onToggleView }: GalleryViewProps) {
     submissions?.map((sub) => ({
       postId: sub.commentId,
       drawing: sub.drawing,
-      rating: sub.rating,
     })) || [];
 
   return (
