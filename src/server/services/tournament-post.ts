@@ -1,5 +1,4 @@
 import type { T2, T3, T1 } from '@devvit/shared-types/tid.js';
-
 import { reddit, redis, media, context } from '@devvit/web/server';
 import type { MediaAsset } from '@devvit/web/server';
 import { createPost } from '../core/post';
