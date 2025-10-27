@@ -18,7 +18,7 @@ interface VotingViewProps {
     | undefined;
   onDraw: () => void;
   hasEnoughSubmissions: boolean;
-  tournamentData: { word: string; postId: string } | undefined;
+  word: string;
   onToggleView: () => void;
 }
 
@@ -38,7 +38,7 @@ export function VotingView({
   stats,
   onDraw,
   hasEnoughSubmissions,
-  tournamentData,
+  word,
   onToggleView,
 }: VotingViewProps) {
   const [animationState, setAnimationState] = useState<AnimationState>('idle');
@@ -231,7 +231,7 @@ export function VotingView({
       </div>
 
       <div className="flex flex-col gap-2 items-center justify-center">
-        <PixelFont scale={4}>{tournamentData?.word || ''}</PixelFont>
+        <PixelFont scale={4}>{word}</PixelFont>
         <CyclingMessage
           messages={[
             'Drawing Challenge',

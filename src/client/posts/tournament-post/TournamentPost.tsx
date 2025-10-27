@@ -3,26 +3,31 @@ import { trpc } from '@client/trpc/client';
 import { DrawingEditor } from '@components/Editor/Editor';
 import { VotingView } from './_components/VotingView';
 import { GalleryView } from './_components/GalleryView';
-import { PixelFont } from '@components/PixelFont';
 import { useToastHelpers } from '@components/ToastManager';
 import { Shimmer } from '@components/Shimmer';
+import { getPostData } from '@client/utils/context';
+import { context } from '@devvit/web/client';
+import type { TournamentPostData } from '@shared/schema';
 
-type TournamentState = 'loading' | 'browsing' | 'drawing' | 'submitted';
 type ViewMode = 'voting' | 'gallery';
 
 export function TournamentPost() {
-  const [state, setState] = useState<TournamentState>('loading');
   const [showEditor, setShowEditor] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>('voting');
   const { success: showSuccessToast } = useToastHelpers();
 
-  const { data: tournamentData, isLoading: isLoadingTournament } =
-    trpc.app.tournament.getTournament.useQuery();
+  // Still fetch from server for validation, but don't block rendering
+  const { data: tournamentData } = trpc.app.tournament.getTournament.useQuery();
+
+  // Get data from context immediately (no loading state)
+  const postData = getPostData<TournamentPostData>();
+  const word = tournamentData?.word || postData?.word || '';
+  const currentPostId = tournamentData?.postId || context.postId || '';
 
   const { data: stats } = trpc.app.tournament.getStats.useQuery(
-    { postId: tournamentData?.postId || '' },
+    { postId: currentPostId },
     {
-      enabled: !!tournamentData?.postId,
+      enabled: !!currentPostId,
     }
   );
 
@@ -34,48 +39,28 @@ export function TournamentPost() {
     void utils.app.user.getProfile.prefetch();
   }, [utils]);
 
-  useEffect(() => {
-    if (isLoadingTournament) {
-      setState('loading');
-    } else {
-      setState('browsing');
-    }
-  }, [isLoadingTournament]);
-
   const handleDrawSomething = () => {
     setShowEditor(true);
-    setState('drawing');
   };
 
   const handleCloseEditor = () => {
     setShowEditor(false);
-    setState('browsing');
   };
 
   const handleEditorSuccess = () => {
     setShowEditor(false);
-    setState('browsing');
     showSuccessToast('Submitted!', { duration: 3000 });
   };
 
-  // Loading state
-  if (state === 'loading' || !tournamentData) {
-    return (
-      <div className="flex items-center justify-center h-full w-full">
-        <PixelFont>Loading...</PixelFont>
-      </div>
-    );
-  }
-
   // Drawing state
-  if (state === 'drawing' || showEditor) {
+  if (showEditor) {
     return (
       <DrawingEditor
         onClose={handleCloseEditor}
         onSuccess={handleEditorSuccess}
         mode="tournament-comment"
-        tournamentPostId={tournamentData?.postId || ''}
-        tournamentWord={tournamentData?.word || ''}
+        tournamentPostId={currentPostId}
+        tournamentWord={word}
       />
     );
   }
@@ -87,11 +72,11 @@ export function TournamentPost() {
       <div className={viewMode === 'voting' ? 'absolute inset-0' : 'hidden'}>
         <div className="absolute flex flex-col gap-6 items-center justify-center h-full w-full p-6">
           <VotingView
-            postId={tournamentData?.postId || ''}
+            postId={currentPostId}
             stats={stats}
             onDraw={handleDrawSomething}
             hasEnoughSubmissions={(stats?.submissionCount || 0) >= 2}
-            tournamentData={tournamentData}
+            word={word}
             onToggleView={() => setViewMode('gallery')}
           />
 
@@ -103,7 +88,7 @@ export function TournamentPost() {
       {/* Gallery view - preserve state when hidden */}
       <div className={viewMode === 'gallery' ? 'absolute inset-0' : 'hidden'}>
         <GalleryView
-          postId={tournamentData?.postId || ''}
+          postId={currentPostId}
           onToggleView={() => setViewMode('voting')}
         />
       </div>
