@@ -31,7 +31,9 @@ export function DrawingEditor({
 }: DrawingEditorProps) {
   // State management - skip word step if tournament word is provided
   const [step, setStep] = useState<Step>(
-    mode === 'tournament-comment' && tournamentWord ? 'draw' : 'word'
+    mode === 'tournament-comment' && tournamentWord && tournamentPostId
+      ? 'draw'
+      : 'word'
   );
   const [time, setTime] = useState<number>(DRAWING_DURATION);
   const [candidate, setCandidate] = useState<CandidateWord | null>(null);
@@ -127,13 +129,18 @@ export function DrawingEditor({
 
   // Initialize tournament word on mount if provided
   useEffect(() => {
-    if (mode === 'tournament-comment' && tournamentWord && !candidate) {
+    if (
+      mode === 'tournament-comment' &&
+      tournamentWord &&
+      tournamentPostId &&
+      !candidate
+    ) {
       setCandidate({
         word: tournamentWord,
         dictionaryName: `r/${subredditNameRef.current}`,
       });
     }
-  }, [mode, tournamentWord, candidate]);
+  }, [mode, tournamentWord, tournamentPostId, candidate]);
 
   return (
     <>
@@ -161,7 +168,7 @@ export function DrawingEditor({
       )}
       {step === 'review' && candidate && (
         <>
-          {mode === 'tournament-comment' && tournamentPostId ? (
+          {mode === 'tournament-comment' && !!tournamentPostId ? (
             <TournamentReviewStep
               word={candidate.word}
               drawing={drawing}

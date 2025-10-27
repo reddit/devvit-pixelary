@@ -43,9 +43,24 @@ export function TournamentReviewStep(props: TournamentReviewStepProps) {
 
   const submitTournamentDrawing = trpc.app.tournament.submitDrawing.useMutation(
     {
-      onSuccess: () => {
-        void queryClient.invalidateQueries({
-          queryKey: ['pixelary', 'tournament'],
+      onSuccess: async (_, variables) => {
+        // Invalidate and refetch all tournament queries
+        await queryClient.invalidateQueries({
+          queryKey: ['pixelary', 'app', 'tournament'],
+        });
+        // Refetch stats and submissions for the specific post
+        await queryClient.refetchQueries({
+          queryKey: ['pixelary', 'app', 'tournament', 'getStats'],
+          exact: false,
+        });
+        await queryClient.refetchQueries({
+          queryKey: [
+            'pixelary',
+            'app',
+            'tournament',
+            'getSubmissionsWithDrawings',
+          ],
+          exact: false,
         });
       },
     }
@@ -57,11 +72,18 @@ export function TournamentReviewStep(props: TournamentReviewStepProps) {
     try {
       const imageData = generatePNGFromDrawing(drawing);
 
+      console.log(
+        'TournamentReviewStep: Submitting with postId:',
+        tournamentPostId
+      );
+
       await submitTournamentDrawing.mutateAsync({
         postId: tournamentPostId,
         drawing,
         imageData,
       });
+
+      console.log('TournamentReviewStep: Submission successful');
 
       if (onSuccess) {
         onSuccess();

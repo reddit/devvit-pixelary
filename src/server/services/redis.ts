@@ -73,6 +73,7 @@ export const REDIS_KEYS = {
   tournamentWord: (date: string) => `tournament:word:${date}`,
   tournamentPost: (date: string) => `tournament:post:${date}`,
   tournamentSubmissions: (postId: T3) => `tournament:submissions:${postId}`,
+  tournamentRatings: (postId: T3) => `tournament:ratings:${postId}`,
   tournamentVotes: (postId: T3, userId: T2) =>
     `tournament:votes:${postId}:${userId}`,
   tournamentUserSubmission: (postId: T3, userId: T2) =>

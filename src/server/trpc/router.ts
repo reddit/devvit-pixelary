@@ -537,7 +537,21 @@ export const appRouter = t.router({
           const date = input?.date || new Date().toISOString().split('T')[0];
           if (!date) throw new Error('Date is required');
           const word = await getTournamentWord(date);
-          const postId = await getTournamentPostId(date);
+
+          // If we're on a tournament post, use the current post ID
+          // Otherwise, look it up from Redis
+          let postId: string | undefined;
+          if (ctx.postId) {
+            // Check if the current post is a tournament post
+            if (ctx.postData?.type === 'tournament') {
+              postId = ctx.postId;
+            }
+          }
+
+          // Fallback to Redis lookup if no post ID from context
+          if (!postId) {
+            postId = await getTournamentPostId(date);
+          }
 
           return {
             word,
@@ -643,61 +657,87 @@ export const appRouter = t.router({
         }),
 
       getSubmissionsWithDrawings: t.procedure
-        .input(
-          z.object({
-            postId: z.string(),
-            sortBy: z.enum(['score', 'recency', 'mine']).optional(),
-          })
-        )
+        .input(z.object({ postId: z.string() }))
         .query(async ({ ctx, input }) => {
           if (!ctx.userId) throw new Error('Must be logged in');
 
           assertT3(input.postId);
-          const { getTournamentSubmissions } = await import(
-            '../services/tournament-post'
-          );
           const { getCommentDrawing } = await import(
             '../services/tournament-post'
           );
           const { redis } = await import('@devvit/web/server');
           const { REDIS_KEYS } = await import('../services/redis');
 
-          const sortBy = input.sortBy || 'recency';
-          const submissions = await getTournamentSubmissions(input.postId);
+          // Get all submissions ordered by Elo rating (highest first)
+          const rankedSubmissions = await redis.zRange(
+            REDIS_KEYS.tournamentRatings(input.postId),
+            0,
+            -1,
+            {
+              reverse: true,
+              by: 'score',
+            }
+          );
+          console.log(
+            'getSubmissionsWithDrawings: Ranked submissions from Redis:',
+            rankedSubmissions.length,
+            'items',
+            rankedSubmissions.map((item) => ({
+              member: item.member,
+              score: item.score,
+            }))
+          );
 
-          if (submissions.length === 0) {
+          if (rankedSubmissions.length === 0) {
+            console.log('getSubmissionsWithDrawings: No submissions in Redis');
             return [];
           }
 
-          // Get all items with scores
-          const items = await redis.zRange(
-            REDIS_KEYS.tournamentSubmissions(input.postId),
-            0,
-            -1,
-            { reverse: sortBy === 'score', by: 'score' } // Reverse for score (highest first)
-          );
-
           const results = [];
-          for (const item of items) {
+          for (const item of rankedSubmissions) {
             const commentId = item.member as T1;
+            console.log(
+              'getSubmissionsWithDrawings: Fetching drawing for commentId:',
+              commentId
+            );
             const drawingData = await getCommentDrawing(commentId);
 
-            if (!drawingData) continue;
-
-            // Filter by userId when sortBy is 'mine'
-            if (sortBy === 'mine' && drawingData.userId !== ctx.userId) {
+            if (!drawingData) {
+              console.log(
+                'getSubmissionsWithDrawings: No drawing data for commentId:',
+                commentId
+              );
               continue;
             }
 
+            console.log(
+              'getSubmissionsWithDrawings: Got drawing data:',
+              'drawing exists:',
+              !!drawingData.drawing,
+              'has colors:',
+              !!drawingData.drawing?.colors,
+              'has data:',
+              !!drawingData.drawing?.data,
+              'size:',
+              drawingData.drawing?.size
+            );
+
+            // Item.score is the Elo rating
             results.push({
               commentId,
               drawing: drawingData.drawing,
               userId: drawingData.userId,
               postId: drawingData.postId,
               score: item.score,
+              rating: item.score,
             });
           }
 
+          console.log(
+            'getSubmissionsWithDrawings: Returning',
+            results.length,
+            'results'
+          );
           return results;
         }),
     }),

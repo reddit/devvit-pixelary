@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import { trpc } from '@client/trpc/client';
 import { PaginatedDrawingGrid } from '@components/PaginatedDrawingGrid';
 import { Button } from '@components/Button';
@@ -16,39 +15,57 @@ interface GalleryViewProps {
   onToggleView: () => void;
 }
 
-type SortBy = 'score' | 'recency' | 'mine';
-
 export function GalleryView({
   postId,
   stats,
   onDraw,
   onToggleView,
 }: GalleryViewProps) {
-  const [sortBy, setSortBy] = useState<SortBy>('recency');
-
   const {
     data: submissions,
     isLoading,
     error,
   } = trpc.app.tournament.getSubmissionsWithDrawings.useQuery(
-    { postId, sortBy },
+    { postId },
     { enabled: !!postId }
   );
-
-  console.log('Gallery submissions:', submissions);
 
   const handleDrawingClick = (commentId: string) => {
     // Future: Show lightbox or detail view
     console.log('Drawing clicked:', commentId);
   };
 
-  const drawings =
-    submissions?.map((sub) => ({
-      postId: sub.commentId,
-      drawing: sub.drawing,
-    })) || [];
+  // Debug: Log postId and submissions
+  console.log(
+    'GalleryView postId:',
+    postId,
+    'error:',
+    error,
+    'isLoading:',
+    isLoading
+  );
+  console.log('GalleryView query input:', { postId });
 
-  console.log('Mapped drawings:', drawings);
+  // Debug: Log submissions to console
+  if (submissions) {
+    console.log('Submissions received:', submissions.length, submissions);
+    if (submissions.length > 0) {
+      console.log('First submission:', submissions[0]);
+      console.log('First submission has drawing:', !!submissions[0]?.drawing);
+      console.log('First submission drawing data:', submissions[0]?.drawing);
+    }
+  }
+
+  const drawings =
+    submissions
+      ?.filter((sub) => sub.drawing)
+      .map((sub) => ({
+        postId: sub.commentId,
+        drawing: sub.drawing,
+        rating: sub.rating,
+      })) || [];
+
+  console.log('Drawings mapped:', drawings.length, drawings);
 
   return (
     <div className="flex flex-col gap-6 items-center w-full">
@@ -56,31 +73,6 @@ export function GalleryView({
       <div className="absolute top-6 right-6">
         <Button onClick={onToggleView} size="medium" variant="secondary">
           VOTING
-        </Button>
-      </div>
-
-      {/* Sort buttons */}
-      <div className="flex gap-2">
-        <Button
-          onClick={() => setSortBy('recency')}
-          variant={sortBy === 'recency' ? 'primary' : 'secondary'}
-          size="medium"
-        >
-          Recent
-        </Button>
-        <Button
-          onClick={() => setSortBy('score')}
-          variant={sortBy === 'score' ? 'primary' : 'secondary'}
-          size="medium"
-        >
-          Top
-        </Button>
-        <Button
-          onClick={() => setSortBy('mine')}
-          variant={sortBy === 'mine' ? 'primary' : 'secondary'}
-          size="medium"
-        >
-          Mine
         </Button>
       </div>
 
@@ -94,26 +86,20 @@ export function GalleryView({
       )}
 
       {/* Gallery or empty state */}
-      {!error && isLoading ? (
+      {isLoading ? (
         <div className="flex items-center justify-center w-full h-64">
           <PixelFont>Loading...</PixelFont>
         </div>
-      ) : !error && drawings.length === 0 ? (
-        <div className="flex flex-col gap-2 items-center w-full">
-          <PixelFont className="text-tertiary">
-            {sortBy === 'mine'
-              ? "You haven't submitted any drawings yet"
-              : 'No drawings yet'}
-          </PixelFont>
-        </div>
+      ) : submissions && submissions.length > 0 && drawings.length > 0 ? (
+        <PaginatedDrawingGrid
+          drawings={drawings}
+          onDrawingClick={handleDrawingClick}
+          isLoading={isLoading}
+        />
       ) : (
-        !error && (
-          <PaginatedDrawingGrid
-            drawings={drawings}
-            onDrawingClick={handleDrawingClick}
-            isLoading={isLoading}
-          />
-        )
+        <div className="flex flex-col gap-2 items-center w-full">
+          <PixelFont className="text-tertiary">No drawings yet</PixelFont>
+        </div>
       )}
 
       {stats !== undefined && (

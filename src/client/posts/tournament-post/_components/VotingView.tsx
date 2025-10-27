@@ -42,9 +42,11 @@ export function VotingView({
   );
 
   const submitVote = trpc.app.tournament.submitVote.useMutation({
-    onSuccess: () => {
+    onSuccess: async () => {
+      // Clear current pair so loading state shows
+      setPair(null);
       // Fetch next pair after voting
-      void refetchPair();
+      await refetchPair();
     },
   });
 
@@ -69,13 +71,13 @@ export function VotingView({
 
   // Sync pairData to pair state
   useEffect(() => {
-    if (pairData && !pair) {
+    if (pairData) {
       // Validate that pairData is an array with 2 elements
       if (Array.isArray(pairData) && pairData.length === 2) {
         setPair(pairData as [string, string]);
       }
     }
-  }, [pairData, pair]);
+  }, [pairData]);
 
   // Fetch initial pair
   useEffect(() => {

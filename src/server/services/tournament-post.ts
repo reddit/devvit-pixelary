@@ -12,6 +12,38 @@ import {
 } from '../../shared/constants';
 import { incrementScore } from './progression';
 
+// Elo rating constants
+const ELO_K_FACTOR = 32;
+const ELO_INITIAL_RATING = 1200;
+
+/**
+ * Calculate Elo rating change for winner and loser
+ */
+function calculateEloChange(
+  winnerRating: number,
+  loserRating: number
+): { winnerChange: number; loserChange: number } {
+  const expectedWinner =
+    1 / (1 + Math.pow(10, (loserRating - winnerRating) / 400));
+  const expectedLoser = 1 - expectedWinner;
+
+  return {
+    winnerChange: Math.round(ELO_K_FACTOR * (1 - expectedWinner)),
+    loserChange: Math.round(ELO_K_FACTOR * (0 - expectedLoser)),
+  };
+}
+
+/**
+ * Get Elo rating for a drawing
+ */
+async function getDrawingRating(postId: T3, commentId: T1): Promise<number> {
+  const rating = await redis.zScore(
+    REDIS_KEYS.tournamentRatings(postId),
+    commentId
+  );
+  return rating ?? ELO_INITIAL_RATING;
+}
+
 /**
  * Get or generate the tournament word for a specific date
  * @param date - The date in YYYY-MM-DD format
@@ -133,6 +165,12 @@ export async function submitTournamentDrawing(
   drawing: DrawingData,
   imageData: string
 ): Promise<T1> {
+  console.log(
+    'submitTournamentDrawing called with postId:',
+    postId,
+    'userId:',
+    userId
+  );
   try {
     let response: MediaAsset;
     try {
@@ -140,6 +178,7 @@ export async function submitTournamentDrawing(
         url: imageData,
         type: 'image',
       });
+      console.log('Media uploaded successfully');
     } catch (mediaError) {
       console.error('Media upload failed:', mediaError);
       const mediaErrorMessage =
@@ -154,6 +193,7 @@ export async function submitTournamentDrawing(
         id: postId,
         runAs: 'USER',
       });
+      console.log('Comment submitted successfully:', comment.id);
     } catch (commentError) {
       console.error('Comment submission failed:', commentError);
       const commentErrorMessage =
@@ -166,10 +206,26 @@ export async function submitTournamentDrawing(
     const promises: Promise<unknown>[] = [];
 
     // Store comment ID in sorted set
+    const submissionsKey = REDIS_KEYS.tournamentSubmissions(postId);
+    const ratingsKey = REDIS_KEYS.tournamentRatings(postId);
+    console.log('Storing to Redis keys:', {
+      submissionsKey,
+      ratingsKey,
+      commentId: comment.id,
+    });
+
     promises.push(
-      redis.zAdd(REDIS_KEYS.tournamentSubmissions(postId), {
+      redis.zAdd(submissionsKey, {
         member: comment.id,
         score: Date.now(),
+      })
+    );
+
+    // Initialize Elo rating
+    promises.push(
+      redis.zAdd(ratingsKey, {
+        member: comment.id,
+        score: ELO_INITIAL_RATING,
       })
     );
 
@@ -190,6 +246,7 @@ export async function submitTournamentDrawing(
     );
 
     await Promise.all(promises);
+    console.log('All data stored to Redis successfully');
 
     return comment.id;
   } catch (error) {
@@ -210,17 +267,39 @@ export async function recordVote(
   postId: T3,
   userId: T2,
   winnerCommentId: T1,
-  _loserCommentId: T1
+  loserCommentId: T1
 ): Promise<void> {
   // Award points for voting
   await incrementScore(userId, TOURNAMENT_REWARD_VOTE);
 
-  // Store vote data for statistics (increment score for winner)
+  // Increment vote count for winner
   await redis.zIncrBy(
     REDIS_KEYS.tournamentSubmissions(postId),
     winnerCommentId,
     1
   );
+
+  // Update Elo ratings
+  const [winnerRating, loserRating] = await Promise.all([
+    getDrawingRating(postId, winnerCommentId),
+    getDrawingRating(postId, loserCommentId),
+  ]);
+
+  const { winnerChange, loserChange } = calculateEloChange(
+    winnerRating,
+    loserRating
+  );
+
+  await Promise.all([
+    redis.zAdd(REDIS_KEYS.tournamentRatings(postId), {
+      member: winnerCommentId,
+      score: winnerRating + winnerChange,
+    }),
+    redis.zAdd(REDIS_KEYS.tournamentRatings(postId), {
+      member: loserCommentId,
+      score: loserRating + loserChange,
+    }),
+  ]);
 }
 
 /**
@@ -322,17 +401,45 @@ export async function getCommentDrawing(commentId: T1): Promise<
     }
   | undefined
 > {
-  const data = await redis.hGetAll(REDIS_KEYS.tournamentCommentData(commentId));
+  const key = REDIS_KEYS.tournamentCommentData(commentId);
+  console.log('getCommentDrawing: Fetching from key:', key);
+  const data = await redis.hGetAll(key);
+  console.log('getCommentDrawing: Raw data from Redis:', data);
 
   if (!data.drawing || !data.userId || !data.postId) {
+    console.log('getCommentDrawing: Missing required fields');
     return undefined;
   }
 
-  return {
-    drawing: JSON.parse(data.drawing) as DrawingData,
-    userId: data.userId as T2,
-    postId: data.postId as T3,
-  };
+  try {
+    const parsedDrawing = JSON.parse(data.drawing) as DrawingData;
+    console.log('getCommentDrawing: Parsed drawing:', {
+      hasColors: !!parsedDrawing.colors,
+      hasData: !!parsedDrawing.data,
+      size: parsedDrawing.size,
+    });
+    return {
+      drawing: parsedDrawing,
+      userId: data.userId as T2,
+      postId: data.postId as T3,
+    };
+  } catch (error) {
+    console.error('getCommentDrawing: Failed to parse drawing:', error);
+    return undefined;
+  }
+}
+
+/**
+ * Get Elo rating for a comment
+ * @param postId - The tournament post ID
+ * @param commentId - The comment ID
+ * @returns The Elo rating
+ */
+export async function getCommentRating(
+  postId: T3,
+  commentId: T1
+): Promise<number> {
+  return await getDrawingRating(postId, commentId);
 }
 
 /**
