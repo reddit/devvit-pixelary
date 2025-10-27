@@ -50,7 +50,7 @@ export function Lightbox({
 
       <div className="flex flex-col items-center justify-center gap-2 text-white">
         {/* Author (built-in) */}
-        {author && <PixelFont scale={2}>{`By u/${author}`}</PixelFont>}
+        {author && <PixelFont scale={3}>{`By u/${author}`}</PixelFont>}
 
         {/* Custom metadata */}
         {children}

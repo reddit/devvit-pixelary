@@ -689,10 +689,21 @@ export const appRouter = t.router({
               score: item.score,
               rating: item.score,
               votes: drawingData.votes,
+              views: drawingData.views,
             });
           }
 
           return results;
+        }),
+
+      incrementViews: t.procedure
+        .input(z.object({ commentId: z.string() }))
+        .mutation(async ({ input }) => {
+          const { incrementEntryViews } = await import(
+            '../services/tournament-post'
+          );
+          await incrementEntryViews(input.commentId as T1);
+          return { success: true };
         }),
     }),
   }),

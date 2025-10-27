@@ -6,21 +6,6 @@ import { IconButton } from '@components/IconButton';
 import { Lightbox } from '@components/Lightbox';
 import type { DrawingData } from '@shared/schema/drawing';
 
-function TournamentLightboxContent({
-  rating,
-  votes,
-}: {
-  rating: number;
-  votes: number;
-}) {
-  return (
-    <div className="flex flex-col gap-1 items-center">
-      <PixelFont scale={1.5}>{`${votes} picks`}</PixelFont>
-      <PixelFont scale={1.5}>{`${rating} rating`}</PixelFont>
-    </div>
-  );
-}
-
 interface GalleryViewProps {
   postId: string;
   onToggleView: () => void;
@@ -32,6 +17,7 @@ export function GalleryView({ postId, onToggleView }: GalleryViewProps) {
     author: string;
     rating: number;
     votes: number;
+    views: number;
   } | null>(null);
 
   const {
@@ -43,6 +29,8 @@ export function GalleryView({ postId, onToggleView }: GalleryViewProps) {
     { enabled: !!postId }
   );
 
+  const incrementViews = trpc.app.tournament.incrementViews.useMutation();
+
   const handleDrawingClick = (postId: string) => {
     const submission = submissions?.find((sub) => sub.commentId === postId);
     if (submission) {
@@ -51,7 +39,10 @@ export function GalleryView({ postId, onToggleView }: GalleryViewProps) {
         author: submission.username,
         rating: submission.rating,
         votes: submission.votes,
+        views: submission.views,
       });
+      // Track view when opening lightbox
+      void incrementViews.mutateAsync({ commentId: postId });
     }
   };
 
@@ -104,10 +95,18 @@ export function GalleryView({ postId, onToggleView }: GalleryViewProps) {
           drawing={selectedDrawing.drawing}
           author={selectedDrawing.author}
         >
-          <TournamentLightboxContent
-            rating={selectedDrawing.rating}
-            votes={selectedDrawing.votes}
-          />
+          <div className="flex flex-col gap-2 items-center">
+            <PixelFont>
+              {`${selectedDrawing.views} views · ${selectedDrawing.votes} picks (${
+                selectedDrawing.views > 0
+                  ? Math.round(
+                      (selectedDrawing.votes / selectedDrawing.views) * 100
+                    )
+                  : 0
+              }%)`}
+            </PixelFont>
+            <PixelFont>{`${selectedDrawing.rating} rating`}</PixelFont>
+          </div>
         </Lightbox>
       )}
     </main>

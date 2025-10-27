@@ -46,6 +46,7 @@ export function VotingView({
   const [currentPairIndex, setCurrentPairIndex] = useState(0);
   const timeoutRefs = useRef<ReturnType<typeof setTimeout>[]>([]);
   const isPrefetching = useRef(false);
+  const trackedViews = useRef<Set<string>>(new Set());
 
   const {
     refetch: fetchPairs,
@@ -59,6 +60,7 @@ export function VotingView({
   );
 
   const submitVote = trpc.app.tournament.submitVote.useMutation();
+  const incrementViews = trpc.app.tournament.incrementViews.useMutation();
 
   const formatStatsLine = (submissionCount: number, playerCount: number) => {
     const drawingText = submissionCount === 1 ? 'drawing' : 'drawings';
@@ -138,6 +140,21 @@ export function VotingView({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasEnoughSubmissions]);
+
+  // Track views when drawings are displayed (only once per pair)
+  useEffect(() => {
+    if (leftDrawing && rightDrawing && animationState === 'idle') {
+      // Track views for both drawings when they're first displayed
+      if (!trackedViews.current.has(leftDrawing.commentId)) {
+        trackedViews.current.add(leftDrawing.commentId);
+        void incrementViews.mutateAsync({ commentId: leftDrawing.commentId });
+      }
+      if (!trackedViews.current.has(rightDrawing.commentId)) {
+        trackedViews.current.add(rightDrawing.commentId);
+        void incrementViews.mutateAsync({ commentId: rightDrawing.commentId });
+      }
+    }
+  }, [leftDrawing, rightDrawing, animationState, incrementViews]);
 
   // Cleanup timeouts on unmount
   useEffect(() => {

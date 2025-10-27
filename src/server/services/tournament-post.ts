@@ -21,6 +21,7 @@ type TournamentDrawing = {
   userId: T2;
   postId: T3;
   votes: number;
+  views: number;
   mediaUrl: string;
   mediaId: string;
 };
@@ -161,6 +162,7 @@ export async function submitTournamentEntry(
     mediaUrl: response.mediaUrl,
     mediaId: response.mediaId,
     votes: '0',
+    views: '0',
   };
 
   const sortedSetKey = REDIS_KEYS.tournamentEntries(postId);
@@ -375,6 +377,7 @@ export async function getTournamentEntry(
     userId: data.userId as T2,
     postId: data.postId as T3,
     votes: parseInt(data.votes || '0'),
+    views: parseInt(data.views || '0'),
     mediaUrl: data.mediaUrl,
     mediaId: data.mediaId,
   };
@@ -417,6 +420,13 @@ export async function awardTournamentRewards(postId: T3): Promise<void> {
     rewardPromises.push(incrementScore(userId, reward));
   }
   await Promise.all(rewardPromises);
+}
+
+/**
+ * Increment views for a tournament entry
+ */
+export async function incrementEntryViews(commentId: T1): Promise<void> {
+  await redis.hIncrBy(REDIS_KEYS.tournamentEntry(commentId), 'views', 1);
 }
 
 /**
