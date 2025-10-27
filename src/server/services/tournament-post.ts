@@ -303,8 +303,8 @@ export async function getDrawingPairs(
     }
 
     pairs.push([
-      { commentId: firstId, ...leftData },
-      { commentId: secondId, ...rightData },
+      { ...leftData, commentId: firstId },
+      { ...rightData, commentId: secondId },
     ]);
   }
 
