@@ -14,8 +14,10 @@ export const GUESSER_REWARD_SOLVE = 5;
 
 // Tournament rewards
 export const TOURNAMENT_REWARD_VOTE = 1;
-export const TOURNAMENT_REWARD_TOP_50 = 100;
-export const TOURNAMENT_REWARD_TOP_25 = 100;
+export const TOURNAMENT_REWARD_WINNER = 250;
+export const TOURNAMENT_REWARD_TOP_10 = 100;
+export const TOURNAMENT_ELO_K_FACTOR = 32;
+export const TOURNAMENT_ELO_INITIAL_RATING = 1200;
 
 /*
  * Timers

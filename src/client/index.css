@@ -120,7 +120,12 @@
     /* Disable our custom animations for accessibility */
     .animate-pixel-breathe,
     .animate-count-pulse,
-    .animate-diagonal-shimmer {
+    .animate-diagonal-shimmer,
+    .animate-pixel-winner-highlight,
+    .animate-slide-out-left,
+    .animate-slide-out-right,
+    .animate-slide-in-from-left,
+    .animate-slide-in-from-right {
       animation: none !important;
     }
   }
@@ -206,6 +211,73 @@
     }
   }
 
+  @keyframes pixel-winner-highlight {
+    0% {
+      transform: scale(1);
+      filter: drop-shadow(0 0 0px rgba(0, 0, 0, 0));
+    }
+    50% {
+      transform: scale(1.15);
+      filter: drop-shadow(0 0 12px rgba(255, 69, 0, 0.8));
+    }
+    100% {
+      transform: scale(1.1);
+      filter: drop-shadow(0 0 8px rgba(255, 69, 0, 0.6));
+    }
+  }
+
+  @keyframes slide-out-left {
+    0% {
+      transform: translateX(0) rotate(0deg);
+      opacity: 1;
+    }
+    100% {
+      transform: translateX(-150%) rotate(-8deg);
+      opacity: 0;
+    }
+  }
+
+  @keyframes slide-out-right {
+    0% {
+      transform: translateX(0) rotate(0deg);
+      opacity: 1;
+    }
+    100% {
+      transform: translateX(150%) rotate(8deg);
+      opacity: 0;
+    }
+  }
+
+  @keyframes slide-in-from-left {
+    0% {
+      transform: translateX(-150%) rotate(-8deg);
+      opacity: 0;
+    }
+    70% {
+      transform: translateX(8px) rotate(0deg);
+      opacity: 1;
+    }
+    100% {
+      transform: translateX(0) rotate(0deg);
+      opacity: 1;
+    }
+  }
+
+  @keyframes slide-in-from-right {
+    0% {
+      transform: translateX(150%) rotate(8deg);
+      opacity: 0;
+    }
+    70% {
+      transform: translateX(-8px) rotate(0deg);
+      opacity: 1;
+    }
+    100% {
+      transform: translateX(0) rotate(0deg);
+      opacity: 1;
+    }
+  }
+
   .animate-nudge-right {
     animation: nudge-right 1s ease-in-out infinite;
   }
@@ -235,6 +307,28 @@
     animation-iteration-count: infinite;
     animation-name: diagonal-shimmer;
     animation-duration: 4s;
+  }
+
+  .animate-pixel-winner-highlight {
+    animation: pixel-winner-highlight 0.5s ease-out forwards;
+  }
+
+  .animate-slide-out-left {
+    animation: slide-out-left 0.8s ease-in forwards;
+  }
+
+  .animate-slide-out-right {
+    animation: slide-out-right 0.8s ease-in forwards;
+  }
+
+  .animate-slide-in-from-left {
+    animation: slide-in-from-left 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)
+      forwards;
+  }
+
+  .animate-slide-in-from-right {
+    animation: slide-in-from-right 0.8s cubic-bezier(0.34, 1.56, 0.64, 1)
+      forwards;
   }
 
   /* Hide native text selection for PixelInput */

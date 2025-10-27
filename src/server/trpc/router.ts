@@ -525,40 +525,25 @@ export const appRouter = t.router({
 
     // Tournament endpoints
     tournament: t.router({
-      getTournament: t.procedure
-        .input(z.object({ date: z.string() }).optional())
-        .query(async ({ ctx, input }) => {
-          if (!ctx.subredditName) throw new Error('Subreddit not found');
+      getTournament: t.procedure.query(async ({ ctx }) => {
+        if (!ctx.subredditName) throw new Error('Subreddit not found');
 
-          const { getTournamentWord, getTournamentPostId } = await import(
-            '../services/tournament-post'
-          );
+        // Get tournament info from current post context
+        if (!ctx.postId || ctx.postData?.type !== 'tournament') {
+          throw new Error('Not on a tournament post');
+        }
 
-          const date = input?.date || new Date().toISOString().split('T')[0];
-          if (!date) throw new Error('Date is required');
-          const word = await getTournamentWord(date);
+        const tournamentPostData = ctx.postData as {
+          type: 'tournament';
+          word: string;
+          dictionary: string;
+        };
 
-          // If we're on a tournament post, use the current post ID
-          // Otherwise, look it up from Redis
-          let postId: string | undefined;
-          if (ctx.postId) {
-            // Check if the current post is a tournament post
-            if (ctx.postData?.type === 'tournament') {
-              postId = ctx.postId;
-            }
-          }
-
-          // Fallback to Redis lookup if no post ID from context
-          if (!postId) {
-            postId = await getTournamentPostId(date);
-          }
-
-          return {
-            word,
-            postId,
-            date,
-          };
-        }),
+        return {
+          word: tournamentPostData.word,
+          postId: ctx.postId,
+        };
+      }),
 
       submitDrawing: t.procedure
         .input(
@@ -604,6 +589,21 @@ export const appRouter = t.router({
           return await getRandomPair(input.postId);
         }),
 
+      getDrawingPairs: t.procedure
+        .input(
+          z.object({
+            postId: z.string(),
+            count: z.number().int().min(1).max(20).default(5),
+          })
+        )
+        .query(async ({ input }) => {
+          assertT3(input.postId);
+          const { getDrawingPairs } = await import(
+            '../services/tournament-post'
+          );
+          return await getDrawingPairs(input.postId, input.count);
+        }),
+
       submitVote: t.procedure
         .input(
           z.object({
@@ -641,10 +641,8 @@ export const appRouter = t.router({
         .input(z.object({ postId: z.string() }))
         .query(async ({ input }) => {
           assertT3(input.postId);
-          const { getTournamentStats } = await import(
-            '../services/tournament-post'
-          );
-          return await getTournamentStats(input.postId);
+          const { getTournament } = await import('../services/tournament-post');
+          return await getTournament(input.postId);
         }),
 
       getCommentDrawing: t.procedure

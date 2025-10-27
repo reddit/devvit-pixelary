@@ -27,8 +27,6 @@ export type CollectionPostData = z.infer<typeof CollectionPostDataSchema>;
 export const TournamentPostDataSchema = z.object({
   type: z.literal('tournament'),
   word: z.string(),
-  date: z.string(),
-  dictionary: z.string(),
 });
 export type TournamentPostData = z.infer<typeof TournamentPostDataSchema>;
 

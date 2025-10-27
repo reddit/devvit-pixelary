@@ -1,9 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { trpc } from '@client/trpc/client';
 import { Drawing } from '@components/Drawing';
 import { Button } from '@components/Button';
 import { PixelFont } from '@components/PixelFont';
 import { CyclingMessage } from '@components/CyclingMessage';
+import type { DrawingData } from '@shared/schema/drawing';
 
 interface VotingViewProps {
   postId: string;
@@ -15,9 +16,20 @@ interface VotingViewProps {
     | undefined;
   onDraw: () => void;
   hasEnoughSubmissions: boolean;
-  tournamentData: { word: string; date: string } | undefined;
+  tournamentData: { word: string; postId: string } | undefined;
   onToggleView: () => void;
 }
+
+type AnimationState = 'idle' | 'highlighting' | 'exiting' | 'entering';
+
+type PairDrawing = {
+  commentId: string;
+  drawing: DrawingData;
+  userId: string;
+  postId: string;
+};
+
+type Pair = [PairDrawing, PairDrawing];
 
 export function VotingView({
   postId,
@@ -27,26 +39,52 @@ export function VotingView({
   tournamentData,
   onToggleView,
 }: VotingViewProps) {
-  const [pair, setPair] = useState<[string, string] | null>(null);
+  const [animationState, setAnimationState] = useState<AnimationState>('idle');
+  const [winnerSide, setWinnerSide] = useState<'left' | 'right' | null>(null);
+  const [pairsQueue, setPairsQueue] = useState<Pair[]>([]);
+  const [currentPairIndex, setCurrentPairIndex] = useState(0);
+  const timeoutRefs = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const isPrefetching = useRef(false);
 
   const {
-    refetch: refetchPair,
-    error: pairError,
-    isFetching: isFetchingPair,
-    data: pairData,
-  } = trpc.app.tournament.getRandomPair.useQuery(
-    { postId },
+    refetch: fetchPairs,
+    error: pairsError,
+    isFetching: isFetchingPairs,
+  } = trpc.app.tournament.getDrawingPairs.useQuery(
+    { postId, count: 5 },
     {
       enabled: false,
     }
   );
 
   const submitVote = trpc.app.tournament.submitVote.useMutation({
-    onSuccess: async () => {
-      // Clear current pair so loading state shows
-      setPair(null);
-      // Fetch next pair after voting
-      await refetchPair();
+    onSuccess: () => {
+      // Move to next pair
+      setCurrentPairIndex((prev) => {
+        const nextIndex = prev + 1;
+
+        // Trigger entering animation
+        const startEnterTimeout = setTimeout(() => {
+          setAnimationState('entering');
+          const enterTimeout = setTimeout(() => {
+            setAnimationState('idle');
+            setWinnerSide(null);
+          }, 800);
+          timeoutRefs.current.push(enterTimeout);
+        }, 100);
+        timeoutRefs.current.push(startEnterTimeout);
+
+        // Refill queue if getting low
+        if (
+          nextIndex >= pairsQueue.length - 2 &&
+          hasEnoughSubmissions &&
+          !isPrefetching.current
+        ) {
+          void prefetchPairs();
+        }
+
+        return nextIndex;
+      });
     },
   });
 
@@ -56,46 +94,75 @@ export function VotingView({
     return `${submissionCount} ${drawingText} by ${playerCount} ${playerText}`;
   };
 
-  // Fetch drawings for the pair
-  const { data: leftDrawingData } =
-    trpc.app.tournament.getCommentDrawing.useQuery(
-      { commentId: pair?.[0] || '' },
-      { enabled: !!pair?.[0] }
-    );
+  const prefetchPairs = useCallback(async () => {
+    if (isPrefetching.current) return;
+    isPrefetching.current = true;
 
-  const { data: rightDrawingData } =
-    trpc.app.tournament.getCommentDrawing.useQuery(
-      { commentId: pair?.[1] || '' },
-      { enabled: !!pair?.[1] }
-    );
-
-  // Sync pairData to pair state
-  useEffect(() => {
-    if (pairData) {
-      // Validate that pairData is an array with 2 elements
-      if (Array.isArray(pairData) && pairData.length === 2) {
-        setPair(pairData as [string, string]);
+    try {
+      const result = await fetchPairs();
+      if (result.data) {
+        setPairsQueue((prev) => [...prev, ...result.data]);
       }
+    } catch (error) {
+      console.error('Failed to prefetch pairs:', error);
+    } finally {
+      isPrefetching.current = false;
     }
-  }, [pairData]);
+  }, [fetchPairs]);
 
-  // Fetch initial pair
+  const fetchInitialPairs = useCallback(async () => {
+    try {
+      const result = await fetchPairs();
+      if (result.data) {
+        setPairsQueue(result.data);
+      }
+    } catch (error) {
+      console.error('Failed to fetch pairs:', error);
+    }
+  }, [fetchPairs]);
+
+  // Get current pair from queue
+  const currentPair = pairsQueue[currentPairIndex];
+  const [leftDrawing, rightDrawing] = currentPair || [];
+
+  // Fetch initial pairs
   useEffect(() => {
-    void refetchPair();
+    void fetchInitialPairs();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const handleVote = (winnerId: string, loserId: string) => {
-    if (!pair) return;
+  // Cleanup timeouts on unmount
+  useEffect(() => {
+    return () => {
+      timeoutRefs.current.forEach((timeout) => clearTimeout(timeout));
+      timeoutRefs.current = [];
+    };
+  }, []);
 
-    void submitVote.mutateAsync({
-      postId,
-      winnerCommentId: winnerId,
-      loserCommentId: loserId,
-    });
+  const handleVote = (winnerId: string, loserId: string) => {
+    if (animationState !== 'idle' || !leftDrawing || !rightDrawing) return;
+
+    // Determine winner side
+    const isLeftWinner = leftDrawing.commentId === winnerId;
+    setWinnerSide(isLeftWinner ? 'left' : 'right');
+
+    // Stage 1: Highlight winner (500ms)
+    setAnimationState('highlighting');
+    const highlightTimeout = setTimeout(() => {
+      setAnimationState('exiting');
+
+      // Submit vote right when exit starts
+      void submitVote.mutateAsync({
+        postId,
+        winnerCommentId: winnerId,
+        loserCommentId: loserId,
+      });
+    }, 500);
+    timeoutRefs.current.push(highlightTimeout);
   };
 
-  const isLoading = !pair || !leftDrawingData || !rightDrawingData;
+  // Don't show loading if we're animating - keep old content visible
+  const isLoading = animationState === 'idle' && !leftDrawing && !rightDrawing;
 
   // Show "not enough submissions" state
   if (!hasEnoughSubmissions) {
@@ -109,14 +176,14 @@ export function VotingView({
     );
   }
 
-  // Show error message if fetching pair failed
-  if (pairError) {
+  // Show error message if fetching pairs failed
+  if (pairsError) {
     return (
       <div className="flex flex-col gap-4 items-center">
         <PixelFont className="text-red-500">
-          {pairError.message || 'Failed to load submissions'}
+          {pairsError.message || 'Failed to load submissions'}
         </PixelFont>
-        <Button onClick={() => void refetchPair()} disabled={isFetchingPair}>
+        <Button onClick={() => void fetchPairs()} disabled={isFetchingPairs}>
           Retry
         </Button>
       </div>
@@ -135,13 +202,9 @@ export function VotingView({
       <div className="flex flex-col gap-2 items-center justify-center">
         <CyclingMessage
           messages={[
-            new Date(tournamentData?.date || '').toLocaleDateString('en-US', {
-              month: 'long',
-              day: 'numeric',
-              year: 'numeric',
-            }),
-            'Word of the Day',
+            'Tournament',
             'Drawing Challenge',
+            'Vote for Your Favorite',
           ]}
           className="text-tertiary"
           intervalMs={3000}
@@ -153,15 +216,35 @@ export function VotingView({
 
       <div className="flex gap-3 items-end justify-center">
         {/* Left drawing */}
-        <div className="flex flex-col gap-3 items-center">
-          {leftDrawingData ? (
-            <Drawing data={leftDrawingData.drawing} size={128} />
+        <div
+          className={`flex flex-col gap-3 items-center ${
+            animationState === 'highlighting' && winnerSide === 'left'
+              ? 'animate-pixel-winner-highlight'
+              : ''
+          } ${
+            animationState === 'exiting'
+              ? 'animate-slide-out-left'
+              : animationState === 'entering'
+                ? 'animate-slide-in-from-left'
+                : ''
+          }`}
+          style={{ willChange: 'transform' }}
+        >
+          {leftDrawing ? (
+            <Drawing data={leftDrawing.drawing} size={128} />
           ) : (
             <div className="w-32 h-32 bg-white-25" />
           )}
           <Button
-            onClick={() => handleVote(pair?.[0] || '', pair?.[1] || '')}
-            disabled={submitVote.isPending || isLoading}
+            onClick={() =>
+              handleVote(
+                leftDrawing?.commentId || '',
+                rightDrawing?.commentId || ''
+              )
+            }
+            disabled={
+              submitVote.isPending || isLoading || animationState !== 'idle'
+            }
             className="w-full"
             variant="secondary"
           >
@@ -173,15 +256,35 @@ export function VotingView({
         <PixelFont className="text-secondary mb-[13px]">or</PixelFont>
 
         {/* Right drawing */}
-        <div className="flex flex-col gap-3 items-center">
-          {rightDrawingData ? (
-            <Drawing data={rightDrawingData.drawing} size={128} />
+        <div
+          className={`flex flex-col gap-3 items-center ${
+            animationState === 'highlighting' && winnerSide === 'right'
+              ? 'animate-pixel-winner-highlight'
+              : ''
+          } ${
+            animationState === 'exiting'
+              ? 'animate-slide-out-right'
+              : animationState === 'entering'
+                ? 'animate-slide-in-from-right'
+                : ''
+          }`}
+          style={{ willChange: 'transform' }}
+        >
+          {rightDrawing ? (
+            <Drawing data={rightDrawing.drawing} size={128} />
           ) : (
             <div className="w-32 h-32 bg-white-25" />
           )}
           <Button
-            onClick={() => handleVote(pair?.[1] || '', pair?.[0] || '')}
-            disabled={submitVote.isPending || isLoading}
+            onClick={() =>
+              handleVote(
+                rightDrawing?.commentId || '',
+                leftDrawing?.commentId || ''
+              )
+            }
+            disabled={
+              submitVote.isPending || isLoading || animationState !== 'idle'
+            }
             className="w-full"
             variant="secondary"
           >

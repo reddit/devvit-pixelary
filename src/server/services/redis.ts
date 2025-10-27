@@ -70,15 +70,11 @@ export const REDIS_KEYS = {
   collection: (collectionId: string) => `collection:${collectionId}`,
 
   // Tournament
-  tournamentWord: (date: string) => `tournament:word:${date}`,
-  tournamentPost: (date: string) => `tournament:post:${date}`,
-  tournamentSubmissions: (postId: T3) => `tournament:submissions:${postId}`,
-  tournamentRatings: (postId: T3) => `tournament:ratings:${postId}`,
-  tournamentVotes: (postId: T3, userId: T2) =>
-    `tournament:votes:${postId}:${userId}`,
-  tournamentUserSubmission: (postId: T3, userId: T2) =>
-    `tournament:user:${postId}:${userId}`,
-  tournamentCommentData: (commentId: T1) => `tournament:comment:${commentId}`,
+  tournament: (postId: T3) => `tournament:${postId}`,
+  tournaments: () => `tournaments:all`,
+  tournamentEntries: (postId: T3) => `tournament:entries:${postId}`,
+  tournamentEntry: (commentId: T1) => `tournament:entry:${commentId}`,
+  tournamentPlayers: (postId: T3) => `tournament:players:${postId}`,
 };
 
 const USERNAME_TTL = 30 * 24 * 60 * 60; // 30 days.

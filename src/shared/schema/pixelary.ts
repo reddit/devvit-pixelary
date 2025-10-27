@@ -167,7 +167,6 @@ export type PostDataInput = z.infer<typeof PostDataInputSchema>;
 export const TournamentPostDataSchema = z.object({
   type: z.literal('tournament'),
   word: z.string(),
-  date: z.string(), // YYYY-MM-DD format
   dictionary: z.string(),
 });
 export type TournamentPostData = z.infer<typeof TournamentPostDataSchema>;
