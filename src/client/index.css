@@ -55,10 +55,7 @@
 @layer base {
   /* CSS Custom Properties */
   :root {
-    font-family: monospace;
     color: var(--color-primary);
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
   }
 
   /* CSS Reset */
@@ -71,7 +68,6 @@
   * {
     margin: 0;
     padding: 0;
-    font-family: monospace;
   }
 
   html {
@@ -84,6 +80,7 @@
 
   body {
     min-height: 100vh;
+    overflow: hidden;
   }
 
   /* Pixel-perfect rendering */
