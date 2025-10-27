@@ -99,6 +99,7 @@ export function VotingView({ postId }: VotingViewProps) {
             onClick={() => handleVote(pair?.[0] || '', pair?.[1] || '')}
             disabled={submitVote.isPending || isLoading}
             className="w-full"
+            variant="secondary"
           >
             VOTE
           </Button>
@@ -118,6 +119,7 @@ export function VotingView({ postId }: VotingViewProps) {
             onClick={() => handleVote(pair?.[1] || '', pair?.[0] || '')}
             disabled={submitVote.isPending || isLoading}
             className="w-full"
+            variant="secondary"
           >
             VOTE
           </Button>

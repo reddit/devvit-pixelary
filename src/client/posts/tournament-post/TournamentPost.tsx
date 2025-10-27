@@ -8,6 +8,7 @@ import { PixelFont } from '@components/PixelFont';
 import { Button } from '@components/Button';
 import { useToastHelpers } from '@components/ToastManager';
 import { CyclingMessage } from '@components/CyclingMessage';
+import { Shimmer } from '@components/Shimmer';
 
 type TournamentState = 'loading' | 'browsing' | 'drawing' | 'submitted';
 
@@ -134,6 +135,9 @@ export function TournamentPost() {
           </Button>
         </>
       )}
+
+      {/* Timed shimmer overlay */}
+      <Shimmer />
     </div>
   );
 }
