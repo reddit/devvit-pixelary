@@ -154,11 +154,11 @@ export function VotingView({
     const isLeftWinner = leftDrawing.commentId === winnerId;
     setWinnerSide(isLeftWinner ? 'left' : 'right');
 
-    // Stage 1: Highlight winner (300ms)
+    // Stage 1: Highlight winner (400ms)
     setAnimationState('highlighting');
     const highlightTimeout = setTimeout(() => {
       setAnimationState('exiting');
-    }, 300);
+    }, 400);
     timeoutRefs.current.push(highlightTimeout);
 
     // Submit vote after highlight starts (non-blocking)
@@ -215,10 +215,14 @@ export function VotingView({
           className={`flex flex-col gap-3 items-center ${
             animationState === 'highlighting' && winnerSide === 'left'
               ? 'animate-pixel-winner-highlight'
-              : ''
+              : animationState === 'highlighting' && winnerSide === 'right'
+                ? 'animate-pixel-loser-fadeout'
+                : ''
           } ${
             animationState === 'exiting'
-              ? 'animate-slide-out-left'
+              ? winnerSide === 'right'
+                ? 'animate-slide-out-left-loser'
+                : 'animate-slide-out-left'
               : animationState === 'entering'
                 ? 'animate-slide-in-from-left'
                 : ''
@@ -255,10 +259,14 @@ export function VotingView({
           className={`flex flex-col gap-3 items-center ${
             animationState === 'highlighting' && winnerSide === 'right'
               ? 'animate-pixel-winner-highlight'
-              : ''
+              : animationState === 'highlighting' && winnerSide === 'left'
+                ? 'animate-pixel-loser-fadeout'
+                : ''
           } ${
             animationState === 'exiting'
-              ? 'animate-slide-out-right'
+              ? winnerSide === 'left'
+                ? 'animate-slide-out-right-loser'
+                : 'animate-slide-out-right'
               : animationState === 'entering'
                 ? 'animate-slide-in-from-right'
                 : ''

@@ -122,8 +122,11 @@
     .animate-count-pulse,
     .animate-diagonal-shimmer,
     .animate-pixel-winner-highlight,
+    .animate-pixel-loser-fadeout,
     .animate-slide-out-left,
     .animate-slide-out-right,
+    .animate-slide-out-left-loser,
+    .animate-slide-out-right-loser,
     .animate-slide-in-from-left,
     .animate-slide-in-from-right {
       animation: none !important;
@@ -213,16 +216,37 @@
 
   @keyframes pixel-winner-highlight {
     0% {
-      transform: scale(1);
-      filter: drop-shadow(0 0 0px rgba(0, 0, 0, 0));
+      transform: scale(1) rotate(0deg);
+      filter: drop-shadow(0 0 0px rgba(255, 69, 0, 0));
+    }
+    25% {
+      transform: scale(1.05) rotate(-2deg);
+      filter: drop-shadow(0 0 16px rgba(255, 69, 0, 0.6));
     }
     50% {
-      transform: scale(1.15);
-      filter: drop-shadow(0 0 12px rgba(255, 69, 0, 0.8));
+      transform: scale(1.25) rotate(2deg);
+      filter: drop-shadow(0 0 24px rgba(255, 69, 0, 1));
+    }
+    75% {
+      transform: scale(1.2) rotate(-1deg);
+      filter: drop-shadow(0 0 20px rgba(255, 69, 0, 0.9));
     }
     100% {
-      transform: scale(1.1);
-      filter: drop-shadow(0 0 8px rgba(255, 69, 0, 0.6));
+      transform: scale(1.15) rotate(0deg);
+      filter: drop-shadow(0 0 16px rgba(255, 69, 0, 0.8));
+    }
+  }
+
+  @keyframes pixel-loser-fadeout {
+    0% {
+      transform: scale(1);
+      opacity: 1;
+      filter: brightness(1);
+    }
+    100% {
+      transform: scale(0.85);
+      opacity: 0.4;
+      filter: brightness(0.5);
     }
   }
 
@@ -245,6 +269,32 @@
     100% {
       transform: translateX(150%) rotate(8deg);
       opacity: 0;
+    }
+  }
+
+  @keyframes slide-out-left-loser {
+    0% {
+      transform: translateX(0) rotate(0deg) scale(0.85);
+      opacity: 0.4;
+      filter: brightness(0.5);
+    }
+    100% {
+      transform: translateX(-150%) rotate(-8deg) scale(0.7);
+      opacity: 0;
+      filter: brightness(0.3);
+    }
+  }
+
+  @keyframes slide-out-right-loser {
+    0% {
+      transform: translateX(0) rotate(0deg) scale(0.85);
+      opacity: 0.4;
+      filter: brightness(0.5);
+    }
+    100% {
+      transform: translateX(150%) rotate(8deg) scale(0.7);
+      opacity: 0;
+      filter: brightness(0.3);
     }
   }
 
@@ -310,7 +360,11 @@
   }
 
   .animate-pixel-winner-highlight {
-    animation: pixel-winner-highlight 0.3s ease-out forwards;
+    animation: pixel-winner-highlight 0.4s ease-out forwards;
+  }
+
+  .animate-pixel-loser-fadeout {
+    animation: pixel-loser-fadeout 0.4s ease-out forwards;
   }
 
   .animate-slide-out-left {
@@ -319,6 +373,14 @@
 
   .animate-slide-out-right {
     animation: slide-out-right 0.5s ease-in forwards;
+  }
+
+  .animate-slide-out-left-loser {
+    animation: slide-out-left-loser 0.5s ease-in forwards;
+  }
+
+  .animate-slide-out-right-loser {
+    animation: slide-out-right-loser 0.5s ease-in forwards;
   }
 
   .animate-slide-in-from-left {
