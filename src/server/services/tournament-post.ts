@@ -14,6 +14,7 @@ import {
 } from '../../shared/constants';
 import { incrementScore } from './progression';
 import { shuffle } from '../../shared/utils/array';
+import { normalizeWord } from '../../shared/utils/string';
 
 type TournamentDrawing = {
   commentId: T1;
@@ -33,7 +34,7 @@ type TournamentDrawing = {
  */
 export async function createTournament(word?: string): Promise<T3> {
   // Use provided word or get a random one
-  let tournamentWord = word;
+  let tournamentWord = word ? normalizeWord(word) : undefined;
   if (!tournamentWord || tournamentWord.trim() === '') {
     const words = await getRandomWords(1);
     tournamentWord = words[0]!;
@@ -44,8 +45,13 @@ export async function createTournament(word?: string): Promise<T3> {
     word: tournamentWord,
   };
 
+  const tournamentIndex = await redis.incrBy(
+    REDIS_KEYS.tournamentsCounter(),
+    1
+  );
+
   const post = await createPost(
-    `Drawing tournament - ${tournamentWord}`,
+    `Drawing tournament #${tournamentIndex} - Who can draw the best "${tournamentWord}"?!`,
     postData
   );
   if (!post) {

@@ -133,6 +133,7 @@ export async function handlePostTypeSelect(
             label: 'Word',
             placeholder: 'Using a random word',
             defaultValue: candidateWord,
+            helpText: 'Case insensitive',
           },
         ];
         break;
