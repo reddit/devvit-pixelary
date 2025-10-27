@@ -5,6 +5,7 @@ import { Button } from '@components/Button';
 import { PixelFont } from '@components/PixelFont';
 import { CyclingMessage } from '@components/CyclingMessage';
 import { IconButton } from '@components/IconButton';
+import { Collision } from '@components/Collision';
 import type { DrawingData } from '@shared/schema/drawing';
 
 interface VotingViewProps {
@@ -44,6 +45,7 @@ export function VotingView({
   const [winnerSide, setWinnerSide] = useState<'left' | 'right' | null>(null);
   const [pairsQueue, setPairsQueue] = useState<Pair[]>([]);
   const [currentPairIndex, setCurrentPairIndex] = useState(0);
+  const [showCollision, setShowCollision] = useState(false);
   const timeoutRefs = useRef<ReturnType<typeof setTimeout>[]>([]);
   const isPrefetching = useRef(false);
   const trackedViews = useRef<Set<string>>(new Set());
@@ -107,6 +109,16 @@ export function VotingView({
 
         // Start entering animation
         setAnimationState('entering');
+
+        // Trigger collision effect mid-way when cards meet
+        const collisionTimeout = setTimeout(() => {
+          setShowCollision(true);
+          // Auto-hide after effect completes
+          const hideTimeout = setTimeout(() => setShowCollision(false), 2500);
+          timeoutRefs.current.push(hideTimeout);
+        }, 250); // 50% of 500ms - midpoint of animation
+        timeoutRefs.current.push(collisionTimeout);
+
         const enterTimeout = setTimeout(() => {
           setAnimationState('idle');
           setWinnerSide(null);
@@ -173,6 +185,7 @@ export function VotingView({
 
     // Stage 1: Highlight winner (300ms)
     setAnimationState('highlighting');
+
     const highlightTimeout = setTimeout(() => {
       setAnimationState('exiting');
     }, 300);
@@ -329,6 +342,15 @@ export function VotingView({
           DRAW THE WORD
         </Button>
       </div>
+
+      {/* Collision effect overlay */}
+      {showCollision && (
+        <Collision
+          count={38}
+          spawnHeight={{ min: 0.4, max: 0.725 }}
+          explosionSpeed={400}
+        />
+      )}
     </div>
   );
 }
