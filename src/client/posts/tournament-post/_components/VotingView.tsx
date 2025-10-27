@@ -58,36 +58,7 @@ export function VotingView({
     }
   );
 
-  const submitVote = trpc.app.tournament.submitVote.useMutation({
-    onSuccess: () => {
-      // Move to next pair
-      setCurrentPairIndex((prev) => {
-        const nextIndex = prev + 1;
-
-        // Trigger entering animation
-        const startEnterTimeout = setTimeout(() => {
-          setAnimationState('entering');
-          const enterTimeout = setTimeout(() => {
-            setAnimationState('idle');
-            setWinnerSide(null);
-          }, 800);
-          timeoutRefs.current.push(enterTimeout);
-        }, 100);
-        timeoutRefs.current.push(startEnterTimeout);
-
-        // Refill queue if getting low
-        if (
-          nextIndex >= pairsQueue.length - 2 &&
-          hasEnoughSubmissions &&
-          !isPrefetching.current
-        ) {
-          void prefetchPairs();
-        }
-
-        return nextIndex;
-      });
-    },
-  });
+  const submitVote = trpc.app.tournament.submitVote.useMutation();
 
   const formatStatsLine = (submissionCount: number, playerCount: number) => {
     const drawingText = submissionCount === 1 ? 'drawing' : 'drawings';
@@ -110,6 +81,39 @@ export function VotingView({
       isPrefetching.current = false;
     }
   }, [fetchPairs]);
+
+  // Handle transition from exit to entry animation
+  useEffect(() => {
+    if (animationState === 'exiting') {
+      // Wait for exit animation to complete (500ms), then start entry
+      const transitionTimeout = setTimeout(() => {
+        // Move to next pair
+        setCurrentPairIndex((prev) => {
+          const nextIndex = prev + 1;
+
+          // Refill queue if getting low
+          if (
+            nextIndex >= pairsQueue.length - 2 &&
+            hasEnoughSubmissions &&
+            !isPrefetching.current
+          ) {
+            void prefetchPairs();
+          }
+
+          return nextIndex;
+        });
+
+        // Start entering animation
+        setAnimationState('entering');
+        const enterTimeout = setTimeout(() => {
+          setAnimationState('idle');
+          setWinnerSide(null);
+        }, 500);
+        timeoutRefs.current.push(enterTimeout);
+      }, 500); // Wait for exit slide-out to complete
+      timeoutRefs.current.push(transitionTimeout);
+    }
+  }, [animationState, pairsQueue.length, hasEnoughSubmissions, prefetchPairs]);
 
   const fetchInitialPairs = useCallback(async () => {
     if (!hasEnoughSubmissions) return;
@@ -150,19 +154,19 @@ export function VotingView({
     const isLeftWinner = leftDrawing.commentId === winnerId;
     setWinnerSide(isLeftWinner ? 'left' : 'right');
 
-    // Stage 1: Highlight winner (500ms)
+    // Stage 1: Highlight winner (300ms)
     setAnimationState('highlighting');
     const highlightTimeout = setTimeout(() => {
       setAnimationState('exiting');
-
-      // Submit vote right when exit starts
-      void submitVote.mutateAsync({
-        postId,
-        winnerCommentId: winnerId,
-        loserCommentId: loserId,
-      });
-    }, 500);
+    }, 300);
     timeoutRefs.current.push(highlightTimeout);
+
+    // Submit vote after highlight starts (non-blocking)
+    void submitVote.mutateAsync({
+      postId,
+      winnerCommentId: winnerId,
+      loserCommentId: loserId,
+    });
   };
 
   // Don't show loading if we're animating - keep old content visible
