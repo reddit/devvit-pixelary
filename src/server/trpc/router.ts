@@ -641,6 +641,65 @@ export const appRouter = t.router({
           );
           return await getCommentDrawing(input.commentId as T1);
         }),
+
+      getSubmissionsWithDrawings: t.procedure
+        .input(
+          z.object({
+            postId: z.string(),
+            sortBy: z.enum(['score', 'recency', 'mine']).optional(),
+          })
+        )
+        .query(async ({ ctx, input }) => {
+          if (!ctx.userId) throw new Error('Must be logged in');
+
+          assertT3(input.postId);
+          const { getTournamentSubmissions } = await import(
+            '../services/tournament-post'
+          );
+          const { getCommentDrawing } = await import(
+            '../services/tournament-post'
+          );
+          const { redis } = await import('@devvit/web/server');
+          const { REDIS_KEYS } = await import('../services/redis');
+
+          const sortBy = input.sortBy || 'recency';
+          const submissions = await getTournamentSubmissions(input.postId);
+
+          if (submissions.length === 0) {
+            return [];
+          }
+
+          // Get all items with scores
+          const items = await redis.zRange(
+            REDIS_KEYS.tournamentSubmissions(input.postId),
+            0,
+            -1,
+            { reverse: sortBy === 'score', by: 'score' } // Reverse for score (highest first)
+          );
+
+          const results = [];
+          for (const item of items) {
+            const commentId = item.member as T1;
+            const drawingData = await getCommentDrawing(commentId);
+
+            if (!drawingData) continue;
+
+            // Filter by userId when sortBy is 'mine'
+            if (sortBy === 'mine' && drawingData.userId !== ctx.userId) {
+              continue;
+            }
+
+            results.push({
+              commentId,
+              drawing: drawingData.drawing,
+              userId: drawingData.userId,
+              postId: drawingData.postId,
+              score: item.score,
+            });
+          }
+
+          return results;
+        }),
     }),
   }),
 });
