@@ -360,6 +360,13 @@ export const appRouter = t.router({
         };
       }),
 
+      getLevel: t.procedure.query(async ({ ctx }) => {
+        if (!ctx.userId) return { level: 1 };
+        const score = await getScore(ctx.userId);
+        const level = getUserLevel(score);
+        return { level: level.rank };
+      }),
+
       isModerator: t.procedure.query(async ({ ctx }) => {
         if (!ctx.userId || !ctx.subredditName) {
           return false;

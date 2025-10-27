@@ -50,8 +50,13 @@ export function DrawingEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // tRPC hooks
-  const { data: userProfile } = trpc.app.user.getProfile.useQuery();
+  // tRPC hooks - fetch level separately for instant access
+  const { data: levelData } = trpc.app.user.getLevel.useQuery(undefined, {
+    staleTime: 30000, // Use prefetched data
+  });
+  const { data: userProfile } = trpc.app.user.getProfile.useQuery(undefined, {
+    staleTime: 30000, // Use prefetched data
+  });
   const trackSlateActionMutation = trpc.app.slate.trackAction.useMutation();
   const trackSlateActionRef = useRef(trackSlateActionMutation.mutateAsync);
   const subredditNameRef = useRef(context.subredditName);
@@ -111,11 +116,12 @@ export function DrawingEditor({
 
   // On load effect
   useEffect(() => {
-    if (userProfile) {
-      const extraTime = getExtraDrawingTime(userProfile.level);
+    const level = levelData?.level || userProfile?.level;
+    if (level) {
+      const extraTime = getExtraDrawingTime(level);
       setTime(DRAWING_DURATION + extraTime);
     }
-  }, [userProfile]);
+  }, [levelData?.level, userProfile?.level]);
 
   const handleOnComplete = useCallback((drawingData: DrawingData) => {
     setDrawing(drawingData);
@@ -142,6 +148,9 @@ export function DrawingEditor({
     }
   }, [mode, tournamentWord, tournamentPostId, candidate]);
 
+  // Use prefetched level data for instant access, fallback to profile
+  const userLevel = levelData?.level || userProfile?.level || 1;
+
   return (
     <>
       {/* Render current step */}
@@ -153,7 +162,7 @@ export function DrawingEditor({
           isLoading={isSlateLoading}
           refreshCandidates={refreshCandidates}
           trackSlateAction={trackSlateAction}
-          userLevel={userProfile?.level || 1}
+          userLevel={userLevel}
         />
       )}
       {step === 'draw' && candidate && (
@@ -163,7 +172,7 @@ export function DrawingEditor({
           onComplete={handleOnComplete}
           slateId={slateId}
           trackSlateAction={trackSlateAction}
-          userLevel={userProfile?.level || 1}
+          userLevel={userLevel}
         />
       )}
       {step === 'review' && candidate && (
