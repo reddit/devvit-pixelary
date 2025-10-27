@@ -154,11 +154,11 @@ export function VotingView({
     const isLeftWinner = leftDrawing.commentId === winnerId;
     setWinnerSide(isLeftWinner ? 'left' : 'right');
 
-    // Stage 1: Highlight winner (400ms)
+    // Stage 1: Highlight winner (300ms)
     setAnimationState('highlighting');
     const highlightTimeout = setTimeout(() => {
       setAnimationState('exiting');
-    }, 400);
+    }, 300);
     timeoutRefs.current.push(highlightTimeout);
 
     // Submit vote after highlight starts (non-blocking)
