@@ -1,4 +1,5 @@
 import type { Request, Response } from 'express';
+import { getRandomWords } from '../services/dictionary';
 
 /**
  * Form handler for post type selection
@@ -26,6 +27,7 @@ export async function handlePostTypeSelect(
     // Show post-specific form based on selected type
     let formName: string;
     let formTitle: string;
+    let formDescription: string | undefined;
     let formFields: Array<{
       type: string;
       name: string;
@@ -116,21 +118,21 @@ export async function handlePostTypeSelect(
         break;
       case 'tournament':
         formName = 'tournamentPostForm';
-        formTitle = 'Create Tournament Post';
+        formTitle = 'Create drawing tournament';
+        formDescription =
+          'Start a community drawing tournament where players compete to draw the best drawing for a given word. You get to pick the word, or leave it blank for a random one.';
+
+        // Generate a candidate word for the default value
+        const candidateWords = await getRandomWords(1);
+        const candidateWord = candidateWords[0] || 'Meatloaf';
+
         formFields = [
           {
             type: 'string',
-            name: 'date',
-            label: 'Date',
-            placeholder: 'YYYY-MM-DD',
-            defaultValue: new Date().toISOString().split('T')[0] as string,
-            required: true,
-          },
-          {
-            type: 'string',
             name: 'word',
-            label: 'Word (optional, random if empty)',
-            placeholder: 'Leave empty for random',
+            label: 'Word',
+            placeholder: 'Using a random word',
+            defaultValue: candidateWord,
           },
         ];
         break;
@@ -147,8 +149,9 @@ export async function handlePostTypeSelect(
         name: formName,
         form: {
           title: formTitle,
+          ...(formDescription && { description: formDescription }),
           fields: formFields,
-          acceptLabel: 'Create Post',
+          acceptLabel: 'Create',
         },
       },
     });

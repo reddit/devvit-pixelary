@@ -7,8 +7,18 @@ export async function handleTournamentPostSubmit(
   res: Response
 ): Promise<void> {
   try {
-    // Create tournament post
-    const postId = await createTournament();
+    console.log('Tournament post submit request received:', {
+      body: req.body,
+      subredditName: context.subredditName,
+    });
+
+    // Get word from request body (may be empty string)
+    const word = req.body.word || undefined;
+
+    // Create tournament post with optional word
+    const postId = await createTournament(word);
+
+    console.log('Tournament post created successfully:', postId);
 
     const postUrl = `https://reddit.com/r/${context.subredditName}/comments/${postId}`;
 

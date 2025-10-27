@@ -28,18 +28,26 @@ type TournamentDrawing = {
 
 /**
  * Create a new tournament post
+ * @param word - Optional word for the tournament. If not provided, a random word will be selected.
  * @returns The created post ID
  */
-export async function createTournament(): Promise<T3> {
-  const words = await getRandomWords(1);
-  const word = words[0]!;
+export async function createTournament(word?: string): Promise<T3> {
+  // Use provided word or get a random one
+  let tournamentWord = word;
+  if (!tournamentWord || tournamentWord.trim() === '') {
+    const words = await getRandomWords(1);
+    tournamentWord = words[0]!;
+  }
 
   const postData: TournamentPostData = {
     type: 'tournament',
-    word,
+    word: tournamentWord,
   };
 
-  const post = await createPost(`Drawing tournament - ${word}`, postData);
+  const post = await createPost(
+    `Drawing tournament - ${tournamentWord}`,
+    postData
+  );
   if (!post) {
     throw new Error('Failed to create tournament post');
   }
