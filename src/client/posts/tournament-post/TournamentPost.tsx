@@ -73,26 +73,25 @@ export function TournamentPost() {
   }
 
   // Show gallery/voting UI
+  if (viewMode === 'gallery') {
+    return (
+      <GalleryView
+        postId={tournamentData?.postId || ''}
+        onToggleView={() => setViewMode('voting')}
+      />
+    );
+  }
+
   return (
     <div className="absolute flex flex-col gap-6 items-center justify-center h-full w-full p-6">
-      {/* Conditional content */}
-      {viewMode === 'voting' ? (
-        <VotingView
-          postId={tournamentData?.postId || ''}
-          stats={stats}
-          onDraw={handleDrawSomething}
-          hasEnoughSubmissions={(stats?.submissionCount || 0) >= 2}
-          tournamentData={tournamentData}
-          onToggleView={() => setViewMode('gallery')}
-        />
-      ) : (
-        <GalleryView
-          postId={tournamentData?.postId || ''}
-          stats={stats}
-          onDraw={handleDrawSomething}
-          onToggleView={() => setViewMode('voting')}
-        />
-      )}
+      <VotingView
+        postId={tournamentData?.postId || ''}
+        stats={stats}
+        onDraw={handleDrawSomething}
+        hasEnoughSubmissions={(stats?.submissionCount || 0) >= 2}
+        tournamentData={tournamentData}
+        onToggleView={() => setViewMode('gallery')}
+      />
 
       {/* Timed shimmer overlay */}
       <Shimmer />

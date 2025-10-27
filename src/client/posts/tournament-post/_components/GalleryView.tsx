@@ -1,26 +1,14 @@
 import { trpc } from '@client/trpc/client';
 import { PaginatedDrawingGrid } from '@components/PaginatedDrawingGrid';
-import { Button } from '@components/Button';
 import { PixelFont } from '@components/PixelFont';
+import { IconButton } from '@components/IconButton';
 
 interface GalleryViewProps {
   postId: string;
-  stats:
-    | {
-        submissionCount: number;
-        playerCount: number;
-      }
-    | undefined;
-  onDraw: () => void;
   onToggleView: () => void;
 }
 
-export function GalleryView({
-  postId,
-  stats,
-  onDraw,
-  onToggleView,
-}: GalleryViewProps) {
+export function GalleryView({ postId, onToggleView }: GalleryViewProps) {
   const {
     data: submissions,
     isLoading,
@@ -43,13 +31,13 @@ export function GalleryView({
     })) || [];
 
   return (
-    <div className="flex flex-col gap-6 items-center w-full">
-      {/* Header with view toggle */}
-      <div className="absolute top-6 right-6">
-        <Button onClick={onToggleView} size="medium" variant="secondary">
-          VOTING
-        </Button>
-      </div>
+    <main className="absolute inset-0 flex flex-col p-4 gap-4">
+      {/* Header */}
+      <header className="shrink-0 w-full flex flex-row items-center justify-between">
+        <PixelFont scale={2.5}>Submissions</PixelFont>
+
+        <IconButton onClick={onToggleView} symbol="X" />
+      </header>
 
       {/* Error state */}
       {error && (
@@ -76,12 +64,6 @@ export function GalleryView({
           <PixelFont className="text-tertiary">No drawings yet</PixelFont>
         </div>
       )}
-
-      {stats !== undefined && (
-        <Button onClick={onDraw} size="large">
-          I CAN DO BETTER
-        </Button>
-      )}
-    </div>
+    </main>
   );
 }

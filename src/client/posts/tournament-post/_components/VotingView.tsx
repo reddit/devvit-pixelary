@@ -4,6 +4,7 @@ import { Drawing } from '@components/Drawing';
 import { Button } from '@components/Button';
 import { PixelFont } from '@components/PixelFont';
 import { CyclingMessage } from '@components/CyclingMessage';
+import { IconButton } from '@components/IconButton';
 import type { DrawingData } from '@shared/schema/drawing';
 
 interface VotingViewProps {
@@ -183,11 +184,9 @@ export function VotingView({
 
   return (
     <div className="flex flex-col gap-6 items-center w-full max-w-2xl">
-      {/* Header with view toggle */}
-      <div className="absolute top-6 right-6">
-        <Button onClick={onToggleView} size="medium" variant="secondary">
-          GALLERY
-        </Button>
+      {/* Gallery toggle button */}
+      <div className="absolute top-4 right-4">
+        <IconButton onClick={onToggleView} symbol="grid" />
       </div>
 
       <div className="flex flex-col gap-2 items-center justify-center">
@@ -296,9 +295,12 @@ export function VotingView({
           : 'No drawings yet'}
       </PixelFont>
 
-      <Button onClick={onDraw} size="large">
-        {hasEnoughSubmissions ? 'I CAN DO BETTER' : 'DRAW THE WORD'}
-      </Button>
+      {/* Action bar */}
+      <div className="flex gap-3 items-center">
+        <Button onClick={onDraw} size="large">
+          {hasEnoughSubmissions ? 'I CAN DO BETTER' : 'DRAW THE WORD'}
+        </Button>
+      </div>
     </div>
   );
 }
