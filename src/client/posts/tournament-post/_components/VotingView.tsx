@@ -175,11 +175,18 @@ export function VotingView({
   // Show error message if fetching pairs failed
   if (pairsError) {
     return (
-      <div className="flex flex-col gap-4 items-center">
-        <PixelFont className="text-red-500">
-          {pairsError.message || 'Failed to load submissions'}
-        </PixelFont>
-        <Button onClick={() => void fetchPairs()} disabled={isFetchingPairs}>
+      <div className="absolute inset-0 flex flex-col items-center justify-center gap-8 w-full h-full">
+        <div className="flex flex-col items-center justify-center gap-2">
+          <PixelFont scale={3}>Error</PixelFont>
+          <PixelFont className="text-secondary">
+            {pairsError.message || 'Failed to load submissions'}
+          </PixelFont>
+        </div>
+        <Button
+          size="large"
+          onClick={() => void fetchPairs()}
+          disabled={isFetchingPairs}
+        >
           Retry
         </Button>
       </div>

@@ -1,7 +1,25 @@
+import { useState } from 'react';
 import { trpc } from '@client/trpc/client';
 import { PaginatedDrawingGrid } from '@components/PaginatedDrawingGrid';
 import { PixelFont } from '@components/PixelFont';
 import { IconButton } from '@components/IconButton';
+import { Lightbox } from '@components/Lightbox';
+import type { DrawingData } from '@shared/schema/drawing';
+
+function TournamentLightboxContent({
+  rating,
+  votes,
+}: {
+  rating: number;
+  votes: number;
+}) {
+  return (
+    <div className="flex flex-col gap-1 items-center">
+      <PixelFont scale={1.5}>{`${votes} picks`}</PixelFont>
+      <PixelFont scale={1.5}>{`${rating} rating`}</PixelFont>
+    </div>
+  );
+}
 
 interface GalleryViewProps {
   postId: string;
@@ -9,6 +27,13 @@ interface GalleryViewProps {
 }
 
 export function GalleryView({ postId, onToggleView }: GalleryViewProps) {
+  const [selectedDrawing, setSelectedDrawing] = useState<{
+    drawing: DrawingData;
+    author: string;
+    rating: number;
+    votes: number;
+  } | null>(null);
+
   const {
     data: submissions,
     isLoading,
@@ -18,9 +43,16 @@ export function GalleryView({ postId, onToggleView }: GalleryViewProps) {
     { enabled: !!postId }
   );
 
-  const handleDrawingClick = (commentId: string) => {
-    // Future: Show lightbox or detail view
-    console.log('Drawing clicked:', commentId);
+  const handleDrawingClick = (postId: string) => {
+    const submission = submissions?.find((sub) => sub.commentId === postId);
+    if (submission) {
+      setSelectedDrawing({
+        drawing: submission.drawing,
+        author: submission.username,
+        rating: submission.rating,
+        votes: submission.votes,
+      });
+    }
   };
 
   const drawings =
@@ -62,6 +94,21 @@ export function GalleryView({ postId, onToggleView }: GalleryViewProps) {
         <div className="flex flex-col gap-2 items-center w-full">
           <PixelFont className="text-tertiary">No drawings yet</PixelFont>
         </div>
+      )}
+
+      {/* Lightbox */}
+      {selectedDrawing && (
+        <Lightbox
+          isOpen={selectedDrawing !== null}
+          onClose={() => setSelectedDrawing(null)}
+          drawing={selectedDrawing.drawing}
+          author={selectedDrawing.author}
+        >
+          <TournamentLightboxContent
+            rating={selectedDrawing.rating}
+            votes={selectedDrawing.votes}
+          />
+        </Lightbox>
       )}
     </main>
   );

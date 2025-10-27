@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { Drawing } from './Drawing';
 import { DrawingData } from '@shared/schema/drawing';
@@ -9,16 +9,16 @@ interface LightboxProps {
   isOpen: boolean;
   onClose: () => void;
   drawing: DrawingData;
-  word?: string | undefined;
   author?: string | undefined;
+  children?: ReactNode;
 }
 
 export function Lightbox({
   isOpen,
   onClose,
   drawing,
-  word,
   author,
+  children,
 }: LightboxProps) {
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -48,12 +48,13 @@ export function Lightbox({
       {/* Drawing container */}
       <Drawing data={drawing} size={288} />
 
-      {word !== undefined && author !== undefined && (
-        <div className="flex flex-col items-center justify-center gap-2 text-white">
-          <PixelFont scale={3}>{`${word}`}</PixelFont>
-          <PixelFont scale={2}>{`By u/${author}`}</PixelFont>
-        </div>
-      )}
+      <div className="flex flex-col items-center justify-center gap-2 text-white">
+        {/* Author (built-in) */}
+        {author && <PixelFont scale={2}>{`By u/${author}`}</PixelFont>}
+
+        {/* Custom metadata */}
+        {children}
+      </div>
 
       {/* Close button */}
       <button

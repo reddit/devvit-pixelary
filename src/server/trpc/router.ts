@@ -653,7 +653,7 @@ export const appRouter = t.router({
             '../services/tournament-post'
           );
           const { redis } = await import('@devvit/web/server');
-          const { REDIS_KEYS } = await import('../services/redis');
+          const { REDIS_KEYS, getUsername } = await import('../services/redis');
 
           // Get all submissions ordered by Elo rating (highest first)
           const queryKey = REDIS_KEYS.tournamentEntries(input.postId);
@@ -676,14 +676,19 @@ export const appRouter = t.router({
               continue;
             }
 
+            // Resolve username
+            const username = await getUsername(drawingData.userId);
+
             // Item.score is the Elo rating
             results.push({
               commentId,
               drawing: drawingData.drawing,
               userId: drawingData.userId,
+              username,
               postId: drawingData.postId,
               score: item.score,
               rating: item.score,
+              votes: drawingData.votes,
             });
           }
 

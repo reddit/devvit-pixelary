@@ -163,9 +163,10 @@ export function ResultsView({
         isOpen={isLightboxOpen}
         onClose={() => setIsLightboxOpen(false)}
         drawing={drawing}
-        word={word}
         author={authorUsername}
-      />
+      >
+        <PixelFont scale={3}>{word}</PixelFont>
+      </Lightbox>
     </main>
   );
 }
