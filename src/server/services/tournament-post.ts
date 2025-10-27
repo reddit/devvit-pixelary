@@ -277,13 +277,27 @@ export async function getDrawingPairs(
 
     // Pick random indices from shuffled array
     const firstIdx = Math.floor(Math.random() * shuffled.length);
-    const secondIdx = Math.floor(Math.random() * shuffled.length);
+    let secondIdx = Math.floor(Math.random() * shuffled.length);
+
+    // Ensure we never pick the same index twice for a pair
+    while (secondIdx === firstIdx && shuffled.length > 1) {
+      secondIdx = Math.floor(Math.random() * shuffled.length);
+    }
 
     const firstId = shuffled[firstIdx];
     const secondId = shuffled[secondIdx];
 
     if (!firstId || !secondId) {
       break;
+    }
+
+    // Check if this pair is identical to the previous pair
+    const lastPair = pairIds[pairIds.length - 1];
+    const isIdenticalToLast =
+      lastPair && lastPair[0] === firstId && lastPair[1] === secondId;
+
+    if (isIdenticalToLast) {
+      continue; // Skip this pair and try again
     }
 
     pairIds.push([firstId, secondId]);
