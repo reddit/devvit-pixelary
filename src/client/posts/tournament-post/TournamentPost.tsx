@@ -73,28 +73,32 @@ export function TournamentPost() {
   }
 
   // Show gallery/voting UI
-  if (viewMode === 'gallery') {
-    return (
-      <GalleryView
-        postId={tournamentData?.postId || ''}
-        onToggleView={() => setViewMode('voting')}
-      />
-    );
-  }
-
   return (
-    <div className="absolute flex flex-col gap-6 items-center justify-center h-full w-full p-6">
-      <VotingView
-        postId={tournamentData?.postId || ''}
-        stats={stats}
-        onDraw={handleDrawSomething}
-        hasEnoughSubmissions={(stats?.submissionCount || 0) >= 2}
-        tournamentData={tournamentData}
-        onToggleView={() => setViewMode('gallery')}
-      />
+    <>
+      {/* Voting view - preserve state when hidden */}
+      <div className={viewMode === 'voting' ? 'absolute inset-0' : 'hidden'}>
+        <div className="absolute flex flex-col gap-6 items-center justify-center h-full w-full p-6">
+          <VotingView
+            postId={tournamentData?.postId || ''}
+            stats={stats}
+            onDraw={handleDrawSomething}
+            hasEnoughSubmissions={(stats?.submissionCount || 0) >= 2}
+            tournamentData={tournamentData}
+            onToggleView={() => setViewMode('gallery')}
+          />
 
-      {/* Timed shimmer overlay */}
-      <Shimmer />
-    </div>
+          {/* Timed shimmer overlay */}
+          <Shimmer />
+        </div>
+      </div>
+
+      {/* Gallery view - preserve state when hidden */}
+      <div className={viewMode === 'gallery' ? 'absolute inset-0' : 'hidden'}>
+        <GalleryView
+          postId={tournamentData?.postId || ''}
+          onToggleView={() => setViewMode('voting')}
+        />
+      </div>
+    </>
   );
 }
