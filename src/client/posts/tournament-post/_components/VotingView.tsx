@@ -111,6 +111,7 @@ export function VotingView({
   }, [fetchPairs]);
 
   const fetchInitialPairs = useCallback(async () => {
+    if (!hasEnoughSubmissions) return;
     try {
       const result = await fetchPairs();
       if (result.data) {
@@ -119,17 +120,19 @@ export function VotingView({
     } catch (error) {
       console.error('Failed to fetch pairs:', error);
     }
-  }, [fetchPairs]);
+  }, [fetchPairs, hasEnoughSubmissions]);
 
   // Get current pair from queue
   const currentPair = pairsQueue[currentPairIndex];
   const [leftDrawing, rightDrawing] = currentPair || [];
 
-  // Fetch initial pairs
+  // Fetch initial pairs only when there are enough submissions
   useEffect(() => {
-    void fetchInitialPairs();
+    if (hasEnoughSubmissions) {
+      void fetchInitialPairs();
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [hasEnoughSubmissions]);
 
   // Cleanup timeouts on unmount
   useEffect(() => {

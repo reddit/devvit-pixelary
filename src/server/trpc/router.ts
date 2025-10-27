@@ -560,10 +560,11 @@ export const appRouter = t.router({
             '../services/tournament-post'
           );
 
-          // Context is used inside the function, so we don't need to pass parameters
+          assertT3(input.postId);
           const commentId = await submitTournamentEntry(
             input.drawing,
-            input.imageData
+            input.imageData,
+            input.postId
           );
 
           return { success: true, commentId };
@@ -655,58 +656,25 @@ export const appRouter = t.router({
           const { REDIS_KEYS } = await import('../services/redis');
 
           // Get all submissions ordered by Elo rating (highest first)
-          const rankedSubmissions = await redis.zRange(
-            REDIS_KEYS.tournamentEntries(input.postId),
-            0,
-            -1,
-            {
-              reverse: true,
-              by: 'score',
-            }
-          );
-          console.log(
-            'getSubmissionsWithDrawings: Ranked submissions from Redis:',
-            rankedSubmissions.length,
-            'items',
-            rankedSubmissions.map((item) => ({
-              member: item.member,
-              score: item.score,
-            }))
-          );
+          const queryKey = REDIS_KEYS.tournamentEntries(input.postId);
+
+          const rankedSubmissions = await redis.zRange(queryKey, 0, -1, {
+            reverse: true,
+            by: 'score',
+          });
 
           if (rankedSubmissions.length === 0) {
-            console.log('getSubmissionsWithDrawings: No submissions in Redis');
             return [];
           }
 
           const results = [];
           for (const item of rankedSubmissions) {
             const commentId = item.member as T1;
-            console.log(
-              'getSubmissionsWithDrawings: Fetching drawing for commentId:',
-              commentId
-            );
             const drawingData = await getTournamentEntry(commentId);
 
             if (!drawingData) {
-              console.log(
-                'getSubmissionsWithDrawings: No drawing data for commentId:',
-                commentId
-              );
               continue;
             }
-
-            console.log(
-              'getSubmissionsWithDrawings: Got drawing data:',
-              'drawing exists:',
-              !!drawingData.drawing,
-              'has colors:',
-              !!drawingData.drawing?.colors,
-              'has data:',
-              !!drawingData.drawing?.data,
-              'size:',
-              drawingData.drawing?.size
-            );
 
             // Item.score is the Elo rating
             results.push({
@@ -719,11 +687,6 @@ export const appRouter = t.router({
             });
           }
 
-          console.log(
-            'getSubmissionsWithDrawings: Returning',
-            results.length,
-            'results'
-          );
           return results;
         }),
     }),

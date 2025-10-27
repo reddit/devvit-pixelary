@@ -35,27 +35,6 @@ export function GalleryView({
     console.log('Drawing clicked:', commentId);
   };
 
-  // Debug: Log postId and submissions
-  console.log(
-    'GalleryView postId:',
-    postId,
-    'error:',
-    error,
-    'isLoading:',
-    isLoading
-  );
-  console.log('GalleryView query input:', { postId });
-
-  // Debug: Log submissions to console
-  if (submissions) {
-    console.log('Submissions received:', submissions.length, submissions);
-    if (submissions.length > 0) {
-      console.log('First submission:', submissions[0]);
-      console.log('First submission has drawing:', !!submissions[0]?.drawing);
-      console.log('First submission drawing data:', submissions[0]?.drawing);
-    }
-  }
-
   const drawings =
     submissions
       ?.filter((sub) => sub.drawing)
@@ -64,8 +43,6 @@ export function GalleryView({
         drawing: sub.drawing,
         rating: sub.rating,
       })) || [];
-
-  console.log('Drawings mapped:', drawings.length, drawings);
 
   return (
     <div className="flex flex-col gap-6 items-center w-full">

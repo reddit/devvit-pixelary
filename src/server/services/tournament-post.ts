@@ -120,12 +120,15 @@ export async function getTournamentEntries(postId: T3): Promise<T1[]> {
  * Submit a drawing submission as a comment to a tournament post
  * @param drawing - The drawing data
  * @param imageData - Base64 encoded image data
+ * @param tournamentPostId - The tournament post ID (optional, falls back to context.postId)
  * @returns The `commentId` of the submitted entry
  */
 export async function submitTournamentEntry(
   drawing: DrawingData,
-  imageData: string
+  imageData: string,
+  tournamentPostId?: T3
 ): Promise<T1> {
+  const postId = tournamentPostId || context.postId!;
   // Upload drawing image to Reddit's media service
   let response: MediaAsset;
   try {
@@ -142,29 +145,34 @@ export async function submitTournamentEntry(
   // Submit comment
   const comment = await reddit.submitComment({
     text: `[My submission](${response.mediaUrl})`,
-    id: context.postId!,
+    id: postId,
     runAs: 'USER',
   });
   if (!comment) {
     throw new Error('Failed to submit comment');
   }
 
+  const entryKey = REDIS_KEYS.tournamentEntry(comment.id);
+  const entryData = {
+    postId: postId,
+    userId: context.userId!,
+    commentId: comment.id,
+    drawing: JSON.stringify(drawing),
+    mediaUrl: response.mediaUrl,
+    mediaId: response.mediaId,
+    votes: '0',
+  };
+
+  const sortedSetKey = REDIS_KEYS.tournamentEntries(postId);
+
   await Promise.all([
     // Add entry to tournament entries sorted set
-    redis.zAdd(REDIS_KEYS.tournamentEntries(context.postId!), {
+    redis.zAdd(sortedSetKey, {
       member: comment.id,
       score: TOURNAMENT_ELO_INITIAL_RATING,
     }),
     // Store entry data in tournament entry hash
-    redis.hSet(REDIS_KEYS.tournamentEntry(comment.id), {
-      postId: context.postId!,
-      userId: context.userId!,
-      commentId: comment.id,
-      drawing: JSON.stringify(drawing),
-      mediaUrl: response.mediaUrl,
-      mediaId: response.mediaId,
-      votes: '0',
-    }),
+    redis.hSet(entryKey, entryData),
   ]);
 
   return comment.id;
@@ -325,6 +333,7 @@ export async function getTournamentEntry(
 ): Promise<TournamentDrawing | undefined> {
   const key = REDIS_KEYS.tournamentEntry(commentId);
   const data = await redis.hGetAll(key);
+
   if (
     !data.drawing ||
     !data.userId ||
