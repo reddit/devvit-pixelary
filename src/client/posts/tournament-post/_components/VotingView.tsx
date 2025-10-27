@@ -186,7 +186,7 @@ export function VotingView({
     <div className="flex flex-col gap-6 items-center w-full">
       {/* Gallery toggle button */}
       <div className="absolute top-4 right-4">
-        <IconButton onClick={onToggleView} symbol="grid" />
+        <IconButton onClick={onToggleView} symbol="menu" />
       </div>
 
       <div className="flex flex-col gap-2 items-center justify-center">

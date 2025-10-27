@@ -34,8 +34,7 @@ export function GalleryView({ postId, onToggleView }: GalleryViewProps) {
     <main className="absolute inset-0 flex flex-col p-4 gap-4">
       {/* Header */}
       <header className="shrink-0 w-full flex flex-row items-center justify-between">
-        <PixelFont scale={2.5}>Submissions</PixelFont>
-
+        <PixelFont scale={2.5}>All drawings</PixelFont>
         <IconButton onClick={onToggleView} symbol="X" />
       </header>
 

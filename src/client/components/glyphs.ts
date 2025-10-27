@@ -341,11 +341,10 @@ const glyphData = {
     'width': 6,
     'height': 7,
   },
-  'grid': {
-    'path':
-      'M2 0H0V2H2V0ZM4 0H6V2H4V0ZM2 2H0V4H2V2ZM4 2H6V4H4V2ZM2 4H0V6H2V4ZM4 4H6V6H4V4Z',
+  'menu': {
+    'path': 'M6 6H0V5H6V6ZM6 4H0V3H6V4ZM6 2H0V1H6V2Z',
     'width': 6,
-    'height': 6,
+    'height': 7,
   },
 } as const;
 
