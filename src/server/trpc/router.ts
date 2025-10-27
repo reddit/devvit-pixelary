@@ -660,7 +660,7 @@ export const appRouter = t.router({
 
           const rankedSubmissions = await redis.zRange(queryKey, 0, -1, {
             reverse: true,
-            by: 'score',
+            by: 'rank',
           });
 
           if (rankedSubmissions.length === 0) {

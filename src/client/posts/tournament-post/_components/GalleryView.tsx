@@ -36,13 +36,11 @@ export function GalleryView({
   };
 
   const drawings =
-    submissions
-      ?.filter((sub) => sub.drawing)
-      .map((sub) => ({
-        postId: sub.commentId,
-        drawing: sub.drawing,
-        rating: sub.rating,
-      })) || [];
+    submissions?.map((sub) => ({
+      postId: sub.commentId,
+      drawing: sub.drawing,
+      rating: sub.rating,
+    })) || [];
 
   return (
     <div className="flex flex-col gap-6 items-center w-full">
