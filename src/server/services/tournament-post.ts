@@ -300,6 +300,14 @@ export async function getDrawingPairs(
       continue; // Skip this pair and try again
     }
 
+    // Check if any item is in the same position as the previous pair
+    const isSamePosition =
+      lastPair && (lastPair[0] === firstId || lastPair[1] === secondId);
+
+    if (isSamePosition) {
+      continue; // Skip this pair and try again
+    }
+
     pairIds.push([firstId, secondId]);
   }
 
