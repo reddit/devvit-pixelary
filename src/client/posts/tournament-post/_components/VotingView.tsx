@@ -167,18 +167,6 @@ export function VotingView({
   // Don't show loading if we're animating - keep old content visible
   const isLoading = animationState === 'idle' && !leftDrawing && !rightDrawing;
 
-  // Show "not enough submissions" state
-  if (!hasEnoughSubmissions) {
-    return (
-      <div className="flex flex-col gap-4 items-center">
-        <PixelFont>Not enough submissions yet</PixelFont>
-        <Button onClick={onDraw} size="large">
-          DRAW THE WORD
-        </Button>
-      </div>
-    );
-  }
-
   // Show error message if fetching pairs failed
   if (pairsError) {
     return (
@@ -246,7 +234,10 @@ export function VotingView({
               )
             }
             disabled={
-              submitVote.isPending || isLoading || animationState !== 'idle'
+              submitVote.isPending ||
+              isLoading ||
+              animationState !== 'idle' ||
+              !hasEnoughSubmissions
             }
             className="w-full"
             variant="secondary"
@@ -286,7 +277,10 @@ export function VotingView({
               )
             }
             disabled={
-              submitVote.isPending || isLoading || animationState !== 'idle'
+              submitVote.isPending ||
+              isLoading ||
+              animationState !== 'idle' ||
+              !hasEnoughSubmissions
             }
             className="w-full"
             variant="secondary"
@@ -296,16 +290,15 @@ export function VotingView({
         </div>
       </div>
 
-      {stats !== undefined && (
-        <>
-          <PixelFont scale={2} className="text-tertiary">
-            {formatStatsLine(stats.submissionCount, stats.playerCount)}
-          </PixelFont>
-          <Button onClick={onDraw} size="large">
-            I CAN DO BETTER
-          </Button>
-        </>
-      )}
+      <PixelFont scale={2} className="text-tertiary">
+        {stats && hasEnoughSubmissions
+          ? formatStatsLine(stats.submissionCount, stats.playerCount)
+          : 'No drawings yet'}
+      </PixelFont>
+
+      <Button onClick={onDraw} size="large">
+        {hasEnoughSubmissions ? 'I CAN DO BETTER' : 'DRAW THE WORD'}
+      </Button>
     </div>
   );
 }
