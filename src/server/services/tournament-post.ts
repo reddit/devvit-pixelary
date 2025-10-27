@@ -90,7 +90,10 @@ export async function getTournament(postId: T3): Promise<{
 /**
  * Get the Elo rating for a drawing
  */
-async function getEntryRating(postId: T3, commentId: T1): Promise<number> {
+export async function getEntryRating(
+  postId: T3,
+  commentId: T1
+): Promise<number> {
   const rating = await redis.zScore(
     REDIS_KEYS.tournamentEntries(postId),
     commentId
@@ -161,6 +164,7 @@ export async function submitTournamentEntry(
       drawing: JSON.stringify(drawing),
       mediaUrl: response.mediaUrl,
       mediaId: response.mediaId,
+      votes: '0',
     }),
   ]);
 
@@ -191,6 +195,7 @@ export async function tournamentVote(winnerId: T1, loserId: T1): Promise<void> {
       redis.zIncrBy(REDIS_KEYS.tournamentPlayers(postId), userId, 1),
       // Update vote count
       redis.hIncrBy(REDIS_KEYS.tournament(postId), 'votes', 1),
+      redis.hIncrBy(REDIS_KEYS.tournamentEntry(winnerId), 'votes', 1),
     ]);
 
   // Calculate and apply Elo rating changes
@@ -325,7 +330,6 @@ export async function getTournamentEntry(
     !data.drawing ||
     !data.userId ||
     !data.postId ||
-    !data.votes ||
     !data.mediaUrl ||
     !data.mediaId
   ) {

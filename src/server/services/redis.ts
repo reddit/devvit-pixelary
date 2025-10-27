@@ -72,7 +72,7 @@ export const REDIS_KEYS = {
   // Tournament
   tournament: (postId: T3) => `tournament:${postId}`,
   tournaments: () => `tournaments:all`,
-  tournamentEntries: (postId: T3) => `tournament:entries:${postId}`,
+  tournamentEntries: (postId: T3) => `tournament:entries:${postId}`, // Sorted set with ratings as scores
   tournamentEntry: (commentId: T1) => `tournament:entry:${commentId}`,
   tournamentPlayers: (postId: T3) => `tournament:players:${postId}`,
 };

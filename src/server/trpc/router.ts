@@ -556,14 +556,12 @@ export const appRouter = t.router({
         .mutation(async ({ ctx, input }) => {
           if (!ctx.userId) throw new Error('Must be logged in');
 
-          const { submitTournamentDrawing } = await import(
+          const { submitTournamentEntry } = await import(
             '../services/tournament-post'
           );
 
-          assertT3(input.postId);
-          const commentId = await submitTournamentDrawing(
-            input.postId,
-            ctx.userId,
+          // Context is used inside the function, so we don't need to pass parameters
+          const commentId = await submitTournamentEntry(
             input.drawing,
             input.imageData
           );
@@ -575,10 +573,10 @@ export const appRouter = t.router({
         .input(z.object({ postId: z.string() }))
         .query(async ({ input }) => {
           assertT3(input.postId);
-          const { getTournamentSubmissions } = await import(
+          const { getTournamentEntries } = await import(
             '../services/tournament-post'
           );
-          return await getTournamentSubmissions(input.postId);
+          return await getTournamentEntries(input.postId);
         }),
 
       getRandomPair: t.procedure
@@ -615,26 +613,16 @@ export const appRouter = t.router({
         .mutation(async ({ ctx, input }) => {
           if (!ctx.userId) throw new Error('Must be logged in');
 
-          assertT3(input.postId);
           const winnerId = input.winnerCommentId as T1;
           const loserId = input.loserCommentId as T1;
 
-          const { recordVote } = await import('../services/tournament-post');
-          await recordVote(input.postId, ctx.userId, winnerId, loserId);
-
-          return { success: true };
-        }),
-
-      getUserSubmission: t.procedure
-        .input(z.object({ postId: z.string() }))
-        .query(async ({ ctx, input }) => {
-          if (!ctx.userId) return null;
-
-          assertT3(input.postId);
-          const { getUserSubmission } = await import(
+          const { tournamentVote } = await import(
             '../services/tournament-post'
           );
-          return await getUserSubmission(input.postId, ctx.userId);
+          // Context is used inside the function
+          await tournamentVote(winnerId, loserId);
+
+          return { success: true };
         }),
 
       getStats: t.procedure
@@ -648,10 +636,10 @@ export const appRouter = t.router({
       getCommentDrawing: t.procedure
         .input(z.object({ commentId: z.string() }))
         .query(async ({ input }) => {
-          const { getCommentDrawing } = await import(
+          const { getTournamentEntry } = await import(
             '../services/tournament-post'
           );
-          return await getCommentDrawing(input.commentId as T1);
+          return await getTournamentEntry(input.commentId as T1);
         }),
 
       getSubmissionsWithDrawings: t.procedure
@@ -660,7 +648,7 @@ export const appRouter = t.router({
           if (!ctx.userId) throw new Error('Must be logged in');
 
           assertT3(input.postId);
-          const { getCommentDrawing } = await import(
+          const { getTournamentEntry } = await import(
             '../services/tournament-post'
           );
           const { redis } = await import('@devvit/web/server');
@@ -668,7 +656,7 @@ export const appRouter = t.router({
 
           // Get all submissions ordered by Elo rating (highest first)
           const rankedSubmissions = await redis.zRange(
-            REDIS_KEYS.tournamentRatings(input.postId),
+            REDIS_KEYS.tournamentEntries(input.postId),
             0,
             -1,
             {
@@ -698,7 +686,7 @@ export const appRouter = t.router({
               'getSubmissionsWithDrawings: Fetching drawing for commentId:',
               commentId
             );
-            const drawingData = await getCommentDrawing(commentId);
+            const drawingData = await getTournamentEntry(commentId);
 
             if (!drawingData) {
               console.log(

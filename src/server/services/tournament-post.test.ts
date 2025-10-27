@@ -14,14 +14,15 @@ vi.mock('@devvit/web/server', () => ({
 
 import { redis } from '@devvit/web/server';
 import { REDIS_KEYS } from './redis';
-import { getCommentRating } from './tournament-post';
+import { getEntryRating } from './tournament-post';
+import { TOURNAMENT_ELO_INITIAL_RATING } from '../../shared/constants';
 
 describe('Tournament Post Service', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  describe('getCommentRating', () => {
+  describe('getEntryRating', () => {
     it('should return rating from Redis', async () => {
       const postId = 't3_test123';
       const commentId = 't1_test456';
@@ -29,10 +30,10 @@ describe('Tournament Post Service', () => {
 
       vi.mocked(redis.zScore).mockResolvedValue(expectedRating);
 
-      const rating = await getCommentRating(postId, commentId);
+      const rating = await getEntryRating(postId, commentId);
 
       expect(redis.zScore).toHaveBeenCalledWith(
-        REDIS_KEYS.tournamentRatings(postId),
+        REDIS_KEYS.tournamentEntries(postId),
         commentId
       );
       expect(rating).toBe(expectedRating);
@@ -44,9 +45,9 @@ describe('Tournament Post Service', () => {
 
       vi.mocked(redis.zScore).mockResolvedValue(null);
 
-      const rating = await getCommentRating(postId, commentId);
+      const rating = await getEntryRating(postId, commentId);
 
-      expect(rating).toBe(1200);
+      expect(rating).toBe(TOURNAMENT_ELO_INITIAL_RATING);
     });
   });
 });
