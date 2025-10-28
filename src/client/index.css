@@ -83,6 +83,10 @@
     overflow: hidden;
   }
 
+  #root {
+    overflow: hidden;
+  }
+
   /* Pixel-perfect rendering */
   canvas,
   img,
