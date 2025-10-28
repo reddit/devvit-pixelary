@@ -344,13 +344,7 @@ export function VotingView({
       </div>
 
       {/* Collision effect overlay */}
-      {showCollision && (
-        <Collision
-          count={38}
-          spawnHeight={{ min: 0.4, max: 0.725 }}
-          explosionSpeed={400}
-        />
-      )}
+      {showCollision && <Collision />}
     </div>
   );
 }

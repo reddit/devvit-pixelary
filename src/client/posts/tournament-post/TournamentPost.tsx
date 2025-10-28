@@ -24,12 +24,13 @@ export function TournamentPost() {
   const word = tournamentData?.word || postData?.word || '';
   const currentPostId = tournamentData?.postId || context.postId || '';
 
-  const { data: stats } = trpc.app.tournament.getStats.useQuery(
-    { postId: currentPostId },
-    {
-      enabled: !!currentPostId,
-    }
-  );
+  const { data: stats, refetch: refetchStats } =
+    trpc.app.tournament.getStats.useQuery(
+      { postId: currentPostId },
+      {
+        enabled: !!currentPostId,
+      }
+    );
 
   // Prefetch user level (lightweight) so editor opens instantly
   const utils = trpc.useUtils();
@@ -47,9 +48,11 @@ export function TournamentPost() {
     setShowEditor(false);
   };
 
-  const handleEditorSuccess = () => {
+  const handleEditorSuccess = async () => {
     setShowEditor(false);
     showSuccessToast('Submitted!', { duration: 3000 });
+    // Refetch stats to update submission count
+    await refetchStats();
   };
 
   // Drawing state

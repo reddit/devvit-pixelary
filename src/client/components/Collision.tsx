@@ -27,9 +27,9 @@ const CONFETTI_COLORS = [
 ];
 
 export function Collision({
-  count = 75,
-  spawnHeight = { min: 0.3, max: 0.7 }, // 30% to 70% of screen height by default
-  explosionSpeed = 200,
+  count = 40,
+  spawnHeight = { min: 0.3, max: 0.7 },
+  explosionSpeed = 400,
 }: CollisionProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number | undefined>(undefined);
