@@ -110,8 +110,8 @@ export function TournamentReviewStep(props: TournamentReviewStepProps) {
       <Drawing data={drawing} size={256} />
 
       <div className="flex flex-col items-center justify-center gap-1 text-center text-secondary">
-        <PixelFont scale={2}>Submit to tournament</PixelFont>
-        <PixelFont scale={2}>Earn points for votes!</PixelFont>
+        <PixelFont scale={2}>Submit your drawing</PixelFont>
+        <PixelFont scale={2}>to join tournament.</PixelFont>
       </div>
 
       <div className="flex flex-row gap-3">
