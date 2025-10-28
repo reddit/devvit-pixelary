@@ -420,7 +420,7 @@ export function VotingView({
       </div>
 
       <div className="flex flex-col gap-2 items-center justify-center">
-        <PixelFont scale={4}>{word}</PixelFont>
+        <PixelFont scale={3}>{word}</PixelFont>
         <CyclingMessage
           messages={[
             'Drawing Tournament',
@@ -433,7 +433,9 @@ export function VotingView({
         />
       </div>
 
-      <PixelFont scale={2.5}>Which is better?</PixelFont>
+      <PixelFont scale={2.5} className="text-secondary">
+        Which is better?
+      </PixelFont>
 
       <div className="flex gap-6 items-center justify-center">
         <DrawingCard
