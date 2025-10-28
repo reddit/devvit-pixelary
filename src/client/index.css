@@ -122,14 +122,14 @@
     .animate-pixel-breathe,
     .animate-count-pulse,
     .animate-diagonal-shimmer,
-    .animate-pixel-winner-highlight,
-    .animate-pixel-loser-fadeout,
-    .animate-slide-out-left,
-    .animate-slide-out-right,
-    .animate-slide-out-left-loser,
-    .animate-slide-out-right-loser,
-    .animate-slide-in-from-left,
-    .animate-slide-in-from-right {
+    .tournaments-animate-winner-highlight,
+    .tournaments-animate-loser-fadeout,
+    .tournaments-animate-slide-out-left,
+    .tournaments-animate-slide-out-right,
+    .tournaments-animate-slide-out-left-loser,
+    .tournaments-animate-slide-out-right-loser,
+    .tournaments-animate-slide-in-from-left,
+    .tournaments-animate-slide-in-from-right {
       animation: none !important;
     }
   }
@@ -215,77 +215,81 @@
     }
   }
 
-  @keyframes pixel-winner-highlight {
+  @keyframes tournaments-winner-highlight {
     0% {
       transform: scale(1);
     }
+    30%,
+    60% {
+      transform: scale(1.25);
+    }
     100% {
-      transform: scale(1.35);
+      transform: scale(1);
     }
   }
 
-  @keyframes pixel-loser-fadeout {
+  @keyframes tournaments-loser-fadeout {
     0% {
       transform: scale(1);
       opacity: 1;
       filter: grayscale(0);
     }
     100% {
-      transform: scale(0.85);
-      opacity: 0.4;
+      transform: scale(0.8);
+      opacity: 0.3;
       filter: grayscale(1);
     }
   }
 
-  @keyframes slide-out-left {
+  @keyframes tournaments-slide-out-left {
     0% {
-      transform: translateX(0) scale(1.35);
+      transform: translateX(0) scale(0.8);
       opacity: 1;
     }
     100% {
-      transform: translateX(-150%) scale(0.8);
+      transform: translateX(-150%) scale(0.5);
       opacity: 0;
     }
   }
 
-  @keyframes slide-out-right {
+  @keyframes tournaments-slide-out-right {
     0% {
-      transform: translateX(0) scale(1.35);
+      transform: translateX(0) scale(0.8);
       opacity: 1;
     }
     100% {
-      transform: translateX(150%) scale(0.8);
+      transform: translateX(150%) scale(0.5);
       opacity: 0;
     }
   }
 
-  @keyframes slide-out-left-loser {
+  @keyframes tournaments-slide-out-left-loser {
     0% {
-      transform: translateX(0) scale(0.85);
-      opacity: 0.4;
+      transform: translateX(0) scale(0.8);
+      opacity: 0.3;
       filter: grayscale(1);
     }
     100% {
-      transform: translateX(-150%) scale(0.7);
+      transform: translateX(-150%) scale(0.5);
       opacity: 0;
       filter: grayscale(1);
     }
   }
 
-  @keyframes slide-out-right-loser {
+  @keyframes tournaments-slide-out-right-loser {
     0% {
-      transform: translateX(0) scale(0.85);
-      opacity: 0.4;
+      transform: translateX(0) scale(0.8);
+      opacity: 0.3;
       filter: grayscale(1);
     }
     100% {
-      transform: translateX(150%) scale(0.7);
+      transform: translateX(150%) scale(0.5);
       opacity: 0;
       filter: grayscale(1);
     }
   }
 
-  @keyframes slide-in-from-left {
+  @keyframes tournaments-slide-in-from-left {
     0% {
       transform: translateX(-150%);
       opacity: 0;
@@ -300,7 +304,7 @@
     }
   }
 
-  @keyframes slide-in-from-right {
+  @keyframes tournaments-slide-in-from-right {
     0% {
       transform: translateX(150%);
       opacity: 0;
@@ -346,38 +350,38 @@
     animation-duration: 4s;
   }
 
-  .animate-pixel-winner-highlight {
-    animation: pixel-winner-highlight 0.25s ease-out forwards;
+  .tournaments-animate-winner-highlight {
+    animation: tournaments-winner-highlight 0.25s ease-out forwards;
   }
 
-  .animate-pixel-loser-fadeout {
-    animation: pixel-loser-fadeout 0.25s ease-out forwards;
+  .tournaments-animate-loser-fadeout {
+    animation: tournaments-loser-fadeout 0.25s ease-out forwards;
   }
 
-  .animate-slide-out-left {
-    animation: slide-out-left 0.5s ease-in forwards;
+  .tournaments-animate-slide-out-left {
+    animation: tournaments-slide-out-left 0.5s ease-in forwards;
   }
 
-  .animate-slide-out-right {
-    animation: slide-out-right 0.5s ease-in forwards;
+  .tournaments-animate-slide-out-right {
+    animation: tournaments-slide-out-right 0.5s ease-in forwards;
   }
 
-  .animate-slide-out-left-loser {
-    animation: slide-out-left-loser 0.5s ease-in forwards;
+  .tournaments-animate-slide-out-left-loser {
+    animation: tournaments-slide-out-left-loser 0.5s ease-in forwards;
   }
 
-  .animate-slide-out-right-loser {
-    animation: slide-out-right-loser 0.5s ease-in forwards;
+  .tournaments-animate-slide-out-right-loser {
+    animation: tournaments-slide-out-right-loser 0.5s ease-in forwards;
   }
 
-  .animate-slide-in-from-left {
-    animation: slide-in-from-left 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)
-      forwards;
+  .tournaments-animate-slide-in-from-left {
+    animation: tournaments-slide-in-from-left 0.5s
+      cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
   }
 
-  .animate-slide-in-from-right {
-    animation: slide-in-from-right 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)
-      forwards;
+  .tournaments-animate-slide-in-from-right {
+    animation: tournaments-slide-in-from-right 0.5s
+      cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
   }
 
   /* Hide native text selection for PixelInput */

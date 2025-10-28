@@ -4,6 +4,7 @@ interface CollisionProps {
   count?: number; // Number of particles to spawn (default: 75)
   spawnHeight?: { min: number; max: number }; // Vertical line spawn range
   explosionSpeed?: number; // Base explosion speed (default: 200)
+  duration?: number; // Animation duration in ms (default: 1500)
 }
 
 interface CollisionParticle {
@@ -30,15 +31,19 @@ export function Collision({
   count = 40,
   spawnHeight = { min: 0.3, max: 0.7 },
   explosionSpeed = 400,
+  duration = 1500,
 }: CollisionProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number | undefined>(undefined);
   const [particles, setParticles] = useState<CollisionParticle[]>([]);
   const lastFrameTime = useRef<number>(0);
   const isAnimatingRef = useRef(false);
+  const startTimeRef = useRef<number>(0);
 
   // Spawn particles on mount
   useEffect(() => {
+    startTimeRef.current = performance.now();
+
     // Spawn all particles instantly in a vertical line at center
     const centerX = window.innerWidth / 2;
     const minY = window.innerHeight * spawnHeight.min;
@@ -91,6 +96,19 @@ export function Collision({
       isAnimatingRef.current = true;
 
       const animate = (currentTime: number) => {
+        // Check duration timeout
+        if (currentTime - startTimeRef.current > duration) {
+          isAnimatingRef.current = false;
+          animationRef.current = undefined;
+          if (canvasRef.current) {
+            const ctx = canvasRef.current.getContext('2d');
+            if (ctx) {
+              ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
+            }
+          }
+          return;
+        }
+
         const canvas = canvasRef.current;
         const ctx = canvas?.getContext('2d');
 

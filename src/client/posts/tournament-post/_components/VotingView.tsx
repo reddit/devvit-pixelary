@@ -33,6 +33,116 @@ type PairDrawing = {
 
 type Pair = [PairDrawing, PairDrawing];
 
+type DrawingCardProps = {
+  drawing: PairDrawing | undefined;
+  side: 'left' | 'right';
+  animationState: AnimationState;
+  winnerSide: 'left' | 'right' | null;
+  onVote: () => void;
+  isDisabled: boolean;
+};
+
+function DrawingCard({
+  drawing,
+  side,
+  animationState,
+  winnerSide,
+  onVote,
+  isDisabled,
+}: DrawingCardProps) {
+  // State machine states: idle -> highlighting -> exiting -> entering -> idle
+
+  // Determine card state based on state machine
+  const cardState = (() => {
+    if (animationState === 'idle') return 'idle';
+    if (animationState === 'highlighting') {
+      return winnerSide === side ? 'highlighting-winner' : 'highlighting-loser';
+    }
+    if (animationState === 'exiting') {
+      return winnerSide === side ? 'exiting-winner' : 'exiting-loser';
+    }
+    if (animationState === 'entering') return 'entering';
+    return 'idle';
+  })();
+
+  // Map state to animation classes
+  const getAnimationClasses = (state: string) => {
+    const classes: string[] = [];
+
+    // Side class
+    classes.push(`side-${side}`);
+
+    // State-specific classes
+    switch (state) {
+      case 'idle':
+        // No animations
+        break;
+
+      case 'highlighting-winner':
+        classes.push('is-highlighting', 'is-winner');
+        classes.push('tournaments-animate-winner-highlight');
+        break;
+
+      case 'highlighting-loser':
+        classes.push('is-highlighting', 'is-loser');
+        classes.push('tournaments-animate-loser-fadeout');
+        break;
+
+      case 'exiting-winner':
+        classes.push('is-sliding-out', 'is-winner-sliding-out');
+        classes.push(
+          side === 'left'
+            ? 'tournaments-animate-slide-out-left'
+            : 'tournaments-animate-slide-out-right'
+        );
+        break;
+
+      case 'exiting-loser':
+        classes.push('is-sliding-out', 'is-loser-sliding-out');
+        classes.push(
+          side === 'left'
+            ? 'tournaments-animate-slide-out-left-loser'
+            : 'tournaments-animate-slide-out-right-loser'
+        );
+        break;
+
+      case 'entering':
+        classes.push('is-sliding-in');
+        classes.push(
+          side === 'left'
+            ? 'tournaments-animate-slide-in-from-left'
+            : 'tournaments-animate-slide-in-from-right'
+        );
+        break;
+    }
+
+    return classes;
+  };
+
+  const classes = [
+    'flex flex-col gap-3 items-center',
+    ...getAnimationClasses(cardState),
+  ].join(' ');
+
+  return (
+    <div className={classes} style={{ willChange: 'transform' }}>
+      {drawing ? (
+        <Drawing data={drawing.drawing} size={128} />
+      ) : (
+        <div className="w-32 h-32 bg-white-25" />
+      )}
+      <Button
+        onClick={onVote}
+        disabled={isDisabled}
+        className="w-full"
+        variant="primary"
+      >
+        PICK
+      </Button>
+    </div>
+  );
+}
+
 export function VotingView({
   postId,
   stats,
@@ -126,8 +236,8 @@ export function VotingView({
       // Trigger collision effect mid-way when cards meet (250ms = midpoint of 500ms animation)
       const collisionTimeout = setTimeout(() => {
         setShowCollision(true);
-        // Auto-hide after effect completes
-        const hideTimeout = setTimeout(() => setShowCollision(false), 2500);
+        // Auto-hide after 1.75 seconds total (0.25s delay + 1.5s collision = 1.75s)
+        const hideTimeout = setTimeout(() => setShowCollision(false), 1750);
         timeoutRefs.current.push(hideTimeout);
       }, 250);
       timeoutRefs.current.push(collisionTimeout);
@@ -207,6 +317,13 @@ export function VotingView({
   // Don't show loading if we're animating - keep old content visible
   const isLoading = animationState === 'idle' && !leftDrawing && !rightDrawing;
 
+  // Determine if buttons should be disabled
+  const isButtonDisabled =
+    submitVote.isPending ||
+    isLoading ||
+    animationState !== 'idle' ||
+    !hasEnoughSubmissions;
+
   // Show error message if fetching pairs failed
   if (pairsError) {
     return (
@@ -252,93 +369,32 @@ export function VotingView({
       <PixelFont scale={2.5}>Which is better?</PixelFont>
 
       <div className="flex gap-6 items-center justify-center">
-        {/* Left drawing */}
-        <div
-          className={`flex flex-col gap-3 items-center ${
-            animationState === 'highlighting' && winnerSide === 'left'
-              ? 'animate-pixel-winner-highlight'
-              : animationState === 'highlighting' && winnerSide === 'right'
-                ? 'animate-pixel-loser-fadeout'
-                : ''
-          } ${
-            animationState === 'exiting'
-              ? winnerSide === 'right'
-                ? 'animate-slide-out-left-loser'
-                : 'animate-slide-out-left'
-              : animationState === 'entering'
-                ? 'animate-slide-in-from-left'
-                : ''
-          }`}
-          style={{ willChange: 'transform' }}
-        >
-          {leftDrawing ? (
-            <Drawing data={leftDrawing.drawing} size={128} />
-          ) : (
-            <div className="w-32 h-32 bg-white-25" />
-          )}
-          <Button
-            onClick={() =>
-              handleVote(
-                leftDrawing?.commentId || '',
-                rightDrawing?.commentId || ''
-              )
-            }
-            disabled={
-              submitVote.isPending ||
-              isLoading ||
-              animationState !== 'idle' ||
-              !hasEnoughSubmissions
-            }
-            className="w-full"
-            variant="primary"
-          >
-            PICK
-          </Button>
-        </div>
-
-        {/* Right drawing */}
-        <div
-          className={`flex flex-col gap-3 items-center ${
-            animationState === 'highlighting' && winnerSide === 'right'
-              ? 'animate-pixel-winner-highlight'
-              : animationState === 'highlighting' && winnerSide === 'left'
-                ? 'animate-pixel-loser-fadeout'
-                : ''
-          } ${
-            animationState === 'exiting'
-              ? winnerSide === 'left'
-                ? 'animate-slide-out-right-loser'
-                : 'animate-slide-out-right'
-              : animationState === 'entering'
-                ? 'animate-slide-in-from-right'
-                : ''
-          }`}
-          style={{ willChange: 'transform' }}
-        >
-          {rightDrawing ? (
-            <Drawing data={rightDrawing.drawing} size={128} />
-          ) : (
-            <div className="w-32 h-32 bg-white-25" />
-          )}
-          <Button
-            onClick={() =>
-              handleVote(
-                rightDrawing?.commentId || '',
-                leftDrawing?.commentId || ''
-              )
-            }
-            disabled={
-              submitVote.isPending ||
-              isLoading ||
-              animationState !== 'idle' ||
-              !hasEnoughSubmissions
-            }
-            className="w-full"
-            variant="primary"
-          >
-            PICK
-          </Button>
-        </div>
+        <DrawingCard
+          drawing={leftDrawing}
+          side="left"
+          animationState={animationState}
+          winnerSide={winnerSide}
+          onVote={() =>
+            handleVote(
+              leftDrawing?.commentId || '',
+              rightDrawing?.commentId || ''
+            )
+          }
+          isDisabled={isButtonDisabled}
+        />
+        <DrawingCard
+          drawing={rightDrawing}
+          side="right"
+          animationState={animationState}
+          winnerSide={winnerSide}
+          onVote={() =>
+            handleVote(
+              rightDrawing?.commentId || '',
+              leftDrawing?.commentId || ''
+            )
+          }
+          isDisabled={isButtonDisabled}
+        />
       </div>
 
       {/* Action bar */}
