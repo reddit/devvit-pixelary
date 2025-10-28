@@ -110,15 +110,6 @@ export function VotingView({
         // Start entering animation
         setAnimationState('entering');
 
-        // Trigger collision effect mid-way when cards meet
-        const collisionTimeout = setTimeout(() => {
-          setShowCollision(true);
-          // Auto-hide after effect completes
-          const hideTimeout = setTimeout(() => setShowCollision(false), 2500);
-          timeoutRefs.current.push(hideTimeout);
-        }, 250); // 50% of 500ms - midpoint of animation
-        timeoutRefs.current.push(collisionTimeout);
-
         const enterTimeout = setTimeout(() => {
           setAnimationState('idle');
           setWinnerSide(null);
@@ -127,7 +118,21 @@ export function VotingView({
       }, 500); // Wait for exit slide-out to complete
       timeoutRefs.current.push(transitionTimeout);
     }
-  }, [animationState, pairsQueue.length, hasEnoughSubmissions, prefetchPairs]);
+  }, [animationState, hasEnoughSubmissions, prefetchPairs]);
+
+  // Trigger collision effect when entering the entering state
+  useEffect(() => {
+    if (animationState === 'entering') {
+      // Trigger collision effect mid-way when cards meet (250ms = midpoint of 500ms animation)
+      const collisionTimeout = setTimeout(() => {
+        setShowCollision(true);
+        // Auto-hide after effect completes
+        const hideTimeout = setTimeout(() => setShowCollision(false), 2500);
+        timeoutRefs.current.push(hideTimeout);
+      }, 250);
+      timeoutRefs.current.push(collisionTimeout);
+    }
+  }, [animationState]);
 
   const fetchInitialPairs = useCallback(async () => {
     if (!hasEnoughSubmissions) return;
