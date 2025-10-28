@@ -71,8 +71,8 @@ export function GalleryView({ postId, onToggleView }: GalleryViewProps) {
 
       {/* Gallery or empty state */}
       {isLoading ? (
-        <div className="flex items-center justify-center w-full h-64">
-          <PixelFont>Loading...</PixelFont>
+        <div className="flex items-center justify-center w-full h-full">
+          <PixelFont className="text-tertiary">Loading ...</PixelFont>
         </div>
       ) : submissions && submissions.length > 0 && drawings.length > 0 ? (
         <PaginatedDrawingGrid
@@ -81,7 +81,7 @@ export function GalleryView({ postId, onToggleView }: GalleryViewProps) {
           isLoading={isLoading}
         />
       ) : (
-        <div className="flex flex-col gap-2 items-center w-full">
+        <div className="h-full flex flex-col gap-2 items-center justify-center w-full">
           <PixelFont className="text-tertiary">No drawings yet</PixelFont>
         </div>
       )}

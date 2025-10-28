@@ -51,7 +51,7 @@ export async function createTournament(word?: string): Promise<T3> {
   );
 
   const post = await createPost(
-    `Drawing tournament #${tournamentIndex} - Who can draw the best "${tournamentWord}"?!`,
+    `Who draws the best "${tournamentWord}"? (Tournament #${tournamentIndex})`,
     postData
   );
   if (!post) {

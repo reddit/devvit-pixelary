@@ -234,17 +234,17 @@ export function VotingView({
         <PixelFont scale={4}>{word}</PixelFont>
         <CyclingMessage
           messages={[
-            'Drawing Challenge',
+            'Drawing Tournament',
             stats && hasEnoughSubmissions
               ? formatStatsLine(stats.submissionCount, stats.playerCount)
-              : 'No drawings yet',
+              : 'Waiting for entries',
           ]}
           className="text-tertiary"
           intervalMs={3000}
         />
       </div>
 
-      <PixelFont scale={2.5}>Which is better?!</PixelFont>
+      <PixelFont scale={2.5}>Which is better?</PixelFont>
 
       <div className="flex gap-6 items-center justify-center">
         {/* Left drawing */}
