@@ -51,11 +51,17 @@ export function DrawStep(props: DrawStepProps) {
     DrawingUtils.createBlank()
   );
   const hasTrackedFirstPixel = useRef(false);
+  const drawingDataRef = useRef<DrawingData>(DrawingUtils.createBlank());
 
   // Color picker modal state
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
 
   const canvasInternalSize = 256;
+
+  // Keep drawingDataRef in sync with drawingData state
+  useEffect(() => {
+    drawingDataRef.current = drawingData;
+  }, [drawingData]);
 
   // Timer effect
   useEffect(() => {
@@ -65,7 +71,7 @@ export function DrawStep(props: DrawStepProps) {
       const remainingTime = (time || DRAWING_DURATION) * 1000 - currentElapsed;
       if (remainingTime <= 0) {
         void track('drawing_done_auto');
-        onComplete(drawingData);
+        onComplete(drawingDataRef.current);
       }
     }, 100);
 
