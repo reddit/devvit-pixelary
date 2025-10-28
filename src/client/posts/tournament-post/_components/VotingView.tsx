@@ -433,7 +433,7 @@ export function VotingView({
         />
       </div>
 
-      <PixelFont scale={2.5} className="text-secondary">
+      <PixelFont scale={2} className="text-primary">
         Which is better?
       </PixelFont>
 
