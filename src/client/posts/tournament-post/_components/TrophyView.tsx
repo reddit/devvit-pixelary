@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { trpc } from '@client/trpc/client';
 import { Drawing } from '@components/Drawing';
 import { PixelFont } from '@components/PixelFont';
 import { IconButton } from '@components/IconButton';
 import { Button } from '@components/Button';
+import { Lightbox } from '@components/Lightbox';
 import type { DrawingData } from '@shared/schema/drawing';
 
 interface TrophyViewProps {
@@ -18,6 +20,7 @@ interface WinnerDisplayProps {
   artist: string;
   rating: number;
   drawing: DrawingData;
+  onClick: () => void;
 }
 
 function TrophyIcon({ position }: { position: TrophyPosition }) {
@@ -59,10 +62,16 @@ function WinnerDisplay({
   artist,
   rating,
   drawing,
+  onClick,
 }: WinnerDisplayProps) {
   return (
     <div className="flex flex-row gap-4 items-center justify-center">
-      <Drawing data={drawing} size={96} />
+      <button
+        onClick={onClick}
+        className="cursor-pointer hover:opacity-80 transition-opacity"
+      >
+        <Drawing data={drawing} size={96} />
+      </button>
       <TrophyIcon position={position} />
       <div className="flex flex-col gap-1 items-start">
         <PixelFont scale={2.5} className="text-primary">
@@ -77,14 +86,41 @@ function WinnerDisplay({
 }
 
 export function TrophyView({ postId, onToggleView, onDraw }: TrophyViewProps) {
+  const [selectedDrawing, setSelectedDrawing] = useState<{
+    drawing: DrawingData;
+    author: string;
+    rating: number;
+    votes: number;
+    views: number;
+    commentId: string;
+  } | null>(null);
+
   const {
     data: submissions,
     isLoading,
     error,
   } = trpc.app.tournament.getSubmissionsWithDrawings.useQuery({ postId });
 
+  const incrementViews = trpc.app.tournament.incrementViews.useMutation();
+
   // Get top 3 submissions
   const top3 = submissions?.slice(0, 3) || [];
+
+  const handleDrawingClick = (index: number) => {
+    const submission = top3[index];
+    if (submission) {
+      setSelectedDrawing({
+        drawing: submission.drawing,
+        author: submission.username,
+        rating: submission.rating,
+        votes: submission.votes,
+        views: submission.views,
+        commentId: submission.commentId,
+      });
+      // Track view when opening lightbox
+      void incrementViews.mutateAsync({ commentId: submission.commentId });
+    }
+  };
 
   if (error) {
     return (
@@ -127,6 +163,7 @@ export function TrophyView({ postId, onToggleView, onDraw }: TrophyViewProps) {
               artist={top3[0].username}
               rating={top3[0].rating}
               drawing={top3[0].drawing}
+              onClick={() => handleDrawingClick(0)}
             />
           )}
           {top3.length >= 2 && top3[1] && (
@@ -135,6 +172,7 @@ export function TrophyView({ postId, onToggleView, onDraw }: TrophyViewProps) {
               artist={top3[1].username}
               rating={top3[1].rating}
               drawing={top3[1].drawing}
+              onClick={() => handleDrawingClick(1)}
             />
           )}
           {top3.length >= 3 && top3[2] && (
@@ -143,6 +181,7 @@ export function TrophyView({ postId, onToggleView, onDraw }: TrophyViewProps) {
               artist={top3[2].username}
               rating={top3[2].rating}
               drawing={top3[2].drawing}
+              onClick={() => handleDrawingClick(2)}
             />
           )}
         </div>
@@ -151,6 +190,29 @@ export function TrophyView({ postId, onToggleView, onDraw }: TrophyViewProps) {
       <Button onClick={onDraw} size="large" className="w-min">
         DRAW THE WORD
       </Button>
+
+      {/* Lightbox */}
+      {selectedDrawing && (
+        <Lightbox
+          isOpen={selectedDrawing !== null}
+          onClose={() => setSelectedDrawing(null)}
+          drawing={selectedDrawing.drawing}
+          author={selectedDrawing.author}
+        >
+          <div className="flex flex-col gap-2 items-center">
+            <PixelFont>
+              {`${selectedDrawing.views} views · ${selectedDrawing.votes} picks (${
+                selectedDrawing.views > 0
+                  ? Math.round(
+                      (selectedDrawing.votes / selectedDrawing.views) * 100
+                    )
+                  : 0
+              }%)`}
+            </PixelFont>
+            <PixelFont>{`${selectedDrawing.rating} rating`}</PixelFont>
+          </div>
+        </Lightbox>
+      )}
     </main>
   );
 }
