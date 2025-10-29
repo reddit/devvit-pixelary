@@ -39,10 +39,10 @@ export function Button({
       : 'bg-black text-white hover:bg-gray-800 cursor-pointer active:bg-gray-900',
     secondary: disabled
       ? 'bg-gray-200 border-4 border-gray-300 text-gray-500 cursor-not-allowed'
-      : 'bg-background border-black text-black hover:bg-background/90 cursor-pointer active:bg-background/80',
+      : 'bg-background border-4 border-black text-black hover:bg-background/90 cursor-pointer active:bg-background/80',
     white: disabled
       ? 'bg-gray-200 border-4  border-gray-300 text-gray-500 cursor-not-allowed'
-      : 'bg-white border-black text-black hover:bg-gray-100 cursor-pointer active:bg-gray-200',
+      : 'bg-white border-4 border-black text-black hover:bg-gray-100 cursor-pointer active:bg-gray-200',
     green: disabled
       ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
       : 'bg-orange-700 text-white hover:bg-orange-800 cursor-pointer active:bg-orange-900',
