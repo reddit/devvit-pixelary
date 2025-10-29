@@ -126,7 +126,7 @@ export function TrophyView({ postId, onToggleView, onDraw }: TrophyViewProps) {
     return (
       <main className="absolute inset-0 flex flex-col p-4 gap-4">
         <header className="shrink-0 w-full flex flex-row items-center justify-between">
-          <PixelFont scale={2.5}>Winners</PixelFont>
+          <PixelFont scale={2.5}>In the lead</PixelFont>
           <IconButton onClick={onToggleView} symbol="X" />
         </header>
         <div className="flex items-center justify-center w-full h-full">
@@ -142,7 +142,7 @@ export function TrophyView({ postId, onToggleView, onDraw }: TrophyViewProps) {
     <main className="absolute inset-0 flex flex-col p-4 gap-6 items-center justify-center">
       {/* Header */}
       <header className="shrink-0 w-full flex flex-row items-center justify-between">
-        <PixelFont scale={2.5}>Leaders</PixelFont>
+        <PixelFont scale={2.5}>In the lead</PixelFont>
         <IconButton onClick={onToggleView} symbol="X" />
       </header>
 

@@ -422,7 +422,7 @@ export function VotingView({
         <PixelFont scale={3}>{word}</PixelFont>
         <CyclingMessage
           messages={[
-            'Drawing Tournament',
+            'Drawing tournament',
             stats && hasEnoughSubmissions
               ? formatStatsLine(stats.submissionCount, stats.playerCount)
               : 'Waiting for entries',
