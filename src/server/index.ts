@@ -41,6 +41,7 @@ import {
   handleCreatePinnedPostComment,
   handleSetUserFlair,
   handleUpdateWords,
+  handleCreateTournamentPostComment,
 } from './scheduler';
 
 // Import trigger handlers
@@ -91,6 +92,10 @@ router.post('/internal/scheduler/user-level-up', handleUserLevelUp);
 router.post(
   '/internal/scheduler/create-pinned-post-comment',
   handleCreatePinnedPostComment
+);
+router.post(
+  '/internal/scheduler/create-tournament-post-comment',
+  handleCreateTournamentPostComment
 );
 router.post('/internal/scheduler/set-user-flair', handleSetUserFlair);
 router.post('/internal/scheduler/update-word-scores', handleUpdateWords);

@@ -1,5 +1,5 @@
 import type { T2, T3, T1 } from '@devvit/shared-types/tid.js';
-import { reddit, redis, media, context } from '@devvit/web/server';
+import { reddit, redis, media, context, scheduler } from '@devvit/web/server';
 import type { MediaAsset } from '@devvit/web/server';
 import { createPost, setPostFlair } from '../core';
 import { REDIS_KEYS } from './redis';
@@ -75,6 +75,21 @@ export async function createTournament(word?: string): Promise<T3> {
       score: post.createdAt.getTime(),
     }),
   ]);
+
+  // Schedule pinned comment creation
+  try {
+    await scheduler.runJob({
+      name: 'CREATE_TOURNAMENT_POST_COMMENT',
+      data: { postId: post.id },
+      runAt: new Date(), // Run immediately
+    });
+  } catch (error) {
+    console.error(
+      'Failed to schedule tournament pinned comment creation:',
+      error
+    );
+    // Don't throw - post was created successfully, comment can be created manually
+  }
 
   return post.id;
 }
@@ -474,4 +489,78 @@ function calculateEloChange(
     winnerChange: Math.round(TOURNAMENT_ELO_K_FACTOR * (1 - expectedWinner)),
     loserChange: Math.round(TOURNAMENT_ELO_K_FACTOR * (0 - expectedLoser)),
   };
+}
+
+/**
+ * Save the pinned comment ID for a tournament post
+ * @param postId - The ID of the tournament post to save the pinned comment ID for
+ * @param commentId - The ID of the pinned comment
+ */
+export async function saveTournamentPinnedCommentId(
+  postId: T3,
+  commentId: T1
+): Promise<void> {
+  const key = REDIS_KEYS.tournament(postId);
+  await redis.hSet(key, {
+    pinnedCommentId: commentId,
+  });
+}
+
+/**
+ * Get the pinned comment ID for a tournament post
+ * @param postId - The ID of the tournament post to get the pinned comment ID for
+ * @returns The pinned comment ID if it exists, null otherwise
+ */
+export async function getTournamentPinnedCommentId(
+  postId: T3
+): Promise<T1 | null> {
+  const key = REDIS_KEYS.tournament(postId);
+  const commentId = await redis.hGet(key, 'pinnedCommentId');
+  return commentId as T1 | null;
+}
+
+/**
+ * Generate comment text for tournament posts
+ * @param postId - The ID of the tournament post
+ * @returns The comment text for tournament posts
+ */
+export async function generateTournamentCommentText(
+  postId: T3
+): Promise<string> {
+  const tournamentData = await getTournament(postId);
+  const word = tournamentData.word;
+
+  return `Draw the word **"${word}"** in this tournament!
+
+## How to Play
+
+**Submit your drawing**: Click the "Draw Something" button to create your 16x16 pixel art submission for the word "${word}".
+
+**Vote on pairs**: Help rank the submissions by voting between two drawings. Choose which one you think best represents the word "${word}".
+
+**Watch the leaderboard**: The tournament uses an Elo rating system. Top drawings rise to the top as more people vote.
+
+**View all submissions**: Check out the gallery to see everyone's creative interpretations of "${word}".
+
+Good luck and let the best drawing win! 🎨`;
+}
+
+/**
+ * Create a pinned comment for a tournament post
+ * @param postId - The ID of the tournament post to create a comment for
+ * @returns The created comment ID
+ */
+export async function createTournamentPostComment(postId: T3): Promise<T1> {
+  const commentText = await generateTournamentCommentText(postId);
+
+  const comment = await reddit.submitComment({
+    text: commentText,
+    id: postId,
+  });
+
+  // Pin the comment and save ID
+  await comment.distinguish(true);
+  await saveTournamentPinnedCommentId(postId, comment.id);
+
+  return comment.id;
 }

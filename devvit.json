@@ -140,6 +140,9 @@
       "CREATE_PINNED_POST_COMMENT": {
         "endpoint": "/internal/scheduler/create-pinned-post-comment"
       },
+      "CREATE_TOURNAMENT_POST_COMMENT": {
+        "endpoint": "/internal/scheduler/create-tournament-post-comment"
+      },
       "SET_USER_FLAIR": {
         "endpoint": "/internal/scheduler/set-user-flair"
       },
