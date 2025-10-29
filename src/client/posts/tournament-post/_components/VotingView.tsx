@@ -4,7 +4,6 @@ import { Drawing } from '@components/Drawing';
 import { Button } from '@components/Button';
 import { PixelFont } from '@components/PixelFont';
 import { CyclingMessage } from '@components/CyclingMessage';
-import { IconButton } from '@components/IconButton';
 import { Collision } from '@components/Collision';
 import type { DrawingData } from '@shared/schema/drawing';
 
@@ -19,7 +18,8 @@ interface VotingViewProps {
   onDraw: () => void;
   hasEnoughSubmissions: boolean;
   word: string;
-  onToggleView: () => void;
+  onToggleGallery: () => void;
+  onToggleTrophy: () => void;
 }
 
 type AnimationState = 'idle' | 'highlighting' | 'exiting' | 'entering';
@@ -127,9 +127,9 @@ function DrawingCard({
   return (
     <div className={classes} style={{ willChange: 'transform' }}>
       {drawing ? (
-        <Drawing data={drawing.drawing} size={128} />
+        <Drawing data={drawing.drawing} size={136} />
       ) : (
-        <div className="w-32 h-32 bg-white-25" />
+        <div className="w-34 h-34 bg-white-25" />
       )}
       <Button
         onClick={onVote}
@@ -149,7 +149,8 @@ export function VotingView({
   onDraw,
   hasEnoughSubmissions,
   word,
-  onToggleView,
+  onToggleGallery,
+  onToggleTrophy,
 }: VotingViewProps) {
   const [animationState, setAnimationState] = useState<AnimationState>('idle');
   const [winnerSide, setWinnerSide] = useState<'left' | 'right' | null>(null);
@@ -346,15 +347,13 @@ export function VotingView({
   }
 
   return (
-    <div className="absolute inset-0 flex flex-col items-center justify-center gap-8 w-full h-full">
+    <div className="absolute inset-0 flex flex-col items-center justify-center gap-10 w-full h-full">
       {/* Gallery toggle button */}
       <div className="absolute flex flex-row gap-4 items-center top-4 right-4">
-        {/* <IconButton onClick={onToggleView} symbol="menu" /> */}
-
         {/* Drawing */}
-        {/* <button
-          onClick={onToggleView}
-          className="w-8 h-8 flex items-center justify-center cursor-pointer opacity-70 hover:opacity-100 filter grayscale-50 hover:grayscale-0 transition-all duration-300 hover:scale-115"
+        <button
+          onClick={onToggleGallery}
+          className="w-8 h-8 flex items-center justify-center cursor-pointer transition-all duration-300 hover:scale-115 active:scale-90"
         >
           <svg
             width="30"
@@ -386,12 +385,12 @@ export function VotingView({
               fill-opacity="0.3"
             />
           </svg>
-        </button> */}
+        </button>
 
         {/* Gold Trophy */}
         <button
-          onClick={onToggleView}
-          className="w-8 h-8 flex items-center justify-center cursor-pointer opacity-70 hover:opacity-100 filter grayscale-70 hover:grayscale-0 transition-all duration-300 hover:scale-115"
+          onClick={onToggleTrophy}
+          className="w-8 h-8 flex items-center justify-center cursor-pointer transition-all duration-300 hover:scale-115 active:scale-90"
         >
           <svg
             width="30"
@@ -428,14 +427,10 @@ export function VotingView({
               ? formatStatsLine(stats.submissionCount, stats.playerCount)
               : 'Waiting for entries',
           ]}
-          className="text-tertiary"
-          intervalMs={3000}
+          className="text-secondary"
+          intervalMs={2000}
         />
       </div>
-
-      <PixelFont scale={2} className="text-primary">
-        Which is better?
-      </PixelFont>
 
       <div className="flex gap-6 items-center justify-center">
         <DrawingCard
@@ -467,9 +462,12 @@ export function VotingView({
       </div>
 
       {/* Action bar */}
-      <div className="flex gap-3 items-center">
-        <Button onClick={onDraw} size="large" variant="secondary">
-          DRAW THE WORD
+      <div className="flex flex-col gap-3 items-center">
+        <PixelFont scale={2} className="text-secondary">
+          Pick winner or
+        </PixelFont>
+        <Button onClick={onDraw} size="large" variant="primary">
+          CREATE DRAWING
         </Button>
       </div>
 

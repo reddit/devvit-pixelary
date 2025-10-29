@@ -3,13 +3,14 @@ import { trpc } from '@client/trpc/client';
 import { DrawingEditor } from '@components/Editor/Editor';
 import { VotingView } from './_components/VotingView';
 import { GalleryView } from './_components/GalleryView';
+import { TrophyView } from './_components/TrophyView';
 import { useToastHelpers } from '@components/ToastManager';
 import { Shimmer } from '@components/Shimmer';
 import { getPostData } from '@client/utils/context';
 import { context } from '@devvit/web/client';
 import type { TournamentPostData } from '@shared/schema';
 
-type ViewMode = 'voting' | 'gallery';
+type ViewMode = 'voting' | 'gallery' | 'trophy';
 
 export function TournamentPost() {
   const [showEditor, setShowEditor] = useState(false);
@@ -80,7 +81,8 @@ export function TournamentPost() {
             onDraw={handleDrawSomething}
             hasEnoughSubmissions={(stats?.submissionCount || 0) >= 2}
             word={word}
-            onToggleView={() => setViewMode('gallery')}
+            onToggleGallery={() => setViewMode('gallery')}
+            onToggleTrophy={() => setViewMode('trophy')}
           />
 
           {/* Timed shimmer overlay */}
@@ -93,6 +95,15 @@ export function TournamentPost() {
         <GalleryView
           postId={currentPostId}
           onToggleView={() => setViewMode('voting')}
+        />
+      </div>
+
+      {/* Trophy view - preserve state when hidden */}
+      <div className={viewMode === 'trophy' ? 'absolute inset-0' : 'hidden'}>
+        <TrophyView
+          postId={currentPostId}
+          onToggleView={() => setViewMode('voting')}
+          onDraw={handleDrawSomething}
         />
       </div>
     </>
