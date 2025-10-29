@@ -464,10 +464,10 @@ export function VotingView({
       {/* Action bar */}
       <div className="flex flex-col gap-3 items-center">
         <PixelFont scale={2} className="text-secondary">
-          Pick winner or
+          Pick the best, or ...
         </PixelFont>
         <Button onClick={onDraw} size="large" variant="primary">
-          CREATE DRAWING
+          ADD A DRAWING
         </Button>
       </div>
 
