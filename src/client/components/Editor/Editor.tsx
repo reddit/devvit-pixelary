@@ -179,7 +179,6 @@ export function DrawingEditor({
         <>
           {mode === 'tournament-comment' && !!tournamentPostId ? (
             <TournamentReviewStep
-              word={candidate.word}
               drawing={drawing}
               onCancel={onClose}
               {...(onSuccess && { onSuccess })}

@@ -10,7 +10,6 @@ import { useTelemetry } from '@client/hooks/useTelemetry';
 import { renderDrawingToCanvas } from '@shared/utils/drawing';
 
 interface TournamentReviewStepProps {
-  word: string;
   drawing: DrawingData;
   onCancel: () => void;
   onSuccess?: () => void;
@@ -36,14 +35,14 @@ function generatePNGFromDrawing(drawingData: DrawingData): string {
 }
 
 export function TournamentReviewStep(props: TournamentReviewStepProps) {
-  const { word, drawing, onCancel, onSuccess, tournamentPostId } = props;
+  const { drawing, onCancel, onSuccess, tournamentPostId } = props;
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const queryClient = useQueryClient();
   const { track } = useTelemetry();
 
   const submitTournamentDrawing = trpc.app.tournament.submitDrawing.useMutation(
     {
-      onSuccess: async (_, variables) => {
+      onSuccess: async () => {
         // Invalidate and refetch all tournament queries
         await queryClient.invalidateQueries({
           queryKey: ['pixelary', 'app', 'tournament'],
