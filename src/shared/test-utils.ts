@@ -1,7 +1,6 @@
 import { z } from 'zod';
 import { expect } from 'vitest';
 import type {
-  CandidateWord,
   Dictionary,
   UserProfile,
   GuessResult,
@@ -19,13 +18,6 @@ import type {
 } from './schema/pixelary';
 
 // Mock data generators
-export const createMockCandidateWord = (
-  overrides: Partial<CandidateWord> = {}
-): CandidateWord => ({
-  word: 'test',
-  dictionaryName: 'main',
-  ...overrides,
-});
 
 export const createMockDictionary = (
   overrides: Partial<Dictionary> = {}
@@ -108,8 +100,8 @@ export const createMockDrawingSubmitInput = (
   overrides: Partial<DrawingSubmitInput> = {}
 ): DrawingSubmitInput => ({
   word: 'test',
-  dictionaryName: 'main',
-  data: {
+  dictionary: 'main',
+  drawing: {
     data: 'test-data',
     colors: ['#FFFFFF', '#000000'],
     bg: 0,

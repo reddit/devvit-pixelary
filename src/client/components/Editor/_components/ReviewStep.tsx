@@ -14,7 +14,7 @@ import { renderDrawingToCanvas } from '@shared/utils/drawing';
 
 interface ReviewStepProps {
   word: string;
-  dictionaryName: string;
+  dictionary: string;
   drawing: DrawingData;
   onCancel: () => void;
   onSuccess?: (result: {
@@ -59,14 +59,8 @@ function generatePNGFromDrawing(drawingData: DrawingData): string {
 }
 
 export function ReviewStep(props: ReviewStepProps) {
-  const {
-    word,
-    dictionaryName,
-    drawing,
-    onCancel,
-    onSuccess,
-    trackSlateAction,
-  } = props;
+  const { word, dictionary, drawing, onCancel, onSuccess, trackSlateAction } =
+    props;
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const queryClient = useQueryClient();
   const { track } = useTelemetry();
@@ -102,7 +96,7 @@ export function ReviewStep(props: ReviewStepProps) {
 
       const result = await submitDrawing.mutateAsync({
         word,
-        dictionary: dictionaryName,
+        dictionary: dictionary,
         drawing: drawing,
         imageData,
       });

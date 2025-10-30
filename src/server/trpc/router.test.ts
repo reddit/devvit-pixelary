@@ -26,11 +26,8 @@ vi.mock('../services/dictionary', () => ({
 vi.mock('../services/slate', () => ({
   generateSlate: vi.fn(async () => ({
     slateId: 'slate_123',
-    candidates: [
-      { word: 'cat', dictionaryName: 'r/testsub' },
-      { word: 'dog', dictionaryName: 'r/testsub' },
-      { word: 'tree', dictionaryName: 'r/testsub' },
-    ],
+    words: ['cat', 'dog', 'tree'],
+    timestamp: Date.now(),
   })),
   trackSlateAction: vi.fn(async () => {}),
 }));

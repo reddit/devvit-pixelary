@@ -1,11 +1,7 @@
 import { z } from 'zod';
 
 // Core Pixelary Types
-export const CandidateWordSchema = z.object({
-  dictionaryName: z.string(),
-  word: z.string(),
-});
-export type CandidateWord = z.infer<typeof CandidateWordSchema>;
+// CandidateWord removed: use plain strings for candidates
 
 export const SlateDataSchema = z.object({
   slateId: z.string(),
@@ -116,13 +112,9 @@ export type DrawingPostDataExtended = z.infer<
 // Input/Output Schemas for API
 export const DrawingSubmitInputSchema = z.object({
   word: z.string(),
-  dictionaryName: z.string(),
-  data: z.object({
-    data: z.string(),
-    colors: z.array(z.string()).max(256),
-    bg: z.number().int().min(0),
-    size: z.number().int().min(1).max(64).default(16),
-  }),
+  dictionary: z.string(),
+  drawing: DrawingDataSchema,
+  imageData: z.string().optional(),
 });
 export type DrawingSubmitInput = z.infer<typeof DrawingSubmitInputSchema>;
 

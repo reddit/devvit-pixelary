@@ -279,7 +279,7 @@ export async function isWordBanned(word: string): Promise<boolean> {
 /**
  * Get random words from a dictionary
  * @param count - The number of words to get
- * @returns The random words as CandidateWord objects
+ * @returns The random words as a string[]
  */
 
 export async function getRandomWords(count: number = 3): Promise<string[]> {

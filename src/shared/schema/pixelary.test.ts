@@ -1,6 +1,5 @@
 import { describe, it } from 'vitest';
 import {
-  CandidateWordSchema,
   DictionarySchema,
   UserProfileSchema,
   GuessResultSchema,
@@ -19,7 +18,6 @@ import {
 import {
   expectValidZodSchema,
   expectInvalidZodSchema,
-  createMockCandidateWord,
   createMockDictionary,
   createMockUserProfile,
   createMockGuessResult,
@@ -37,27 +35,7 @@ import {
 } from '../test-utils';
 
 describe('Pixelary Schema Validation', () => {
-  describe('CandidateWord', () => {
-    it('validates correct candidate word', () => {
-      const validData = createMockCandidateWord();
-      expectValidZodSchema(CandidateWordSchema, validData);
-    });
-
-    it('rejects invalid candidate word', () => {
-      const invalidData = { word: 123, dictionaryName: 'main' };
-      expectInvalidZodSchema(CandidateWordSchema, invalidData);
-    });
-
-    it('requires word field', () => {
-      const invalidData = { dictionaryName: 'main' };
-      expectInvalidZodSchema(CandidateWordSchema, invalidData);
-    });
-
-    it('requires dictionaryName field', () => {
-      const invalidData = { word: 'test' };
-      expectInvalidZodSchema(CandidateWordSchema, invalidData);
-    });
-  });
+  // CandidateWord removed: candidates are plain strings now
 
   describe('Dictionary', () => {
     it('validates correct dictionary', () => {
@@ -215,11 +193,6 @@ describe('Pixelary Schema Validation', () => {
   });
 
   describe('Edge Cases', () => {
-    it('handles empty strings appropriately', () => {
-      const validData = createMockCandidateWord({ word: '' });
-      expectValidZodSchema(CandidateWordSchema, validData);
-    });
-
     it('handles zero values appropriately', () => {
       const validData = createMockUserProfile({ score: 0, level: 1 });
       expectValidZodSchema(UserProfileSchema, validData);
@@ -228,13 +201,6 @@ describe('Pixelary Schema Validation', () => {
     it('handles large numbers appropriately', () => {
       const validData = createMockUserProfile({ score: 999999 });
       expectValidZodSchema(UserProfileSchema, validData);
-    });
-
-    it('handles special characters in strings', () => {
-      const validData = createMockCandidateWord({
-        word: 'test-word_with.special@chars!',
-      });
-      expectValidZodSchema(CandidateWordSchema, validData);
     });
   });
 });

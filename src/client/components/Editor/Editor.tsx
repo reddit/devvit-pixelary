@@ -5,7 +5,6 @@ import { ReviewStep } from './_components/ReviewStep';
 import { TournamentReviewStep } from './_components/TournamentReviewStep';
 import { trpc } from '@client/trpc/client';
 import { DRAWING_DURATION } from '@shared/constants';
-import type { CandidateWord } from '@shared/schema/pixelary';
 import { DrawingData, DrawingUtils } from '@shared/schema/drawing';
 import { useTelemetry } from '@client/hooks/useTelemetry';
 import type { SlateAction } from '@shared/types';
@@ -36,7 +35,7 @@ export function DrawingEditor({
       : 'word'
   );
   const [time, setTime] = useState<number>(DRAWING_DURATION);
-  const [candidate, setCandidate] = useState<CandidateWord | null>(null);
+  const [selectedWord, setSelectedWord] = useState<string | null>(null);
   const [drawing, setDrawing] = useState<DrawingData>(
     DrawingUtils.createBlank()
   );
@@ -129,7 +128,7 @@ export function DrawingEditor({
   }, []);
 
   const selectCandidate = useCallback((word: string) => {
-    setCandidate({ word, dictionaryName: `r/${subredditNameRef.current}` });
+    setSelectedWord(word);
     setStep('draw');
   }, []);
 
@@ -139,14 +138,11 @@ export function DrawingEditor({
       mode === 'tournament-comment' &&
       tournamentWord &&
       tournamentPostId &&
-      !candidate
+      !selectedWord
     ) {
-      setCandidate({
-        word: tournamentWord,
-        dictionaryName: `r/${subredditNameRef.current}`,
-      });
+      setSelectedWord(tournamentWord);
     }
-  }, [mode, tournamentWord, tournamentPostId, candidate]);
+  }, [mode, tournamentWord, tournamentPostId, selectedWord]);
 
   // Use prefetched level data for instant access, fallback to profile
   const userLevel = levelData?.level || userProfile?.level || 1;
@@ -165,9 +161,9 @@ export function DrawingEditor({
           userLevel={userLevel}
         />
       )}
-      {step === 'draw' && candidate && (
+      {step === 'draw' && selectedWord && (
         <DrawStep
-          word={candidate.word}
+          word={selectedWord}
           time={time}
           onComplete={handleOnComplete}
           slateId={slateId}
@@ -175,7 +171,7 @@ export function DrawingEditor({
           userLevel={userLevel}
         />
       )}
-      {step === 'review' && candidate && (
+      {step === 'review' && selectedWord && (
         <>
           {mode === 'tournament-comment' && !!tournamentPostId ? (
             <TournamentReviewStep
@@ -186,8 +182,8 @@ export function DrawingEditor({
             />
           ) : (
             <ReviewStep
-              word={candidate.word}
-              dictionaryName={candidate.dictionaryName}
+              word={selectedWord}
+              dictionary={`r/${subredditNameRef.current}`}
               drawing={drawing}
               onCancel={onClose}
               onSuccess={onClose}

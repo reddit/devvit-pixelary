@@ -9,3 +9,4 @@ export { handleTelemetryClear } from './telemetry-clear';
 export { handleSlateBandit } from './slate-bandit';
 export { handleSetUserPoints } from './user-points-set';
 export { handleGetUserPoints } from './user-points-get';
+export { handleTournamentHopper } from './tournament-hopper';

@@ -76,6 +76,12 @@ export const REDIS_KEYS = {
   tournamentEntries: (postId: T3) => `tournament:entries:${postId}`, // Sorted set with ratings as scores
   tournamentEntry: (commentId: T1) => `tournament:entry:${commentId}`,
   tournamentPlayers: (postId: T3) => `tournament:players:${postId}`,
+  tournamentHopper: (subredditName: string) =>
+    `tournament:hopper:${subredditName}`,
+  tournamentSchedulerLock: (subredditName: string) =>
+    `tournament:scheduler:lock:${subredditName}`,
+  tournamentSchedulerEnabled: (subredditName: string) =>
+    `tournament:scheduler:enabled:${subredditName}`,
 };
 
 const USERNAME_TTL = 30 * 24 * 60 * 60; // 30 days.

@@ -9,6 +9,7 @@ import {
   handleCreatePost,
   handleEditWords,
   handleEditBannedWords,
+  handleTournamentHopper,
   handleRevealWord,
   handleUpdateUserFlair,
   handleUpdatePinnedComment,
@@ -29,6 +30,7 @@ import {
   handleEditWordsForm,
   handleCollectionPostSubmit,
   handleTournamentPostSubmit,
+  handleTournamentHopperForm,
   handleSetUserPointsForm,
   handleGetUserPointsForm,
 } from './forms';
@@ -42,6 +44,7 @@ import {
   handleSetUserFlair,
   handleUpdateWords,
   handleCreateTournamentPostComment,
+  handleTournamentScheduler,
 } from './scheduler';
 
 // Import trigger handlers
@@ -99,6 +102,10 @@ router.post(
 );
 router.post('/internal/scheduler/set-user-flair', handleSetUserFlair);
 router.post('/internal/scheduler/update-word-scores', handleUpdateWords);
+router.post(
+  '/internal/scheduler/run-tournament-scheduler',
+  handleTournamentScheduler
+);
 
 // ============================================================================
 // MENU ACTIONS
@@ -107,6 +114,7 @@ router.post('/internal/scheduler/update-word-scores', handleUpdateWords);
 router.post('/internal/menu/create-post', handleCreatePost);
 router.post('/internal/menu/edit-words', handleEditWords);
 router.post('/internal/menu/edit-banned-words', handleEditBannedWords);
+router.post('/internal/menu/edit-tournament-prompts', handleTournamentHopper);
 router.post('/internal/menu/reveal-word', handleRevealWord);
 router.post('/internal/menu/update-user-flair', handleUpdateUserFlair);
 router.post('/internal/menu/update-pinned-comment', handleUpdatePinnedComment);
@@ -124,6 +132,10 @@ router.post('/internal/form/post-type-select', handlePostTypeSelect);
 router.post('/internal/form/pinned-post-submit', handlePinnedPostSubmit);
 router.post('/internal/form/words-update', handleWordsUpdate);
 router.post('/internal/form/banned-words-update', handleBannedWordsUpdate);
+router.post(
+  '/internal/form/edit-tournament-prompts',
+  handleTournamentHopperForm
+);
 router.post('/internal/form/slate-bandit-update', handleSlateBanditUpdate);
 router.post('/internal/form/edit-words', handleEditWordsForm);
 router.post(

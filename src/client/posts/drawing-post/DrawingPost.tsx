@@ -254,7 +254,7 @@ export const DrawingPost = () => {
   // Use actual post data
   const drawingData = postData?.drawing;
   const word = postData?.word;
-  const dictionaryName = postData?.dictionary;
+  const dictionary = postData?.dictionary;
   const currentSubreddit = context.subredditName;
 
   // Reset state if we're in solved state but missing essential data (broken state)
@@ -280,7 +280,7 @@ export const DrawingPost = () => {
           drawing={drawingData!}
           word={word!}
           authorUsername={postData?.authorName}
-          dictionaryName={dictionaryName}
+          dictionary={dictionary}
           currentSubreddit={currentSubreddit}
           onDrawSomething={handleDrawSomething}
           stats={stats}

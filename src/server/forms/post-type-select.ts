@@ -116,7 +116,7 @@ export async function handlePostTypeSelect(
           },
         ];
         break;
-      case 'tournament':
+      case 'tournament': {
         formName = 'tournamentPostForm';
         formTitle = 'Create drawing tournament';
         formDescription =
@@ -137,6 +137,7 @@ export async function handlePostTypeSelect(
           },
         ];
         break;
+      }
       default:
         res.status(400).json({
           status: 'error',

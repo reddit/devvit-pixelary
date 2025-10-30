@@ -31,6 +31,7 @@
     "slateBanditForm": "/internal/form/slate-bandit-update",
     "editWordsForm": "/internal/form/edit-words",
     "editBannedWordsForm": "/internal/form/edit-banned-words",
+    "tournamentHopperForm": "/internal/form/edit-tournament-prompts",
     "collectionPostForm": "/internal/form/collection-post-submit",
     "tournamentPostForm": "/internal/form/tournament-post-submit",
     "setUserPointsForm": "/internal/form/set-user-points",
@@ -116,6 +117,13 @@
         "location": "subreddit",
         "forUserType": "moderator",
         "endpoint": "/internal/menu/get-user-points"
+      },
+      {
+        "label": "[Pixelary] Tournament Hopper",
+        "description": "View and edit the tournament prompt hopper",
+        "location": "subreddit",
+        "forUserType": "moderator",
+        "endpoint": "/internal/menu/edit-tournament-prompts"
       }
     ]
   },
@@ -149,6 +157,10 @@
       "UPDATE_WORD_SCORES": {
         "endpoint": "/internal/scheduler/update-word-scores",
         "cron": "0 * * * *"
+      },
+      "RUN_TOURNAMENT_SCHEDULER": {
+        "endpoint": "/internal/scheduler/run-tournament-scheduler",
+        "cron": "0 0 * * *"
       }
     }
   },

@@ -18,7 +18,7 @@ interface ResultsViewProps {
   drawing: DrawingData;
   word: string;
   authorUsername?: string | undefined;
-  dictionaryName?: string | undefined;
+  dictionary?: string | undefined;
   currentSubreddit?: string | undefined;
   onDrawSomething: () => void;
   stats?: PostGuesses | null;
@@ -30,7 +30,7 @@ export function ResultsView({
   drawing,
   word,
   authorUsername,
-  dictionaryName,
+  dictionary,
   currentSubreddit,
   onDrawSomething,
   stats,
@@ -80,9 +80,9 @@ export function ResultsView({
 
   // Rendering flags
   const showTag =
-    dictionaryName &&
-    dictionaryName !== 'main' &&
-    dictionaryName !== `r/${currentSubreddit}`;
+    dictionary &&
+    dictionary !== 'main' &&
+    dictionary !== `r/${currentSubreddit}`;
 
   return (
     <main className="absolute inset-0 flex flex-col items-center justify-center h-full p-6 gap-6">
@@ -104,7 +104,7 @@ export function ResultsView({
           {showTag && (
             <div className="flex items-center gap-2 text-secondary">
               <PixelSymbol type="clock" />
-              <PixelFont>{`${dictionaryName} event`}</PixelFont>
+              <PixelFont>{`${dictionary} event`}</PixelFont>
             </div>
           )}
         </div>
