@@ -10,13 +10,13 @@ import {
   addWord,
   removeWord,
   getBannedWords,
-} from '../services/dictionary';
+} from '../services/words/dictionary';
 import {
   generateSlate,
   handleSlateEvent,
   getCurrentTimestamp,
   type SlateId,
-} from '../services/slate';
+} from '../services/words/slate';
 import {
   createDrawing,
   submitGuess,
@@ -57,9 +57,9 @@ export const appRouter = t.router({
         if (!ctx.subredditName) throw new Error('Subreddit not found');
 
         // Import initialization functions
-        const { initDictionary } = await import('../services/dictionary');
+        const { initDictionary } = await import('../services/words/dictionary');
         const { initFlairTemplates } = await import('../core/flair');
-        const { initSlateBandit } = await import('../services/slate');
+        const { initSlateBandit } = await import('../services/words/slate');
 
         // Run initialization
         await initDictionary();

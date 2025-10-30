@@ -30,7 +30,7 @@ vi.mock('./progression', () => ({
   incrementScore: vi.fn(),
 }));
 
-vi.mock('./word-backing', () => ({
+vi.mock('./words/word-backing', () => ({
   shouldShowWord: vi.fn().mockResolvedValue(true),
 }));
 
@@ -130,7 +130,7 @@ describe('Drawing Service', () => {
       vi.mocked(redis.zCard).mockResolvedValueOnce(3); // solvedCount
 
       // Mock shouldShowWord to return false so words get obfuscated
-      const { shouldShowWord } = await import('./word-backing');
+      const { shouldShowWord } = await import('./words/word-backing');
       vi.mocked(shouldShowWord).mockResolvedValue(false);
 
       const result = await getGuesses('t3_test123', 10);

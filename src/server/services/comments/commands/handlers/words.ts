@@ -1,5 +1,5 @@
 import type { CommandContext, CommandResult } from '../comment-commands';
-import { getWords } from '../dictionary';
+import { getWords } from '../../../words/dictionary';
 
 export async function handleWords(
   args: string[],
@@ -10,10 +10,7 @@ export async function handleWords(
     const page = parseInt(args[0] || '1', 10) || 1;
 
     if (page < 1 || page > 1000) {
-      return {
-        success: false,
-        error: 'Invalid page number (1-1000)',
-      };
+      return { success: false, error: 'Invalid page number (1-1000)' };
     }
 
     const offset = (page - 1) * pageSize;
@@ -23,7 +20,6 @@ export async function handleWords(
     const wordCount = total;
     const totalPages = Math.ceil(wordCount / pageSize);
 
-    // If 200 words or less total, show all words without pagination
     if (wordCount <= pageSize) {
       const wordList = words.join(', ');
       const response =
@@ -53,9 +49,6 @@ export async function handleWords(
       metadata: { page, totalPages, wordCount },
     };
   } catch (error) {
-    return {
-      success: false,
-      error: 'Failed to retrieve dictionary.',
-    };
+    return { success: false, error: 'Failed to retrieve dictionary.' };
   }
 }

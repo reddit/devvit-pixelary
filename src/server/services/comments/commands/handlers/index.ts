@@ -1,4 +1,3 @@
-// Comment command handlers
 export { handleWords } from './words';
 export { handleAdd } from './add';
 export { handleRemove } from './remove';

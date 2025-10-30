@@ -10,7 +10,7 @@ import {
 import type { MediaAsset } from '@devvit/web/server';
 import { createPost, setPostFlair } from '../../core';
 import { REDIS_KEYS, acquireLock, releaseLock, isRateLimited } from '../redis';
-import { getRandomWords } from '../dictionary';
+import { getRandomWords } from '../words/dictionary';
 import type { DrawingData, TournamentPostData } from '../../../shared/schema';
 import {
   TOURNAMENT_REWARD_VOTE,

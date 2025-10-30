@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { getWords } from '../services/dictionary';
+import { getWords } from '../services/words/dictionary';
 
 /**
  * Menu action handler for showing a form to view and edit the word list

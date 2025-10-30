@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { getRandomWords } from '../services/dictionary';
+import { getRandomWords } from '../services/words/dictionary';
 
 /**
  * Form handler for post type selection

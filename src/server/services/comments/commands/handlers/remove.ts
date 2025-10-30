@@ -1,23 +1,19 @@
 import type { CommandContext, CommandResult } from '../comment-commands';
-import { removeWord } from '../dictionary';
-import { getScore, getLevelByScore } from '../progression';
-import { hasReward } from '../../../shared/rewards';
+import { removeWord } from '../../../words/dictionary';
+import { getScore, getLevelByScore } from '../../../progression';
+import { hasReward } from '../../../../../shared/rewards';
 
 export async function handleRemove(
   args: string[],
   context: CommandContext
 ): Promise<CommandResult> {
   try {
-    // Check user level - requires Level 3 (1000+ points)
     if (context.authorId) {
       const userScore = await getScore(context.authorId);
       const userLevel = getLevelByScore(userScore);
 
       if (!hasReward(userLevel.rank, 'add_remove_words')) {
-        return {
-          success: false,
-          error: 'Requires Level 3 to remove words.',
-        };
+        return { success: false, error: 'Requires Level 3 to remove words.' };
       }
     }
 
@@ -30,10 +26,7 @@ export async function handleRemove(
 
     const word = args[0]?.trim();
     if (!word) {
-      return {
-        success: false,
-        error: 'Invalid word.',
-      };
+      return { success: false, error: 'Invalid word.' };
     }
 
     const success = await removeWord(word);
@@ -45,15 +38,9 @@ export async function handleRemove(
         metadata: { word, removedBy: context.authorName },
       };
     } else {
-      return {
-        success: false,
-        error: `Not in dictionary.`,
-      };
+      return { success: false, error: `Not in dictionary.` };
     }
   } catch (error) {
-    return {
-      success: false,
-      error: 'Failed to remove word.',
-    };
+    return { success: false, error: 'Failed to remove word.' };
   }
 }

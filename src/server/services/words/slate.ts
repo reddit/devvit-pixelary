@@ -1,20 +1,15 @@
 import { context, redis } from '@devvit/web/server';
-import { REDIS_KEYS } from './redis';
+import { REDIS_KEYS } from '../redis';
 import type { T3 } from '@devvit/shared-types/tid.js';
-import { clamp } from '../../shared/utils/numbers';
-import { shuffle } from '../../shared/utils/array';
+import { clamp } from '../../../shared/utils/numbers';
+import { shuffle } from '../../../shared/utils/array';
 
-// Default configuration
-const EXPLORATION_RATE = 0.1; // ε-exploration rate
+const EXPLORATION_RATE = 0.1;
 const Z_SCORE_CLAMP = 3;
 const WEIGHT_PICK_RATE = 1;
 const WEIGHT_POST_RATE = 1;
-const UCB_CONSTANT = 2; // Upper Confidence Bound exploration constant
-const SCORE_DECAY_RATE = 0.1; // Exponential decay rate per day
-
-/*
- * Slate types
- */
+const UCB_CONSTANT = 2;
+const SCORE_DECAY_RATE = 0.1;
 
 export type Slate = {
   slateId: SlateId;
@@ -32,21 +27,21 @@ export type SlateId = `slate_${string}`;
 
 export type SlateEventServed = {
   slateId: SlateId;
-  name: 'slate_served'; // Did you see it?
+  name: 'slate_served';
   timestamp: string;
 };
 
 export type SlateEventPicked = {
   slateId: SlateId;
-  name: 'slate_picked'; // Did you pick it?
+  name: 'slate_picked';
   timestamp: string;
   word: string;
-  position: number; // Position in the slate (0, 1, or 2)
+  position: number;
 };
 
 export type SlateEventPosted = {
   slateId: SlateId;
-  name: 'slate_posted'; // Did you post it?
+  name: 'slate_posted';
   word: string;
   postId: T3;
 };
@@ -62,14 +57,9 @@ export type SlateBanditConfig = {
   scoreDecayRate: number;
 };
 
-/**
- * Get the current slate bandit configuration from Redis
- */
 export async function getSlateBanditConfig(): Promise<SlateBanditConfig> {
   const configKey = REDIS_KEYS.slateConfig();
-
   const config = await redis.hGetAll(configKey);
-
   const rawConfig = {
     explorationRate: config.explorationRate
       ? parseFloat(config.explorationRate)
@@ -90,8 +80,6 @@ export async function getSlateBanditConfig(): Promise<SlateBanditConfig> {
       ? parseFloat(config.scoreDecayRate)
       : SCORE_DECAY_RATE,
   };
-
-  // Validate and clamp values
   const finalConfig = {
     explorationRate: clamp(rawConfig.explorationRate, 0, 1),
     zScoreClamp: Math.max(0.1, rawConfig.zScoreClamp),
@@ -100,13 +88,8 @@ export async function getSlateBanditConfig(): Promise<SlateBanditConfig> {
     ucbConstant: Math.max(0.1, rawConfig.ucbConstant),
     scoreDecayRate: clamp(rawConfig.scoreDecayRate, 0, 1),
   };
-
   return finalConfig;
 }
-
-/**
- * Set the slate bandit configuration in Redis
- */
 
 export async function setSlateBanditConfig(
   config: SlateBanditConfig
@@ -122,15 +105,9 @@ export async function setSlateBanditConfig(
   });
 }
 
-/**
- * Initialize the slate bandit with default configuration if not set
- */
-
 export async function initSlateBandit(): Promise<void> {
   const configKey = REDIS_KEYS.slateConfig();
   const existingKeys = await redis.exists(configKey);
-
-  // Only set defaults if no configuration exists
   if (existingKeys === 0) {
     const defaultConfig: SlateBanditConfig = {
       explorationRate: EXPLORATION_RATE,
@@ -142,23 +119,16 @@ export async function initSlateBandit(): Promise<void> {
     };
     await setSlateBanditConfig(defaultConfig);
   }
-
-  // Initialize uncertainty scores for all words if not already set
   const uncertaintyKey = REDIS_KEYS.wordsUncertainty(context.subredditName);
   const uncertaintyExists = await redis.global.exists(uncertaintyKey);
-
   if (uncertaintyExists === 0) {
-    // Get all words and set initial uncertainty
     const allWords = await redis.global.zRange(
       REDIS_KEYS.wordsAll(context.subredditName),
       0,
       -1
     );
-
-    // Only proceed if we have words to initialize
     if (allWords.length > 0) {
-      const initialUncertainty = 1 / Math.sqrt(10); // Small prior for new words
-
+      const initialUncertainty = 1 / Math.sqrt(10);
       await redis.global.zAdd(
         uncertaintyKey,
         ...allWords.map((word) => ({
@@ -170,14 +140,8 @@ export async function initSlateBandit(): Promise<void> {
   }
 }
 
-/**
- * Pick words using Upper Confidence Bound (UCB) algorithm
- */
-
 export async function pickWordsWithUCB(count: number = 3): Promise<string[]> {
   const config = await getSlateBanditConfig();
-
-  // Get all words with their scores and uncertainties
   const [allWords, uncertainties] = await Promise.all([
     redis.global.zRange(REDIS_KEYS.wordsAll(context.subredditName), 0, -1),
     redis.global.zRange(
@@ -186,47 +150,33 @@ export async function pickWordsWithUCB(count: number = 3): Promise<string[]> {
       -1
     ),
   ]);
-
   if (allWords.length < count) {
     throw new Error(
       `Not enough words available. Need ${count}, have ${allWords.length}`
     );
   }
-
-  // Create UCB scores: score + c * sqrt(ln(total_serves) / serves)
   const ucbScores: Array<{ word: string; ucbScore: number }> = [];
-
   for (const word of allWords) {
     const uncertainty =
       uncertainties.find((u) => u.member === word.member)?.score ?? 0;
     const ucbScore = (word.score ?? 0) + config.ucbConstant * uncertainty;
     ucbScores.push({ word: word.member, ucbScore });
   }
-
-  // Sort by UCB score (descending)
   ucbScores.sort((a, b) => b.ucbScore - a.ucbScore);
-
-  // Sample proportionally to UCB scores, but with some randomness
   const selectedWords: string[] = [];
   const remainingWords = [...ucbScores];
-
   for (let i = 0; i < count && remainingWords.length > 0; i++) {
-    // Use weighted random selection based on UCB scores
     const totalScore = remainingWords.reduce(
       (sum, w) => sum + Math.max(0, w.ucbScore),
       0
     );
-
     if (totalScore === 0) {
-      // If all scores are negative/zero, pick randomly
       const randomIndex = Math.floor(Math.random() * remainingWords.length);
       selectedWords.push(remainingWords[randomIndex]!.word);
       remainingWords.splice(randomIndex, 1);
     } else {
-      // Weighted selection
       let random = Math.random() * totalScore;
       let selectedIndex = 0;
-
       for (let j = 0; j < remainingWords.length; j++) {
         random -= Math.max(0, remainingWords[j]!.ucbScore);
         if (random <= 0) {
@@ -234,32 +184,19 @@ export async function pickWordsWithUCB(count: number = 3): Promise<string[]> {
           break;
         }
       }
-
       selectedWords.push(remainingWords[selectedIndex]!.word);
       remainingWords.splice(selectedIndex, 1);
     }
   }
-
   return selectedWords;
 }
-
-/**
- * Creates a new slate of candidates
- */
 
 export async function generateSlate(): Promise<Slate> {
   const slateId: SlateId = `slate_${crypto.randomUUID()}`;
   const slateKey = REDIS_KEYS.slate(slateId);
   const now = Date.now();
-
-  // Use UCB algorithm to pick words
   let slateWords = await pickWordsWithUCB(3);
-
-  // Dedupe if collisions
-  // Shouldn't happen with UCB but safety check
   slateWords = Array.from(new Set(slateWords));
-
-  // If dedupe shrank slate, backfill from top words
   while (slateWords.length < 3) {
     const backfill = await redis.global.zRange(
       REDIS_KEYS.wordsAll(context.subredditName),
@@ -275,48 +212,28 @@ export async function generateSlate(): Promise<Slate> {
     }
     if (slateWords.length < 3) break;
   }
-
-  // If we don't have 3 words at this point, just give up
   if (slateWords.length < 3) {
     throw new Error(`Unable to fill slate: ${slateWords.join(', ')}`);
   }
-
-  // Shuffle positions to avoid position bias
   slateWords = shuffle(slateWords);
-
-  // Create slate object
-  const slate: Slate = {
-    slateId,
-    words: slateWords,
-    timestamp: now,
-  };
-
-  // Persist slate data in Redis
+  const slate: Slate = { slateId, words: slateWords, timestamp: now };
   await redis.hSet(slateKey, {
     slateId,
     words: JSON.stringify(slateWords),
     timestamp: now.toString(),
   });
-  await redis.expire(slateKey, 90 * 24 * 60 * 60); // 90 days TTL
-
+  await redis.expire(slateKey, 90 * 24 * 60 * 60);
   return slate;
 }
-
-/**
- * Handle a slate events
- */
 
 export async function handleSlateEvent(event: SlateEvent): Promise<void> {
   const { slateId, name } = event;
   const timestamp = getCurrentTimestamp();
   const promises: Promise<unknown>[] = [];
-
   if (name === 'slate_served') {
-    // Increment impression counts + set servedAt time
     const rawWords = await redis.hGet(REDIS_KEYS.slate(slateId), 'words');
     if (!rawWords) return;
     const words = JSON.parse(rawWords) as string[];
-
     for (const word of words) {
       promises.push(
         redis.hIncrBy(
@@ -336,9 +253,7 @@ export async function handleSlateEvent(event: SlateEvent): Promise<void> {
       );
     }
     promises.push(
-      redis.hSet(REDIS_KEYS.slate(slateId), {
-        servedAt: timestamp,
-      }),
+      redis.hSet(REDIS_KEYS.slate(slateId), { servedAt: timestamp }),
       ...words.map((word) =>
         redis.zAdd(REDIS_KEYS.wordsActive(context.subredditName, timestamp), {
           member: word,
@@ -347,9 +262,7 @@ export async function handleSlateEvent(event: SlateEvent): Promise<void> {
       )
     );
   } else if (name === 'slate_picked') {
-    // Increment pick counts + set pickedAt time
-    const { word, position } = event;
-
+    const { word, position } = event as SlateEventPicked;
     promises.push(
       redis.hIncrBy(
         REDIS_KEYS.wordsHourlyStats(context.subredditName, timestamp),
@@ -368,8 +281,7 @@ export async function handleSlateEvent(event: SlateEvent): Promise<void> {
       })
     );
   } else if (name === 'slate_posted') {
-    // Increment post counts + set postedAt time
-    const { word, postId } = event;
+    const { word, postId } = event as SlateEventPosted;
     promises.push(
       redis.hIncrBy(
         REDIS_KEYS.wordsHourlyStats(context.subredditName, timestamp),
@@ -388,14 +300,8 @@ export async function handleSlateEvent(event: SlateEvent): Promise<void> {
       })
     );
   }
-
-  // Execute all promises in parallel
   await Promise.all(promises);
 }
-
-/**
- * Apply exponential decay to word scores based on recency
- */
 
 export async function applyScoreDecay(
   wordStats: Record<
@@ -408,11 +314,7 @@ export async function applyScoreDecay(
         pickRate: number;
         postRate: number;
       };
-      total: {
-        served: number;
-        picked: number;
-        posted: number;
-      };
+      total: { served: number; picked: number; posted: number };
       drawerScore?: number;
       drawerUncertainty?: number;
     }
@@ -429,64 +331,38 @@ export async function applyScoreDecay(
         pickRate: number;
         postRate: number;
       };
-      total: {
-        served: number;
-        picked: number;
-        posted: number;
-      };
+      total: { served: number; picked: number; posted: number };
       drawerScore?: number;
       drawerUncertainty?: number;
     }
   >
 > {
-  // Get last served timestamps for all words
   const lastServedData = await redis.zRange(
     REDIS_KEYS.wordsLastServed(context.subredditName),
     0,
     -1
   );
   const now = Date.now();
-
-  // Create a map for quick lookup
   const lastServedMap = new Map(
     (lastServedData || []).map((item) => [item.member, item.score])
   );
-
   for (const word in wordStats) {
     const wordStat = wordStats[word];
     if (!wordStat || !wordStat.drawerScore) continue;
-
-    // If never served, no decay
     if (wordStat.total.served === 0) continue;
-
     const lastServed = lastServedMap.get(word);
-    if (!lastServed) {
-      // Word has been served but no timestamp recorded - skip decay
-      continue;
-    }
-
+    if (!lastServed) continue;
     const daysSinceLastServed = (now - lastServed) / (1000 * 60 * 60 * 24);
-
-    // Apply exponential decay: score * exp(-decayRate * days)
     const decayFactor = Math.exp(-config.scoreDecayRate * daysSinceLastServed);
     wordStat.drawerScore *= decayFactor;
   }
-
   return wordStats;
 }
-
-/**
- * Get the current timestamp
- */
 
 export function getCurrentTimestamp(): string {
   const now = new Date();
   return now.toISOString().slice(0, 13).replace('T', '-');
 }
-
-/**
- * Get the previous timestamp
- */
 
 function getPreviousTimestamp(): string {
   const now = new Date();
@@ -494,13 +370,8 @@ function getPreviousTimestamp(): string {
   return lastHour.toISOString().slice(0, 13).replace('T', '-');
 }
 
-/*
- * Update the word scores. Runs every hour.
- */
-
 export async function updateWordScores() {
   const timestamp = getPreviousTimestamp();
-
   const [allWords, allHourlyStats, allTotalStats, config] = await Promise.all([
     redis.zRange(REDIS_KEYS.wordsAll(context.subredditName), 0, -1),
     redis.hGetAll(
@@ -509,14 +380,10 @@ export async function updateWordScores() {
     redis.hGetAll(REDIS_KEYS.wordsTotalStats(context.subredditName)),
     getSlateBanditConfig(),
   ]);
-
   const words = allWords.map((item) => item.member);
-
   if (words.length === 0) {
     return;
   }
-
-  // Intermediate tallies
   const pickRates: number[] = [];
   const postRates: number[] = [];
   const wordStats: Record<
@@ -529,70 +396,36 @@ export async function updateWordScores() {
         pickRate: number;
         postRate: number;
       };
-      total: {
-        served: number;
-        picked: number;
-        posted: number;
-      };
+      total: { served: number; picked: number; posted: number };
       drawerScore?: number;
       drawerUncertainty?: number;
     }
   > = {};
-
   for (const word of words) {
-    // Extract per-word stats from shared hashes
-    const hourly = {
-      served: allHourlyStats[`${word}:served`],
-      picked: allHourlyStats[`${word}:picked`],
-      posted: allHourlyStats[`${word}:posted`],
-    };
-    const total = {
-      served: allTotalStats[`${word}:served`],
-      picked: allTotalStats[`${word}:picked`],
-      posted: allTotalStats[`${word}:posted`],
-    };
-
-    // Parse stats
-    const hourlyServed = parseInt(hourly.served ?? '0');
-    const hourlyPicked = parseInt(hourly.picked ?? '0');
-    const hourlyPosted = parseInt(hourly.posted ?? '0');
-    const totalServed = parseInt(total.served ?? '0');
-    const totalPicked = parseInt(total.picked ?? '0');
-    const totalPosted = parseInt(total.posted ?? '0');
-
-    // Skip hourly rate calculation if no hourly data
+    const hourlyServed = parseInt(allHourlyStats[`${word}:served`] ?? '0');
+    const hourlyPicked = parseInt(allHourlyStats[`${word}:picked`] ?? '0');
+    const hourlyPosted = parseInt(allHourlyStats[`${word}:posted`] ?? '0');
+    const totalServed = parseInt(allTotalStats[`${word}:served`] ?? '0');
+    const totalPicked = parseInt(allTotalStats[`${word}:picked`] ?? '0');
+    const totalPosted = parseInt(allTotalStats[`${word}:posted`] ?? '0');
     if (hourlyServed === 0) {
-      // Still calculate uncertainty based on total stats
       const drawerUncertainty = 1 / Math.sqrt(Math.max(totalServed, 1));
-
       wordStats[word] = {
-        hourly: {
-          served: 0,
-          picked: 0,
-          posted: 0,
-          pickRate: 0,
-          postRate: 0,
-        },
+        hourly: { served: 0, picked: 0, posted: 0, pickRate: 0, postRate: 0 },
         total: {
           served: totalServed,
           picked: totalPicked,
           posted: totalPosted,
         },
-        drawerScore: 0, // Default score for words with no hourly data
+        drawerScore: 0,
         drawerUncertainty,
       };
       continue;
     }
-
-    // Smoothing (alpha-beta filter)
     const hourlyPickRate = (hourlyPicked + 5) / (hourlyServed + 100);
     const hourlyPostRate = (hourlyPosted + 5) / (hourlyPicked + 10);
-
-    // Collect rates for later normalization
     pickRates.push(hourlyPickRate);
     postRates.push(hourlyPostRate);
-
-    // Store stats
     wordStats[word] = {
       hourly: {
         served: hourlyServed,
@@ -601,60 +434,42 @@ export async function updateWordScores() {
         pickRate: hourlyPickRate,
         postRate: hourlyPostRate,
       },
-      total: {
-        served: totalServed,
-        picked: totalPicked,
-        posted: totalPosted,
-      },
+      total: { served: totalServed, picked: totalPicked, posted: totalPosted },
     };
   }
-
-  // Only compute z-scores if we have enough data points
   let meanPickRate = 0;
   let stdPickRate = 1;
   let meanPostRate = 0;
   let stdPostRate = 1;
-
   if (pickRates.length > 1) {
     meanPickRate = pickRates.reduce((a, b) => a + b, 0) / pickRates.length;
     const variancePickRate =
       pickRates.reduce((a, b) => a + Math.pow(b - meanPickRate, 2), 0) /
       pickRates.length;
     stdPickRate = Math.sqrt(variancePickRate);
-
-    // Prevent division by zero
     if (stdPickRate === 0) {
       stdPickRate = 1;
     }
   }
-
   if (postRates.length > 1) {
     meanPostRate = postRates.reduce((a, b) => a + b, 0) / postRates.length;
     const variancePostRate =
       postRates.reduce((a, b) => a + Math.pow(b - meanPostRate, 2), 0) /
       postRates.length;
     stdPostRate = Math.sqrt(variancePostRate);
-
-    // Prevent division by zero
     if (stdPostRate === 0) {
       stdPostRate = 1;
     }
   }
-
-  // Compute z-scores, uncertainties, and drawerscores
   for (const word in wordStats) {
     const wordStat = wordStats[word];
     if (!wordStat) continue;
-
     let zPickRate = 0;
     let zPostRate = 0;
-
-    // Only calculate z-scores if we have hourly data
     if (wordStat.hourly.served > 0) {
       zPickRate = (wordStat.hourly.pickRate - meanPickRate) / stdPickRate;
       zPostRate = (wordStat.hourly.postRate - meanPostRate) / stdPostRate;
     }
-
     const zPickRateClamped = clamp(
       zPickRate,
       -config.zScoreClamp,
@@ -665,44 +480,27 @@ export async function updateWordScores() {
       -config.zScoreClamp,
       config.zScoreClamp
     );
-
     const drawerScore =
       config.weightPickRate * zPickRateClamped +
       config.weightPostRate * zPostRateClamped;
     const drawerUncertainty = 1 / Math.sqrt(Math.max(wordStat.total.served, 1));
-
-    // Append drawer score and uncertainty to word stats
-    wordStats[word] = {
-      ...wordStat,
-      drawerScore,
-      drawerUncertainty,
-    };
+    wordStats[word] = { ...wordStat, drawerScore, drawerUncertainty };
   }
-
-  // Apply score decay based on recency
   const decayedWordStats = await applyScoreDecay(wordStats, config);
-
-  // Prepare data for Redis operations
   const scoreEntries = words.map((word) => ({
     member: word,
     score: decayedWordStats[word]?.drawerScore ?? 0,
   }));
-
   const uncertaintyEntries = words.map((word) => ({
     member: word,
     score: decayedWordStats[word]?.drawerUncertainty ?? 0,
   }));
-
-  // Save data to Redis + cleanup
   await Promise.all([
-    // Scores
     redis.zAdd(REDIS_KEYS.wordsAll(context.subredditName), ...scoreEntries),
-    // Uncertainties
     redis.zAdd(
       REDIS_KEYS.wordsUncertainty(context.subredditName),
       ...uncertaintyEntries
     ),
-    // Cleanup hourly stats in 90 days
     redis.expire(
       REDIS_KEYS.wordsHourlyStats(context.subredditName, timestamp),
       90 * 24 * 60 * 60

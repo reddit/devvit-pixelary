@@ -3,6 +3,7 @@ import { reddit } from '@devvit/web/server';
 import { getTournament } from './post';
 import { REDIS_KEYS } from '../redis';
 import { redis } from '@devvit/web/server';
+import { createPinnedComment } from '../comments/pinned';
 
 export async function generateTournamentCommentText(
   word: string
@@ -22,35 +23,10 @@ export async function generateTournamentCommentText(
 Good luck and let the best drawing win! 🎨`;
 }
 
-export async function saveTournamentPinnedCommentId(
-  postId: T3,
-  commentId: T1
-): Promise<void> {
-  const key = REDIS_KEYS.tournament(postId);
-  await redis.hSet(key, {
-    pinnedCommentId: commentId,
-  });
-}
-
-export async function getTournamentPinnedCommentId(
-  postId: T3
-): Promise<T1 | null> {
-  const key = REDIS_KEYS.tournament(postId);
-  const commentId = await redis.hGet(key, 'pinnedCommentId');
-  return commentId as T1 | null;
-}
+// Pinned comment storage is handled by services/comments/pinned
 
 export async function createTournamentPostComment(postId: T3): Promise<T1> {
   const data = await getTournament(postId);
   const commentText = await generateTournamentCommentText(data.word);
-
-  const comment = await reddit.submitComment({
-    text: commentText,
-    id: postId,
-  });
-
-  await comment.distinguish(true);
-  await saveTournamentPinnedCommentId(postId, comment.id);
-
-  return comment.id;
+  return await createPinnedComment(postId, commentText);
 }

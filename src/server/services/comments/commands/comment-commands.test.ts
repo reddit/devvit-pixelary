@@ -3,13 +3,13 @@ import { processCommand } from './comment-commands';
 import type { CommandContext } from './comment-commands';
 
 // Mock the progression service to return a level 1 user (below level 2 requirement)
-vi.mock('./progression', () => ({
+vi.mock('../../progression', () => ({
   getScore: vi.fn().mockResolvedValue(50), // Level 1 user (below level 2)
   getLevelByScore: vi.fn().mockReturnValue({ rank: 1 }),
 }));
 
 // Mock the dictionary service
-vi.mock('./dictionary', () => ({
+vi.mock('../../words/dictionary', () => ({
   addWord: vi.fn().mockResolvedValue(true),
   getBannedWords: vi.fn().mockResolvedValue({
     words: [],
@@ -22,10 +22,22 @@ vi.mock('./dictionary', () => ({
 }));
 
 // Mock the word-backing service
-vi.mock('./word-backing', () => ({
+vi.mock('../../words/word-backing', () => ({
   getBacker: vi.fn().mockResolvedValue(null),
   addBacker: vi.fn().mockResolvedValue(undefined),
   shouldShowWord: vi.fn().mockResolvedValue(false),
+}));
+
+// Mock @devvit/web/server to avoid ESM import attribute parsing issues
+vi.mock('@devvit/web/server', () => ({
+  context: { subredditName: 'testsub' },
+  redis: {
+    hGetAll: vi.fn().mockResolvedValue({}),
+    zRange: vi.fn().mockResolvedValue([]),
+    zCard: vi.fn().mockResolvedValue(0),
+  },
+  reddit: {},
+  scheduler: { runJob: vi.fn() },
 }));
 
 describe('Comment command system', () => {
@@ -72,13 +84,11 @@ describe('Comment command system', () => {
 
       const addResult = await processCommand('!add', ['test'], context);
       expect(addResult.success).toBe(false);
-      // The mocking isn't working properly, so we get the catch block error
-      // But the actual level gate functionality is implemented correctly
-      expect(addResult.error).toContain('Failed to add word');
+      expect(addResult.error).toContain('Requires Level 3 to add words.');
 
       const removeResult = await processCommand('!remove', ['test'], context);
       expect(removeResult.success).toBe(false);
-      expect(removeResult.error).toContain('Failed to remove word');
+      expect(removeResult.error).toContain('Requires Level 3 to remove words.');
     });
 
     test('should handle !show command without postId', async () => {

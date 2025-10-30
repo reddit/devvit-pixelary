@@ -10,7 +10,7 @@ import {
 import { incrementScore } from './progression';
 import { REDIS_KEYS, acquireLock, isRateLimited } from './redis';
 import { normalizeWord, obfuscateString } from '../../shared/utils/string';
-import { shouldShowWord } from './word-backing';
+import { shouldShowWord } from './words/word-backing';
 import type { DrawingPostDataExtended } from '../../shared/schema/pixelary';
 import { createPost } from '../core/post';
 import { setPostFlair } from '../core/flair';
@@ -23,6 +23,7 @@ import {
   GUESSER_REWARD_SOLVE,
 } from '../../shared/constants';
 import type { MediaAsset } from '@devvit/web/server';
+import { createPinnedComment, updatePinnedComment } from './comments/pinned';
 
 // OPTIMIZATION: Use Devvit's cache helper for drawing data to reduce Redis calls
 const DRAWING_DATA_TTL = 5 * 60; // 5 minutes cache TTL (in seconds)
@@ -805,18 +806,9 @@ type CommentSection = {
  */
 export async function createDrawingPostComment(postId: T3): Promise<T1> {
   const commentText = generateDrawingCommentText();
-
-  const comment = await reddit.submitComment({
-    text: commentText,
-    id: postId,
-  });
-
-  // Pin the comment and save ID
-  await comment.distinguish(true);
-  await savePinnedCommentId(postId, comment.id);
+  const id = await createPinnedComment(postId, commentText);
   await saveLastCommentUpdate(postId, Date.now());
-
-  return comment.id;
+  return id;
 }
 
 /**
@@ -835,10 +827,7 @@ export async function updateDrawingPostComment(postId: T3): Promise<void> {
   const commentText = generateDrawingCommentText(stats);
 
   // Update the comment
-  const comment = await reddit.getCommentById(
-    postData.pinnedCommentId as `t1_${string}`
-  );
-  await comment.edit({ text: commentText });
+  await updatePinnedComment(postId, commentText);
 
   // Update timestamp
   await saveLastCommentUpdate(postId, Date.now());

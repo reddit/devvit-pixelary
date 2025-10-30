@@ -5,10 +5,10 @@ import {
   isCommand,
   parseCommand,
   handleCommentEdit,
-} from '../services/comment-commands';
-import { getBackedWord, removeBacker } from '../services/word-backing';
-import { processCommand } from '../services/comment-commands';
-import { banWord } from '../services/dictionary';
+  processCommand,
+} from '../services/comments/commands/comment-commands';
+import { getBackedWord, removeBacker } from '../services/words/word-backing';
+import { banWord } from '../services/words/dictionary';
 import {
   removeTournamentEntry,
   getTournamentEntry,

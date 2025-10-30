@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { getBannedWords } from '../services/dictionary';
+import { getBannedWords } from '../services/words/dictionary';
 
 /**
  * Menu action handler for showing a form to view and edit the banned words list

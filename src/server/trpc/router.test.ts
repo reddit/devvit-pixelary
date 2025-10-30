@@ -7,7 +7,7 @@ import {
   createMockGuessSubmitInput,
 } from '../../shared/test-utils';
 
-vi.mock('../services/dictionary', () => ({
+vi.mock('../services/words/dictionary', () => ({
   getWords: vi.fn(async () => ({
     words: ['cat', 'dog', 'tree'],
     total: 3,
@@ -23,7 +23,7 @@ vi.mock('../services/dictionary', () => ({
   getAllowedWords: vi.fn(async () => ['cat', 'dog', 'tree']),
 }));
 
-vi.mock('../services/slate', () => ({
+vi.mock('../services/words/slate', () => ({
   generateSlate: vi.fn(async () => ({
     slateId: 'slate_123',
     words: ['cat', 'dog', 'tree'],

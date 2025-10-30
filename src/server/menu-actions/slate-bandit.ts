@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { getSlateBanditConfig } from '../services/slate';
+import { getSlateBanditConfig } from '../services/words/slate';
 
 /**
  * Menu action handler for slate bandit configuration

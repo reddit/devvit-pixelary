@@ -1,7 +1,5 @@
-import { context, reddit, redis, scheduler } from '@devvit/web/server';
 import type { T2, T3 } from '@devvit/shared-types/tid.js';
 import type { Level } from '../../shared/types';
-import { REDIS_KEYS } from '../services/redis';
 
 // Configuration-driven approach
 const FLAIR_CONFIG = {
@@ -42,6 +40,8 @@ interface DrawingStats {
  * Creates missing templates and updates existing ones, saves their IDs to Redis
  */
 export async function initFlairTemplates(): Promise<void> {
+  const { context, reddit, redis } = await import('@devvit/web/server');
+  const { REDIS_KEYS } = await import('../services/redis');
   const subredditName = context.subredditName;
   try {
     // Check if flair is enabled by trying to get templates
@@ -112,6 +112,7 @@ export async function setUserFlair(
 ): Promise<void> {
   try {
     // Schedule the flair setting job to run in app context
+    const { scheduler } = await import('@devvit/web/server');
     await scheduler.runJob({
       name: 'SET_USER_FLAIR',
       data: {
@@ -135,6 +136,8 @@ export async function setPostFlair(
   difficulty: string
 ): Promise<void> {
   try {
+    const { reddit, redis } = await import('@devvit/web/server');
+    const { REDIS_KEYS } = await import('../services/redis');
     const templateId = await redis.get(
       REDIS_KEYS.flairTemplates.post(difficulty)
     );

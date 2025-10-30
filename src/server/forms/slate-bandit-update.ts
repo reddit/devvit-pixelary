@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { setSlateBanditConfig } from '../services/slate';
+import { setSlateBanditConfig } from '../services/words/slate';
 
 /**
  * Form handler for slate bandit configuration update

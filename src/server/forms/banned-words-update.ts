@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { replaceBannedWords } from '../services/dictionary';
+import { replaceBannedWords } from '../services/words/dictionary';
 import { context } from '@devvit/web/server';
 
 /**

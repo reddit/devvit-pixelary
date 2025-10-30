@@ -22,8 +22,5 @@ export async function handleHelp(
     `Accountability note:\n` +
     `Users add words publicly via comments. Others can remove them. Words removed by Reddit's safety systems cannot be added back.`;
 
-  return {
-    success: true,
-    response,
-  };
+  return { success: true, response };
 }

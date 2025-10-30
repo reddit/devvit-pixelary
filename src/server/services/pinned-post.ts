@@ -1,8 +1,9 @@
-import { redis, scheduler, reddit } from '@devvit/web/server';
+import { scheduler, reddit } from '@devvit/web/server';
 import { REDIS_KEYS } from './redis';
 import { createPost } from '../core/post';
 import { getLeaderboard } from './progression';
 import type { T1, T3 } from '@devvit/shared-types/tid.js';
+import { createPinnedComment, updatePinnedComment } from './comments/pinned';
 
 /**
  * Pinned Post Service
@@ -50,26 +51,7 @@ export async function createPinnedPost(title: string): Promise<T3> {
  * @param postId - The ID of the pinned post to save the pinned comment ID for
  * @param commentId - The ID of the pinned comment
  */
-export async function savePinnedPostCommentId(
-  postId: T3,
-  commentId: T1
-): Promise<void> {
-  const key = REDIS_KEYS.comment(postId);
-  await redis.hSet(key, {
-    pinnedCommentId: commentId,
-  });
-}
-
-/**
- * Get the pinned comment ID for a pinned post
- * @param postId - The ID of the pinned post to get the pinned comment ID for
- * @returns The pinned comment ID if it exists, null otherwise
- */
-export async function getPinnedPostCommentId(postId: T3): Promise<T1 | null> {
-  const key = REDIS_KEYS.comment(postId);
-  const commentId = await redis.hGet(key, 'pinnedCommentId');
-  return commentId as T1 | null;
-}
+// Storage of pinned comment IDs is handled in services/comments/pinned
 
 /**
  * Generate the dynamic comment text for pinned posts with leaderboard data
@@ -116,17 +98,7 @@ May the best artist win!`;
  */
 export async function createPinnedPostComment(postId: T3): Promise<T1> {
   const commentText = await generatePinnedPostCommentText();
-
-  const comment = await reddit.submitComment({
-    text: commentText,
-    id: postId,
-  });
-
-  // Pin the comment and save ID
-  await comment.distinguish(true);
-  await savePinnedPostCommentId(postId, comment.id);
-
-  return comment.id;
+  return await createPinnedComment(postId, commentText);
 }
 
 /**
@@ -135,18 +107,7 @@ export async function createPinnedPostComment(postId: T3): Promise<T1> {
  * @returns Promise that resolves when the comment is updated
  */
 export async function updatePinnedPostComment(postId: T3): Promise<void> {
-  // Get the pinned comment ID
-  const pinnedCommentId = await getPinnedPostCommentId(postId);
-  if (!pinnedCommentId) {
-    throw new Error(`No pinned comment found for post ${postId}`);
-  }
-
   // Generate the latest comment text with current leaderboard
   const commentText = await generatePinnedPostCommentText();
-
-  // Update the comment
-  const comment = await reddit.getCommentById(
-    pinnedCommentId as `t1_${string}`
-  );
-  await comment.edit({ text: commentText });
+  await updatePinnedComment(postId, commentText);
 }

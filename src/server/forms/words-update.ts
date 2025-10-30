@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { updateWordsPreservingScores } from '../services/dictionary';
+import { updateWordsPreservingScores } from '../services/words/dictionary';
 import { context } from '@devvit/web/server';
 
 /**

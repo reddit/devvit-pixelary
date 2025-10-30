@@ -1,41 +1,34 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { CommandContext } from '../comment-commands';
+import type { T1, T2, T3, T5 } from '@devvit/shared-types/tid.js';
 
 // Mock the context
 vi.mock('@devvit/web/server', () => ({
-  context: {
-    subredditName: 'testsub',
-  },
-  redis: {
-    hGetAll: vi.fn(),
-    zRange: vi.fn(),
-    zCard: vi.fn(),
-  },
+  context: { subredditName: 'testsub' },
+  redis: { hGetAll: vi.fn(), zRange: vi.fn(), zCard: vi.fn() },
 }));
 
 // Mock the dictionary service
-vi.mock('../dictionary', () => ({
+vi.mock('../../../words/dictionary', () => ({
   isWordInList: vi.fn().mockResolvedValue(true),
 }));
 
 // Mock the word-backing service
-vi.mock('../word-backing', () => ({
+vi.mock('../../../words/word-backing', () => ({
   addBacker: vi.fn().mockResolvedValue(undefined),
 }));
 
 import { redis } from '@devvit/web/server';
 import { handleStats, getWordMetrics } from './stats';
-import { isWordInList } from '../dictionary';
+import { isWordInList } from '../../../words/dictionary';
 
-// Mock context for tests
-const mockContext = {
-  commentId: 't1_test123' as const,
-  postId: 't3_test456' as const,
-  authorId: 't2_test789' as const,
+const mockContext: CommandContext = {
+  commentId: 't1_test123' as T1,
+  postId: 't3_test456' as T3,
+  authorId: 't2_test789' as T2,
   authorName: 'testuser',
   subredditName: 'testsub',
-  subredditId: 't5_testsub' as const,
-  userId: 't2_test789' as const,
-  username: 'testuser',
+  subredditId: 't5_testsub' as T5,
   timestamp: Date.now(),
 };
 
@@ -51,8 +44,8 @@ describe('Stats Comment Handler', () => {
         'Test:served': '500',
         'Test:picked': '250',
         'Test:posted': '125',
-      };
-      const mockWordDrawings = [
+      } as Record<string, string>;
+      const mockWordDrawings: Array<{ member: string; score: number }> = [
         { member: 't3_drawing1', score: 1 },
         { member: 't3_drawing2', score: 2 },
       ];
@@ -60,14 +53,14 @@ describe('Stats Comment Handler', () => {
       vi.mocked(redis.hGetAll).mockResolvedValue(mockTotalStats);
       vi.mocked(redis.zRange).mockResolvedValue(mockWordDrawings);
       vi.mocked(redis.zCard)
-        .mockResolvedValueOnce(100) // drawingAttempts for drawing1
-        .mockResolvedValueOnce(50) // drawingSolves for drawing1
-        .mockResolvedValueOnce(20) // drawingSkips for drawing1
-        .mockResolvedValueOnce(80) // drawingGuesses for drawing1
-        .mockResolvedValueOnce(50) // drawingAttempts for drawing2
-        .mockResolvedValueOnce(30) // drawingSolves for drawing2
-        .mockResolvedValueOnce(10) // drawingSkips for drawing2
-        .mockResolvedValueOnce(40); // drawingGuesses for drawing2
+        .mockResolvedValueOnce(100)
+        .mockResolvedValueOnce(50)
+        .mockResolvedValueOnce(20)
+        .mockResolvedValueOnce(80)
+        .mockResolvedValueOnce(50)
+        .mockResolvedValueOnce(30)
+        .mockResolvedValueOnce(10)
+        .mockResolvedValueOnce(40);
 
       const result = await getWordMetrics(word);
 
@@ -76,13 +69,13 @@ describe('Stats Comment Handler', () => {
         clicks: 250,
         clickRate: 0.5,
         publishes: 125,
-        publishRate: 0.25, // 125/500
-        starts: 150, // 100 + 50
-        guesses: 120, // 80 + 40
-        skips: 30, // 20 + 10
-        solves: 80, // 50 + 30
-        skipRate: 0.2, // 30/150
-        solveRate: 0.5333333333333333, // 80/150
+        publishRate: 0.25,
+        starts: 150,
+        guesses: 120,
+        skips: 30,
+        solves: 80,
+        skipRate: 0.2,
+        solveRate: 0.5333333333333333,
         upvotes: 0,
         comments: 0,
       });
@@ -94,16 +87,18 @@ describe('Stats Comment Handler', () => {
         'Test:served': '100',
         'Test:picked': '50',
         'Test:posted': '25',
-      };
-      const mockWordDrawings = [{ member: 't3_drawing1', score: 1 }];
+      } as Record<string, string>;
+      const mockWordDrawings: Array<{ member: string; score: number }> = [
+        { member: 't3_drawing1', score: 1 },
+      ];
 
       vi.mocked(redis.hGetAll).mockResolvedValue(mockTotalStats);
       vi.mocked(redis.zRange).mockResolvedValue(mockWordDrawings);
       vi.mocked(redis.zCard)
-        .mockResolvedValueOnce(25) // drawingAttempts
-        .mockResolvedValueOnce(15) // drawingSolves
-        .mockResolvedValueOnce(5) // drawingSkips
-        .mockResolvedValueOnce(20); // drawingGuesses
+        .mockResolvedValueOnce(25)
+        .mockResolvedValueOnce(15)
+        .mockResolvedValueOnce(5)
+        .mockResolvedValueOnce(20);
 
       const result = await getWordMetrics(word);
 
@@ -112,7 +107,7 @@ describe('Stats Comment Handler', () => {
         clicks: 50,
         clickRate: 0.5,
         publishes: 25,
-        publishRate: 0.25, // 25/100
+        publishRate: 0.25,
         starts: 25,
         guesses: 20,
         skips: 5,
@@ -128,13 +123,13 @@ describe('Stats Comment Handler', () => {
       const word = 'test';
       const mockWordDrawings = [{ member: 't3_drawing1', score: 1 }];
 
-      vi.mocked(redis.hGetAll).mockResolvedValue({}); // Empty total stats
+      vi.mocked(redis.hGetAll).mockResolvedValue({} as Record<string, string>);
       vi.mocked(redis.zRange).mockResolvedValue(mockWordDrawings);
       vi.mocked(redis.zCard)
-        .mockResolvedValueOnce(20) // drawingAttempts
-        .mockResolvedValueOnce(15) // drawingSolves
-        .mockResolvedValueOnce(5) // drawingSkips
-        .mockResolvedValueOnce(20); // drawingGuesses
+        .mockResolvedValueOnce(20)
+        .mockResolvedValueOnce(15)
+        .mockResolvedValueOnce(5)
+        .mockResolvedValueOnce(20);
 
       const result = await getWordMetrics(word);
 
@@ -161,10 +156,10 @@ describe('Stats Comment Handler', () => {
         'Test:served': '500',
         'Test:picked': '250',
         'Test:posted': '125',
-      };
+      } as Record<string, string>;
 
       vi.mocked(redis.hGetAll).mockResolvedValue(mockTotalStats);
-      vi.mocked(redis.zRange).mockResolvedValue([]); // No drawings
+      vi.mocked(redis.zRange).mockResolvedValue([]);
 
       const result = await getWordMetrics(word);
 
@@ -173,7 +168,7 @@ describe('Stats Comment Handler', () => {
         clicks: 250,
         clickRate: 0.5,
         publishes: 125,
-        publishRate: 0.25, // 125/500
+        publishRate: 0.25,
         starts: 0,
         guesses: 0,
         skips: 0,
@@ -191,7 +186,7 @@ describe('Stats Comment Handler', () => {
         'Test:served': '0',
         'Test:picked': '0',
         'Test:posted': '0',
-      };
+      } as Record<string, string>;
 
       vi.mocked(redis.hGetAll).mockResolvedValue(mockTotalStats);
       vi.mocked(redis.zRange).mockResolvedValue([]);
@@ -221,7 +216,7 @@ describe('Stats Comment Handler', () => {
         'Test:served': '0',
         'Test:picked': '0',
         'Test:posted': '0',
-      };
+      } as Record<string, string>;
 
       vi.mocked(redis.hGetAll).mockResolvedValue(mockTotalStats);
       vi.mocked(redis.zRange).mockResolvedValue([]);
@@ -240,23 +235,25 @@ describe('Stats Comment Handler', () => {
         'Test:served': '100',
         'Test:picked': '30',
         'Test:posted': '20',
-      };
-      const mockWordDrawings = [{ member: 't3_drawing1', score: 1 }];
+      } as Record<string, string>;
+      const mockWordDrawings: Array<{ member: string; score: number }> = [
+        { member: 't3_drawing1', score: 1 },
+      ];
 
       vi.mocked(redis.hGetAll).mockResolvedValue(mockTotalStats);
       vi.mocked(redis.zRange).mockResolvedValue(mockWordDrawings);
       vi.mocked(redis.zCard)
-        .mockResolvedValueOnce(50) // drawingAttempts
-        .mockResolvedValueOnce(40) // drawingSolves
-        .mockResolvedValueOnce(10) // drawingSkips
-        .mockResolvedValueOnce(50); // drawingGuesses
+        .mockResolvedValueOnce(50)
+        .mockResolvedValueOnce(40)
+        .mockResolvedValueOnce(10)
+        .mockResolvedValueOnce(50);
 
       const result = await getWordMetrics(word);
 
       expect(result.clickRate).toBe(0.3);
       expect(result.publishRate).toBe(0.2);
-      expect(result.skipRate).toBe(0.2); // 10/50
-      expect(result.solveRate).toBe(0.8); // 40/50
+      expect(result.skipRate).toBe(0.2);
+      expect(result.solveRate).toBe(0.8);
     });
 
     it('should handle Redis errors gracefully', async () => {
@@ -266,7 +263,6 @@ describe('Stats Comment Handler', () => {
 
       const result = await getWordMetrics(word);
 
-      // Should return zero metrics on error
       expect(result).toEqual({
         impressions: 0,
         clicks: 0,
@@ -290,32 +286,28 @@ describe('Stats Comment Handler', () => {
         'Test:served': 'invalid',
         'Test:picked': '250',
         'Test:posted': '125',
-      };
+      } as Record<string, string>;
 
       vi.mocked(redis.hGetAll).mockResolvedValue(mockTotalStats);
       vi.mocked(redis.zRange).mockResolvedValue([]);
 
       const result = await getWordMetrics(word);
 
-      expect(result.impressions).toBe(NaN); // Should be NaN for invalid value
+      expect(result.impressions).toBeNaN();
       expect(result.clicks).toBe(250);
-      expect(result.clickRate).toBe(0); // 250/NaN = 0 (due to error handling)
+      expect(result.clickRate).toBe(0);
     });
   });
 
   describe('handleStats', () => {
     it('should return formatted stats for a word', async () => {
       const args = ['test'];
-
-      // Mock isWordInList to return true
       vi.mocked(isWordInList).mockResolvedValue(true);
-
-      // Mock the Redis calls directly
       vi.mocked(redis.hGetAll).mockResolvedValue({
         'Test:served': '100',
         'Test:picked': '50',
         'Test:posted': '25',
-      });
+      } as Record<string, string>);
       vi.mocked(redis.zRange).mockResolvedValue([]);
 
       const result = await handleStats(args, mockContext);
@@ -324,66 +316,49 @@ describe('Stats Comment Handler', () => {
       expect(result.response).toContain('100');
       expect(result.response).toContain('50');
       expect(result.response).toContain('25');
-      expect(result.response).toContain('0'); // starts, guesses, etc. are 0 when no drawings
+      expect(result.response).toContain('0');
     });
 
     it('should handle missing word argument', async () => {
       const args: string[] = [];
-
       const result = await handleStats(args, mockContext);
-
-      expect(result.success).toBe(true); // Should return success with usage message
+      expect(result.success).toBe(true);
       expect(result.response).toContain('Usage');
     });
 
     it('should handle word not found', async () => {
       const args = ['nonexistent'];
-
-      // Mock isWordInList to return false
       vi.mocked(isWordInList).mockResolvedValue(false);
-
       const result = await handleStats(args, mockContext);
-
       expect(result.success).toBe(false);
       expect(result.error).toContain('Word not found');
     });
 
     it('should handle getWordMetrics errors', async () => {
       const args = ['test'];
-
-      // Mock isWordInList to return true so we get to the getWordMetrics call
       vi.mocked(isWordInList).mockResolvedValue(true);
-
-      // Mock Redis to throw an error
       vi.mocked(redis.hGetAll).mockRejectedValue(new Error('Database error'));
-
       const result = await handleStats(args, mockContext);
-
-      // The service handles Redis errors gracefully by returning zero metrics
       expect(result.success).toBe(true);
-      expect(result.response).toContain('0'); // All metrics should be 0 due to error handling
+      expect(result.response).toContain('0');
     });
 
     it('should format percentages correctly', async () => {
       const args = ['test'];
-
-      // Mock isWordInList to return true
       vi.mocked(isWordInList).mockResolvedValue(true);
-
-      // Mock the Redis calls to return specific values
       vi.mocked(redis.hGetAll).mockResolvedValue({
         'Test:served': '100',
         'Test:picked': '33',
         'Test:posted': '10',
-      });
+      } as Record<string, string>);
       vi.mocked(redis.zRange).mockResolvedValue([
         { member: 't3_drawing1', score: 1 },
       ]);
       vi.mocked(redis.zCard)
-        .mockResolvedValueOnce(10) // drawingAttempts
-        .mockResolvedValueOnce(23) // drawingSolves
-        .mockResolvedValueOnce(7) // drawingSkips
-        .mockResolvedValueOnce(30); // drawingGuesses
+        .mockResolvedValueOnce(10)
+        .mockResolvedValueOnce(23)
+        .mockResolvedValueOnce(7)
+        .mockResolvedValueOnce(30);
 
       const result = await handleStats(args, mockContext);
 

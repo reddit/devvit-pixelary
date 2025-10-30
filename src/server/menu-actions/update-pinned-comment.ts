@@ -4,10 +4,10 @@ import {
   getDrawing,
   getDrawingCommentData,
   generateDrawingCommentText,
-  getPinnedCommentId,
   saveLastCommentUpdate,
   clearNextScheduledJobId,
 } from '../services/drawing';
+import { getPinnedCommentId } from '../services/comments/pinned';
 import { updatePinnedPostComment } from '../services/pinned-post';
 import type { T1 } from '@devvit/shared-types/tid.js';
 

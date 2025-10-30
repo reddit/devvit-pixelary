@@ -1,8 +1,8 @@
 import type { Request, Response } from 'express';
 import { context } from '@devvit/web/server';
-import { initDictionary } from '../services/dictionary';
+import { initDictionary } from '../services/words/dictionary';
 import { initFlairTemplates } from '../core/flair';
-import { initSlateBandit } from '../services/slate';
+import { initSlateBandit } from '../services/words/slate';
 
 /**
  * App lifecycle trigger handlers
