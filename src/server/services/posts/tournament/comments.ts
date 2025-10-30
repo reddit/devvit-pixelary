@@ -1,9 +1,7 @@
 import type { T1, T3 } from '@devvit/shared-types/tid.js';
 import { reddit } from '@devvit/web/server';
 import { getTournament } from './post';
-import { REDIS_KEYS } from '../redis';
-import { redis } from '@devvit/web/server';
-import { createPinnedComment } from '../comments/pinned';
+import { createPinnedComment } from '../../comments/pinned';
 
 export async function generateTournamentCommentText(
   word: string
@@ -22,8 +20,6 @@ export async function generateTournamentCommentText(
 
 Good luck and let the best drawing win! 🎨`;
 }
-
-// Pinned comment storage is handled by services/comments/pinned
 
 export async function createTournamentPostComment(postId: T3): Promise<T1> {
   const data = await getTournament(postId);

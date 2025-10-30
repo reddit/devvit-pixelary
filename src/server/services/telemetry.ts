@@ -1,5 +1,5 @@
 import { redis } from '@devvit/web/server';
-import { REDIS_KEYS } from './redis';
+import { REDIS_KEYS } from '../core/redis';
 import type { PostType, TelemetryEventType } from '../../shared/types';
 import type { PostData } from '../../shared/schema';
 

@@ -41,7 +41,7 @@ interface DrawingStats {
  */
 export async function initFlairTemplates(): Promise<void> {
   const { context, reddit, redis } = await import('@devvit/web/server');
-  const { REDIS_KEYS } = await import('../services/redis');
+  const { REDIS_KEYS } = await import('./redis');
   const subredditName = context.subredditName;
   try {
     // Check if flair is enabled by trying to get templates
@@ -137,7 +137,7 @@ export async function setPostFlair(
 ): Promise<void> {
   try {
     const { reddit, redis } = await import('@devvit/web/server');
-    const { REDIS_KEYS } = await import('../services/redis');
+    const { REDIS_KEYS } = await import('./redis');
     const templateId = await redis.get(
       REDIS_KEYS.flairTemplates.post(difficulty)
     );

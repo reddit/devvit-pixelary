@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import { context } from '@devvit/web/server';
-import { getDrawing } from '../services/drawing';
+import { getDrawing } from '../services/posts/drawing';
 
 /**
  * Menu action handler for revealing the word for a drawing post

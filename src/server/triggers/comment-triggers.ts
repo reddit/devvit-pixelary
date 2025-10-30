@@ -12,7 +12,7 @@ import { banWord } from '../services/words/dictionary';
 import {
   removeTournamentEntry,
   getTournamentEntry,
-} from '../services/tournament/post';
+} from '../services/posts/tournament/post';
 
 // EventSource enum values from Reddit API
 enum EventSource {

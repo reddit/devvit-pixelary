@@ -1,5 +1,5 @@
 import { redis, scheduler, context, realtime } from '@devvit/web/server';
-import { getUsername, REDIS_KEYS } from './redis';
+import { getUsername, REDIS_KEYS } from '../core/redis';
 import { getLevelByScore as getLevelByScoreUtil } from '../../shared/utils/progression';
 import type { T2 } from '@devvit/shared-types/tid.js';
 import type { Level } from '../../shared/types';

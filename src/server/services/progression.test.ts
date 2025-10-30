@@ -10,7 +10,7 @@ import {
 } from './progression';
 import { redis, scheduler, cache } from '@devvit/web/server';
 import { LEVELS } from '../../shared/constants';
-import { getUsername, REDIS_KEYS } from './redis';
+import { getUsername, REDIS_KEYS } from '../core/redis';
 
 vi.mock('@devvit/web/server', () => ({
   redis: {
@@ -30,7 +30,7 @@ vi.mock('@devvit/web/server', () => ({
   },
 }));
 
-vi.mock('./redis', () => ({
+vi.mock('../core/redis', () => ({
   getUsername: vi.fn(),
   REDIS_KEYS: {
     scores: () => 'scores',

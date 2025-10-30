@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import { context } from '@devvit/web/server';
-import { createPinnedPost } from '../services/pinned-post';
+import { createPinnedPost } from '../services/posts/pinned';
 
 /**
  * Form handler for pinned post submission

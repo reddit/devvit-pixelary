@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import { getTelemetryDateKey } from '../services/telemetry';
-import { REDIS_KEYS } from '../services/redis';
+import { REDIS_KEYS } from '../core/redis';
 import { redis } from '@devvit/web/server';
 
 /**

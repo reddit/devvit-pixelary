@@ -60,8 +60,8 @@ vi.mock('./redis', () => ({
   acquireLock: vi.fn().mockResolvedValue(true),
 }));
 
-import { submitGuess, getGuesses, isAuthorFirstView } from './drawing';
-import { REDIS_KEYS } from './redis';
+import { submitGuess, getGuesses, isAuthorFirstView } from './posts/drawing';
+import { REDIS_KEYS } from '../core/redis';
 import { redis } from '@devvit/web/server';
 
 describe('Drawing Service', () => {

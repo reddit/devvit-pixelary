@@ -32,7 +32,7 @@ vi.mock('../services/words/slate', () => ({
   trackSlateAction: vi.fn(async () => {}),
 }));
 
-vi.mock('../services/drawing', () => ({
+vi.mock('../services/posts/drawing', () => ({
   createDrawing: vi.fn(async () => ({ postId: 't3_test123' })),
   submitGuess: vi.fn(async () => ({ correct: true, points: 2 })),
   skipDrawing: vi.fn(async () => ({ success: true })),

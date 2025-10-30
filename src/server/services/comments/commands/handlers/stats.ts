@@ -2,7 +2,7 @@ import type { CommandContext, CommandResult } from '../comment-commands';
 import { isWordInList } from '../../../words/dictionary';
 import { addBacker } from '../../../words/word-backing';
 import { redis, context } from '@devvit/web/server';
-import { REDIS_KEYS } from '../../../redis';
+import { REDIS_KEYS } from '../../../../core/redis';
 import type { WordMetrics } from '../../../../../shared/types';
 import type { T3 } from '@devvit/shared-types/tid.js';
 import { normalizeWord } from '../../../../../shared/utils/string';

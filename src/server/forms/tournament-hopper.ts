@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import { context, redis } from '@devvit/web/server';
-import { replaceHopperPrompts } from '../services/tournament/hopper';
-import { REDIS_KEYS } from '../services/redis';
+import { replaceHopperPrompts } from '../services/posts/tournament/hopper';
+import { REDIS_KEYS } from '../core/redis';
 import { parseForm, z } from './_schema';
 
 /**

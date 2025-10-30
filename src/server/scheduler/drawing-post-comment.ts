@@ -6,7 +6,7 @@ import {
   createDrawingPostComment,
   updateDrawingPostComment,
   getDrawingCommentData,
-} from '../services/drawing';
+} from '../services/posts/drawing';
 import { setPostFlair, getDifficultyFromStats } from '../core/flair';
 
 /**

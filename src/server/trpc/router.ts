@@ -4,7 +4,7 @@ import { z } from 'zod';
 import type { T3, T1 } from '@devvit/shared-types/tid.js';
 import { assertT3 } from '@devvit/shared-types/tid.js';
 import { redis } from '@devvit/web/server';
-import { REDIS_KEYS } from '../services/redis';
+import { REDIS_KEYS } from '../core/redis';
 import {
   getWords,
   addWord,
@@ -27,7 +27,7 @@ import {
   getUserDrawingsWithData,
   getUserDrawingStatus,
   isAuthorFirstView,
-} from '../services/drawing';
+} from '../services/posts/drawing';
 import {
   getLeaderboard,
   getScore,
@@ -37,7 +37,7 @@ import {
   getUnclaimedLevelUp,
   claimLevelUp,
 } from '../services/progression';
-import { isAdmin, isModerator } from '../services/redis';
+import { isAdmin, isModerator } from '../core/redis';
 import { DrawingDataSchema } from '../../shared/schema/pixelary';
 import { trackEventFromContext } from '../services/telemetry';
 import type { TelemetryEventType } from '../../shared/types';
@@ -150,7 +150,7 @@ export const appRouter = t.router({
         .input(z.object({ collectionId: z.string() }))
         .query(async ({ input }) => {
           const { getCollectionData } = await import(
-            '../services/collection-post'
+            '../services/posts/collection'
           );
           return await getCollectionData(input.collectionId);
         }),
@@ -564,7 +564,7 @@ export const appRouter = t.router({
           if (!ctx.userId) throw new Error('Must be logged in');
 
           const { submitTournamentEntry } = await import(
-            '../services/tournament/post'
+            '../services/posts/tournament/post'
           );
 
           assertT3(input.postId);
@@ -582,7 +582,7 @@ export const appRouter = t.router({
         .query(async ({ input }) => {
           assertT3(input.postId);
           const { getTournamentEntries } = await import(
-            '../services/tournament/post'
+            '../services/posts/tournament/post'
           );
           return await getTournamentEntries(input.postId);
         }),
@@ -592,7 +592,7 @@ export const appRouter = t.router({
         .query(async ({ input }) => {
           assertT3(input.postId);
           const { getRandomPair } = await import(
-            '../services/tournament/pairs'
+            '../services/posts/tournament/pairs'
           );
           return await getRandomPair(input.postId);
         }),
@@ -607,7 +607,7 @@ export const appRouter = t.router({
         .query(async ({ input }) => {
           assertT3(input.postId);
           const { getDrawingPairs } = await import(
-            '../services/tournament/pairs'
+            '../services/posts/tournament/pairs'
           );
           return await getDrawingPairs(input.postId, input.count);
         }),
@@ -627,7 +627,7 @@ export const appRouter = t.router({
           const loserId = input.loserCommentId as T1;
 
           const { tournamentVote } = await import(
-            '../services/tournament/post'
+            '../services/posts/tournament/post'
           );
           // Context is used inside the function
           await tournamentVote(winnerId, loserId);
@@ -639,7 +639,9 @@ export const appRouter = t.router({
         .input(z.object({ postId: z.string() }))
         .query(async ({ input }) => {
           assertT3(input.postId);
-          const { getTournament } = await import('../services/tournament/post');
+          const { getTournament } = await import(
+            '../services/posts/tournament/post'
+          );
           return await getTournament(input.postId);
         }),
 
@@ -647,7 +649,7 @@ export const appRouter = t.router({
         .input(z.object({ commentId: z.string() }))
         .query(async ({ input }) => {
           const { getTournamentEntry } = await import(
-            '../services/tournament/post'
+            '../services/posts/tournament/post'
           );
           return await getTournamentEntry(input.commentId as T1);
         }),
@@ -659,10 +661,10 @@ export const appRouter = t.router({
 
           assertT3(input.postId);
           const { getTournamentEntry } = await import(
-            '../services/tournament/post'
+            '../services/posts/tournament/post'
           );
           const { redis } = await import('@devvit/web/server');
-          const { REDIS_KEYS, getUsername } = await import('../services/redis');
+          const { REDIS_KEYS, getUsername } = await import('../core/redis');
 
           // Get all submissions ordered by Elo rating (highest first)
           const queryKey = REDIS_KEYS.tournamentEntries(input.postId);
@@ -742,7 +744,7 @@ export const appRouter = t.router({
         .input(z.object({ commentId: z.string() }))
         .mutation(async ({ input }) => {
           const { incrementEntryViews } = await import(
-            '../services/tournament/post'
+            '../services/posts/tournament/post'
           );
           await incrementEntryViews(input.commentId as T1);
           return { success: true };

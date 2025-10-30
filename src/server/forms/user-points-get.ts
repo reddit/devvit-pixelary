@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import { reddit } from '@devvit/web/server';
 import { getScore } from '../services/progression';
-import { getUsername } from '../services/redis';
+import { getUsername } from '../core/redis';
 import type { T2 } from '@devvit/shared-types/tid.js';
 
 /**

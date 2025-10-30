@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import { redis, context } from '@devvit/web/server';
-import { getHopperPrompts } from '../services/tournament/hopper';
-import { REDIS_KEYS } from '../services/redis';
+import { getHopperPrompts } from '../services/posts/tournament/hopper';
+import { REDIS_KEYS } from '../core/redis';
 
 /**
  * Menu action handler to view and edit the tournament prompt hopper

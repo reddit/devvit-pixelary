@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import { context, redis } from '@devvit/web/server';
-import { REDIS_KEYS, acquireLock } from '../services/redis';
+import { REDIS_KEYS, acquireLock } from '../core/redis';
 
 export async function handleTournamentScheduler(
   req: Request,
@@ -28,9 +28,11 @@ export async function handleTournamentScheduler(
     try {
       // Lazy import to avoid circular deps
       const { peekNextHopperPrompt, removeHopperPrompt } = await import(
-        '../services/tournament/hopper'
+        '../services/posts/tournament/hopper'
       );
-      const { createTournament } = await import('../services/tournament/post');
+      const { createTournament } = await import(
+        '../services/posts/tournament/post'
+      );
 
       const prompt = await peekNextHopperPrompt();
       if (!prompt) {

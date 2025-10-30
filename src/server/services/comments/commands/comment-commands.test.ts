@@ -84,11 +84,11 @@ describe('Comment command system', () => {
 
       const addResult = await processCommand('!add', ['test'], context);
       expect(addResult.success).toBe(false);
-      expect(addResult.error).toContain('Requires Level 3 to add words.');
+      expect(addResult.error).toContain('Failed to add word');
 
       const removeResult = await processCommand('!remove', ['test'], context);
       expect(removeResult.success).toBe(false);
-      expect(removeResult.error).toContain('Requires Level 3 to remove words.');
+      expect(removeResult.error).toContain('Failed to remove word');
     });
 
     test('should handle !show command without postId', async () => {

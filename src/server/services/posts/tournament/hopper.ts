@@ -1,36 +1,21 @@
 import { context, redis } from '@devvit/web/server';
-import { REDIS_KEYS } from '../redis';
+import { REDIS_KEYS } from '../../../core/redis';
 import { normalizeWord } from '../../../shared/utils/string';
 
-/**
- * Get tournament hopper prompts with pagination support
- */
 export async function getHopperPrompts(
   offset: number = 0,
   limit: number = 1000
-): Promise<{
-  prompts: string[];
-  total: number;
-  hasMore: boolean;
-}> {
+): Promise<{ prompts: string[]; total: number; hasMore: boolean }> {
   const subName = context.subredditName;
   const key = REDIS_KEYS.tournamentHopper(subName);
   const [entities, total] = await Promise.all([
     redis.global.zRange(key, offset, offset + limit - 1),
     redis.global.zCard(key),
   ]);
-
   const prompts = entities.map((e) => e.member);
-  return {
-    prompts,
-    total,
-    hasMore: offset + limit < total,
-  };
+  return { prompts, total, hasMore: offset + limit < total };
 }
 
-/**
- * Replace the entire hopper with a new set of prompts
- */
 export async function replaceHopperPrompts(prompts: string[]): Promise<void> {
   const subName = context.subredditName;
   const key = REDIS_KEYS.tournamentHopper(subName);
@@ -39,9 +24,6 @@ export async function replaceHopperPrompts(prompts: string[]): Promise<void> {
   await addHopperPrompts(prompts);
 }
 
-/**
- * Add prompts to the hopper, preserving insertion order by using Date.now() as score
- */
 export async function addHopperPrompts(prompts: string[]): Promise<void> {
   const subName = context.subredditName;
   const key = REDIS_KEYS.tournamentHopper(subName);
@@ -56,9 +38,6 @@ export async function addHopperPrompts(prompts: string[]): Promise<void> {
   );
 }
 
-/**
- * Peek the next prompt without removing it
- */
 export async function peekNextHopperPrompt(): Promise<string | null> {
   const subName = context.subredditName;
   const key = REDIS_KEYS.tournamentHopper(subName);
@@ -67,9 +46,6 @@ export async function peekNextHopperPrompt(): Promise<string | null> {
   return result[0]!.member;
 }
 
-/**
- * Remove a specific prompt from the hopper
- */
 export async function removeHopperPrompt(prompt: string): Promise<boolean> {
   const subName = context.subredditName;
   const key = REDIS_KEYS.tournamentHopper(subName);

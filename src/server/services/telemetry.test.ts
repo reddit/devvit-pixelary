@@ -16,7 +16,7 @@ import {
   getEventStats,
   clearTelemetryData,
 } from './telemetry';
-import { REDIS_KEYS } from './redis';
+import { REDIS_KEYS } from '../core/redis';
 
 describe('Telemetry Service', () => {
   beforeEach(() => {

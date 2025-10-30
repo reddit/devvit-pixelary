@@ -3,7 +3,7 @@ import { context } from '@devvit/web/server';
 import {
   fetchTopDrawingPosts,
   createCollectionPost,
-} from '../services/collection-post';
+} from '../services/posts/collection';
 import { CollectionFormInputSchema } from '../../shared/schema';
 
 /**

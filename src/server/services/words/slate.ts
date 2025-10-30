@@ -1,5 +1,5 @@
 import { context, redis } from '@devvit/web/server';
-import { REDIS_KEYS } from '../redis';
+import { REDIS_KEYS } from '../../core/redis';
 import type { T3 } from '@devvit/shared-types/tid.js';
 import { clamp } from '../../../shared/utils/numbers';
 import { shuffle } from '../../../shared/utils/array';
