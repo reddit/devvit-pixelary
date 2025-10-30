@@ -1,7 +1,7 @@
 import { redis, cache } from '@devvit/web/server';
-import { normalizeWord } from '../../../shared/utils/string';
+import { normalizeWord } from '@shared/utils/string';
 import { isWordBanned, isWordInList } from './dictionary';
-import { REDIS_KEYS } from '../../core/redis';
+import { REDIS_KEYS } from '@server/core/redis';
 import { isT1, type T1 } from '@devvit/shared-types/tid.js';
 
 export async function addBacker(word: string, commentId: T1): Promise<void> {

@@ -1,6 +1,6 @@
 import { context, type Post, reddit } from '@devvit/web/server';
 import type { JsonObject } from '@devvit/shared-types/json.js';
-import type { PostData } from '../../shared/schema/index';
+import type { PostData } from '@shared/schema/index';
 
 /**
  * Convert PostData to JsonObject safely

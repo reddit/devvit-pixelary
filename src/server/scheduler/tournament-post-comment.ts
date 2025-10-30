@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import type { T3 } from '@devvit/shared-types/tid.js';
 import { assertT3 } from '@devvit/shared-types/tid.js';
-import { createTournamentPostComment } from '../services/posts/tournament/comments';
+import { createTournamentPostComment } from '@server/services/posts/tournament/comments';
 
 /**
  * Job handler for creating tournament post comment

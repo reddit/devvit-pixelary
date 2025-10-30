@@ -1,12 +1,12 @@
 import { scheduler, reddit } from '@devvit/web/server';
-import { REDIS_KEYS } from '../../core/redis';
-import { createPost } from '../../../core/post';
-import { getLeaderboard } from '../../progression';
+import { REDIS_KEYS } from '@server/core/redis';
+import { createPost } from '@server/core/post';
+import { getLeaderboard } from '@server/services/progression';
 import type { T1, T3 } from '@devvit/shared-types/tid.js';
 import {
   createPinnedComment,
   updatePinnedComment,
-} from '../../comments/pinned';
+} from '@server/services/comments/pinned';
 
 export async function createPinnedPost(title: string): Promise<T3> {
   try {
@@ -70,7 +70,9 @@ export async function updatePinnedPostComment(postId: T3): Promise<void> {
 
 export async function getPinnedPostCommentId(postId: T3): Promise<T1 | null> {
   // Use shared comments store for pinned posts
-  const { getPinnedCommentId } = await import('../comments/pinned');
+  const { getPinnedCommentId } = await import(
+    '@server/services/comments/pinned'
+  );
   const id = await getPinnedCommentId(postId);
   return id;
 }

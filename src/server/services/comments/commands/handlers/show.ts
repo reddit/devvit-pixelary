@@ -1,12 +1,12 @@
 import type { CommandContext, CommandResult } from '../comment-commands';
-import { normalizeWord } from '../../../../../shared/utils/string';
-import { isWordBanned } from '../../../words/dictionary';
+import { normalizeWord } from '@shared/utils/string';
+import { isWordBanned } from '@server/services/words/dictionary';
 import {
   getBacker,
   addBacker,
   shouldShowWord,
-} from '../../../words/word-backing';
-import { incrementScore } from '../../../progression';
+} from '@server/services/words/word-backing';
+import { incrementScore } from '@server/services/progression';
 
 export async function handleShow(
   args: string[],

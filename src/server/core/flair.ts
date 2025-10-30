@@ -1,5 +1,5 @@
 import type { T2, T3 } from '@devvit/shared-types/tid.js';
-import type { Level } from '../../shared/types';
+import type { Level } from '@shared/types';
 
 // Configuration-driven approach
 const FLAIR_CONFIG = {

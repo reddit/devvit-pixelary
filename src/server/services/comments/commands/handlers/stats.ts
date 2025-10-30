@@ -1,11 +1,11 @@
 import type { CommandContext, CommandResult } from '../comment-commands';
-import { isWordInList } from '../../../words/dictionary';
-import { addBacker } from '../../../words/word-backing';
+import { isWordInList } from '@server/services/words/dictionary';
+import { addBacker } from '@server/services/words/word-backing';
 import { redis, context } from '@devvit/web/server';
-import { REDIS_KEYS } from '../../../../core/redis';
-import type { WordMetrics } from '../../../../../shared/types';
+import { REDIS_KEYS } from '@server/core/redis';
+import type { WordMetrics } from '@shared/types';
 import type { T3 } from '@devvit/shared-types/tid.js';
-import { normalizeWord } from '../../../../../shared/utils/string';
+import { normalizeWord } from '@shared/utils/string';
 
 export async function handleStats(
   args: string[],

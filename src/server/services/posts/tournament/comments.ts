@@ -1,7 +1,6 @@
 import type { T1, T3 } from '@devvit/shared-types/tid.js';
-import { reddit } from '@devvit/web/server';
 import { getTournament } from './post';
-import { createPinnedComment } from '../../comments/pinned';
+import { createPinnedComment } from '@server/services/comments/pinned';
 
 export async function generateTournamentCommentText(
   word: string

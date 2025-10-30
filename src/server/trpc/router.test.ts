@@ -5,7 +5,7 @@ import {
   createMockDictionary,
   createMockUserProfile,
   createMockGuessSubmitInput,
-} from '../../shared/test-utils';
+} from '@shared/test-utils';
 
 vi.mock('../services/words/dictionary', () => ({
   getWords: vi.fn(async () => ({

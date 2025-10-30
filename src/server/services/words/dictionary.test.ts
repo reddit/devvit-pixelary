@@ -48,7 +48,7 @@ import {
   getRandomWords,
   initDictionary,
 } from './dictionary';
-import { REDIS_KEYS } from '../../core/redis';
+import { REDIS_KEYS } from '@server/core/redis';
 
 describe('Dictionary Service', () => {
   beforeEach(() => {

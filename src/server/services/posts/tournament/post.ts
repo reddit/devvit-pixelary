@@ -8,24 +8,24 @@ import {
   cache,
 } from '@devvit/web/server';
 import type { MediaAsset } from '@devvit/web/server';
-import { createPost, setPostFlair } from '../../../core';
+import { createPost, setPostFlair } from '@server/core';
 import {
   REDIS_KEYS,
   acquireLock,
   releaseLock,
   isRateLimited,
-} from '../../../core/redis';
-import { getRandomWords } from '../../words/dictionary';
-import type { DrawingData, TournamentPostData } from '../../../shared/schema';
+} from '@server/core/redis';
+import { getRandomWords } from '@server/services/words/dictionary';
+import type { DrawingData, TournamentPostData } from '@shared/schema';
 import {
   TOURNAMENT_REWARD_VOTE,
   TOURNAMENT_REWARD_WINNER,
   TOURNAMENT_REWARD_TOP_10,
   TOURNAMENT_ELO_INITIAL_RATING,
-} from '../../../shared/constants';
+} from '@shared/constants';
 import { calculateEloChange } from './elo';
-import { incrementScore } from '../../progression';
-import { normalizeWord } from '../../../shared/utils/string';
+import { incrementScore } from '@server/services/progression';
+import { normalizeWord } from '@shared/utils/string';
 
 export type TournamentDrawing = {
   commentId: T1;
@@ -260,6 +260,28 @@ export async function getTournamentEntry(
     mediaUrl: data.mediaUrl,
     mediaId: data.mediaId,
   };
+}
+
+export async function removeTournamentEntry(
+  postId: T3,
+  commentId: T1
+): Promise<void> {
+  const entry = await getTournamentEntry(commentId);
+  await Promise.all([
+    redis.zRem(REDIS_KEYS.tournamentEntries(postId), [commentId]),
+    redis.del(REDIS_KEYS.tournamentEntry(commentId)),
+  ]);
+  if (entry) {
+    try {
+      await redis.zIncrBy(
+        REDIS_KEYS.tournamentPlayers(postId),
+        entry.userId,
+        -1
+      );
+    } catch {
+      // best-effort decrement
+    }
+  }
 }
 
 export async function awardTournamentRewards(postId: T3): Promise<void> {

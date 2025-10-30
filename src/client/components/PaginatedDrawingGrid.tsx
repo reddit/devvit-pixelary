@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Drawing } from './Drawing';
 import { IconButton } from './IconButton';
 import { PixelFont } from './PixelFont';
-import { DrawingData } from '../../shared/schema/drawing';
+import { DrawingData } from '@shared/schema/drawing';
 
 interface PaginatedDrawingGridProps {
   drawings: Array<{ postId: string; drawing: DrawingData }>;

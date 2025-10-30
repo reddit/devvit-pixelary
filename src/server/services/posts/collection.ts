@@ -1,7 +1,7 @@
 import { redis, reddit, context } from '@devvit/web/server';
-import { REDIS_KEYS } from '../../core/redis';
-import { createPost } from '../../../core/post';
-import type { DrawingData } from '../../../shared/schema/drawing';
+import { REDIS_KEYS } from '@server/core/redis';
+import { createPost } from '@server/core/post';
+import type { DrawingData } from '@shared/schema/drawing';
 import type { T2, T3 } from '@devvit/shared-types/tid.js';
 
 export type CollectionDrawing = {

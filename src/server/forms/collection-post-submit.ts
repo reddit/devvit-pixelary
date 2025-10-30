@@ -4,7 +4,7 @@ import {
   fetchTopDrawingPosts,
   createCollectionPost,
 } from '../services/posts/collection';
-import { CollectionFormInputSchema } from '../../shared/schema';
+import { CollectionFormInputSchema } from '@shared/schema';
 
 /**
  * Form handler for collection post submission

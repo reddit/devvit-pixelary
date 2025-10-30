@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { connectRealtime } from '@devvit/web/client';
 import { useQueryClient } from '@tanstack/react-query';
-import { trpc } from '../trpc/client';
-import type { PostGuesses } from '../../shared/schema';
+import { trpc } from '@client/trpc/client';
+import type { PostGuesses } from '@shared/schema';
 
 type StatsData = PostGuesses;
 

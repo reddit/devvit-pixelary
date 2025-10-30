@@ -1,6 +1,9 @@
 import type { T5, T3, T1, T2 } from '@devvit/shared-types/tid.js';
 import * as handlers from './handlers';
-import { getBackedWord, removeBacker } from '../../words/word-backing';
+import {
+  getBackedWord,
+  removeBacker,
+} from '@server/services/words/word-backing';
 
 export type CommandContext = {
   commentId: T1;

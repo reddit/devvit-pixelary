@@ -1,4 +1,4 @@
-import { TOURNAMENT_ELO_K_FACTOR } from '../../../shared/constants';
+import { TOURNAMENT_ELO_K_FACTOR } from '@shared/constants';
 
 export function calculateEloChange(
   winnerRating: number,

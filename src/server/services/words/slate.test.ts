@@ -9,7 +9,7 @@ import {
   updateWordScores,
   applyScoreDecay,
 } from './slate';
-import { REDIS_KEYS } from '../../core/redis';
+import { REDIS_KEYS } from '@server/core/redis';
 
 vi.mock('@devvit/web/server', () => ({
   context: { subredditName: 'test-subreddit' },

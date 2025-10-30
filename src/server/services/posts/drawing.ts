@@ -7,23 +7,26 @@ import {
   cache,
   media,
 } from '@devvit/web/server';
-import { incrementScore } from '../progression';
-import { REDIS_KEYS, acquireLock, isRateLimited } from '../../core/redis';
-import { normalizeWord, obfuscateString } from '../../../shared/utils/string';
-import { shouldShowWord } from '../words/word-backing';
-import type { DrawingPostDataExtended } from '../../../shared/schema/pixelary';
-import { createPost } from '../../core/post';
-import { setPostFlair } from '../../core/flair';
-import type { DrawingData } from '../../../shared/schema/drawing';
+import { incrementScore } from '@server/services/progression';
+import { REDIS_KEYS, acquireLock, isRateLimited } from '@server/core/redis';
+import { normalizeWord, obfuscateString } from '@shared/utils/string';
+import { shouldShowWord } from '@server/services/words/word-backing';
+import type { DrawingPostDataExtended } from '@shared/schema/pixelary';
+import { createPost } from '@server/core/post';
+import { setPostFlair } from '@server/core/flair';
+import type { DrawingData } from '@shared/schema/drawing';
 import type { T1, T2, T3 } from '@devvit/shared-types/tid.js';
 import { isT2, isT3 } from '@devvit/shared-types/tid.js';
 import {
   AUTHOR_REWARD_CORRECT_GUESS,
   AUTHOR_REWARD_SUBMIT,
   GUESSER_REWARD_SOLVE,
-} from '../../../shared/constants';
+} from '@shared/constants';
 import type { MediaAsset } from '@devvit/web/server';
-import { createPinnedComment, updatePinnedComment } from '../comments/pinned';
+import {
+  createPinnedComment,
+  updatePinnedComment,
+} from '@server/services/comments/pinned';
 
 const DRAWING_DATA_TTL = 5 * 60;
 
@@ -604,6 +607,21 @@ function generateLiveStatsSection(
       ? Math.round((stats.guessCount / stats.playerCount) * 10) / 10
       : 0;
   return `Live stats:\n- ${stats.playerCount} unique players guessed\n- ${stats.guessCount} total guesses (avg ${avgGuessesPerPlayer} per player)\n- ${stats.wordCount} unique words guessed\n- ${stats.skips} skips (${stats.skipPercentage}% skip rate)\n- ${stats.solves} solves (${stats.solvedPercentage}% solved rate)`;
+}
+
+export async function getUserDrawingStatus(
+  postId: T3,
+  userId: T2
+): Promise<{ solved: boolean; skipped: boolean; guessCount: number }> {
+  const [solved, skipped, guesses] = await Promise.all([
+    redis.zScore(REDIS_KEYS.drawingSolves(postId), userId),
+    redis.zScore(REDIS_KEYS.drawingSkips(postId), userId),
+    redis.zRange(REDIS_KEYS.drawingGuesses(postId), 0, -1, {
+      withScores: true,
+    }),
+  ]);
+  const guessCount = guesses.reduce((sum, g) => sum + g.score, 0);
+  return { solved: solved != null, skipped: skipped != null, guessCount };
 }
 
 export async function isAuthorFirstView(postId: T3): Promise<boolean> {

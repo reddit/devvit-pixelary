@@ -17,7 +17,7 @@ vi.mock('./dictionary', () => ({
 
 import { redis } from '@devvit/web/server';
 import { addBacker, getBacker, removeBacker } from './word-backing';
-import { REDIS_KEYS } from '../../core/redis';
+import { REDIS_KEYS } from '@server/core/redis';
 
 describe('Word Backing Service', () => {
   beforeEach(() => {

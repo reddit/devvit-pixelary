@@ -1,8 +1,8 @@
 import type { CommandContext, CommandResult } from '../comment-commands';
-import { addWord, getBannedWords } from '../../../words/dictionary';
-import { getScore, getLevelByScore } from '../../../progression';
-import { hasReward } from '../../../../../shared/rewards';
-import { addBacker } from '../../../words/word-backing';
+import { addWord, getBannedWords } from '@server/services/words/dictionary';
+import { getScore, getLevelByScore } from '@server/services/progression';
+import { hasReward } from '@shared/rewards';
+import { addBacker } from '@server/services/words/word-backing';
 
 export async function handleAdd(
   args: string[],

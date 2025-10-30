@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { renderDrawingToCanvas } from '../../shared/utils/drawing';
+import { renderDrawingToCanvas } from '@shared/utils/drawing';
 import { DrawingData } from '@shared/schema/drawing';
 
 interface DrawingProps {

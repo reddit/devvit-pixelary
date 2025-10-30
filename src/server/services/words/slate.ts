@@ -1,8 +1,8 @@
 import { context, redis } from '@devvit/web/server';
-import { REDIS_KEYS } from '../../core/redis';
+import { REDIS_KEYS } from '@server/core/redis';
 import type { T3 } from '@devvit/shared-types/tid.js';
-import { clamp } from '../../../shared/utils/numbers';
-import { shuffle } from '../../../shared/utils/array';
+import { clamp } from '@shared/utils/numbers';
+import { shuffle } from '@shared/utils/array';
 
 const EXPLORATION_RATE = 0.1;
 const Z_SCORE_CLAMP = 3;

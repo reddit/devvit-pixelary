@@ -1,7 +1,7 @@
 import { redis } from '@devvit/web/server';
 import { REDIS_KEYS } from '../core/redis';
-import type { PostType, TelemetryEventType } from '../../shared/types';
-import type { PostData } from '../../shared/schema';
+import type { PostType, TelemetryEventType } from '@shared/types';
+import type { PostData } from '@shared/schema';
 
 /**
  * Telemetry service for tracking UI events

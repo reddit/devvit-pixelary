@@ -1,11 +1,11 @@
 import { useState } from 'react';
-import { DrawingEditor } from '../../components/Editor/Editor';
+import { DrawingEditor } from '@client/components/Editor/Editor';
 import { MyDrawings } from './_components/MyDrawings';
 import { Leaderboard } from './_components/Leaderboard';
 import { MyRewards } from './_components/MyRewards';
 import { LevelDetails } from './_components/LevelDetails';
 import { Menu } from './_components/Menu';
-import { trpc } from '../../trpc/client';
+import { trpc } from '@client/trpc/client';
 
 type Page =
   | 'menu'

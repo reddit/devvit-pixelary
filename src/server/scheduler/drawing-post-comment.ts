@@ -6,8 +6,8 @@ import {
   createDrawingPostComment,
   updateDrawingPostComment,
   getDrawingCommentData,
-} from '../services/posts/drawing';
-import { setPostFlair, getDifficultyFromStats } from '../core/flair';
+} from '@server/services/posts/drawing';
+import { setPostFlair, getDifficultyFromStats } from '@server/core/flair';
 
 /**
  * Job handler for creating a new drawing pinned comment

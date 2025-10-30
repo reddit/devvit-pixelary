@@ -1,7 +1,7 @@
 import type { CommandContext, CommandResult } from '../comment-commands';
-import { removeWord } from '../../../words/dictionary';
-import { getScore, getLevelByScore } from '../../../progression';
-import { hasReward } from '../../../../../shared/rewards';
+import { removeWord } from '@server/services/words/dictionary';
+import { getScore, getLevelByScore } from '@server/services/progression';
+import { hasReward } from '@shared/rewards';
 
 export async function handleRemove(
   args: string[],

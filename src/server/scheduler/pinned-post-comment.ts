@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import type { T3 } from '@devvit/shared-types/tid.js';
 import { isT3, assertT3 } from '@devvit/shared-types/tid.js';
-import { createPinnedPostComment } from '../services/posts/pinned';
+import { createPinnedPostComment } from '@server/services/posts/pinned';
 
 /**
  * Job handler for creating pinned post comment

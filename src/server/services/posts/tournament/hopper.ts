@@ -1,6 +1,6 @@
 import { context, redis } from '@devvit/web/server';
-import { REDIS_KEYS } from '../../../core/redis';
-import { normalizeWord } from '../../../shared/utils/string';
+import { REDIS_KEYS } from '@server/core/redis';
+import { normalizeWord } from '@shared/utils/string';
 
 export async function getHopperPrompts(
   offset: number = 0,

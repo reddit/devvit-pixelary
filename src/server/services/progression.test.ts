@@ -9,7 +9,7 @@ import {
   getRank,
 } from './progression';
 import { redis, scheduler, cache } from '@devvit/web/server';
-import { LEVELS } from '../../shared/constants';
+import { LEVELS } from '@shared/constants';
 import { getUsername, REDIS_KEYS } from '../core/redis';
 
 vi.mock('@devvit/web/server', () => ({

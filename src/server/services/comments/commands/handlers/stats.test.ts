@@ -20,7 +20,7 @@ vi.mock('../../../words/word-backing', () => ({
 
 import { redis } from '@devvit/web/server';
 import { handleStats, getWordMetrics } from './stats';
-import { isWordInList } from '../../../words/dictionary';
+import { isWordInList } from '@server/services/words/dictionary';
 
 const mockContext: CommandContext = {
   commentId: 't1_test123' as T1,

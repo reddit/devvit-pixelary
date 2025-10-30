@@ -2,7 +2,7 @@ import type { Request, Response } from 'express';
 import type { T2 } from '@devvit/shared-types/tid.js';
 import { getUsername } from '../core/redis';
 import { reddit } from '@devvit/web/server';
-import type { Level } from '../../shared/types';
+import type { Level } from '@shared/types';
 
 /**
  * Job handler for setting user flair

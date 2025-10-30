@@ -1,9 +1,9 @@
 import { defineConfig } from 'vitest/config';
 import react from '@vitejs/plugin-react';
-import path from 'path';
+import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), tsconfigPaths()],
   test: {
     globals: true,
     exclude: ['node_modules', 'dist'],
@@ -16,15 +16,6 @@ export default defineConfig({
     clearMocks: true,
     isolate: true,
     pool: 'threads',
-    resolve: {
-      alias: {
-        '@src': path.resolve(__dirname, './src'),
-        '@components': path.resolve(__dirname, './src/client/components'),
-        '@utils': path.resolve(__dirname, './src/client/utils'),
-        '@hooks': path.resolve(__dirname, './src/client/hooks'),
-        '@shared': path.resolve(__dirname, './src/shared'),
-      },
-    },
     coverage: {
       provider: 'v8',
       reporter: ['text', 'json-summary', 'html'],

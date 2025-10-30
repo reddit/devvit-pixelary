@@ -12,7 +12,7 @@ vi.mock('@devvit/web/server', () => ({
 
 import { reddit, context, type Post } from '@devvit/web/server';
 import { createPost } from './post';
-import type { PostData } from '../../shared/schema/index';
+import type { PostData } from '@shared/schema/index';
 
 describe('Post Service', () => {
   beforeEach(() => {

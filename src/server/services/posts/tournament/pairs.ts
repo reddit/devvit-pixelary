@@ -1,5 +1,5 @@
 import type { T1, T3 } from '@devvit/shared-types/tid.js';
-import { shuffle } from '../../../shared/utils/array';
+import { shuffle } from '@shared/utils/array';
 import type { TournamentDrawing } from './post';
 import { getTournamentEntries, getTournamentEntry } from './post';
 

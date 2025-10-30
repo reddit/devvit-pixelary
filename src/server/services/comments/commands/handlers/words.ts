@@ -1,5 +1,5 @@
 import type { CommandContext, CommandResult } from '../comment-commands';
-import { getWords } from '../../../words/dictionary';
+import { getWords } from '@server/services/words/dictionary';
 
 export async function handleWords(
   args: string[],

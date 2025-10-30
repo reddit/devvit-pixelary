@@ -4,19 +4,19 @@ import { z } from 'zod';
 import type { T3, T1 } from '@devvit/shared-types/tid.js';
 import { assertT3 } from '@devvit/shared-types/tid.js';
 import { redis } from '@devvit/web/server';
-import { REDIS_KEYS } from '../core/redis';
+import { REDIS_KEYS } from '@server/core/redis';
 import {
   getWords,
   addWord,
   removeWord,
   getBannedWords,
-} from '../services/words/dictionary';
+} from '@server/services/words/dictionary';
 import {
   generateSlate,
   handleSlateEvent,
   getCurrentTimestamp,
   type SlateId,
-} from '../services/words/slate';
+} from '@server/services/words/slate';
 import {
   createDrawing,
   submitGuess,
@@ -27,7 +27,7 @@ import {
   getUserDrawingsWithData,
   getUserDrawingStatus,
   isAuthorFirstView,
-} from '../services/posts/drawing';
+} from '@server/services/posts/drawing';
 import {
   getLeaderboard,
   getScore,
@@ -36,11 +36,11 @@ import {
   getLevelProgressPercentage,
   getUnclaimedLevelUp,
   claimLevelUp,
-} from '../services/progression';
-import { isAdmin, isModerator } from '../core/redis';
-import { DrawingDataSchema } from '../../shared/schema/pixelary';
-import { trackEventFromContext } from '../services/telemetry';
-import type { TelemetryEventType } from '../../shared/types';
+} from '@server/services/progression';
+import { isAdmin, isModerator } from '@server/core/redis';
+import { DrawingDataSchema } from '@shared/schema/pixelary';
+import { trackEventFromContext } from '@server/services/telemetry';
+import type { TelemetryEventType } from '@shared/types';
 
 const t = initTRPC.context<Context>().create();
 
@@ -57,9 +57,13 @@ export const appRouter = t.router({
         if (!ctx.subredditName) throw new Error('Subreddit not found');
 
         // Import initialization functions
-        const { initDictionary } = await import('../services/words/dictionary');
-        const { initFlairTemplates } = await import('../core/flair');
-        const { initSlateBandit } = await import('../services/words/slate');
+        const { initDictionary } = await import(
+          '@server/services/words/dictionary'
+        );
+        const { initFlairTemplates } = await import('@server/core/flair');
+        const { initSlateBandit } = await import(
+          '@server/services/words/slate'
+        );
 
         // Run initialization
         await initDictionary();
