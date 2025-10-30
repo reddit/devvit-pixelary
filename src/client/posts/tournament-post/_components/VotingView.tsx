@@ -229,7 +229,7 @@ export function VotingView({
       }, 500); // Wait for exit slide-out to complete
       timeoutRefs.current.push(transitionTimeout);
     }
-  }, [animationState, hasEnoughSubmissions, prefetchPairs]);
+  }, [animationState, hasEnoughSubmissions, prefetchPairs, pairsQueue.length]);
 
   // Trigger collision effect when entering the entering state
   useEffect(() => {

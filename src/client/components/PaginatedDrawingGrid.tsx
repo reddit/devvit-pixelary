@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Drawing } from './Drawing';
 import { IconButton } from './IconButton';
 import { PixelFont } from './PixelFont';
@@ -10,7 +10,7 @@ interface PaginatedDrawingGridProps {
   isLoading?: boolean;
 }
 
-export function PaginatedDrawingGrid({
+export const PaginatedDrawingGrid = React.memo(function PaginatedDrawingGrid({
   drawings,
   onDrawingClick,
   isLoading = false,
@@ -133,4 +133,4 @@ export function PaginatedDrawingGrid({
       </div>
     </div>
   );
-}
+});

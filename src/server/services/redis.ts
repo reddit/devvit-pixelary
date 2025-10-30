@@ -1,4 +1,4 @@
-import { reddit, cache } from '@devvit/web/server';
+import { reddit, cache, redis } from '@devvit/web/server';
 import type { T2, T3, T1 } from '@devvit/shared-types/tid.js';
 
 /**
@@ -82,6 +82,11 @@ export const REDIS_KEYS = {
     `tournament:scheduler:lock:${subredditName}`,
   tournamentSchedulerEnabled: (subredditName: string) =>
     `tournament:scheduler:enabled:${subredditName}`,
+  tournamentEloLock: (postId: T3) => `tournament:elo_lock:${postId}`,
+  // Rate limit keys
+  rateGuess: (userId: T2) => `rate:guess:${userId}`,
+  rateVote: (userId: T2) => `rate:vote:${userId}`,
+  rateSubmit: (userId: T2) => `rate:submit:${userId}`,
 };
 
 const USERNAME_TTL = 30 * 24 * 60 * 60; // 30 days.
@@ -151,4 +156,51 @@ export async function isAdmin(userId: T2): Promise<boolean> {
       ttl: ADMIN_STATUS_TTL,
     }
   );
+}
+
+/**
+ * Acquire a lightweight distributed lock using atomic SET NX EX semantics.
+ * Returns true if the lock was acquired, false otherwise.
+ */
+export async function acquireLock(
+  key: string,
+  ttlSeconds: number
+): Promise<boolean> {
+  const result = await redis.set(
+    key as never,
+    '1' as never,
+    {
+      ex: ttlSeconds,
+      nx: true,
+    } as never
+  );
+  // Some clients return 'OK', others truthy
+  return Boolean(result);
+}
+
+/**
+ * Best-effort lock release. Safe to call even if lock expired.
+ */
+export async function releaseLock(key: string): Promise<void> {
+  try {
+    await redis.del(key as never);
+  } catch {
+    // noop
+  }
+}
+
+/**
+ * Simple sliding-window-ish rate limiter using INCR + EXPIRE.
+ * Returns true if the caller exceeded the limit.
+ */
+export async function isRateLimited(
+  key: string,
+  limit: number,
+  ttlSeconds: number
+): Promise<boolean> {
+  const count = await redis.incrBy(key as never, 1 as never);
+  if (count === 1) {
+    await redis.expire(key as never, ttlSeconds);
+  }
+  return count > limit;
 }

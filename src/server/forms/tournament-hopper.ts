@@ -1,7 +1,8 @@
 import type { Request, Response } from 'express';
 import { context, redis } from '@devvit/web/server';
-import { replaceHopperPrompts } from '../services/tournament-hopper';
+import { replaceHopperPrompts } from '../services/tournament/hopper';
 import { REDIS_KEYS } from '../services/redis';
+import { parseForm, z } from './_schema';
 
 /**
  * Form handler to update the tournament prompt hopper
@@ -11,10 +12,13 @@ export async function handleTournamentHopperForm(
   res: Response
 ): Promise<void> {
   try {
-    const { prompts, enabled } = req.body as {
-      prompts?: string;
-      enabled?: boolean | string;
-    };
+    const { prompts, enabled } = parseForm(
+      z.object({
+        prompts: z.string().optional(),
+        enabled: z.union([z.string(), z.boolean()]).optional(),
+      }),
+      req.body
+    );
 
     const list = (prompts || '')
       .split(/[\n,]/)

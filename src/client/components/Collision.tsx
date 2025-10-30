@@ -187,7 +187,7 @@ export function Collision({
         isAnimatingRef.current = false;
       };
     }
-  }, [particles.length]);
+  }, [particles.length, duration]);
 
   // Handle window resize
   useEffect(() => {

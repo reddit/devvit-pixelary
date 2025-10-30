@@ -54,7 +54,10 @@ vi.mock('./redis', () => ({
     wordBacking: (word: string) => `word:backing:${word}`,
     commentUpdateLock: (postId: string) => `comment_update_lock:${postId}`,
     scores: () => 'scores',
+    rateGuess: (userId: string) => `rate:guess:${userId}`,
   },
+  isRateLimited: vi.fn().mockResolvedValue(false),
+  acquireLock: vi.fn().mockResolvedValue(true),
 }));
 
 import { submitGuess, getGuesses, isAuthorFirstView } from './drawing';

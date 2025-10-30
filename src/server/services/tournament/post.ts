@@ -1,22 +1,28 @@
 import type { T2, T3, T1 } from '@devvit/shared-types/tid.js';
-import { reddit, redis, media, context, scheduler } from '@devvit/web/server';
+import {
+  reddit,
+  redis,
+  media,
+  context,
+  scheduler,
+  cache,
+} from '@devvit/web/server';
 import type { MediaAsset } from '@devvit/web/server';
-import { createPost, setPostFlair } from '../core';
-import { REDIS_KEYS } from './redis';
-import { getRandomWords } from './dictionary';
-import type { DrawingData, TournamentPostData } from '../../shared/schema';
+import { createPost, setPostFlair } from '../../core';
+import { REDIS_KEYS, acquireLock, releaseLock, isRateLimited } from '../redis';
+import { getRandomWords } from '../dictionary';
+import type { DrawingData, TournamentPostData } from '../../../shared/schema';
 import {
   TOURNAMENT_REWARD_VOTE,
   TOURNAMENT_REWARD_WINNER,
   TOURNAMENT_REWARD_TOP_10,
-  TOURNAMENT_ELO_K_FACTOR,
   TOURNAMENT_ELO_INITIAL_RATING,
-} from '../../shared/constants';
-import { incrementScore } from './progression';
-import { shuffle } from '../../shared/utils/array';
-import { normalizeWord } from '../../shared/utils/string';
+} from '../../../shared/constants';
+import { calculateEloChange } from './elo';
+import { incrementScore } from '../progression';
+import { normalizeWord } from '../../../shared/utils/string';
 
-type TournamentDrawing = {
+export type TournamentDrawing = {
   commentId: T1;
   drawing: DrawingData;
   userId: T2;
@@ -104,19 +110,27 @@ export async function getTournament(postId: T3): Promise<{
   voteCount: number;
   playerCount: number;
 }> {
-  const [data, submissionCount, playerCount] = await Promise.all([
-    redis.hGetAll(REDIS_KEYS.tournament(postId)),
-    redis.zCard(REDIS_KEYS.tournamentEntries(postId)),
-    redis.zCard(REDIS_KEYS.tournamentPlayers(postId)),
-  ]);
+  return await cache(
+    async () => {
+      const [data, submissionCount, playerCount] = await Promise.all([
+        redis.hGetAll(REDIS_KEYS.tournament(postId)),
+        redis.zCard(REDIS_KEYS.tournamentEntries(postId)),
+        redis.zCard(REDIS_KEYS.tournamentPlayers(postId)),
+      ]);
 
-  return {
-    word: data.word || '',
-    type: data.type || '',
-    submissionCount,
-    voteCount: parseInt(data.votes || '0'),
-    playerCount,
-  };
+      return {
+        word: data.word || '',
+        type: data.type || '',
+        submissionCount,
+        voteCount: parseInt(data.votes || '0'),
+        playerCount,
+      };
+    },
+    {
+      key: `tournament:stats:${postId}`,
+      ttl: 10, // short TTL; UI also refetches on demand
+    }
+  );
 }
 
 /**
@@ -162,6 +176,10 @@ export async function submitTournamentEntry(
   tournamentPostId?: T3
 ): Promise<T1> {
   const postId = tournamentPostId || context.postId!;
+  // Rate limit submissions per-user (2 per 10s)
+  if (await isRateLimited(REDIS_KEYS.rateSubmit(context.userId!), 2, 10)) {
+    throw new Error('Too many submissions, slow down');
+  }
   // Upload drawing image to Reddit's media service
   let response: MediaAsset;
   try {
@@ -226,6 +244,11 @@ export async function tournamentVote(winnerId: T1, loserId: T1): Promise<void> {
     throw new Error('Must be in a tournament post and logged in');
   }
 
+  // Per-user rate limiting (3 ops/sec)
+  if (await isRateLimited(REDIS_KEYS.rateVote(userId), 3, 1)) {
+    return;
+  }
+
   // First batch of operations
   const [winnerRating, loserRating, _score, _playerCount, _votes] =
     await Promise.all([
@@ -241,21 +264,52 @@ export async function tournamentVote(winnerId: T1, loserId: T1): Promise<void> {
       redis.hIncrBy(REDIS_KEYS.tournamentEntry(winnerId), 'votes', 1),
     ]);
 
-  // Calculate and apply Elo rating changes
-  const { winnerChange, loserChange } = calculateEloChange(
-    winnerRating,
-    loserRating
-  );
-  await Promise.all([
-    redis.zAdd(REDIS_KEYS.tournamentEntries(postId), {
-      member: winnerId,
-      score: winnerRating + winnerChange,
-    }),
-    redis.zAdd(REDIS_KEYS.tournamentEntries(postId), {
-      member: loserId,
-      score: loserRating + loserChange,
-    }),
-  ]);
+  // Calculate and apply Elo rating changes atomically using a short-lived lock
+  const eloLockKey = REDIS_KEYS.tournamentEloLock(postId);
+  const gotLock = await acquireLock(eloLockKey, 2);
+  try {
+    if (gotLock) {
+      // Re-read ratings inside lock for latest values
+      const [latestWinner, latestLoser] = await Promise.all([
+        getEntryRating(postId, winnerId),
+        getEntryRating(postId, loserId),
+      ]);
+      const { winnerChange, loserChange } = calculateEloChange(
+        latestWinner,
+        latestLoser
+      );
+      await Promise.all([
+        redis.zAdd(REDIS_KEYS.tournamentEntries(postId), {
+          member: winnerId,
+          score: latestWinner + winnerChange,
+        }),
+        redis.zAdd(REDIS_KEYS.tournamentEntries(postId), {
+          member: loserId,
+          score: latestLoser + loserChange,
+        }),
+      ]);
+    } else {
+      // Fallback (best effort) without lock
+      const { winnerChange, loserChange } = calculateEloChange(
+        winnerRating,
+        loserRating
+      );
+      await Promise.all([
+        redis.zAdd(REDIS_KEYS.tournamentEntries(postId), {
+          member: winnerId,
+          score: winnerRating + winnerChange,
+        }),
+        redis.zAdd(REDIS_KEYS.tournamentEntries(postId), {
+          member: loserId,
+          score: loserRating + loserChange,
+        }),
+      ]);
+    }
+  } finally {
+    if (gotLock) {
+      await releaseLock(eloLockKey);
+    }
+  }
 }
 
 /**
@@ -263,24 +317,7 @@ export async function tournamentVote(winnerId: T1, loserId: T1): Promise<void> {
  * @param postId - The tournament post ID
  * @returns Array of two random submission comment IDs
  */
-export async function getRandomPair(postId: T3): Promise<[T1, T1]> {
-  const submissions = await getTournamentEntries(postId);
-
-  if (submissions.length < 2) {
-    throw new Error('Not enough submissions for voting');
-  }
-
-  // Select two random submissions
-  const shuffled = [...submissions].sort(() => Math.random() - 0.5);
-  const first = shuffled[0];
-  const second = shuffled[1];
-
-  if (!first || !second) {
-    throw new Error('Failed to select random submissions');
-  }
-
-  return [first, second];
-}
+// moved to services/tournament/pairs
 
 /**
  * Get N pairs of drawing submissions with full drawing data
@@ -288,98 +325,7 @@ export async function getRandomPair(postId: T3): Promise<[T1, T1]> {
  * @param count - Number of pairs to return
  * @returns Array of pairs as tuples `[left, right]`
  */
-export async function getDrawingPairs(
-  postId: T3,
-  count: number = 5
-): Promise<[TournamentDrawing, TournamentDrawing][]> {
-  const submissions = await getTournamentEntries(postId);
-
-  if (submissions.length < 2) {
-    throw new Error('Not enough submissions for voting');
-  }
-
-  // Shuffle once for randomness
-  const shuffled = shuffle(submissions);
-
-  // Collect all pair IDs first
-  const pairIds: [T1, T1][] = [];
-  let attempts = 0;
-  const maxAttempts = count * 10; // Prevent infinite loop
-
-  while (pairIds.length < count && attempts < maxAttempts) {
-    attempts++;
-
-    // Pick random indices from shuffled array
-    const firstIdx = Math.floor(Math.random() * shuffled.length);
-    let secondIdx = Math.floor(Math.random() * shuffled.length);
-
-    // Ensure we never pick the same index twice for a pair
-    while (secondIdx === firstIdx && shuffled.length > 1) {
-      secondIdx = Math.floor(Math.random() * shuffled.length);
-    }
-
-    const firstId = shuffled[firstIdx];
-    const secondId = shuffled[secondIdx];
-
-    if (!firstId || !secondId) {
-      break;
-    }
-
-    // Check if this pair is identical to the previous pair
-    const lastPair = pairIds[pairIds.length - 1];
-    const isIdenticalToLast =
-      lastPair && lastPair[0] === firstId && lastPair[1] === secondId;
-
-    if (isIdenticalToLast) {
-      continue; // Skip this pair and try again
-    }
-
-    // Check if any item is in the same position as the previous pair
-    const isSamePosition =
-      lastPair && (lastPair[0] === firstId || lastPair[1] === secondId);
-
-    if (isSamePosition) {
-      continue; // Skip this pair and try again
-    }
-
-    pairIds.push([firstId, secondId]);
-  }
-
-  // Collect unique IDs to avoid fetching duplicates
-  const uniqueIds = [...new Set(pairIds.flat())];
-
-  // Fetch all unique drawings in parallel
-  const fetchPromises = uniqueIds.map((id) => getTournamentEntry(id));
-  const fetchedData = await Promise.all(fetchPromises);
-
-  // Create a map of commentId -> drawing data for fast lookup
-  const dataMap = new Map<T1, Awaited<ReturnType<typeof getTournamentEntry>>>();
-  for (let i = 0; i < uniqueIds.length; i++) {
-    const id = uniqueIds[i];
-    const data = fetchedData[i];
-    if (id && data) {
-      dataMap.set(id, data);
-    }
-  }
-
-  // Pair the results together
-  const pairs: Array<[TournamentDrawing, TournamentDrawing]> = [];
-  for (const [firstId, secondId] of pairIds) {
-    const leftData = dataMap.get(firstId);
-    const rightData = dataMap.get(secondId);
-
-    if (!leftData || !rightData) {
-      continue;
-    }
-
-    pairs.push([
-      { ...leftData, commentId: firstId },
-      { ...rightData, commentId: secondId },
-    ]);
-  }
-
-  return pairs;
-}
+// moved to services/tournament/pairs
 
 /**
  * Get drawing data from a comment ID
@@ -477,90 +423,6 @@ export async function removeTournamentEntry(
 /**
  * Utility function to calculate Elo rating change for winner and loser
  */
-function calculateEloChange(
-  winnerRating: number,
-  loserRating: number
-): { winnerChange: number; loserChange: number } {
-  const expectedWinner =
-    1 / (1 + Math.pow(10, (loserRating - winnerRating) / 400));
-  const expectedLoser = 1 - expectedWinner;
+// calculateEloChange moved to services/tournament/elo
 
-  return {
-    winnerChange: Math.round(TOURNAMENT_ELO_K_FACTOR * (1 - expectedWinner)),
-    loserChange: Math.round(TOURNAMENT_ELO_K_FACTOR * (0 - expectedLoser)),
-  };
-}
-
-/**
- * Save the pinned comment ID for a tournament post
- * @param postId - The ID of the tournament post to save the pinned comment ID for
- * @param commentId - The ID of the pinned comment
- */
-export async function saveTournamentPinnedCommentId(
-  postId: T3,
-  commentId: T1
-): Promise<void> {
-  const key = REDIS_KEYS.tournament(postId);
-  await redis.hSet(key, {
-    pinnedCommentId: commentId,
-  });
-}
-
-/**
- * Get the pinned comment ID for a tournament post
- * @param postId - The ID of the tournament post to get the pinned comment ID for
- * @returns The pinned comment ID if it exists, null otherwise
- */
-export async function getTournamentPinnedCommentId(
-  postId: T3
-): Promise<T1 | null> {
-  const key = REDIS_KEYS.tournament(postId);
-  const commentId = await redis.hGet(key, 'pinnedCommentId');
-  return commentId as T1 | null;
-}
-
-/**
- * Generate comment text for tournament posts
- * @param postId - The ID of the tournament post
- * @returns The comment text for tournament posts
- */
-export async function generateTournamentCommentText(
-  postId: T3
-): Promise<string> {
-  const tournamentData = await getTournament(postId);
-  const word = tournamentData.word;
-
-  return `Draw the word **"${word}"** in this tournament!
-
-## How to Play
-
-**Submit your drawing**: Click the "Draw Something" button to create your 16x16 pixel art submission for the word "${word}".
-
-**Vote on pairs**: Help rank the submissions by voting between two drawings. Choose which one you think best represents the word "${word}".
-
-**Watch the leaderboard**: The tournament uses an Elo rating system. Top drawings rise to the top as more people vote.
-
-**View all submissions**: Check out the gallery to see everyone's creative interpretations of "${word}".
-
-Good luck and let the best drawing win! 🎨`;
-}
-
-/**
- * Create a pinned comment for a tournament post
- * @param postId - The ID of the tournament post to create a comment for
- * @returns The created comment ID
- */
-export async function createTournamentPostComment(postId: T3): Promise<T1> {
-  const commentText = await generateTournamentCommentText(postId);
-
-  const comment = await reddit.submitComment({
-    text: commentText,
-    id: postId,
-  });
-
-  // Pin the comment and save ID
-  await comment.distinguish(true);
-  await saveTournamentPinnedCommentId(postId, comment.id);
-
-  return comment.id;
-}
+// moved to services/tournament/comments

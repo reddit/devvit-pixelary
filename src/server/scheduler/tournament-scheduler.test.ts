@@ -11,13 +11,22 @@ vi.mock('@devvit/web/server', () => ({
   },
 }));
 
-vi.mock('../services/tournament-hopper', () => ({
+vi.mock('../services/tournament/hopper', () => ({
   peekNextHopperPrompt: vi.fn(),
   removeHopperPrompt: vi.fn(),
 }));
 
-vi.mock('../services/tournament-post', () => ({
+vi.mock('../services/tournament/post', () => ({
   createTournament: vi.fn(),
+}));
+
+vi.mock('../services/redis', () => ({
+  acquireLock: vi.fn().mockResolvedValue(true),
+  REDIS_KEYS: {
+    tournamentSchedulerEnabled: (s: string) =>
+      `tournament:scheduler:enabled:${s}`,
+    tournamentSchedulerLock: (s: string) => `tournament:scheduler:lock:${s}`,
+  },
 }));
 
 import type { Request, Response } from 'express';
@@ -26,8 +35,9 @@ import { handleTournamentScheduler } from './tournament-scheduler';
 import {
   peekNextHopperPrompt,
   removeHopperPrompt,
-} from '../services/tournament-hopper';
-import { createTournament } from '../services/tournament-post';
+} from '../services/tournament/hopper';
+import { createTournament } from '../services/tournament/post';
+import { acquireLock } from '../services/redis';
 
 function mockRes(): Response {
   const res = {
@@ -54,7 +64,7 @@ describe('tournament scheduler', () => {
 
   it('skips when lock is held', async () => {
     vi.mocked(redis.get).mockResolvedValue('1');
-    vi.mocked(redis.exists).mockResolvedValue(1);
+    vi.mocked(acquireLock).mockResolvedValue(false as unknown as boolean);
     const req = {} as Request;
     const res = mockRes();
     await handleTournamentScheduler(req, res);
@@ -65,7 +75,7 @@ describe('tournament scheduler', () => {
 
   it('creates tournament and removes prompt when available', async () => {
     vi.mocked(redis.get).mockResolvedValue('1');
-    vi.mocked(redis.exists).mockResolvedValue(0);
+    vi.mocked(acquireLock).mockResolvedValue(true as unknown as boolean);
     vi.mocked(peekNextHopperPrompt).mockResolvedValue('Cat');
     const req = {} as Request;
     const res = mockRes();

@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { renderDrawingToCanvas } from '../../shared/utils/drawing';
 import { DrawingData } from '@shared/schema/drawing';
 
@@ -11,7 +11,7 @@ interface DrawingProps {
   isPaused?: boolean;
 }
 
-export function Drawing({
+export const Drawing = React.memo(function Drawing({
   data,
   size,
   onClick,
@@ -71,4 +71,4 @@ export function Drawing({
       </div>
     </div>
   );
-}
+});

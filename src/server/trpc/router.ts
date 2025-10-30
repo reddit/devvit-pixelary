@@ -564,7 +564,7 @@ export const appRouter = t.router({
           if (!ctx.userId) throw new Error('Must be logged in');
 
           const { submitTournamentEntry } = await import(
-            '../services/tournament-post'
+            '../services/tournament/post'
           );
 
           assertT3(input.postId);
@@ -582,7 +582,7 @@ export const appRouter = t.router({
         .query(async ({ input }) => {
           assertT3(input.postId);
           const { getTournamentEntries } = await import(
-            '../services/tournament-post'
+            '../services/tournament/post'
           );
           return await getTournamentEntries(input.postId);
         }),
@@ -591,7 +591,9 @@ export const appRouter = t.router({
         .input(z.object({ postId: z.string() }))
         .query(async ({ input }) => {
           assertT3(input.postId);
-          const { getRandomPair } = await import('../services/tournament-post');
+          const { getRandomPair } = await import(
+            '../services/tournament/pairs'
+          );
           return await getRandomPair(input.postId);
         }),
 
@@ -605,7 +607,7 @@ export const appRouter = t.router({
         .query(async ({ input }) => {
           assertT3(input.postId);
           const { getDrawingPairs } = await import(
-            '../services/tournament-post'
+            '../services/tournament/pairs'
           );
           return await getDrawingPairs(input.postId, input.count);
         }),
@@ -625,7 +627,7 @@ export const appRouter = t.router({
           const loserId = input.loserCommentId as T1;
 
           const { tournamentVote } = await import(
-            '../services/tournament-post'
+            '../services/tournament/post'
           );
           // Context is used inside the function
           await tournamentVote(winnerId, loserId);
@@ -637,7 +639,7 @@ export const appRouter = t.router({
         .input(z.object({ postId: z.string() }))
         .query(async ({ input }) => {
           assertT3(input.postId);
-          const { getTournament } = await import('../services/tournament-post');
+          const { getTournament } = await import('../services/tournament/post');
           return await getTournament(input.postId);
         }),
 
@@ -645,7 +647,7 @@ export const appRouter = t.router({
         .input(z.object({ commentId: z.string() }))
         .query(async ({ input }) => {
           const { getTournamentEntry } = await import(
-            '../services/tournament-post'
+            '../services/tournament/post'
           );
           return await getTournamentEntry(input.commentId as T1);
         }),
@@ -657,7 +659,7 @@ export const appRouter = t.router({
 
           assertT3(input.postId);
           const { getTournamentEntry } = await import(
-            '../services/tournament-post'
+            '../services/tournament/post'
           );
           const { redis } = await import('@devvit/web/server');
           const { REDIS_KEYS, getUsername } = await import('../services/redis');
@@ -674,31 +676,64 @@ export const appRouter = t.router({
             return [];
           }
 
-          const results = [];
-          for (const item of rankedSubmissions) {
-            const commentId = item.member as T1;
-            const drawingData = await getTournamentEntry(commentId);
+          // Collect all comment IDs and fetch entries in parallel
+          const commentIds = rankedSubmissions.map((item) => item.member as T1);
+          const entryPromises = commentIds.map((id) => getTournamentEntry(id));
+          const entryList = await Promise.all(entryPromises);
 
-            if (!drawingData) {
-              continue;
+          // Build a map of commentId -> entry (filtering undefined)
+          const entryMap = new Map<
+            T1,
+            NonNullable<Awaited<ReturnType<typeof getTournamentEntry>>>
+          >();
+          const userIds: string[] = [];
+          entryList.forEach((entry, idx) => {
+            const commentId = commentIds[idx];
+            if (entry) {
+              entryMap.set(commentId, entry);
+              userIds.push(entry.userId);
             }
+          });
 
-            // Resolve username
-            const username = await getUsername(drawingData.userId);
+          // Resolve usernames with de-duplication
+          const uniqueUserIds = Array.from(new Set(userIds));
+          const usernameResults = await Promise.all(
+            uniqueUserIds.map((uid) => getUsername(uid as never))
+          );
+          const usernameMap = new Map<string, string>();
+          uniqueUserIds.forEach((uid, i) => {
+            usernameMap.set(uid, usernameResults[i] || '');
+          });
 
-            // Item.score is the Elo rating
-            results.push({
-              commentId,
-              drawing: drawingData.drawing,
-              userId: drawingData.userId,
-              username,
-              postId: drawingData.postId,
-              score: item.score,
-              rating: item.score,
-              votes: drawingData.votes,
-              views: drawingData.views,
-            });
-          }
+          // Assemble results in the same rank order, skipping missing entries
+          const results = rankedSubmissions
+            .map((item) => {
+              const commentId = item.member as T1;
+              const data = entryMap.get(commentId);
+              if (!data) return null;
+              return {
+                commentId,
+                drawing: data.drawing,
+                userId: data.userId,
+                username: usernameMap.get(data.userId) || '',
+                postId: data.postId,
+                score: item.score,
+                rating: item.score,
+                votes: data.votes,
+                views: data.views,
+              };
+            })
+            .filter(Boolean) as Array<{
+            commentId: T1;
+            drawing: unknown;
+            userId: string;
+            username: string;
+            postId: string;
+            score: number;
+            rating: number;
+            votes: number;
+            views: number;
+          }>;
 
           return results;
         }),
@@ -707,7 +742,7 @@ export const appRouter = t.router({
         .input(z.object({ commentId: z.string() }))
         .mutation(async ({ input }) => {
           const { incrementEntryViews } = await import(
-            '../services/tournament-post'
+            '../services/tournament/post'
           );
           await incrementEntryViews(input.commentId as T1);
           return { success: true };

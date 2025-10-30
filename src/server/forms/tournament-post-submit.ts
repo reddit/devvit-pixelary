@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import { context } from '@devvit/web/server';
-import { createTournament } from '../services/tournament-post';
+import { createTournament } from '../services/tournament/post';
 
 export async function handleTournamentPostSubmit(
   req: Request,

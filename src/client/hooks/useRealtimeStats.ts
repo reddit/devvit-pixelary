@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { connectRealtime } from '@devvit/web/client';
 import { useQueryClient } from '@tanstack/react-query';
 import { trpc } from '../trpc/client';
@@ -84,6 +84,7 @@ export function useRealtimeStats(postId: string): {
   const [optimisticStats, setOptimisticStats] = useState<StatsData | null>(
     null
   );
+  const lastUpdateRef = useRef(0);
 
   // Get initial data from tRPC
   const { data: initialStats, isLoading } = trpc.app.guess.getStats.useQuery(
@@ -98,11 +99,12 @@ export function useRealtimeStats(postId: string): {
   useEffect(() => {
     if (!postId) return;
 
+    const THROTTLE_MS = 100;
     const handleStatsUpdate = (newStats: StatsData) => {
-      // Update optimistic state immediately
+      const now = Date.now();
+      if (now - lastUpdateRef.current < THROTTLE_MS) return;
+      lastUpdateRef.current = now;
       setOptimisticStats(newStats);
-
-      // Update React Query cache for consistency
       queryClient.setQueryData(
         ['pixelary', 'guess', 'stats', postId],
         newStats

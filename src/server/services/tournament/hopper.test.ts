@@ -20,8 +20,8 @@ import {
   replaceHopperPrompts,
   peekNextHopperPrompt,
   removeHopperPrompt,
-} from './tournament-hopper';
-import { REDIS_KEYS } from './redis';
+} from './hopper';
+import { REDIS_KEYS } from '../redis';
 
 describe('Tournament Hopper Service', () => {
   const nowSpy = vi.spyOn(Date, 'now');

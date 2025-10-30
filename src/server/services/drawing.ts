@@ -8,7 +8,7 @@ import {
   media,
 } from '@devvit/web/server';
 import { incrementScore } from './progression';
-import { REDIS_KEYS } from './redis';
+import { REDIS_KEYS, acquireLock, isRateLimited } from './redis';
 import { normalizeWord, obfuscateString } from '../../shared/utils/string';
 import { shouldShowWord } from './word-backing';
 import type { DrawingPostDataExtended } from '../../shared/schema/pixelary';
@@ -95,6 +95,7 @@ export const createDrawing = async (options: {
   const postId = post.id;
   const currentDate = new Date();
   const currentTime = currentDate.getTime();
+  const normalizedWord = normalizeWord(word);
 
   // Run all operations in parallel
   await Promise.all([
@@ -104,6 +105,7 @@ export const createDrawing = async (options: {
       postId,
       createdAt: post.createdAt.getTime().toString(),
       word,
+      normalizedWord,
       dictionary,
       drawing: JSON.stringify(drawing),
       authorId,
@@ -366,16 +368,11 @@ export async function handleCommentUpdateCooldown(postId: T3): Promise<void> {
   const LOCK_TTL = 30; // 30 seconds lock timeout
   const ONE_MINUTE = 60 * 1000;
 
-  // Check if lock already exists
-  const lockExists = await redis.exists(lockKey);
-  if (lockExists) {
-    // Another process is handling the cooldown, skip
+  // Try to acquire lock atomically; skip if held
+  const gotLock = await acquireLock(lockKey, LOCK_TTL);
+  if (!gotLock) {
     return;
   }
-
-  // Try to acquire lock
-  await redis.set(lockKey, '1');
-  await redis.expire(lockKey, LOCK_TTL);
 
   try {
     const now = Date.now();
@@ -584,6 +581,11 @@ export async function submitGuess(options: {
   const { postId, userId, guess } = options;
   const empty = { correct: false, points: 0 };
 
+  // Basic per-user rate limiting (3 ops/sec)
+  if (await isRateLimited(REDIS_KEYS.rateGuess(userId), 3, 1)) {
+    return empty;
+  }
+
   // Single Redis call to get all drawing data at once (with caching)
   // Parallel check for user status and increment counters
   const [drawingData, solved, skipped] = await Promise.all([
@@ -593,6 +595,7 @@ export async function submitGuess(options: {
   ]);
 
   const word = drawingData.word;
+  const drawingNormalizedWord = drawingData.normalizedWord;
   const authorId = drawingData.authorId;
 
   // Check if user already solved/skipped
@@ -608,7 +611,7 @@ export async function submitGuess(options: {
   }
 
   const normalizedGuess = normalizeWord(guess);
-  const normalizedWord = normalizeWord(word);
+  const normalizedWord = drawingNormalizedWord || normalizeWord(word);
   const correct = normalizedGuess === normalizedWord;
   const now = Date.now();
 

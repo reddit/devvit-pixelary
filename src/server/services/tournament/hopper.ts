@@ -1,6 +1,6 @@
 import { context, redis } from '@devvit/web/server';
-import { REDIS_KEYS } from './redis';
-import { normalizeWord } from '../../shared/utils/string';
+import { REDIS_KEYS } from '../redis';
+import { normalizeWord } from '../../../shared/utils/string';
 
 /**
  * Get tournament hopper prompts with pagination support

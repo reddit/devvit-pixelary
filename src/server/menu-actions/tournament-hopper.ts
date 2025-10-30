@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import { redis, context } from '@devvit/web/server';
-import { getHopperPrompts } from '../services/tournament-hopper';
+import { getHopperPrompts } from '../services/tournament/hopper';
 import { REDIS_KEYS } from '../services/redis';
 
 /**

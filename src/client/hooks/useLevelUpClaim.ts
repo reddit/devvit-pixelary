@@ -110,7 +110,7 @@ export function useLevelUpClaim(): {
     if (context.userId) {
       void refetch();
     }
-  }, [context.userId, refetch]);
+  }, [refetch]);
 
   // Handle realtime claim events
   useEffect(() => {

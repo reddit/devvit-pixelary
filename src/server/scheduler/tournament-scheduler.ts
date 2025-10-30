@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import { context, redis } from '@devvit/web/server';
-import { REDIS_KEYS } from '../services/redis';
+import { REDIS_KEYS, acquireLock } from '../services/redis';
 
 export async function handleTournamentScheduler(
   req: Request,
@@ -18,21 +18,19 @@ export async function handleTournamentScheduler(
     }
     const lockKey = REDIS_KEYS.tournamentSchedulerLock(subName);
 
-    // Lightweight lock to avoid duplicate work
-    const exists = await redis.exists(lockKey);
-    if (exists) {
+    // Lightweight lock to avoid duplicate work (atomic)
+    const gotLock = await acquireLock(lockKey, 120);
+    if (!gotLock) {
       res.json({ status: 'skipped', reason: 'lock held' });
       return;
     }
-    await redis.set(lockKey, '1');
-    await redis.expire(lockKey, 120);
 
     try {
       // Lazy import to avoid circular deps
       const { peekNextHopperPrompt, removeHopperPrompt } = await import(
-        '../services/tournament-hopper'
+        '../services/tournament/hopper'
       );
-      const { createTournament } = await import('../services/tournament-post');
+      const { createTournament } = await import('../services/tournament/post');
 
       const prompt = await peekNextHopperPrompt();
       if (!prompt) {

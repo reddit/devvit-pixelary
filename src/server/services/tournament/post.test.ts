@@ -13,9 +13,9 @@ vi.mock('@devvit/web/server', () => ({
 }));
 
 import { redis } from '@devvit/web/server';
-import { REDIS_KEYS } from './redis';
-import { getEntryRating } from './tournament-post';
-import { TOURNAMENT_ELO_INITIAL_RATING } from '../../shared/constants';
+import { REDIS_KEYS } from '../redis';
+import { getEntryRating } from './post';
+import { TOURNAMENT_ELO_INITIAL_RATING } from '../../../shared/constants';
 
 describe('Tournament Post Service', () => {
   beforeEach(() => {
@@ -30,11 +30,11 @@ describe('Tournament Post Service', () => {
 
       vi.mocked(redis.zScore).mockResolvedValue(expectedRating);
 
-      const rating = await getEntryRating(postId, commentId);
+      const rating = await getEntryRating(postId as never, commentId as never);
 
       expect(redis.zScore).toHaveBeenCalledWith(
-        REDIS_KEYS.tournamentEntries(postId),
-        commentId
+        REDIS_KEYS.tournamentEntries(postId as never),
+        commentId as never
       );
       expect(rating).toBe(expectedRating);
     });
@@ -45,7 +45,7 @@ describe('Tournament Post Service', () => {
 
       vi.mocked(redis.zScore).mockResolvedValue(null);
 
-      const rating = await getEntryRating(postId, commentId);
+      const rating = await getEntryRating(postId as never, commentId as never);
 
       expect(rating).toBe(TOURNAMENT_ELO_INITIAL_RATING);
     });

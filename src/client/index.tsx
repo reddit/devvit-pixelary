@@ -1,5 +1,5 @@
-import React from 'react';
 import ReactDOM from 'react-dom/client';
+import React from 'react';
 import { DrawingPost } from './posts/drawing-post/DrawingPost';
 import { PinnedPost } from './posts/pinned-post/PinnedPost';
 import { CollectionPost } from './posts/collection-post/CollectionPost';
