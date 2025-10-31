@@ -15,13 +15,16 @@ import { ErrorBoundary } from './components/ErrorBoundary';
 import { TelemetryProvider } from './hooks/useTelemetry';
 import { PixelFont } from './components/PixelFont';
 import { LevelUpManager } from './components/LevelUpManager';
+import { PostType } from '@src/shared/types';
 
 const queryClient = new QueryClient();
 const trpcClient = trpc.createClient({
   links: [httpBatchLink({ url: '/api/trpc' })],
 });
 
-const Providers = ({ children }: { children: React.ReactNode }) => {
+// Providers component that wraps the app in the necessary providers
+function Providers(props: React.PropsWithChildren) {
+  const { children } = props;
   return (
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
@@ -30,12 +33,20 @@ const Providers = ({ children }: { children: React.ReactNode }) => {
           defaultPosition="top-right"
           defaultDuration={4000}
         >
-          <TelemetryProvider>{children}</TelemetryProvider>
+          <TelemetryProvider>
+            <ErrorBoundary
+              onError={(_error, _errorInfo) => {
+                // Error boundary caught error
+              }}
+            >
+              <LevelUpManager>{children}</LevelUpManager>
+            </ErrorBoundary>
+          </TelemetryProvider>
         </ToastProvider>
       </QueryClientProvider>
     </trpc.Provider>
   );
-};
+}
 
 // Global error handler
 window.addEventListener('error', (event) => {
@@ -55,40 +66,37 @@ window.addEventListener('unhandledrejection', (event) => {
   });
 });
 
-const App = () => {
+// Main app component that displays the current post based on the post data
+function App() {
   const postData = getPostData();
+  const currentPostType = (postData?.type as PostType) ?? 'unknown';
 
-  switch (postData?.type) {
-    case 'drawing':
-      return <DrawingPost />;
-    case 'pinned':
-      return <PinnedPost />;
-    case 'collection':
-      return <CollectionPost />;
-    case 'tournament':
-      return <TournamentPost />;
-    default:
-      return (
-        <div className="flex items-center justify-center h-full w-full">
-          <PixelFont>Unknown post type</PixelFont>
-        </div>
-      );
-  }
-};
+  const postTypes = {
+    drawing: <DrawingPost />,
+    pinned: <PinnedPost />,
+    collection: <CollectionPost />,
+    tournament: <TournamentPost />,
+    unknown: (
+      <div className="flex flex-col items-center justify-center h-full w-full">
+        <PixelFont>Error:</PixelFont>
+        <PixelFont>Unknown Post Type</PixelFont>
+      </div>
+    ),
+  };
 
+  return (
+    <React.Fragment>
+      <Background />
+      {postTypes[currentPostType]}
+    </React.Fragment>
+  );
+}
+
+// Render the app
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <Providers>
-      <ErrorBoundary
-        onError={(_error, _errorInfo) => {
-          // Error boundary caught error
-        }}
-      >
-        <Background />
-        <LevelUpManager>
-          <App />
-        </LevelUpManager>
-      </ErrorBoundary>
+      <App />
     </Providers>
   </React.StrictMode>
 );
