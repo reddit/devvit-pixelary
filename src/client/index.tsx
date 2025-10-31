@@ -1,21 +1,29 @@
-import ReactDOM from 'react-dom/client';
 import React from 'react';
-import { DrawingPost } from './posts/drawing-post/DrawingPost';
-import { PinnedPost } from './posts/pinned-post/PinnedPost';
-import { CollectionPost } from './posts/collection-post/CollectionPost';
-import { TournamentPost } from './posts/tournament-post/TournamentPost';
-import { trpc } from './trpc/client';
-import { httpBatchLink } from '@trpc/client';
+import ReactDOM from 'react-dom/client';
+
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { getPostData } from './utils/context';
+import { httpBatchLink } from '@trpc/client';
+
+import { Background } from '@components/Background';
+import { ErrorBoundary } from '@components/ErrorBoundary';
+import { LevelUpManager } from '@components/LevelUpManager';
+import { PixelFont } from '@components/PixelFont';
+import { ToastProvider } from '@components/ToastManager';
+
+import { TelemetryProvider } from '@hooks/useTelemetry';
+
+import { CollectionPost } from '@client/posts/collection-post/CollectionPost';
+import { DrawingPost } from '@client/posts/drawing-post/DrawingPost';
+import { PinnedPost } from '@client/posts/pinned-post/PinnedPost';
+import { TournamentPost } from '@client/posts/tournament-post/TournamentPost';
+
+import { getPostData } from '@utils/context';
+
+import { trpc } from '@client/trpc/client';
+
+import type { PostType } from '@shared/types';
+
 import './index.css';
-import { Background } from './components/Background';
-import { ToastProvider } from './components/ToastManager';
-import { ErrorBoundary } from './components/ErrorBoundary';
-import { TelemetryProvider } from './hooks/useTelemetry';
-import { PixelFont } from './components/PixelFont';
-import { LevelUpManager } from './components/LevelUpManager';
-import { PostType } from '@src/shared/types';
 
 const queryClient = new QueryClient();
 const trpcClient = trpc.createClient({
