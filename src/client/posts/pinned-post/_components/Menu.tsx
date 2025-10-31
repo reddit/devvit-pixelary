@@ -50,7 +50,7 @@ export function Menu(props: MenuProps) {
 
       {/* Menu */}
       <nav className="flex flex-col gap-3 w-full max-w-3xs">
-        <Button onClick={onDraw} size="medium" telemetryEvent="click_draw">
+        <Button onClick={onDraw} size="large" telemetryEvent="click_draw">
           Draw
         </Button>
 

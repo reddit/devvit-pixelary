@@ -50,6 +50,7 @@
 
   /* Pixel shadows */
   --shadow-pixel: 4px 4px 0px 0px var(--color-shadow);
+  --shadow-pixel-sm: 2px 2px 0px 0px var(--color-shadow);
 }
 
 @layer base {
@@ -99,6 +100,10 @@
   /* Pixel shadow utilities */
   .pixel-shadow {
     box-shadow: var(--shadow-pixel);
+  }
+
+  .pixel-shadow-sm {
+    box-shadow: var(--shadow-pixel-sm);
   }
 
   /* Skeleton utilities */

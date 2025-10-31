@@ -7,7 +7,7 @@ import type { TelemetryEventType } from '@shared/types';
 interface ButtonProps {
   children?: string;
   onClick?: () => void;
-  variant?: 'primary' | 'secondary' | 'white' | 'green';
+  variant?: 'primary' | 'secondary' | 'white';
   size?: 'small' | 'medium' | 'large';
   disabled?: boolean;
   leadingIcon?: SupportedGlyph;
@@ -31,21 +31,18 @@ export function Button({
 }: ButtonProps) {
   const { track } = useTelemetry();
   const baseClasses =
-    'flex flex-row gap-2 items-center justify-center transition-all';
+    'flex flex-row gap-2 items-center justify-center transition-all border-4';
 
   const variantClasses = {
     primary: disabled
-      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-      : 'bg-black text-white hover:bg-gray-800 cursor-pointer active:bg-gray-900',
+      ? 'bg-gray-300 text-gray-500 cursor-not-allowed border-transparent'
+      : 'bg-black text-white hover:bg-gray-800 cursor-pointer active:bg-gray-900 border-transparent',
     secondary: disabled
       ? 'bg-gray-200 border-4 border-gray-300 text-gray-500 cursor-not-allowed'
       : 'bg-background border-4 border-black text-black hover:bg-background/90 cursor-pointer active:bg-background/80',
     white: disabled
-      ? 'bg-gray-200 border-4  border-gray-300 text-gray-500 cursor-not-allowed'
+      ? 'bg-gray-200 border-4 border-gray-300 text-gray-500 cursor-not-allowed'
       : 'bg-white border-4 border-black text-black hover:bg-gray-100 cursor-pointer active:bg-gray-200',
-    green: disabled
-      ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
-      : 'bg-orange-700 text-white hover:bg-orange-800 cursor-pointer active:bg-orange-900',
   };
 
   const sizeClasses = {
