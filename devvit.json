@@ -154,6 +154,9 @@
       "SET_USER_FLAIR": {
         "endpoint": "/internal/scheduler/set-user-flair"
       },
+      "USER_LEVEL_CLAIMED": {
+        "endpoint": "/internal/scheduler/user-level-claimed"
+      },
       "UPDATE_WORD_SCORES": {
         "endpoint": "/internal/scheduler/update-word-scores",
         "cron": "0 * * * *"
