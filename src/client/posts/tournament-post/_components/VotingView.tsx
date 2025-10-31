@@ -434,40 +434,44 @@ export function VotingView({
         />
       </div>
 
-      <div className="flex gap-6 items-center justify-center">
-        <DrawingCard
-          drawing={leftDrawing}
-          side="left"
-          animationState={animationState}
-          winnerSide={winnerSide}
-          onVote={() =>
-            handleVote(
-              leftDrawing?.commentId || '',
-              rightDrawing?.commentId || ''
-            )
-          }
-          isDisabled={isButtonDisabled}
-        />
-        <DrawingCard
-          drawing={rightDrawing}
-          side="right"
-          animationState={animationState}
-          winnerSide={winnerSide}
-          onVote={() =>
-            handleVote(
-              rightDrawing?.commentId || '',
-              leftDrawing?.commentId || ''
-            )
-          }
-          isDisabled={isButtonDisabled}
-        />
-      </div>
+      {hasEnoughSubmissions && (
+        <div className="flex gap-6 items-center justify-center">
+          <DrawingCard
+            drawing={leftDrawing}
+            side="left"
+            animationState={animationState}
+            winnerSide={winnerSide}
+            onVote={() =>
+              handleVote(
+                leftDrawing?.commentId || '',
+                rightDrawing?.commentId || ''
+              )
+            }
+            isDisabled={isButtonDisabled}
+          />
+          <DrawingCard
+            drawing={rightDrawing}
+            side="right"
+            animationState={animationState}
+            winnerSide={winnerSide}
+            onVote={() =>
+              handleVote(
+                rightDrawing?.commentId || '',
+                leftDrawing?.commentId || ''
+              )
+            }
+            isDisabled={isButtonDisabled}
+          />
+        </div>
+      )}
 
       {/* Action bar */}
       <div className="flex flex-col gap-3 items-center">
-        <PixelFont scale={2} className="text-secondary">
-          Pick the best, or ...
-        </PixelFont>
+        {hasEnoughSubmissions && (
+          <PixelFont scale={2} className="text-secondary">
+            Pick the best, or ...
+          </PixelFont>
+        )}
         <Button onClick={onDraw} size="large" variant="primary">
           ADD A DRAWING
         </Button>
