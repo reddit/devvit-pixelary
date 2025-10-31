@@ -8,6 +8,7 @@ import { useToastHelpers } from '@components/ToastManager';
 import { PixelFont } from '@components/PixelFont';
 import type { PostGuesses } from '@shared/schema/pixelary';
 import { useTelemetry } from '@client/hooks/useTelemetry';
+import { ActiveEffectsBadge } from '@components/ActiveEffectsBadge';
 
 interface GuessViewProps {
   drawing: DrawingData;
@@ -66,6 +67,7 @@ export function GuessView({
 
   return (
     <main className="absolute inset-0 flex flex-col items-center justify-evenly px-5">
+      <ActiveEffectsBadge />
       {/* Drawing */}
       <div className="relative h-64 w-64 flex items-center justify-center">
         <Drawing

@@ -7,6 +7,7 @@ import { ProgressBar } from '@components/ProgressBar';
 import { trpc } from '@client/trpc/client';
 import { useTelemetry } from '@client/hooks/useTelemetry';
 import { useEffect } from 'react';
+import { ActiveEffectsBadge } from '@components/ActiveEffectsBadge';
 
 type MenuProps = {
   onDraw: () => void;
@@ -37,6 +38,7 @@ export function Menu(props: MenuProps) {
 
   return (
     <main className="absolute inset-0 flex flex-col items-center justify-evenly min-h-screen px-4">
+      <ActiveEffectsBadge />
       {/* Logo + Wordmark */}
       <div className="flex flex-col items-center gap-4">
         <Logo size={64} />

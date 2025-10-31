@@ -6,6 +6,7 @@ import { PixelFont } from '@components/PixelFont';
 import { CyclingMessage } from '@components/CyclingMessage';
 import { Collision } from '@components/Collision';
 import type { DrawingData } from '@shared/schema/drawing';
+import { ActiveEffectsBadge } from '@components/ActiveEffectsBadge';
 
 interface VotingViewProps {
   postId: string;
@@ -348,6 +349,7 @@ export function VotingView({
 
   return (
     <div className="absolute inset-0 flex flex-col items-center justify-center gap-10 w-full h-full">
+      <ActiveEffectsBadge />
       {/* Gallery toggle button */}
       <div className="absolute flex flex-row gap-4 items-center top-4 right-4">
         {/* Drawing */}

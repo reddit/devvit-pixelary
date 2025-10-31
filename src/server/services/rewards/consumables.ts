@@ -1,4 +1,4 @@
-import { redis } from '@devvit/web/server';
+import { redis, realtime } from '@devvit/web/server';
 import type { T2 } from '@devvit/shared-types/tid.js';
 import { REDIS_KEYS } from '@server/core/redis';
 import {
@@ -95,6 +95,18 @@ export async function activateConsumable(
     member: activationId as never,
     score: expiresAt as never,
   } as never);
+
+  // Broadcast updated active effects to user-scoped realtime channel
+  try {
+    const effects = await getActiveEffects(userId);
+    await realtime.send(`user-${userId}-rewards`, {
+      type: 'effects_updated',
+      effects,
+      timestamp: Date.now(),
+    });
+  } catch {
+    // Non-blocking: failures here should not affect activation flow
+  }
 
   return { activationId, expiresAt };
 }
