@@ -22,6 +22,9 @@ export const REDIS_KEYS = {
   userAdmin: (userId: T2) => `user:admin:${userId}`,
   userDrawings: (userId: T2) => `user:drawings:${userId}`,
   userLevelUpClaim: (userId: T2) => `user:levelup:${userId}`,
+  userInventory: (userId: T2) => `user:inventory:${userId}`, // Hash of itemId -> count
+  userActiveBoosts: (userId: T2) => `user:active_boosts:${userId}`, // ZSET of activationId scored by expiresAt
+  boostActivation: (activationId: string) => `boost:${activationId}`, // Hash for activation metadata
 
   // Words
   wordsAll: (subredditName: string) => `words:all:${subredditName}`,

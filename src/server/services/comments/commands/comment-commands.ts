@@ -34,6 +34,7 @@ const COMMAND_LIST = [
   '!stats',
   '!score',
   '!show',
+  '!dispense',
   '!help',
 ];
 
@@ -72,6 +73,8 @@ export async function processCommand(
       return handlers.handleScore(args, context);
     case '!show':
       return handlers.handleShow(args, context);
+    case '!dispense':
+      return handlers.handleDispense(args, context);
     case '!help':
       return handlers.handleHelp(args, context);
     default:

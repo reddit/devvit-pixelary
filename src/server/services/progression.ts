@@ -124,6 +124,18 @@ export async function incrementScore(
   amount: number
 ): Promise<number> {
   const key = REDIS_KEYS.scores();
+  // Apply active score multiplier (non-stacking; highest wins)
+  try {
+    const { getEffectiveScoreMultiplier } = await import(
+      '../services/rewards/consumables'
+    );
+    const multiplier = await getEffectiveScoreMultiplier(userId);
+    if (multiplier > 1) {
+      amount = Math.floor(amount * multiplier);
+    }
+  } catch {
+    // If rewards provider fails, continue without multiplier
+  }
   const oldScore = await getScore(userId);
   const score = await redis.zIncrBy(key, userId, amount);
   const level = getLevelByScore(score);
@@ -242,6 +254,17 @@ export async function claimLevelUp(userId: T2, level: number): Promise<void> {
 
   // Broadcast claim to all open posts for this user
   await broadcastLevelUpClaimed(userId);
+
+  // Schedule rewards grant to be handled by rewards service
+  try {
+    await scheduler.runJob({
+      name: 'USER_LEVEL_CLAIMED',
+      data: { userId, level },
+      runAt: new Date(),
+    });
+  } catch {
+    // Non-blocking
+  }
 }
 
 /**

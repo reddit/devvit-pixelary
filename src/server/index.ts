@@ -40,6 +40,7 @@ import {
   handleNewDrawingPinnedComment,
   handleUpdateDrawingPinnedComment,
   handleUserLevelUp,
+  handleUserLevelClaimed,
   handleCreatePinnedPostComment,
   handleSetUserFlair,
   handleUpdateWords,
@@ -92,6 +93,7 @@ router.post(
   handleUpdateDrawingPinnedComment
 );
 router.post('/internal/scheduler/user-level-up', handleUserLevelUp);
+router.post('/internal/scheduler/user-level-claimed', handleUserLevelClaimed);
 router.post(
   '/internal/scheduler/create-pinned-post-comment',
   handleCreatePinnedPostComment

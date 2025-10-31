@@ -1,6 +1,6 @@
 import { initTRPC } from '@trpc/server';
 import type { Context } from './context';
-import { z } from 'zod';
+
 import type { T3, T1 } from '@devvit/shared-types/tid.js';
 import { assertT3 } from '@devvit/shared-types/tid.js';
 import { redis } from '@devvit/web/server';
@@ -41,6 +41,7 @@ import { isAdmin, isModerator } from '@server/core/redis';
 import { DrawingDataSchema } from '@shared/schema/pixelary';
 import { trackEventFromContext } from '@server/services/telemetry';
 import type { TelemetryEventType } from '@shared/types';
+import { z } from 'zod';
 
 const t = initTRPC.context<Context>().create();
 
@@ -531,6 +532,89 @@ export const appRouter = t.router({
           }
 
           return { ok: true };
+        }),
+    }),
+
+    // Rewards endpoints
+    rewards: t.router({
+      getInventory: t.procedure.query(async ({ ctx }) => {
+        if (!ctx.userId) throw new Error('Must be logged in');
+        const { getInventory } = await import(
+          '../services/rewards/consumables'
+        );
+        return await getInventory(ctx.userId);
+      }),
+
+      getActiveEffects: t.procedure.query(async ({ ctx }) => {
+        if (!ctx.userId) throw new Error('Must be logged in');
+        const { getActiveEffects } = await import(
+          '../services/rewards/consumables'
+        );
+        return await getActiveEffects(ctx.userId);
+      }),
+
+      activateConsumable: t.procedure
+        .input(
+          z.object({
+            itemId: z.union([
+              z.literal('score_multiplier_2x_4h'),
+              z.literal('score_multiplier_3x_30m'),
+              z.literal('draw_time_boost_30s_2h'),
+            ]),
+          })
+        )
+        .mutation(async ({ ctx, input }) => {
+          if (!ctx.userId) throw new Error('Must be logged in');
+          const { activateConsumable } = await import(
+            '../services/rewards/consumables'
+          );
+          const result = await activateConsumable(ctx.userId, input.itemId);
+          if (!result) {
+            return { success: false } as const;
+          }
+          return { success: true, ...result } as const;
+        }),
+
+      getEffectiveBonuses: t.procedure.query(async ({ ctx }) => {
+        if (!ctx.userId) throw new Error('Must be logged in');
+        const { getEffectiveBonuses } = await import('../services/rewards');
+        return await getEffectiveBonuses(ctx.userId);
+      }),
+
+      dispenseItems: t.procedure
+        .input(
+          z.object({
+            username: z.string(),
+            items: z.array(
+              z.object({
+                itemId: z.union([
+                  z.literal('score_multiplier_2x_4h'),
+                  z.literal('score_multiplier_3x_30m'),
+                  z.literal('draw_time_boost_30s_2h'),
+                ]),
+                quantity: z.number().int().min(1),
+              })
+            ),
+          })
+        )
+        .mutation(async ({ ctx, input }) => {
+          if (!ctx.userId) throw new Error('Must be logged in');
+          const { isAdmin, isModerator } = await import('../core/redis');
+          const userIsAdmin = await isAdmin(ctx.userId);
+          const userIsModerator = ctx.subredditName
+            ? await isModerator(ctx.userId, ctx.subredditName)
+            : false;
+          if (!userIsAdmin && !userIsModerator) {
+            throw new Error('Not authorized');
+          }
+          const { reddit } = await import('@devvit/web/server');
+          const user = await reddit.getUserByUsername(input.username);
+          if (!user) throw new Error('User not found');
+          const { grantItems } = await import(
+            '../services/rewards/consumables'
+          );
+          await grantItems(user.id as never, input.items as never);
+          return { success: true } as const;
         }),
     }),
 

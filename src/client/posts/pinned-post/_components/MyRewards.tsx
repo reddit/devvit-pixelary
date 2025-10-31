@@ -1,8 +1,9 @@
 import { PixelFont } from '@components/PixelFont';
 import { PixelSymbol } from '@components/PixelSymbol';
 import { IconButton } from '@components/IconButton';
+import { Button } from '@components/Button';
 import { useTelemetry } from '@client/hooks/useTelemetry';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 import { trpc } from '@client/trpc/client';
 import {
   getAllRewards,
@@ -10,6 +11,8 @@ import {
   getRewardLabel,
   getRewardValue,
 } from '@shared/rewards';
+import { CONSUMABLES_CONFIG } from '@shared/consumables';
+import { context } from '@devvit/web/client';
 
 interface MyRewardsProps {
   onClose: () => void;
@@ -53,6 +56,45 @@ export function MyRewards({ onClose }: MyRewardsProps) {
       return aLevel - bLevel;
     });
 
+  // Inventory & Active Effects
+  const { data: inventory, refetch: refetchInventory } =
+    trpc.app.rewards.getInventory.useQuery(undefined, {
+      enabled: !!context.userId,
+      staleTime: 5000,
+    });
+  const { data: activeEffects, refetch: refetchEffects } =
+    trpc.app.rewards.getActiveEffects.useQuery(undefined, {
+      enabled: !!context.userId,
+      staleTime: 5000,
+    });
+  const activateMutation = trpc.app.rewards.activateConsumable.useMutation({
+    onSuccess: () => {
+      void refetchInventory();
+      void refetchEffects();
+    },
+  });
+
+  const inventoryEntries = useMemo(() => {
+    const entries = Object.entries(inventory ?? {});
+    return entries
+      .filter(([, qty]) => (qty as number) > 0)
+      .sort((a, b) =>
+        CONSUMABLES_CONFIG[
+          a[0] as keyof typeof CONSUMABLES_CONFIG
+        ].label.localeCompare(
+          CONSUMABLES_CONFIG[b[0] as keyof typeof CONSUMABLES_CONFIG].label
+        )
+      );
+  }, [inventory]);
+
+  function formatTimeRemaining(expiresAt: number): string {
+    const ms = Math.max(0, expiresAt - Date.now());
+    const hours = Math.floor(ms / 3600000);
+    const minutes = Math.floor((ms % 3600000) / 60000);
+    if (hours > 0) return `${hours}h ${minutes}m remaining`;
+    return `${minutes}m remaining`;
+  }
+
   return (
     <main className="absolute inset-0 flex flex-col p-4 gap-4">
       {/* Header */}
@@ -62,7 +104,7 @@ export function MyRewards({ onClose }: MyRewardsProps) {
       </header>
 
       {/* Stack of Reward Cards */}
-      <div className="flex-1 w-full space-y-3">
+      <div className="flex-1 w-full space-y-3 overflow-y-auto">
         {unlockedRewards.map((reward) => {
           const minLevel = getRewardMinLevel(reward);
           const currentValue = getRewardValue(userLevel, reward);
@@ -104,6 +146,84 @@ export function MyRewards({ onClose }: MyRewardsProps) {
             </div>
           );
         })}
+
+        {/* Consumables Inventory */}
+        <div className="mt-4">
+          <PixelFont scale={2.5}>Consumables</PixelFont>
+          {inventoryEntries.length === 0 ? (
+            <div className="mt-2 p-4 bg-white pixel-shadow">
+              <PixelFont scale={2} className="text-black-40">
+                You don't have any consumables yet.
+              </PixelFont>
+            </div>
+          ) : (
+            <div className="mt-2 space-y-2">
+              {inventoryEntries.map(([itemId, qty]) => {
+                const cfg =
+                  CONSUMABLES_CONFIG[itemId as keyof typeof CONSUMABLES_CONFIG];
+                return (
+                  <div
+                    key={itemId}
+                    className="flex items-center justify-between gap-4 p-4 bg-white pixel-shadow"
+                  >
+                    <div className="flex flex-col gap-1">
+                      <PixelFont scale={2}>{cfg.label}</PixelFont>
+                      <PixelFont scale={2} className="text-black-40">
+                        {String(qty)} available
+                      </PixelFont>
+                    </div>
+                    <Button
+                      variant="secondary"
+                      size="small"
+                      disabled={
+                        activateMutation.isPending || (qty as number) <= 0
+                      }
+                      onClick={() =>
+                        activateMutation.mutate({ itemId: itemId as never })
+                      }
+                    >
+                      Activate
+                    </Button>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Active Effects */}
+        <div className="mt-4">
+          <PixelFont scale={2.5}>Active effects</PixelFont>
+          {activeEffects && activeEffects.length > 0 ? (
+            <div className="mt-2 space-y-2">
+              {activeEffects.map((e) => {
+                const cfg =
+                  CONSUMABLES_CONFIG[
+                    e.itemId as keyof typeof CONSUMABLES_CONFIG
+                  ];
+                return (
+                  <div
+                    key={e.activationId}
+                    className="flex items-center justify-between gap-4 p-4 bg-white pixel-shadow"
+                  >
+                    <div className="flex flex-col gap-1">
+                      <PixelFont scale={2}>{cfg.label}</PixelFont>
+                      <PixelFont scale={2} className="text-black-40">
+                        {formatTimeRemaining(e.expiresAt)}
+                      </PixelFont>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            <div className="mt-2 p-4 bg-white pixel-shadow">
+              <PixelFont scale={2} className="text-black-40">
+                No active effects
+              </PixelFont>
+            </div>
+          )}
+        </div>
       </div>
     </main>
   );

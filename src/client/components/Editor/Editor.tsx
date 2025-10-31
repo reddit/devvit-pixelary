@@ -56,6 +56,11 @@ export function DrawingEditor({
   const { data: userProfile } = trpc.app.user.getProfile.useQuery(undefined, {
     staleTime: 30000, // Use prefetched data
   });
+  const { data: effectiveBonuses } =
+    trpc.app.rewards.getEffectiveBonuses.useQuery(undefined, {
+      enabled: !!context.userId,
+      staleTime: 5000,
+    });
   const trackSlateActionMutation = trpc.app.slate.trackAction.useMutation();
   const trackSlateActionRef = useRef(trackSlateActionMutation.mutateAsync);
   const subredditNameRef = useRef(context.subredditName);
@@ -113,14 +118,18 @@ export function DrawingEditor({
     [slateId, currentSlateId]
   );
 
-  // On load effect
+  // On load effect: prefer server-computed bonuses; fallback to level-only
   useEffect(() => {
+    if (effectiveBonuses) {
+      setTime(DRAWING_DURATION + effectiveBonuses.extraDrawingTimeSeconds);
+      return;
+    }
     const level = levelData?.level || userProfile?.level;
     if (level) {
       const extraTime = getExtraDrawingTime(level);
       setTime(DRAWING_DURATION + extraTime);
     }
-  }, [levelData?.level, userProfile?.level]);
+  }, [effectiveBonuses, levelData?.level, userProfile?.level]);
 
   const handleOnComplete = useCallback((drawingData: DrawingData) => {
     setDrawing(drawingData);
