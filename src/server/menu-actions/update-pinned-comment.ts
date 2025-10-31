@@ -1,21 +1,25 @@
-import { context, reddit } from '@devvit/web/server';
+import { context } from '@devvit/web/server';
 import type { Request, Response } from 'express';
 import {
-  getDrawing,
-  getDrawingCommentData,
-  generateDrawingCommentText,
   saveLastCommentUpdate,
   clearNextScheduledJobId,
 } from '../services/posts/drawing';
 import { getPinnedCommentId } from '../services/comments/pinned';
 import { updatePinnedPostComment } from '../services/posts/pinned';
-import type { T1 } from '@devvit/shared-types/tid.js';
+import { updatePinnedComment } from '../services/comments/pinned';
+import { getTournament } from '../services/posts/tournament/post';
+import { generateTournamentCommentText } from '../services/posts/tournament/comments';
+import {
+  generateDrawingCommentText,
+  getDrawingCommentData,
+} from '../services/posts/drawing';
+import type { PostType } from '@shared/schema/index';
 
 /**
  * Menu action handler for updating the pinned comment for a drawing post or pinned post
  */
 export async function handleUpdatePinnedComment(
-  _req: Request,
+  req: Request,
   res: Response
 ): Promise<void> {
   try {
@@ -37,24 +41,34 @@ export async function handleUpdatePinnedComment(
       return;
     }
 
-    // Determine post type and update accordingly
-    const postData = await getDrawing(postId);
+    // Determine post type from UI request
+    const postType = (req.body?.postType as PostType | undefined) ?? undefined;
+    if (!postType) {
+      res.status(400).json({ showToast: 'postType is required' });
+      return;
+    }
 
-    if (postData) {
-      // It's a drawing post - generate dynamic comment with stats
-      const stats = await getDrawingCommentData(postId);
-      const commentText = generateDrawingCommentText(stats);
-
-      // Update the pinned comment
-      const comment = await reddit.getCommentById(pinnedCommentId as T1);
-      await comment.edit({ text: commentText });
-    } else {
-      // It's a pinned post - use the dedicated update method
+    if (postType === 'pinned') {
+      // For pinned posts, use the dedicated update method (static text)
       await updatePinnedPostComment(postId);
+    } else {
+      // For drawing/tournament, build text directly
+      if (postType === 'drawing') {
+        const stats = await getDrawingCommentData(postId);
+        const text = generateDrawingCommentText(stats);
+        await updatePinnedComment(postId, text);
+      } else if (postType === 'tournament') {
+        const data = await getTournament(postId);
+        const text = await generateTournamentCommentText(data.word);
+        await updatePinnedComment(postId, text);
+      } else {
+        res.json({ showToast: 'Unsupported post type' });
+        return;
+      }
     }
 
     // Update timestamp and clear any scheduled jobs (only for drawing posts)
-    if (postData) {
+    if (postType === 'drawing') {
       await Promise.all([
         saveLastCommentUpdate(postId, Date.now()),
         clearNextScheduledJobId(postId),

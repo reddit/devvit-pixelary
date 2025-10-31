@@ -22,6 +22,6 @@ Good luck and let the best drawing win! 🎨`;
 
 export async function createTournamentPostComment(postId: T3): Promise<T1> {
   const data = await getTournament(postId);
-  const commentText = await generateTournamentCommentText(data.word);
-  return await createPinnedComment(postId, commentText);
+  const text = await generateTournamentCommentText(data.word);
+  return await createPinnedComment(postId, text);
 }

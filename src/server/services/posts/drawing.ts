@@ -3,7 +3,6 @@ import {
   scheduler,
   realtime,
   context,
-  reddit,
   cache,
   media,
 } from '@devvit/web/server';
@@ -149,7 +148,6 @@ export async function getDrawing(
     drawing,
     authorId,
     authorName,
-    pinnedCommentId,
     lastCommentUpdate,
   } = data;
   const { playerCount, solvedPercentage } = stats;
@@ -174,7 +172,6 @@ export async function getDrawing(
     authorName,
     playerCount,
     solvedPercentage,
-    pinnedCommentId,
     lastCommentUpdate: lastCommentUpdate
       ? parseInt(lastCommentUpdate)
       : undefined,
@@ -217,21 +214,6 @@ export async function getDrawingStats(
     },
     { key: `drawing:stats:${postId}`, ttl: 5 }
   );
-}
-
-export async function savePinnedCommentId(
-  postId: T3,
-  commentId: T1
-): Promise<void> {
-  const key = REDIS_KEYS.drawing(postId);
-  await redis.hSet(key, { pinnedCommentId: commentId });
-}
-
-export async function getPinnedCommentId(postId: T3): Promise<T1 | null> {
-  const drawingData = await getDrawing(postId);
-  if (drawingData?.pinnedCommentId) return drawingData.pinnedCommentId as T1;
-  const { getPinnedPostCommentId } = await import('./pinned');
-  return await getPinnedPostCommentId(postId);
 }
 
 export async function saveLastCommentUpdate(
@@ -616,9 +598,7 @@ export async function getUserDrawingStatus(
   const [solved, skipped, guesses] = await Promise.all([
     redis.zScore(REDIS_KEYS.drawingSolves(postId), userId),
     redis.zScore(REDIS_KEYS.drawingSkips(postId), userId),
-    redis.zRange(REDIS_KEYS.drawingGuesses(postId), 0, -1, {
-      withScores: true,
-    }),
+    redis.zRange(REDIS_KEYS.drawingGuesses(postId), 0, -1, { by: 'rank' }),
   ]);
   const guessCount = guesses.reduce((sum, g) => sum + g.score, 0);
   return { solved: solved != null, skipped: skipped != null, guessCount };

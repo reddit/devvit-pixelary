@@ -19,28 +19,9 @@ export async function savePinnedCommentId(
 }
 
 export async function getPinnedCommentId(postId: T3): Promise<T1 | null> {
-  // Try unified location first
-  const unifiedKey = REDIS_KEYS.comment(postId);
-  const unified = (await redis.hGet(
-    unifiedKey,
-    'pinnedCommentId'
-  )) as T1 | null;
-  if (unified) return unified;
-
-  // Legacy fallbacks (for compatibility with existing data)
-  const legacyDrawing = (await redis.hGet(
-    REDIS_KEYS.drawing(postId),
-    'pinnedCommentId'
-  )) as T1 | null;
-  if (legacyDrawing) return legacyDrawing;
-
-  const legacyTournament = (await redis.hGet(
-    REDIS_KEYS.tournament(postId),
-    'pinnedCommentId'
-  )) as T1 | null;
-  if (legacyTournament) return legacyTournament;
-
-  return null;
+  const key = REDIS_KEYS.comment(postId);
+  const pinned = (await redis.hGet(key, 'pinnedCommentId')) as T1 | null;
+  return pinned ?? null;
 }
 
 export async function createPinnedComment(

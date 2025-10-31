@@ -1,4 +1,4 @@
-import { scheduler, reddit } from '@devvit/web/server';
+import { scheduler } from '@devvit/web/server';
 import { REDIS_KEYS } from '@server/core/redis';
 import { createPost } from '@server/core/post';
 import { getLeaderboard } from '@server/services/progression';
@@ -59,20 +59,11 @@ May the best artist win!`;
 }
 
 export async function createPinnedPostComment(postId: T3): Promise<T1> {
-  const commentText = await generatePinnedPostCommentText();
-  return await createPinnedComment(postId, commentText);
+  const text = await generatePinnedPostCommentText();
+  return await createPinnedComment(postId, text);
 }
 
 export async function updatePinnedPostComment(postId: T3): Promise<void> {
-  const commentText = await generatePinnedPostCommentText();
-  await updatePinnedComment(postId, commentText);
-}
-
-export async function getPinnedPostCommentId(postId: T3): Promise<T1 | null> {
-  // Use shared comments store for pinned posts
-  const { getPinnedCommentId } = await import(
-    '@server/services/comments/pinned'
-  );
-  const id = await getPinnedCommentId(postId);
-  return id;
+  const text = await generatePinnedPostCommentText();
+  await updatePinnedComment(postId, text);
 }
