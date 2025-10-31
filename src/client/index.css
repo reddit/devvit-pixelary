@@ -79,13 +79,12 @@
     text-size-adjust: 100%;
   }
 
-  body {
-    min-height: 100vh;
-    overflow: hidden;
-  }
-
-  #root {
-    overflow: hidden;
+  html,
+  body,
+  #root,
+  #portal-root {
+    height: 100%;
+    width: 100%;
   }
 
   /* Pixel-perfect rendering */

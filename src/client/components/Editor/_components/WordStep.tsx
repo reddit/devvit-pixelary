@@ -106,7 +106,7 @@ export function WordStep(props: WordStepProps) {
   );
 
   return (
-    <main className="fixed inset-0 flex flex-col gap-6 p-6 items-center justify-center">
+    <main className="absolute inset-0 flex flex-col gap-6 p-6 items-center justify-center">
       {/* Page Title */}
       <PixelFont scale={3}>Pick a word</PixelFont>
 
@@ -150,7 +150,7 @@ export function WordStep(props: WordStepProps) {
           void track('click_refresh_words');
           void refreshCandidates();
         }}
-        className="flex items-center hover:opacity-70 transition-opacity p-6 fixed right-0 bottom-0 cursor-pointer"
+        className="flex items-center hover:opacity-70 transition-opacity p-6 absolute right-0 bottom-0 cursor-pointer"
       >
         <PixelSymbol scale={3} type="undo" className="text-secondary" />
       </button>

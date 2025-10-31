@@ -63,7 +63,7 @@ describe('Confetti', () => {
     const { unmount } = render(<Confetti />);
     const canvas = screen.getByTestId('confetti-canvas');
     expect(canvas).toBeInTheDocument();
-    expect(canvas).toHaveClass('fixed', 'inset-0', 'pointer-events-none');
+    expect(canvas).toHaveClass('absolute', 'inset-0', 'pointer-events-none');
 
     // Unmount and wait for cleanup
     unmount();

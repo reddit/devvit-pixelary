@@ -103,7 +103,7 @@ export function TournamentReviewStep(props: TournamentReviewStepProps) {
   };
 
   return (
-    <main className="fixed inset-0 flex flex-col items-center justify-center h-full gap-6 p-6">
+    <main className="absolute inset-0 flex flex-col items-center justify-center h-full gap-6 p-6">
       <PixelFont scale={3}>That's a wrap!</PixelFont>
 
       <Drawing data={drawing} size={256} />

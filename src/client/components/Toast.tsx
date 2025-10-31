@@ -90,7 +90,7 @@ export function Toast({
   // Memoized styles for performance
   const toastStyles = useMemo(() => {
     const baseStyles = `
-      fixed max-w-sm cursor-pointer
+      absolute max-w-sm cursor-pointer
       bg-white border-4 p-4 border-black shadow-pixel
       transition-all duration-${TOAST_CONFIG.ANIMATION_DURATION} ease-out
       focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2

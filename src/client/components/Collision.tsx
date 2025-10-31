@@ -218,7 +218,7 @@ export function Collision({
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 pointer-events-none z-40"
+      className="absolute inset-0 pointer-events-none z-40"
       data-testid="collision-canvas"
       style={{
         imageRendering: 'pixelated',

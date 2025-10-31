@@ -1,7 +1,7 @@
 export function Shimmer() {
   return (
     <div
-      className="fixed inset-0 pointer-events-none animate-diagonal-shimmer"
+      className="absolute inset-0 pointer-events-none animate-diagonal-shimmer"
       style={{
         background:
           'linear-gradient(-45deg, transparent 40%, var(--color-shimmer) 50%, transparent 60%)',

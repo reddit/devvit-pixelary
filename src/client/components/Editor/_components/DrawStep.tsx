@@ -298,7 +298,7 @@ export function DrawStep(props: DrawStepProps) {
   );
 
   return (
-    <main className="fixed inset-0 flex flex-col items-center justify-center p-6 gap-6">
+    <main className="absolute inset-0 flex flex-col items-center justify-center p-6 gap-6">
       {/* Header */}
       <header className="flex flex-row items-center justify-center h-min w-full gap-3">
         <div className="flex flex-col items-start justify-center gap-1 w-full h-full flex-1">

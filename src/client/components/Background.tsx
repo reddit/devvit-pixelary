@@ -2,12 +2,11 @@ export function Background() {
   return (
     <svg
       fill="none"
-      height="512"
       viewBox="0 0 1024 512"
-      width="1024"
       xmlns="http://www.w3.org/2000/svg"
       xmlnsXlink="http://www.w3.org/1999/xlink"
-      className="absolute inset-0 object-cover text-background"
+      className="absolute inset-0 w-full h-full pointer-events-none text-background"
+      preserveAspectRatio="xMidYMid slice"
     >
       <pattern id="a" height="64" patternUnits="userSpaceOnUse" width="64">
         <path d="m0 0h64v64h-64z" fill="currentColor" />
