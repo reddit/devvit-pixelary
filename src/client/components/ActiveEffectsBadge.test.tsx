@@ -115,7 +115,9 @@ describe('ActiveEffectsBadge component', () => {
     expect(screen.getByLabelText('2× Score (4h)')).toBeInTheDocument();
     // Modal body includes description (aria-label on description block)
     expect(
-      screen.getByLabelText('All points earned are multiplied by 2x while active.')
+      screen.getByLabelText(
+        'All points earned are multiplied by 2x while active.'
+      )
     ).toBeInTheDocument();
   });
 });

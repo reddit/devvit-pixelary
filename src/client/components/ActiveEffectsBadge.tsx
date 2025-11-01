@@ -24,13 +24,13 @@ export function ActiveEffectsBadge() {
   const [isOpen, setIsOpen] = useState(false);
   const config = useMemo(
     () => (currentEffect ? getConsumableConfig(currentEffect.itemId) : null),
-    [currentEffect?.itemId]
+    [currentEffect]
   );
   const onOpen = useCallback(() => setIsOpen(true), []);
   const onClose = useCallback(() => setIsOpen(false), []);
   const description = useMemo(
     () => (currentEffect ? getEffectDescription(currentEffect.effect) : ''),
-    [currentEffect?.effect]
+    [currentEffect]
   );
   const descriptionScale = 2;
   const maxDisplayPx = 256;
@@ -39,6 +39,14 @@ export function ActiveEffectsBadge() {
     () => chunkByPixelWidth(description, maxBaseWidth, 1, getStringWidth),
     [description, maxBaseWidth]
   );
+
+  // Accessible title for the modal header: e.g., "2× Score (4h)"
+  const headerAriaLabel = useMemo(() => {
+    if (!config) return '';
+    const withTimesSymbol = config.label.replace(/^([0-9]+)x\s/, '$1× ');
+    const dur = formatSecondsShort(Math.floor(config.durationMs / 1000));
+    return `${withTimesSymbol} (${dur})`;
+  }, [config]);
 
   if (!currentEffect) return null;
 
@@ -65,7 +73,7 @@ export function ActiveEffectsBadge() {
         <div className="flex flex-col items-center justify-center gap-6">
           <div
             className="flex flex-col items-center justify-center gap-1"
-            aria-label={config?.label ?? ''}
+            aria-label={headerAriaLabel}
           >
             <PixelFont scale={2.5} className="text-primary">
               {config?.label ?? ''}

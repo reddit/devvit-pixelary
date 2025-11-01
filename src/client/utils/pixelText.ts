@@ -1,3 +1,4 @@
+import { getStringWidth } from '../components/glyphs';
 export function chunkByPixelWidth(
   text: string,
   maxBaseWidth: number,
@@ -9,7 +10,8 @@ export function chunkByPixelWidth(
   const lines: string[] = [];
   let current = '';
 
-  const fits = (candidate: string) => getStringWidthImpl(candidate, gap) <= maxBaseWidth;
+  const fits = (candidate: string) =>
+    getStringWidthImpl(candidate, gap) <= maxBaseWidth;
 
   for (const word of words) {
     const next = current ? `${current} ${word}` : word;
@@ -39,8 +41,5 @@ export function chunkByPixelWidth(
 }
 
 function defaultGetStringWidth(text: string, gap: number = 1): number {
-  // Lazy import to avoid circular deps in tests
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const { getStringWidth } = require('../components/glyphs');
   return getStringWidth(text, gap);
 }

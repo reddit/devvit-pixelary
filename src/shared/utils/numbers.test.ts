@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest';
-import { abbreviateNumber, formatSecondsShort, formatSecondsTwoUnits } from './numbers';
+import {
+  abbreviateNumber,
+  formatSecondsShort,
+  formatSecondsTwoUnits,
+} from './numbers';
 
 describe('numbers utilities', () => {
   describe('abbreviateNumber', () => {

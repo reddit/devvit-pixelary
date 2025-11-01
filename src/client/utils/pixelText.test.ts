@@ -24,5 +24,3 @@ describe('chunkByPixelWidth', () => {
     expect(lines).toEqual(['super', 'longw', 'ord']);
   });
 });
-
-
