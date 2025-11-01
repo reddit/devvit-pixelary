@@ -358,7 +358,7 @@ export function VotingView({
           onClick={onToggleGallery}
           className="w-8 h-8 flex items-center justify-center cursor-pointer transition-all duration-300 hover:scale-115 active:scale-90"
         >
-          <Drawings />
+          <Drawings size={24} />
         </button>
 
         {/* Gold Trophy */}
@@ -366,7 +366,7 @@ export function VotingView({
           onClick={onToggleTrophy}
           className="w-8 h-8 flex items-center justify-center cursor-pointer transition-all duration-300 hover:scale-115 active:scale-90"
         >
-          <Trophy variant="gold" />
+          <Trophy size={24} variant="gold" />
         </button>
       </div>
 
