@@ -22,19 +22,19 @@ export type ConsumableConfig = {
 export const CONSUMABLES_CONFIG: Record<ConsumableId, ConsumableConfig> = {
   score_multiplier_2x_4h: {
     id: 'score_multiplier_2x_4h',
-    label: '2× Score (4h)',
+    label: '2x Score',
     durationMs: 4 * 60 * 60 * 1000,
     effect: { kind: 'score_multiplier', multiplier: 2 },
   },
   score_multiplier_3x_30m: {
     id: 'score_multiplier_3x_30m',
-    label: '3× Score (30m)',
+    label: '3x Score',
     durationMs: 30 * 60 * 1000,
     effect: { kind: 'score_multiplier', multiplier: 3 },
   },
   draw_time_boost_30s_2h: {
     id: 'draw_time_boost_30s_2h',
-    label: '+30s Drawing Time (2h)',
+    label: '+30s Drawing Time',
     durationMs: 2 * 60 * 60 * 1000,
     effect: { kind: 'extra_drawing_time', extraSeconds: 30 },
   },
@@ -49,4 +49,21 @@ export const DRAW_TIME_BOOST_IDS: ConsumableId[] = ['draw_time_boost_30s_2h'];
 
 export function getConsumableConfig(id: ConsumableId): ConsumableConfig {
   return CONSUMABLES_CONFIG[id];
+}
+
+/**
+ * Get a human-readable description for an effect.
+ */
+export function getEffectDescription(effect: ConsumableEffect): string {
+  if (effect.kind === 'score_multiplier') {
+    return `All points earned are multiplied by ${effect.multiplier}x while active.`;
+  }
+  return `Adds +${effect.extraSeconds}s to your drawing timer.`;
+}
+
+/**
+ * Get a UI icon key for an effect (client can map to actual glyph).
+ */
+export function getEffectIcon(effect: ConsumableEffect): 'star' | 'clock' {
+  return effect.kind === 'score_multiplier' ? 'star' : 'clock';
 }

@@ -7,7 +7,7 @@ import { ModalBody } from './ModalBody';
 interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
-  title: string;
+  title?: string;
   children: React.ReactNode;
 }
 
@@ -36,9 +36,11 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
     <ModalScrim onClick={onClose}>
       <ModalBody>
         {/* Header */}
-        <div className="flex justify-start">
-          <PixelFont scale={2}>{title}</PixelFont>
-        </div>
+        {title && (
+          <div className="flex justify-start" aria-label={title}>
+            <PixelFont scale={2}>{title}</PixelFont>
+          </div>
+        )}
 
         {/* Content */}
         <div className="flex flex-col items-start justify-start text-secondary gap-6">

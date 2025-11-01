@@ -1,4 +1,4 @@
-import { context, PostData } from '@devvit/web/client';
+import { context, type PostData } from '@devvit/web/client';
 
 /**
  * Gets post data from context, handling a known iOS-specific bug where the data

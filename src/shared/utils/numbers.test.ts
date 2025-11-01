@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { abbreviateNumber } from './numbers';
+import { abbreviateNumber, formatSecondsShort, formatSecondsTwoUnits } from './numbers';
 
 describe('numbers utilities', () => {
   describe('abbreviateNumber', () => {
@@ -72,6 +72,30 @@ describe('numbers utilities', () => {
       expect(abbreviateNumber(1000000)).toBe('1M');
       expect(abbreviateNumber(999999999)).toBe('999.9M');
       expect(abbreviateNumber(1000000000)).toBe('1B');
+    });
+  });
+
+  describe('formatSecondsShort', () => {
+    it('formats hours', () => {
+      expect(formatSecondsShort(3 * 3600 + 12 * 60)).toBe('3h');
+    });
+    it('formats minutes', () => {
+      expect(formatSecondsShort(125)).toBe('2m');
+    });
+    it('formats seconds', () => {
+      expect(formatSecondsShort(5)).toBe('5s');
+    });
+  });
+
+  describe('formatSecondsTwoUnits', () => {
+    it('formats hours and minutes', () => {
+      expect(formatSecondsTwoUnits(3 * 3600 + 12 * 60)).toBe('3h 12m');
+    });
+    it('formats minutes and seconds', () => {
+      expect(formatSecondsTwoUnits(125)).toBe('2m 5s');
+    });
+    it('formats seconds only', () => {
+      expect(formatSecondsTwoUnits(5)).toBe('5s');
     });
   });
 });

@@ -27,3 +27,29 @@ export function abbreviateNumber(value: number): string {
 export function clamp(value: number, min: number, max: number): number {
   return Math.max(min, Math.min(value, max));
 }
+
+/**
+ * Format seconds to a short single-unit label like "10h", "9m", or "5s".
+ */
+export function formatSecondsShort(seconds: number): string {
+  const s = Math.max(0, Math.floor(seconds));
+  const hours = Math.floor(s / 3600);
+  const minutes = Math.floor((s % 3600) / 60);
+  const secs = s % 60;
+  if (hours > 0) return `${hours}h`;
+  if (minutes > 0) return `${minutes}m`;
+  return `${secs}s`;
+}
+
+/**
+ * Format seconds to a compact two-unit label like "3h 12m" or "9m 20s".
+ */
+export function formatSecondsTwoUnits(seconds: number): string {
+  const s = Math.max(0, Math.floor(seconds));
+  const hours = Math.floor(s / 3600);
+  const minutes = Math.floor((s % 3600) / 60);
+  const secs = s % 60;
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  if (minutes > 0) return `${minutes}m ${secs}s`;
+  return `${secs}s`;
+}
