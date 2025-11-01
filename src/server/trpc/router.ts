@@ -752,7 +752,8 @@ export const appRouter = t.router({
             '../services/posts/tournament/post'
           );
           const { redis } = await import('@devvit/web/server');
-          const { REDIS_KEYS, getUsername } = await import('../core/redis');
+          const { REDIS_KEYS } = await import('../core/redis');
+          const { getUsername } = await import('../core/user');
 
           // Get all submissions ordered by Elo rating (highest first)
           const queryKey = REDIS_KEYS.tournamentEntries(input.postId);

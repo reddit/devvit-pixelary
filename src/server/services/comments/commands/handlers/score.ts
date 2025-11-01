@@ -1,6 +1,6 @@
 import type { CommandContext, CommandResult } from '../comment-commands';
 import { getScore, getRank, getUserLevel } from '@server/services/progression';
-import { getUsername } from '@server/core/redis';
+import { getUsername } from '@server/core/user';
 import { reddit } from '@devvit/web/server';
 import type { T2 } from '@devvit/shared-types/tid.js';
 

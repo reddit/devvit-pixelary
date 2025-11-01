@@ -10,7 +10,8 @@ import {
 } from './progression';
 import { redis, scheduler, cache } from '@devvit/web/server';
 import { LEVELS } from '@shared/constants';
-import { getUsername, REDIS_KEYS } from '../core/redis';
+import { getUsername } from '../core/user';
+import { REDIS_KEYS } from '../core/redis';
 
 vi.mock('@devvit/web/server', () => ({
   redis: {
@@ -31,11 +32,14 @@ vi.mock('@devvit/web/server', () => ({
 }));
 
 vi.mock('../core/redis', () => ({
-  getUsername: vi.fn(),
   REDIS_KEYS: {
     scores: () => 'scores',
     userLevelUpClaim: (userId: string) => `user:${userId}:levelup`,
   },
+}));
+
+vi.mock('../core/user', () => ({
+  getUsername: vi.fn(),
 }));
 
 describe('Leaderboard Service', () => {

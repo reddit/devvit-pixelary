@@ -18,6 +18,7 @@ import {
   handleSlateBandit,
   handleSetUserPoints,
   handleGetUserPoints,
+  handleLegacyUsers,
 } from './menu-actions';
 
 // Import form handlers
@@ -33,6 +34,7 @@ import {
   handleTournamentHopperForm,
   handleSetUserPointsForm,
   handleGetUserPointsForm,
+  handleLegacyUsersUpdate,
 } from './forms';
 
 // Import scheduler handlers
@@ -125,6 +127,7 @@ router.post('/internal/menu/telemetry-clear', handleTelemetryClear);
 router.post('/internal/menu/slate-bandit', handleSlateBandit);
 router.post('/internal/menu/set-user-points', handleSetUserPoints);
 router.post('/internal/menu/get-user-points', handleGetUserPoints);
+router.post('/internal/menu/legacy-users', handleLegacyUsers);
 
 // ============================================================================
 // FORM HANDLERS
@@ -146,6 +149,7 @@ router.post(
 );
 router.post('/internal/form/set-user-points', handleSetUserPointsForm);
 router.post('/internal/form/get-user-points', handleGetUserPointsForm);
+router.post('/internal/form/legacy-users-update', handleLegacyUsersUpdate);
 router.post(
   '/internal/form/tournament-post-submit',
   handleTournamentPostSubmit

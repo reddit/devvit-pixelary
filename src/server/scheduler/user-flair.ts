@@ -1,6 +1,6 @@
 import type { Request, Response } from 'express';
 import type { T2 } from '@devvit/shared-types/tid.js';
-import { getUsername } from '../core/redis';
+import { getUsername } from '../core/user';
 import { reddit } from '@devvit/web/server';
 import type { Level } from '@shared/types';
 
@@ -54,7 +54,16 @@ export async function handleSetUserFlair(
     const username = await getUsername(userId);
 
     // Format flair text and CSS class
-    const flairText = `Level ${level.rank} - ${level.name}`;
+    const baseText = `Level ${level.rank} - ${level.name}`;
+    let flairText = baseText;
+    try {
+      const { isLegacyUser } = await import('../services/legacy');
+      if (await isLegacyUser(userId)) {
+        flairText = `${baseText} [OG]`;
+      }
+    } catch {
+      // Non-blocking: legacy check shouldn't fail the job
+    }
     const cssClass = `level-${level.rank}`;
 
     // Set user flair using app context

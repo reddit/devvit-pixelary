@@ -49,6 +49,9 @@ export const REDIS_KEYS = {
   // Communities
   communities: () => 'communities',
 
+  // Legacy
+  legacyUsers: () => 'legacy:users',
+
   // Comment
   comment: (postId: T3) => `comment:${postId}`,
   commentUpdateLock: (postId: T3) => `comment_update_lock:${postId}`,
@@ -92,30 +95,10 @@ export const REDIS_KEYS = {
   rateSubmit: (userId: T2) => `rate:submit:${userId}`,
 };
 
-const USERNAME_TTL = 30 * 24 * 60 * 60; // 30 days.
 const MODERATOR_STATUS_TTL = 10 * 24 * 60 * 60; // 10 days.
 const ADMIN_STATUS_TTL = 1 * 24 * 60 * 60; // 1 day.
 
-/**
- * Get the username for a user ID. Cached for 30 days.
- * @param userId - The user ID to get the username for
- * @returns The username for the user ID, or `null` if the user is not found
- */
-export async function getUsername(userId: T2): Promise<string> {
-  return await cache(
-    async () => {
-      const user = await reddit.getUserById(userId);
-      if (!user) {
-        throw new Error('No user found for id: ' + userId);
-      }
-      return user.username;
-    },
-    {
-      key: REDIS_KEYS.userName(userId),
-      ttl: USERNAME_TTL,
-    }
-  );
-}
+export { getUsername } from './user';
 
 /**
  * Check if user is moderator with caching

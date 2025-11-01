@@ -9,3 +9,4 @@ export { handleTournamentPostSubmit } from './tournament-post-submit';
 export { handleSetUserPointsForm } from './user-points-set';
 export { handleGetUserPointsForm } from './user-points-get';
 export { handleTournamentHopperForm } from './tournament-hopper';
+export { handleLegacyUsersUpdate } from './legacy-users-update';

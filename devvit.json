@@ -35,7 +35,8 @@
     "collectionPostForm": "/internal/form/collection-post-submit",
     "tournamentPostForm": "/internal/form/tournament-post-submit",
     "setUserPointsForm": "/internal/form/set-user-points",
-    "getUserPointsForm": "/internal/form/get-user-points"
+    "getUserPointsForm": "/internal/form/get-user-points",
+    "legacyUsersForm": "/internal/form/legacy-users-update"
   },
   "menu": {
     "items": [
@@ -124,6 +125,13 @@
         "location": "subreddit",
         "forUserType": "moderator",
         "endpoint": "/internal/menu/edit-tournament-prompts"
+      },
+      {
+        "label": "[Pixelary] Legacy Users",
+        "description": "Manage the legacy users set",
+        "location": "subreddit",
+        "forUserType": "moderator",
+        "endpoint": "/internal/menu/legacy-users"
       }
     ]
   },
