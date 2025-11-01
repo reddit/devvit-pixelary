@@ -71,5 +71,10 @@ export function ActiveEffectsBadge() {
     </Modal>
   );
 
-  return [badge, modal];
+  return (
+    <>
+      {badge}
+      {modal}
+    </>
+  );
 }

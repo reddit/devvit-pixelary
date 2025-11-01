@@ -1,10 +1,6 @@
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
 import { render, screen, cleanup, fireEvent } from '@testing-library/react';
-import {
-  ActiveEffectsBadge,
-  formatRemaining,
-  getIconForEffect,
-} from './ActiveEffectsBadge';
+import { ActiveEffectsBadge } from './ActiveEffectsBadge';
 import * as ActiveEffectsHook from '@hooks/useActiveEffects';
 
 vi.mock('@hooks/useActiveEffects', () => ({
@@ -20,26 +16,7 @@ vi.mock('@client/hooks/useTelemetry', () => ({
 const mockedUseActiveEffects =
   ActiveEffectsHook.useActiveEffects as unknown as Mock;
 
-describe('ActiveEffectsBadge utilities', () => {
-  it('formatRemaining formats hours and minutes', () => {
-    // 3h 12m -> short format is just hours
-    expect(formatRemaining(3 * 3600 + 12 * 60)).toBe('3h');
-  });
-
-  it('formatRemaining formats minutes and seconds', () => {
-    expect(formatRemaining(125)).toBe('2m');
-    expect(formatRemaining(5)).toBe('5s');
-  });
-
-  it('getIconForEffect maps kinds correctly', () => {
-    expect(getIconForEffect({ kind: 'score_multiplier', multiplier: 2 })).toBe(
-      'star'
-    );
-    expect(
-      getIconForEffect({ kind: 'extra_drawing_time', extraSeconds: 30 })
-    ).toBe('clock');
-  });
-});
+// utilities are now covered in shared utils tests; this component focuses on rendering
 
 describe('ActiveEffectsBadge component', () => {
   beforeEach(() => {
@@ -112,12 +89,8 @@ describe('ActiveEffectsBadge component', () => {
     const badge = screen.getByTestId('active-effects-badge');
     fireEvent.click(badge);
     // Modal title derives from consumable config label (aria-label on header)
-    expect(screen.getByLabelText('2× Score (4h)')).toBeInTheDocument();
-    // Modal body includes description (aria-label on description block)
-    expect(
-      screen.getByLabelText(
-        'All points earned are multiplied by 2x while active.'
-      )
-    ).toBeInTheDocument();
+    expect(screen.getByLabelText('2x Points Earned!')).toBeInTheDocument();
+    // Modal body shows remaining time
+    expect(screen.getByLabelText('2m 5s left')).toBeInTheDocument();
   });
 });

@@ -123,7 +123,7 @@ export async function getActiveEffects(
     const expiresAt = Number(entry.score);
     if (!expiresAt || expiresAt < now) {
       // Lazy prune expired
-      await redis.zRem(setKey, activationId);
+      await redis.zRem(setKey, [activationId]);
       continue;
     }
     const activationData = await redis.hGetAll(
@@ -133,7 +133,7 @@ export async function getActiveEffects(
     const expiresAtStr = activationData.expiresAt;
     if (!itemId || !expiresAtStr) {
       // Orphan/missing, prune
-      await redis.zRem(setKey, activationId);
+      await redis.zRem(setKey, [activationId]);
       continue;
     }
     const cfg = getConsumableConfig(itemId);
