@@ -1,7 +1,7 @@
 import { Confetti } from './Confetti';
-import { PixelFont } from './PixelFont';
+import { Text } from './PixelFont';
 import { Button } from './Button';
-import { PixelSymbol } from './PixelSymbol';
+import { Icon } from './PixelFont';
 import { ModalScrim } from './ModalScrim';
 import { ModalBody } from './ModalBody';
 import { getRewardsByLevel, getRewardLabel } from '@shared/rewards';
@@ -29,18 +29,18 @@ export function LevelUpModal(props: LevelUpModalProps) {
 
       <ModalBody>
         {/* Title */}
-        <PixelFont scale={4} className="text-primary">
+        <Text scale={4} className="text-primary">
           {`Level ${level}!`}
-        </PixelFont>
+        </Text>
 
         {/* Description */}
         <div className="flex flex-col items-center gap-3">
-          <PixelFont scale={2} className="text-success">
+          <Text scale={2} className="text-success">
             You leveled up,
-          </PixelFont>
-          <PixelFont scale={2} className="text-success">
+          </Text>
+          <Text scale={2} className="text-success">
             {`earning reward${rewardCount === 1 ? '' : 's'}!`}
-          </PixelFont>
+          </Text>
         </div>
 
         {/* Rewards */}
@@ -78,8 +78,8 @@ function RewardItem(props: RewardItemProps) {
   const label = getRewardLabel(reward, level);
   return (
     <div className="flex items-center gap-3">
-      <PixelSymbol type="checkmark" className="text-success" scale={2} />
-      <PixelFont scale={2}>{label}</PixelFont>
+      <Icon type="checkmark" className="text-success" scale={2} />
+      <Text scale={2}>{label}</Text>
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { PixelFont } from '@components/PixelFont';
+import { Text } from '@components/PixelFont';
 import { Button } from '@components/Button';
 import { Modal } from '@components/Modal';
 import { useActiveEffects } from '@hooks/useActiveEffects';
@@ -43,7 +43,7 @@ export function ActiveEffectsBadge() {
         }
       />
       <div data-testid="active-effects-timer" aria-label={formatted}>
-        <PixelFont className="text-tertiary">{formatted}</PixelFont>
+        <Text className="text-tertiary">{formatted}</Text>
       </div>
     </div>
   );
@@ -62,8 +62,8 @@ export function ActiveEffectsBadge() {
         />
 
         <div className="flex flex-col items-center justify-center gap-2">
-          <PixelFont className="text-primary">{config?.label ?? ''}</PixelFont>
-          <PixelFont className="text-tertiary">{`${formattedLong} left`}</PixelFont>
+          <Text className="text-primary">{config?.label ?? ''}</Text>
+          <Text className="text-tertiary">{`${formattedLong} left`}</Text>
         </div>
 
         <Button onClick={onClose}>Okay</Button>

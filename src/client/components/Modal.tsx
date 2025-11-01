@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { createPortal } from 'react-dom';
-import { PixelFont } from './PixelFont';
+import { Text } from './PixelFont';
 import { ModalScrim } from './ModalScrim';
 import { ModalBody } from './ModalBody';
 
@@ -38,7 +38,7 @@ export function Modal({ isOpen, onClose, title, children }: ModalProps) {
         {/* Header */}
         {title && (
           <div className="flex justify-start" aria-label={title}>
-            <PixelFont scale={2}>{title}</PixelFont>
+            <Text scale={2}>{title}</Text>
           </div>
         )}
 

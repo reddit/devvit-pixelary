@@ -1,9 +1,9 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@components/Button';
-import { PixelSymbol } from '@components/PixelSymbol';
+import { Icon } from '@components/PixelFont';
 import { DRAWING_COLORS, getAvailableExtendedColors } from '@client/constants';
 import { DRAWING_DURATION } from '@shared/constants';
-import { PixelFont } from '@components/PixelFont';
+import { Text } from '@components/PixelFont';
 import { DrawingData, DrawingUtils } from '@shared/schema/drawing';
 import { getContrastColor } from '@shared/utils/color';
 import type { HEX } from '@shared/types';
@@ -302,10 +302,10 @@ export function DrawStep(props: DrawStepProps) {
       {/* Header */}
       <header className="flex flex-row items-center justify-center h-min w-full gap-3">
         <div className="flex flex-col items-start justify-center gap-1 w-full h-full flex-1">
-          <PixelFont scale={2.5}>{word}</PixelFont>
+          <Text scale={2.5}>{word}</Text>
           <div className="flex flex-row items-center gap-2 text-secondary">
-            <PixelSymbol type="clock" />
-            <PixelFont scale={2}>{`${secondsLeft}s left`}</PixelFont>
+            <Icon type="clock" />
+            <Text scale={2}>{`${secondsLeft}s left`}</Text>
           </div>
         </div>
 
@@ -329,9 +329,9 @@ export function DrawStep(props: DrawStepProps) {
         />
         {DrawingUtils.isEmpty(drawingData) && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-            <PixelFont scale={2} className="text-tertiary">
+            <Text scale={2} className="text-tertiary">
               Tap to draw
-            </PixelFont>
+            </Text>
           </div>
         )}
       </div>
@@ -381,7 +381,7 @@ function ColorSwatch(props: ColorSwatchProps) {
       className="w-8 h-8 border-4 border-black cursor-pointer transition-all flex items-center justify-center hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[4px] active:translate-y-[4px] shadow-pixel hover:shadow-pixel-sm active:shadow-none"
       style={{ backgroundColor: color }}
     >
-      <PixelSymbol
+      <Icon
         type="checkmark"
         scale={2}
         color={getContrastColor(color)}
@@ -403,7 +403,7 @@ function ColorPickerPlusButton(props: ColorPickerPlusButtonProps) {
       onClick={onClick}
       className="w-8 h-8 border-4 border-black cursor-pointer transition-all flex items-center justify-center hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[4px] active:translate-y-[4px] shadow-pixel hover:shadow-pixel-sm active:shadow-none bg-gray-200"
     >
-      <PixelSymbol type="plus" scale={2} color="currentColor" />
+      <Icon type="plus" scale={2} color="currentColor" />
     </button>
   );
 }

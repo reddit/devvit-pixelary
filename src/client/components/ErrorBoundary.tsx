@@ -1,5 +1,5 @@
 import { Component, ErrorInfo, ReactNode } from 'react';
-import { PixelFont } from './PixelFont';
+import { Text } from './PixelFont';
 import { Button } from './Button';
 
 interface ErrorBoundaryState {
@@ -55,24 +55,21 @@ export class ErrorBoundary extends Component<
               {/* Error Icon */}
               <div className="text-center mb-6">
                 <div className="text-6xl mb-4">⚠️</div>
-                <PixelFont scale={3} className="text-error">
+                <Text scale={3} className="text-error">
                   Oops! Something went wrong
-                </PixelFont>
+                </Text>
               </div>
 
               {/* Error Message */}
               <div className="text-center mb-8">
-                <PixelFont scale={2} className="text-gray-700 mb-4">
+                <Text scale={2} className="text-gray-700 mb-4">
                   The application encountered an unexpected error.
-                </PixelFont>
+                </Text>
                 {this.state.error && (
                   <div className="bg-gray-100 border-2 border-gray-300 p-4 rounded">
-                    <PixelFont
-                      scale={1}
-                      className="text-error font-mono text-left"
-                    >
+                    <Text scale={1} className="text-error font-mono text-left">
                       {this.state.error.message}
-                    </PixelFont>
+                    </Text>
                   </div>
                 )}
               </div>
@@ -89,9 +86,9 @@ export class ErrorBoundary extends Component<
               {isDevelopment && this.state.errorInfo && (
                 <details className="mt-8">
                   <summary className="cursor-pointer mb-4">
-                    <PixelFont scale={1} className="text-gray-600">
+                    <Text scale={1} className="text-gray-600">
                       Show Error Details (Development)
-                    </PixelFont>
+                    </Text>
                   </summary>
                   <div className="bg-gray-900 text-success p-4 rounded border-2 border-gray-600 font-mono text-xs overflow-auto max-h-64">
                     <div className="mb-2">
@@ -110,9 +107,9 @@ export class ErrorBoundary extends Component<
 
             {/* Footer */}
             <div className="text-center mt-6">
-              <PixelFont scale={1} className="text-gray-500">
+              <Text scale={1} className="text-gray-500">
                 If this problem persists, please contact support.
-              </PixelFont>
+              </Text>
             </div>
           </div>
         </div>

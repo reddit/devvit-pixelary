@@ -1,10 +1,9 @@
 import { useState, useEffect } from 'react';
 import { generateLevel, getLevelByScore } from '@shared/utils/progression';
 import { abbreviateNumber } from '@shared/utils/numbers';
-import { PixelFont } from '@components/PixelFont';
+import { Text, Icon } from '@components/PixelFont';
 import { IconButton } from '@components/IconButton';
 import { trpc } from '@client/trpc/client';
-import { PixelSymbol } from '@components/PixelSymbol';
 import { useTelemetry } from '@client/hooks/useTelemetry';
 import { getRewardsByLevel, getRewardLabel } from '@shared/rewards';
 
@@ -86,10 +85,10 @@ export function LevelDetails({ onClose }: LevelDetailsProps) {
         {/* Header */}
         <header className="flex flex-row items-start justify-between gap-2 w-full">
           <div className="flex flex-col items-start justify-start gap-2 flex-1">
-            <PixelFont color="var(--color-orangered)">
+            <Text color="var(--color-orangered)">
               {`Level ${currentLevel.rank}`}
-            </PixelFont>
-            <PixelFont scale={3}>{currentLevel.name}</PixelFont>
+            </Text>
+            <Text scale={3}>{currentLevel.name}</Text>
           </div>
 
           <IconButton
@@ -112,24 +111,24 @@ export function LevelDetails({ onClose }: LevelDetailsProps) {
           {/* Labels */}
           <div className="flex flex-row items-center justify-between w-full">
             <div className="flex flex-row items-center justify-start gap-3">
-              <PixelFont
+              <Text
                 className={overMinimum ? 'text-orangered' : 'text-black-40'}
-              >{`${abbreviateNumber(overMinimum ? (userProfile?.score ?? 0) : currentLevel.min)}`}</PixelFont>
+              >{`${abbreviateNumber(overMinimum ? (userProfile?.score ?? 0) : currentLevel.min)}`}</Text>
               {overMinimum && !overMaximum && (
-                <PixelFont
+                <Text
                   className={overMinimum ? 'text-orangered' : 'text-black-40'}
-                >{`(${progressPercentage.toFixed(1)}%)`}</PixelFont>
+                >{`(${progressPercentage.toFixed(1)}%)`}</Text>
               )}
             </div>
 
-            <PixelFont
+            <Text
               className={overMaximum ? 'text-orangered' : 'text-black-40'}
-            >{`${abbreviateNumber(currentLevel.max)}`}</PixelFont>
+            >{`${abbreviateNumber(currentLevel.max)}`}</Text>
           </div>
         </div>
 
         {/* Rewards */}
-        <PixelFont scale={3}>Rewards:</PixelFont>
+        <Text scale={3}>Rewards:</Text>
         <div className="flex flex-col items-start justify-start gap-3 flex-1 h-full">
           {getRewardsByLevel(currentLevel.rank).map((reward) => (
             <RewardItem
@@ -169,13 +168,13 @@ function RewardItem(props: RewardItemProps) {
   const { reward, unlocked } = props;
   return (
     <div className="flex flex-row items-center justify-start gap-3">
-      <PixelSymbol
+      <Icon
         type={unlocked ? 'checkmark' : 'x'}
         className={unlocked ? 'text-orangered' : 'text-black-20'}
       />
-      <PixelFont className={unlocked ? 'text-black' : 'text-black-50'}>
+      <Text className={unlocked ? 'text-black' : 'text-black-50'}>
         {reward}
-      </PixelFont>
+      </Text>
     </div>
   );
 }

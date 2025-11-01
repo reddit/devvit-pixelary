@@ -7,7 +7,7 @@ import { httpBatchLink } from '@trpc/client';
 import { Background } from '@components/Background';
 import { ErrorBoundary } from '@components/ErrorBoundary';
 import { LevelUpManager } from '@components/LevelUpManager';
-import { PixelFont } from '@components/PixelFont';
+import { Text } from '@components/PixelFont';
 import { ToastProvider } from '@components/ToastManager';
 
 import { TelemetryProvider } from '@hooks/useTelemetry';
@@ -86,8 +86,8 @@ function App() {
     tournament: <TournamentPost />,
     unknown: (
       <div className="flex flex-col items-center justify-center h-full w-full">
-        <PixelFont>Error:</PixelFont>
-        <PixelFont>Unknown Post Type</PixelFont>
+        <Text>Error:</Text>
+        <Text>Unknown Post Type</Text>
       </div>
     ),
   };

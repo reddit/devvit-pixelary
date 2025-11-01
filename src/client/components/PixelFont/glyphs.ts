@@ -354,7 +354,7 @@ export type SupportedGlyph = keyof typeof glyphData;
  * Get a glyph by character
  */
 export function getGlyph(char: string): PixelGlyph | null {
-  return glyphData[char as keyof typeof glyphData] || null;
+  return (glyphData as Record<string, PixelGlyph | undefined>)[char] || null;
 }
 
 /**

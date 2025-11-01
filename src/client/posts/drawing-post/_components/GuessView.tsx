@@ -5,7 +5,7 @@ import { Shimmer } from '@components/Shimmer';
 import { DrawingData } from '@shared/schema/drawing';
 import { PixelInput } from '@components/PixelInput';
 import { useToastHelpers } from '@components/ToastManager';
-import { PixelFont } from '@components/PixelFont';
+import { Text } from '@components/PixelFont';
 import type { PostGuesses } from '@shared/schema/pixelary';
 import { useTelemetry } from '@client/hooks/useTelemetry';
 import { ActiveEffectsBadge } from '@components/ActiveEffectsBadge';
@@ -100,18 +100,18 @@ export function GuessView({
       {/* Player Count */}
       <div className="w-full flex flex-col gap-2 items-center justify-center">
         {!isLoading ? (
-          <PixelFont scale={2.5}>
+          <Text scale={2.5}>
             {`${playerCount.toLocaleString()} player${
               playerCount !== 1 ? 's' : ''
             } tried`}
-          </PixelFont>
+          </Text>
         ) : (
           <div className="w-[232.5px] h-[17.5px] skeleton" />
         )}
         {!isLoading ? (
-          <PixelFont className="text-secondary">
+          <Text className="text-secondary">
             {`${solvePercentage}% solved it`}
-          </PixelFont>
+          </Text>
         ) : (
           <div className="w-[156px] h-[14px] skeleton" />
         )}

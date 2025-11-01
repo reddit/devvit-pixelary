@@ -1,7 +1,7 @@
 import { trpc } from '@client/trpc/client';
 import { getPostData } from '@client/utils/context';
 import { Drawing } from '@client/components/Drawing';
-import { PixelFont } from '@client/components/PixelFont';
+import { Text } from '@client/components/PixelFont';
 import { Button } from '@client/components/Button';
 import { Shimmer } from '@client/components/Shimmer';
 import { CyclingMessage } from '@client/components/CyclingMessage';
@@ -22,7 +22,7 @@ export function CollectionPost() {
   if (isLoading) {
     return (
       <div className="flex items-center justify-center h-full w-full">
-        <PixelFont>Loading...</PixelFont>
+        <Text>Loading...</Text>
       </div>
     );
   }
@@ -30,7 +30,7 @@ export function CollectionPost() {
   if (error || !data) {
     return (
       <div className="flex items-center justify-center h-full w-full">
-        <PixelFont>Failed to load collection</PixelFont>
+        <Text>Failed to load collection</Text>
       </div>
     );
   }
@@ -38,7 +38,7 @@ export function CollectionPost() {
   if (data.drawings.length === 0) {
     return (
       <div className="flex items-center justify-center h-full w-full">
-        <PixelFont>No drawings found</PixelFont>
+        <Text>No drawings found</Text>
       </div>
     );
   }
@@ -62,9 +62,9 @@ export function CollectionPost() {
     <div className="absolute flex flex-col gap-6 items-center justify-center h-full w-full text-black">
       <div className="flex flex-col gap-2 items-center justify-center">
         {titleLines.map((line, index) => (
-          <PixelFont key={index} scale={3}>
+          <Text key={index} scale={3}>
             {line}
-          </PixelFont>
+          </Text>
         ))}
       </div>
 

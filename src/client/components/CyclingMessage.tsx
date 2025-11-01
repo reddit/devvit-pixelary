@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { PixelFont } from './PixelFont';
+import { Text } from './PixelFont';
 
 interface CyclingMessageProps {
   messages: string[];
@@ -47,7 +47,7 @@ export function CyclingMessage({
             : 'opacity-100 translate-y-0 transition-all duration-300 ease-in'
         }`}
       >
-        <PixelFont>{messages[currentIndex] || ''}</PixelFont>
+        <Text>{messages[currentIndex] || ''}</Text>
       </div>
     </div>
   );

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Drawing } from './Drawing';
 import { IconButton } from './IconButton';
-import { PixelFont } from './PixelFont';
+import { Text } from './PixelFont';
 import { DrawingData } from '@shared/schema/drawing';
 
 interface PaginatedDrawingGridProps {
@@ -117,7 +117,7 @@ export const PaginatedDrawingGrid = React.memo(function PaginatedDrawingGrid({
         )}
 
         <div className="flex items-center justify-center flex-1 text-secondary">
-          <PixelFont>{`Page ${currentPage} of ${totalPages}`}</PixelFont>
+          <Text>{`Page ${currentPage} of ${totalPages}`}</Text>
         </div>
 
         {hasNextPage ? (

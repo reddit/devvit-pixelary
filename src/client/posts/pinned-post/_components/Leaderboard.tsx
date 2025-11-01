@@ -1,8 +1,7 @@
 import { trpc } from '@client/trpc/client';
 import { abbreviateNumber } from '@shared/utils/numbers';
-import { PixelFont } from '@components/PixelFont';
+import { Text, Icon } from '@components/PixelFont';
 import { CardLayout } from './CardLayout';
-import { PixelSymbol } from '@components/PixelSymbol';
 import type { LeaderboardEntry } from '@shared/schema/index';
 import { useTelemetry } from '@client/hooks/useTelemetry';
 import { useEffect } from 'react';
@@ -30,7 +29,7 @@ export function Leaderboard({ onClose }: LeaderboardProps) {
       <div className="h-full w-full flex flex-col">
         {isLoading && leaderboard.length === 0 ? (
           <div className="flex items-center justify-center h-full">
-            <PixelFont>Loading...</PixelFont>
+            <Text>Loading...</Text>
           </div>
         ) : (
           <>
@@ -84,14 +83,14 @@ function LeaderboardRow({
     >
       {/* Rank + Username */}
       <div className="flex items-center gap-2 w-full flex-1 justify-start overflow-hidden">
-        <PixelFont className="text-secondary">{`${rank}.`}</PixelFont>
-        <PixelFont>{username}</PixelFont>
+        <Text className="text-secondary">{`${rank}.`}</Text>
+        <Text>{username}</Text>
       </div>
 
       {/* Score */}
       <div className="flex items-center gap-2 text-secondary">
-        <PixelFont>{abbreviateNumber(score)}</PixelFont>
-        <PixelSymbol type="star" />
+        <Text>{abbreviateNumber(score)}</Text>
+        <Icon type="star" />
       </div>
     </button>
   );

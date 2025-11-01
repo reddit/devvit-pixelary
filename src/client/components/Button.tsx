@@ -1,6 +1,5 @@
-import { PixelFont } from './PixelFont';
-import { PixelSymbol } from './PixelSymbol';
-import { type SupportedGlyph } from './glyphs';
+import { Text, Icon } from './PixelFont';
+import { type SupportedGlyph } from './PixelFont';
 import { useTelemetry } from '@client/hooks/useTelemetry';
 import type { TelemetryEventType } from '@shared/types';
 
@@ -74,9 +73,9 @@ export function Button({
       className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[4px] active:translate-y-[4px] shadow-pixel hover:shadow-pixel-sm active:shadow-none ${className}`}
       title={title}
     >
-      {leadingIcon && <PixelSymbol type={leadingIcon} />}
-      {children && <PixelFont scale={fontScales[size]} children={children} />}
-      {trailingIcon && <PixelSymbol type={trailingIcon} />}
+      {leadingIcon && <Icon type={leadingIcon} />}
+      {children && <Text scale={fontScales[size]} children={children} />}
+      {trailingIcon && <Icon type={trailingIcon} />}
     </button>
   );
 }

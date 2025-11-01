@@ -1,11 +1,11 @@
 import { Button } from '@components/Button';
-import { PixelSymbol } from '@components/PixelSymbol';
+import { Icon } from '@components/PixelFont';
 import { Drawing } from '@components/Drawing';
 import { Lightbox } from '@components/Lightbox';
 import { trpc } from '@client/trpc/client';
 import { abbreviateNumber } from '@shared/utils/numbers';
 import { DrawingData } from '@shared/schema/drawing';
-import { PixelFont } from '@components/PixelFont';
+import { Text } from '@components/PixelFont';
 import { CyclingMessage } from '@components/CyclingMessage';
 import { AUTHOR_REWARD_SUBMIT } from '@shared/constants';
 import { titleCase } from '@shared/utils/string';
@@ -95,27 +95,25 @@ export function ResultsView({
         />
         <div className="flex flex-col items-start justify-center gap-1.5">
           {/* Word */}
-          <PixelFont>{word}</PixelFont>
+          <Text>{word}</Text>
           {/* Author */}
-          <PixelFont className="text-secondary">
-            {`By u/${authorUsername}`}
-          </PixelFont>
+          <Text className="text-secondary">{`By u/${authorUsername}`}</Text>
           {/* Dictionary Tag */}
           {showTag && (
             <div className="flex items-center gap-2 text-secondary">
-              <PixelSymbol type="clock" />
-              <PixelFont>{`${dictionary} event`}</PixelFont>
+              <Icon type="clock" />
+              <Text>{`${dictionary} event`}</Text>
             </div>
           )}
         </div>
       </header>
       {/* Guess and Player Count */}
       {!isLoading ? (
-        <PixelFont>
+        <Text>
           {`${abbreviateNumber(guessCount)} guess${guessCount !== 1 ? 'es' : ''} by ${abbreviateNumber(playerCount)} player${
             playerCount !== 1 ? 's' : ''
           }`}
-        </PixelFont>
+        </Text>
       ) : (
         <div className="w-72 h-[14px] skeleton" />
       )}
@@ -165,7 +163,7 @@ export function ResultsView({
         drawing={drawing}
         author={authorUsername}
       >
-        <PixelFont scale={3}>{word}</PixelFont>
+        <Text scale={3}>{word}</Text>
       </Lightbox>
     </main>
   );
@@ -202,13 +200,11 @@ function GuessRow(props: GuessRowProps) {
         style={{ width: `${percentage}%` }}
       />
 
-      <PixelFont className="relative">{guess}</PixelFont>
+      <Text className="relative">{guess}</Text>
 
       <div className="relative flex items-center gap-3">
-        <PixelFont className="text-tertiary">
-          {abbreviateNumber(count)}
-        </PixelFont>
-        <PixelFont className="text-secondary">{`${percentage}%`}</PixelFont>
+        <Text className="text-tertiary">{abbreviateNumber(count)}</Text>
+        <Text className="text-secondary">{`${percentage}%`}</Text>
       </div>
     </div>
   );

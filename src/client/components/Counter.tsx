@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { PixelFont, PixelFontProps } from './PixelFont';
-import { getFontHeight } from './glyphs';
+import { Text, TextProps, getFontHeight } from './PixelFont';
 
-export interface CounterProps extends Omit<PixelFontProps, 'children'> {
+export interface CounterProps extends Omit<TextProps, 'children'> {
   value: number | null | undefined;
   fallback?: number;
 }
@@ -82,14 +81,14 @@ export function Counter({
       <div style={innerStyle}>
         {/* Previous value */}
         {previousValue !== null && previousValue !== undefined && (
-          <PixelFont scale={scale} {...pixelFontProps}>
+          <Text scale={scale} {...pixelFontProps}>
             {displayValue(previousValue)}
-          </PixelFont>
+          </Text>
         )}
         {/* Current value */}
-        <PixelFont scale={scale} {...pixelFontProps}>
+        <Text scale={scale} {...pixelFontProps}>
           {displayValue(currentValue)}
-        </PixelFont>
+        </Text>
       </div>
     </div>
   );

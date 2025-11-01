@@ -1,5 +1,4 @@
-import { PixelFont } from '@components/PixelFont';
-import { PixelSymbol } from '@components/PixelSymbol';
+import { Text, Icon } from '@components/PixelFont';
 import { IconButton } from '@components/IconButton';
 import { Button } from '@components/Button';
 import { Modal } from '@components/Modal';
@@ -7,7 +6,7 @@ import { Multiplier, Clock } from '@components/illustrations';
 import { useTelemetry } from '@client/hooks/useTelemetry';
 import { useEffect, useMemo, useState } from 'react';
 import { trpc } from '@client/trpc/client';
-import { chunkByPixelWidth } from '@client/utils/pixelText';
+import { wrapTextByWidth } from '@client/components/PixelFont';
 import { useToastHelpers } from '@components/ToastManager';
 import {
   getAllRewards,
@@ -95,7 +94,7 @@ export function MyRewards({ onClose }: MyRewardsProps) {
     [selectedConfig]
   );
   const descriptionLines = useMemo(
-    () => chunkByPixelWidth(selectedDescription, 128),
+    () => wrapTextByWidth(selectedDescription, 128),
     [selectedDescription]
   );
 
@@ -128,14 +127,14 @@ export function MyRewards({ onClose }: MyRewardsProps) {
     <main className="absolute inset-0 flex flex-col p-4 gap-4 overflow-visible">
       {/* Header */}
       <header className="shrink-0 w-full flex flex-row items-center justify-between">
-        <PixelFont scale={2.5}>My Rewards</PixelFont>
+        <Text scale={2.5}>My Rewards</Text>
         <IconButton onClick={onClose} symbol="X" />
       </header>
 
       {/* Rewards - single card listing unlocked items */}
       <div className="p-4 bg-white pixel-shadow flex flex-col items-start justify-start gap-4">
         {unlockedRewards.length === 0 ? (
-          <PixelFont className="text-muted">No rewards unlocked yet</PixelFont>
+          <Text className="text-muted">No rewards unlocked yet</Text>
         ) : (
           unlockedRewards.map((reward) => {
             let displayLabel: string;
@@ -154,8 +153,8 @@ export function MyRewards({ onClose }: MyRewardsProps) {
 
             return (
               <div key={reward} className="flex items-center gap-4">
-                <PixelSymbol type="checkmark" className="text-success" />
-                <PixelFont>{displayLabel}</PixelFont>
+                <Icon type="checkmark" className="text-success" />
+                <Text>{displayLabel}</Text>
               </div>
             );
           })
@@ -163,15 +162,15 @@ export function MyRewards({ onClose }: MyRewardsProps) {
       </div>
 
       <div className="h-8 w-full flex flex-row items-center justify-start">
-        <PixelFont scale={2.5}>Inventory</PixelFont>
+        <Text scale={2.5}>Inventory</Text>
       </div>
 
       {/* Consumables Inventory */}
       <div className="flex flex-row items-start justify-start gap-4">
         {inventoryEntries.length === 0 ? (
-          <PixelFont className="text-muted">
+          <Text className="text-muted">
             You don't have any consumables yet.
-          </PixelFont>
+          </Text>
         ) : (
           inventoryEntries.map(([itemId, quantity]) => {
             const id = itemId as ConsumableId;
@@ -196,13 +195,11 @@ export function MyRewards({ onClose }: MyRewardsProps) {
           {selectedItemId && renderConsumableIllustration(selectedItemId, 48)}
 
           <div className="flex flex-col items-center justify-center gap-2">
-            <PixelFont className="text-primary">
-              {selectedConfig?.label ?? ''}
-            </PixelFont>
+            <Text className="text-primary">{selectedConfig?.label ?? ''}</Text>
             {descriptionLines.map((line, i) => (
-              <PixelFont key={i} className="text-tertiary">
+              <Text key={i} className="text-tertiary">
                 {line}
-              </PixelFont>
+              </Text>
             ))}
           </div>
 
@@ -274,9 +271,9 @@ function ConsumableItem({
         onClick={() => onView()}
       >
         {renderConsumableIllustration(itemId)}
-        <PixelFont scale={2} className="text-muted absolute bottom-2 left-2">
+        <Text scale={2} className="text-muted absolute bottom-2 left-2">
           {String(quantity)}
-        </PixelFont>
+        </Text>
       </div>
 
       <Button

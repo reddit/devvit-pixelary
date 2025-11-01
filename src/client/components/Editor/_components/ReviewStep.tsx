@@ -5,7 +5,7 @@ import { Drawing } from '@components/Drawing';
 import { Modal } from '@components/Modal';
 import { trpc } from '@client/trpc/client';
 import { DrawingData } from '@shared/schema/drawing';
-import { PixelFont } from '@components/PixelFont';
+import { Text } from '@components/PixelFont';
 import { navigateTo } from '@devvit/web/client';
 import { useTelemetry } from '@client/hooks/useTelemetry';
 import { useEffect } from 'react';
@@ -131,16 +131,16 @@ export function ReviewStep(props: ReviewStepProps) {
   return (
     <main className="absolute inset-0 flex flex-col items-center justify-center h-full gap-6 p-6">
       {/* Header */}
-      <PixelFont scale={3}>That's a wrap!</PixelFont>
+      <Text scale={3}>That's a wrap!</Text>
 
       {/* Drawing Preview */}
       <Drawing data={drawing} size={256} />
 
       {/* Instructions */}
       <div className="flex flex-col items-center justify-center gap-1 text-center text-secondary">
-        <PixelFont scale={2}>Post your drawing</PixelFont>
-        <PixelFont scale={2}>and earn points for</PixelFont>
-        <PixelFont scale={2}>every correct guess!</PixelFont>
+        <Text scale={2}>Post your drawing</Text>
+        <Text scale={2}>and earn points for</Text>
+        <Text scale={2}>every correct guess!</Text>
       </div>
 
       {/* Action Buttons */}
@@ -184,8 +184,8 @@ function DeleteConfirmationModal(props: DeleteConfirmationModalProps) {
     <Modal isOpen={isOpen} onClose={onClose} title="Delete drawing?">
       {/* Body Copy - Concise and to the point. */}
       <div className="flex flex-col gap-1 items-center justify-center w-full">
-        <PixelFont>You cannot undo</PixelFont>
-        <PixelFont>this action later</PixelFont>
+        <Text>You cannot undo</Text>
+        <Text>this action later</Text>
       </div>
 
       {/* Actions - The primary action has been placed on the left side and deemphasized to avoid accidental misclicks given the severity of the action.

@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { trpc } from '@client/trpc/client';
 import { Drawing } from '@components/Drawing';
 import { Button } from '@components/Button';
-import { PixelFont } from '@components/PixelFont';
+import { Text } from '@components/PixelFont';
 import { CyclingMessage } from '@components/CyclingMessage';
 import { Collision } from '@components/Collision';
 import type { DrawingData } from '@shared/schema/drawing';
@@ -332,10 +332,10 @@ export function VotingView({
     return (
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-8 w-full h-full">
         <div className="flex flex-col items-center justify-center gap-2">
-          <PixelFont scale={3}>Error</PixelFont>
-          <PixelFont className="text-secondary">
+          <Text scale={3}>Error</Text>
+          <Text className="text-secondary">
             {pairsError.message || 'Failed to load submissions'}
-          </PixelFont>
+          </Text>
         </div>
         <Button
           size="large"
@@ -371,7 +371,7 @@ export function VotingView({
       </div>
 
       <div className="flex flex-col gap-2 items-center justify-center">
-        <PixelFont scale={3}>{word}</PixelFont>
+        <Text scale={3}>{word}</Text>
         <CyclingMessage
           messages={[
             'Drawing tournament',
@@ -418,9 +418,9 @@ export function VotingView({
       {/* Action bar */}
       <div className="flex flex-col gap-3 items-center">
         {hasEnoughSubmissions && (
-          <PixelFont scale={2} className="text-secondary">
+          <Text scale={2} className="text-secondary">
             Pick the best, or ...
-          </PixelFont>
+          </Text>
         )}
         <Button onClick={onDraw} size="large" variant="primary">
           ADD A DRAWING

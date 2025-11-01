@@ -1,5 +1,5 @@
 import React from 'react';
-import { PixelFont } from '@components/PixelFont';
+import { Text } from '@components/PixelFont';
 import { IconButton } from '@components/IconButton';
 
 interface CardLayoutProps {
@@ -15,7 +15,7 @@ export function CardLayout(props: CardLayoutProps) {
     <main className="absolute inset-0 flex flex-col p-4 gap-4">
       {/* Header */}
       <header className="shrink-0 w-full flex flex-row items-center justify-between">
-        <PixelFont scale={2.5}>{title}</PixelFont>
+        <Text scale={2.5}>{title}</Text>
 
         <IconButton onClick={onClose} symbol="X" />
       </header>

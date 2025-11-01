@@ -2,8 +2,7 @@ import { useEffect, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { Drawing } from './Drawing';
 import { DrawingData } from '@shared/schema/drawing';
-import { PixelSymbol } from './PixelSymbol';
-import { PixelFont } from './PixelFont';
+import { Icon, Text } from './PixelFont';
 
 interface LightboxProps {
   isOpen: boolean;
@@ -50,7 +49,7 @@ export function Lightbox({
 
       <div className="flex flex-col items-center justify-center gap-2 text-white">
         {/* Author (built-in) */}
-        {author && <PixelFont scale={3}>{`By u/${author}`}</PixelFont>}
+        {author && <Text scale={3}>{`By u/${author}`}</Text>}
 
         {/* Custom metadata */}
         {children}
@@ -61,7 +60,7 @@ export function Lightbox({
         onClick={onClose}
         className="absolute top-0 right-0 p-6 text-white hover:text-white/50 transition-colors cursor-pointer"
       >
-        <PixelSymbol type="X" scale={3} />
+        <Icon type="X" scale={3} />
       </button>
     </div>
   );

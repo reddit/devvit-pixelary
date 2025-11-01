@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { getGlyph, getStringWidth, getFontHeight } from './glyphs';
 
-export interface PixelFontProps {
+export interface TextProps {
   children: string;
   scale?: number;
   color?: string;
@@ -18,7 +18,7 @@ export interface PixelFontProps {
  * PixelFont component - renders as SVG for pixel-perfect text
  * Based on the old Pixelary approach with better developer ergonomics
  */
-export function PixelFont({
+export function Text({
   children,
   scale = 2,
   color = 'currentColor',
@@ -29,7 +29,7 @@ export function PixelFont({
   shadowOffset = { x: 2, y: 2 },
   className = '',
   onPress,
-}: PixelFontProps) {
+}: TextProps) {
   // Calculate dimensions
   const dimensions = useMemo(() => {
     const width = getStringWidth(children, gap);

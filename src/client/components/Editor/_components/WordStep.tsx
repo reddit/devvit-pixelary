@@ -1,8 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { CARD_DRAW_DURATION } from '@shared/constants';
 import { getExtraWordTime } from '@shared/rewards';
-import { PixelFont } from '@components/PixelFont';
-import { PixelSymbol } from '@components/PixelSymbol';
+import { Text, Icon } from '@components/PixelFont';
 import { useTelemetry } from '@client/hooks/useTelemetry';
 import type { SlateAction } from '@shared/types';
 
@@ -108,7 +107,7 @@ export function WordStep(props: WordStepProps) {
   return (
     <main className="absolute inset-0 flex flex-col gap-6 p-6 items-center justify-center">
       {/* Page Title */}
-      <PixelFont scale={3}>Pick a word</PixelFont>
+      <Text scale={3}>Pick a word</Text>
 
       {/* Word Candidates */}
       <div className="flex flex-col gap-3 items-center justify-center h-full w-full max-w-xs flex-1">
@@ -126,18 +125,18 @@ export function WordStep(props: WordStepProps) {
 
       {/* Timer */}
       <div className="flex flex-row items-center justify-center gap-4">
-        <PixelSymbol
+        <Icon
           scale={3}
           type="arrow-right"
           className={secondsLeft > 2 ? 'text-tertiary' : 'text-orangered'}
         />
-        <PixelFont
+        <Text
           scale={3}
           className={secondsLeft > 2 ? 'text-primary' : 'text-orangered'}
         >
           {secondsLeft.toString()}
-        </PixelFont>
-        <PixelSymbol
+        </Text>
+        <Icon
           scale={3}
           type="arrow-left"
           className={secondsLeft > 2 ? 'text-tertiary' : 'text-orangered'}
@@ -152,7 +151,7 @@ export function WordStep(props: WordStepProps) {
         }}
         className="flex items-center hover:opacity-70 transition-opacity p-6 absolute right-0 bottom-0 cursor-pointer"
       >
-        <PixelSymbol scale={3} type="undo" className="text-secondary" />
+        <Icon scale={3} type="undo" className="text-secondary" />
       </button>
     </main>
   );
@@ -195,7 +194,7 @@ function WordCandidate(props: WordCandidateProps) {
       {/* Word */}
       <div className="flex flex-row items-center justify-center gap-2">
         {index === 0 && !isLoading && (
-          <PixelSymbol
+          <Icon
             scale={2}
             type="arrow-right"
             color="currentColor"
@@ -205,10 +204,10 @@ function WordCandidate(props: WordCandidateProps) {
         {isLoading || !word ? (
           <div className="w-16 h-3.5 skeleton" />
         ) : (
-          <PixelFont scale={2}>{word}</PixelFont>
+          <Text scale={2}>{word}</Text>
         )}
         {index === 0 && !isLoading && (
-          <PixelSymbol
+          <Icon
             scale={2}
             type="arrow-left"
             color="currentColor"

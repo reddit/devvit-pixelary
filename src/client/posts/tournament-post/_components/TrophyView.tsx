@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { trpc } from '@client/trpc/client';
 import { Drawing } from '@components/Drawing';
-import { PixelFont } from '@components/PixelFont';
+import { Text } from '@components/PixelFont';
 import { IconButton } from '@components/IconButton';
 import { Button } from '@components/Button';
 import { Lightbox } from '@components/Lightbox';
@@ -74,12 +74,12 @@ function WinnerDisplay({
       </button>
       <TrophyIcon position={position} />
       <div className="flex flex-col gap-1 items-start">
-        <PixelFont scale={2.5} className="text-primary">
+        <Text scale={2.5} className="text-primary">
           {artist}
-        </PixelFont>
-        <PixelFont scale={2} className="text-tertiary">
+        </Text>
+        <Text scale={2} className="text-tertiary">
           {`${Math.round(rating)} rating`}
-        </PixelFont>
+        </Text>
       </div>
     </div>
   );
@@ -126,13 +126,13 @@ export function TrophyView({ postId, onToggleView, onDraw }: TrophyViewProps) {
     return (
       <main className="absolute inset-0 flex flex-col p-4 gap-4">
         <header className="shrink-0 w-full flex flex-row items-center justify-between">
-          <PixelFont scale={2.5}>In the lead</PixelFont>
+          <Text scale={2.5}>In the lead</Text>
           <IconButton onClick={onToggleView} symbol="X" />
         </header>
         <div className="flex items-center justify-center w-full h-full">
-          <PixelFont className="text-red-500">
+          <Text className="text-red-500">
             {`Error: ${Array.isArray(error.message) ? error.message.join(', ') : error.message || 'Failed to load'}`}
-          </PixelFont>
+          </Text>
         </div>
       </main>
     );
@@ -142,18 +142,18 @@ export function TrophyView({ postId, onToggleView, onDraw }: TrophyViewProps) {
     <main className="absolute inset-0 flex flex-col p-4 gap-6 items-center justify-center">
       {/* Header */}
       <header className="shrink-0 w-full flex flex-row items-center justify-between">
-        <PixelFont scale={2.5}>In the lead</PixelFont>
+        <Text scale={2.5}>In the lead</Text>
         <IconButton onClick={onToggleView} symbol="X" />
       </header>
 
       {/* Loading state */}
       {isLoading ? (
         <div className="flex items-center justify-center w-full h-full">
-          <PixelFont className="text-tertiary">Loading...</PixelFont>
+          <Text className="text-tertiary">Loading...</Text>
         </div>
       ) : top3.length === 0 ? (
         <div className="flex items-center justify-center w-full h-full">
-          <PixelFont className="text-tertiary">No winners yet</PixelFont>
+          <Text className="text-tertiary">No winners yet</Text>
         </div>
       ) : (
         <div className="flex flex-col gap-6 items-center justify-center w-full h-full flex-1">
@@ -200,7 +200,7 @@ export function TrophyView({ postId, onToggleView, onDraw }: TrophyViewProps) {
           author={selectedDrawing.author}
         >
           <div className="flex flex-col gap-2 items-center">
-            <PixelFont>
+            <Text>
               {`${selectedDrawing.views} views · ${selectedDrawing.votes} picks (${
                 selectedDrawing.views > 0
                   ? Math.round(
@@ -208,8 +208,8 @@ export function TrophyView({ postId, onToggleView, onDraw }: TrophyViewProps) {
                     )
                   : 0
               }%)`}
-            </PixelFont>
-            <PixelFont>{`${selectedDrawing.rating} rating`}</PixelFont>
+            </Text>
+            <Text>{`${selectedDrawing.rating} rating`}</Text>
           </div>
         </Lightbox>
       )}

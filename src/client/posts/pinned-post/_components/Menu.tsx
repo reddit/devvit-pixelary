@@ -1,8 +1,7 @@
-import { PixelFont } from '@components/PixelFont';
+import { Text, Icon } from '@components/PixelFont';
 import { Counter } from '@components/Counter';
 import { Button } from '@components/Button';
 import { Logo } from '@components/Logo';
-import { PixelSymbol } from '@components/PixelSymbol';
 import { ProgressBar } from '@components/ProgressBar';
 import { trpc } from '@client/trpc/client';
 import { useTelemetry } from '@client/hooks/useTelemetry';
@@ -42,7 +41,7 @@ export function Menu(props: MenuProps) {
       {/* Logo + Wordmark */}
       <div className="flex flex-col items-center gap-4">
         <Logo size={64} />
-        <PixelFont scale={4}>Pixelary</PixelFont>
+        <Text scale={4}>Pixelary</Text>
       </div>
 
       {/* Featured Community Banner (if applicable) */}
@@ -91,14 +90,10 @@ export function Menu(props: MenuProps) {
         className="level-button hover:opacity-70 transition-opacity cursor-pointer flex flex-col items-center justify-center gap-2"
       >
         <div className="flex relative">
-          <PixelFont scale={2}>Level </PixelFont>
+          <Text scale={2}>Level </Text>
           <Counter value={userProfile?.level} scale={2} />
           <div className="absolute -right-5 level-arrow">
-            <PixelSymbol
-              type="arrow-right"
-              scale={2}
-              className="text-tertiary"
-            />
+            <Icon type="arrow-right" scale={2} className="text-tertiary" />
           </div>
         </div>
 

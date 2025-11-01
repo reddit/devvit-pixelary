@@ -1,6 +1,6 @@
 import { Button } from '@components/Button';
 import { trpc } from '@client/trpc/client';
-import { PixelFont } from '@components/PixelFont';
+import { Text } from '@components/PixelFont';
 import { IconButton } from '@components/IconButton';
 import { PaginatedDrawingGrid } from '@components/PaginatedDrawingGrid';
 import { navigateTo } from '@devvit/web/client';
@@ -29,7 +29,7 @@ export function MyDrawings({ onClose }: MyDrawingsProps) {
     <main className="absolute inset-0 flex flex-col p-4 gap-4">
       {/* Header */}
       <header className="shrink-0 w-full flex flex-row items-center justify-between">
-        <PixelFont scale={2.5}>My Drawings</PixelFont>
+        <Text scale={2.5}>My Drawings</Text>
 
         <IconButton
           onClick={onClose}

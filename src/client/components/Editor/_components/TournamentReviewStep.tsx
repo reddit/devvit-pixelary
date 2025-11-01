@@ -5,7 +5,7 @@ import { Drawing } from '@components/Drawing';
 import { Modal } from '@components/Modal';
 import { trpc } from '@client/trpc/client';
 import { DrawingData } from '@shared/schema/drawing';
-import { PixelFont } from '@components/PixelFont';
+import { Text } from '@components/PixelFont';
 import { useTelemetry } from '@client/hooks/useTelemetry';
 import { renderDrawingToCanvas } from '@shared/utils/drawing';
 
@@ -104,13 +104,13 @@ export function TournamentReviewStep(props: TournamentReviewStepProps) {
 
   return (
     <main className="absolute inset-0 flex flex-col items-center justify-center h-full gap-6 p-6">
-      <PixelFont scale={3}>That's a wrap!</PixelFont>
+      <Text scale={3}>That's a wrap!</Text>
 
       <Drawing data={drawing} size={256} />
 
       <div className="flex flex-col items-center justify-center gap-1 text-center text-secondary">
-        <PixelFont scale={2}>Submit your drawing</PixelFont>
-        <PixelFont scale={2}>to join tournament.</PixelFont>
+        <Text scale={2}>Submit your drawing</Text>
+        <Text scale={2}>to join tournament.</Text>
       </div>
 
       <div className="flex flex-row gap-3">
@@ -150,8 +150,8 @@ function DeleteConfirmationModal(props: DeleteConfirmationModalProps) {
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Delete drawing?">
       <div className="flex flex-col gap-1 items-center justify-center w-full">
-        <PixelFont>You cannot undo</PixelFont>
-        <PixelFont>this action later</PixelFont>
+        <Text>You cannot undo</Text>
+        <Text>this action later</Text>
       </div>
 
       <div className="flex flex-row gap-3 items-center justify-center w-full">

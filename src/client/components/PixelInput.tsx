@@ -5,8 +5,7 @@ import React, {
   forwardRef,
   useImperativeHandle,
 } from 'react';
-import { PixelFont } from './PixelFont';
-import { PixelSymbol } from './PixelSymbol';
+import { Text, Icon } from './PixelFont';
 
 // Animation constants
 const TYPE_SPEED = 150; // ms per character
@@ -265,7 +264,7 @@ export const PixelInput = forwardRef<PixelInputRef, PixelInputProps>(
             />
             {value ? (
               <>
-                <PixelFont scale={2}>{value}</PixelFont>
+                <Text scale={2}>{value}</Text>
                 {/* Blinking cursor - always at the end */}
                 {isFocused && showCursor && (
                   <div className="w-1 h-6 bg-orangered animate-pulse" />
@@ -275,12 +274,12 @@ export const PixelInput = forwardRef<PixelInputRef, PixelInputProps>(
               <>
                 {/* Character-by-character animated placeholder */}
                 <div className="text-weak">
-                  <PixelFont scale={2}>
+                  <Text scale={2}>
                     {placeholderPhrases[currentPhraseIndex]?.slice(
                       0,
                       visibleChars
                     ) || ''}
-                  </PixelFont>
+                  </Text>
                 </div>
               </>
             )}
@@ -298,7 +297,7 @@ export const PixelInput = forwardRef<PixelInputRef, PixelInputProps>(
               className="w-8 h-8 bg-black border-2 border-black flex items-center justify-center hover:bg-gray-800 transition-colors"
               type="button"
             >
-              <PixelSymbol type="X" className="text-white" scale={2} />
+              <Icon type="X" className="text-white" scale={2} />
             </button>
           )}
         </div>

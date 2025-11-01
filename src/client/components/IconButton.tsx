@@ -1,5 +1,4 @@
-import { PixelSymbol } from './PixelSymbol';
-import { SupportedGlyph } from './glyphs';
+import { Icon, SupportedGlyph } from './PixelFont';
 import { useTelemetry } from '@client/hooks/useTelemetry';
 import type { TelemetryEventType } from '@shared/types';
 
@@ -67,7 +66,7 @@ export function IconButton({
       disabled={disabled}
       className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${shadowClasses} shadow-pixel hover:shadow-pixel-sm active:shadow-none ${className}`}
     >
-      <PixelSymbol
+      <Icon
         type={symbol}
         scale={fontScales[size]}
         color={

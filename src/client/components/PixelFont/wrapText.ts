@@ -1,5 +1,6 @@
-import { getStringWidth } from '../components/glyphs';
-export function chunkByPixelWidth(
+import { getStringWidth } from './glyphs';
+
+export function wrapTextByWidth(
   text: string,
   maxBaseWidth: number,
   gap: number = 1,
@@ -43,3 +44,5 @@ export function chunkByPixelWidth(
 function defaultGetStringWidth(text: string, gap: number = 1): number {
   return getStringWidth(text, gap);
 }
+
+// Alias removed; use wrapTextByWidth

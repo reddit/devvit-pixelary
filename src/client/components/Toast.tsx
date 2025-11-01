@@ -7,7 +7,7 @@ import React, {
   ReactNode,
 } from 'react';
 import { createPortal } from 'react-dom';
-import { PixelFont } from './PixelFont';
+import { Text } from './PixelFont';
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info';
 export type ToastPosition =
@@ -244,9 +244,9 @@ export function Toast({
     >
       <div className="flex flex-col gap-2 justify-center items-center">
         <div className="flex items-center gap-2">
-          <PixelFont scale={2} className="flex-1">
+          <Text scale={2} className="flex-1">
             {message}
-          </PixelFont>
+          </Text>
           {action && (
             <button
               onClick={handleAction}

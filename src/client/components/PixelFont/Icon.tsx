@@ -7,7 +7,7 @@ interface PixelSymbolProps {
   className?: string;
 }
 
-export function PixelSymbol({
+export function Icon({
   type,
   scale = 2,
   color = 'currentColor',
