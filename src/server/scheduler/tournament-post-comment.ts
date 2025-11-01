@@ -1,7 +1,8 @@
 import type { Request, Response } from 'express';
 import type { T3 } from '@devvit/shared-types/tid.js';
 import { assertT3 } from '@devvit/shared-types/tid.js';
-import { createTournamentPostComment } from '@server/services/posts/tournament/comments';
+import { generateTournamentCommentText } from '@server/services/posts/tournament/comments';
+import { createPinnedComment } from '@server/services/comments/pinned';
 
 /**
  * Job handler for creating tournament post comment
@@ -15,7 +16,7 @@ export async function handleCreateTournamentPostComment(
   try {
     // Extract data from the scheduler payload
     const jobData = req.body.data || req.body;
-    const { postId } = jobData;
+    const { postId, word } = jobData;
 
     // Validate and parse postId as T3
     let validatedPostId: T3;
@@ -30,8 +31,17 @@ export async function handleCreateTournamentPostComment(
       return;
     }
 
+    if (typeof word !== 'string' || word.trim() === '') {
+      res.status(400).json({
+        status: 'error',
+        message: 'Word is required to create tournament comment',
+      });
+      return;
+    }
+
     // Create the pinned comment
-    await createTournamentPostComment(validatedPostId);
+    const text = generateTournamentCommentText(word);
+    await createPinnedComment(validatedPostId, text);
     res.json({ status: 'success' });
   } catch (error) {
     console.error('Tournament pinned comment creation failed:', error);

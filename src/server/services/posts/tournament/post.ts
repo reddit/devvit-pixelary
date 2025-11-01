@@ -72,7 +72,7 @@ export async function createTournament(word?: string): Promise<T3> {
   try {
     await scheduler.runJob({
       name: 'CREATE_TOURNAMENT_POST_COMMENT',
-      data: { postId: post.id },
+      data: { postId: post.id, word: tournamentWord },
       runAt: new Date(),
     });
   } catch (error) {

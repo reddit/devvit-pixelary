@@ -1,7 +1,3 @@
-import type { T1, T3 } from '@devvit/shared-types/tid.js';
-import { getTournament } from './post';
-import { createPinnedComment } from '@server/services/comments/pinned';
-
 export function generateTournamentCommentText(word: string): string {
   return `**Pixelary Drawing Tournaments!**
 
@@ -17,10 +13,4 @@ Each drawing's rating changes with every pick. The top 10 of the day earn specia
 **Explore the gallery**: See every creative (and chaotic) interpretation of “${word}” in the full gallery.
 
 May the best artist win!`;
-}
-
-export async function createTournamentPostComment(postId: T3): Promise<T1> {
-  const data = await getTournament(postId);
-  const text = generateTournamentCommentText(data.word);
-  return await createPinnedComment(postId, text);
 }
