@@ -97,6 +97,7 @@ export function PixelFont({
       className={`select-none image-rendering-pixelated ${className}`.trim()}
       onClick={onPress}
       xmlns="http://www.w3.org/2000/svg"
+      aria-label={children}
     >
       {backgroundColor !== 'transparent' && (
         <rect

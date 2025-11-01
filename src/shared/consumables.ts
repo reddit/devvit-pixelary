@@ -22,13 +22,13 @@ export type ConsumableConfig = {
 export const CONSUMABLES_CONFIG: Record<ConsumableId, ConsumableConfig> = {
   score_multiplier_2x_4h: {
     id: 'score_multiplier_2x_4h',
-    label: '2x Score',
+    label: '2x Points Earned!',
     durationMs: 4 * 60 * 60 * 1000,
     effect: { kind: 'score_multiplier', multiplier: 2 },
   },
   score_multiplier_3x_30m: {
     id: 'score_multiplier_3x_30m',
-    label: '3x Score',
+    label: '3x Points Earned!',
     durationMs: 30 * 60 * 1000,
     effect: { kind: 'score_multiplier', multiplier: 3 },
   },
@@ -56,14 +56,7 @@ export function getConsumableConfig(id: ConsumableId): ConsumableConfig {
  */
 export function getEffectDescription(effect: ConsumableEffect): string {
   if (effect.kind === 'score_multiplier') {
-    return `All points earned are multiplied by ${effect.multiplier}x while active.`;
+    return 'On all points earned while active';
   }
-  return `Adds +${effect.extraSeconds}s to your drawing timer.`;
-}
-
-/**
- * Get a UI icon key for an effect (client can map to actual glyph).
- */
-export function getEffectIcon(effect: ConsumableEffect): 'star' | 'clock' {
-  return effect.kind === 'score_multiplier' ? 'star' : 'clock';
+  return `Adds +${effect.extraSeconds}s to your drawing timer!`;
 }
