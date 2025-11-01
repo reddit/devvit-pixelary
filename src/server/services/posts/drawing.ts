@@ -26,6 +26,7 @@ import {
   createPinnedComment,
   updatePinnedComment,
 } from '@server/services/comments/pinned';
+import { REALTIME_CHANNELS } from '@server/core/realtime';
 
 const DRAWING_DATA_TTL = 5 * 60;
 
@@ -395,7 +396,7 @@ export async function submitGuess(options: {
   }
   await Promise.all(redisOperations);
   void handleCommentUpdateCooldown(postId);
-  const channelName = `post-${postId}`;
+  const channelName = REALTIME_CHANNELS.post(postId);
   const finalStats = await getGuesses(postId);
   void realtime.send(channelName, {
     type: 'guess_submitted',

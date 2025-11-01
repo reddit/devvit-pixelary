@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { connectRealtime, context } from '@devvit/web/client';
+import { REALTIME_CHANNELS } from '@shared/realtime';
 import { trpc } from '@client/trpc/client';
 import type { ConsumableEffect, ConsumableId } from '@shared/consumables';
 
@@ -27,7 +28,7 @@ class RealtimeRewardsManager {
     const userId = context.userId;
     if (!userId) return () => {};
 
-    const channelName = `user-${userId}-rewards`;
+    const channelName = REALTIME_CHANNELS.userRewards(userId);
 
     // Add subscriber
     this.subscribers.add(onEffectsUpdate);

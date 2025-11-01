@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { connectRealtime } from '@devvit/web/client';
+import { REALTIME_CHANNELS } from '@shared/realtime';
 import { useQueryClient } from '@tanstack/react-query';
 import { trpc } from '@client/trpc/client';
 import type { PostGuesses } from '@shared/schema';
@@ -24,7 +25,7 @@ class RealtimeManager {
   private subscribers = new Map<string, Set<(stats: StatsData) => void>>();
 
   async connect(postId: string, onStatsUpdate: (stats: StatsData) => void) {
-    const channelName = `post-${postId}`;
+    const channelName = REALTIME_CHANNELS.post(postId);
 
     // Add subscriber
     if (!this.subscribers.has(channelName)) {

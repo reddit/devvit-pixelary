@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express';
 import { getServerPort, realtime } from '@devvit/web/server';
+import { REALTIME_CHANNELS } from '@server/core/realtime';
 
 /**
  * Test trigger handlers
@@ -18,7 +19,7 @@ export async function handleTestRealtime(
     }
 
     // Sending test message
-    await realtime.send(`post-${postId}-guesses`, {
+    await realtime.send(REALTIME_CHANNELS.post(postId), {
       type: 'test_message',
       postId,
       message: 'This is a test message',

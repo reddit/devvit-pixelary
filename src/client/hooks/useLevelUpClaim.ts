@@ -3,6 +3,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { connectRealtime } from '@devvit/web/client';
 import { trpc } from '../trpc/client';
 import { context } from '@devvit/web/client';
+import { REALTIME_CHANNELS } from '@shared/realtime';
 import type { RewardType } from '@shared/rewards';
 
 type UnclaimedLevelUp = {
@@ -23,7 +24,7 @@ class LevelUpClaimManager {
     const userId = context.userId;
     if (!userId) return;
 
-    const channelName = `user-${userId}-levelup`;
+    const channelName = REALTIME_CHANNELS.userLevelUp(userId);
 
     // Add subscriber
     this.subscribers.add(onClaimUpdate);

@@ -1,4 +1,5 @@
 import { redis, realtime } from '@devvit/web/server';
+import { REALTIME_CHANNELS } from '@server/core/realtime';
 import type { T2 } from '@devvit/shared-types/tid.js';
 import { REDIS_KEYS } from '@server/core/redis';
 import {
@@ -99,7 +100,7 @@ export async function activateConsumable(
   // Broadcast updated active effects to user-scoped realtime channel
   try {
     const effects = await getActiveEffects(userId);
-    await realtime.send(`user-${userId}-rewards`, {
+    await realtime.send(REALTIME_CHANNELS.userRewards(userId), {
       type: 'effects_updated',
       effects,
       timestamp: Date.now(),
