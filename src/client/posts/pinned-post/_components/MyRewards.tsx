@@ -23,24 +23,20 @@ import {
 import { context } from '@devvit/web/client';
 import type { ConsumableEffect, ConsumableId } from '@shared/consumables';
 
+/**
+ * Props for the MyRewards component.
+ * @param onClose - The function to call when the modal is closed.
+ */
+
 interface MyRewardsProps {
   onClose: () => void;
 }
 
-// Helper function to get minimum level for a reward
-function getRewardMinLevel(reward: string): number {
-  const levelMap: Record<string, number> = {
-    extra_drawing_time: 2,
-    extra_word_time: 2,
-    add_remove_words: 3,
-    extended_colors_tier_1: 2,
-    extended_colors_tier_2: 3,
-    extended_colors_tier_3: 4,
-    extended_colors_tier_4: 5,
-    level_flair: 1,
-  };
-  return levelMap[reward] ?? 1;
-}
+/**
+ * My Rewards component.
+ * @param onClose - The function to call when the modal is closed.
+ * @returns The rendered My Rewards component.
+ */
 
 export function MyRewards({ onClose }: MyRewardsProps) {
   // Telemetry
@@ -115,19 +111,6 @@ export function MyRewards({ onClose }: MyRewardsProps) {
     return total;
   }, [activeEffects]);
 
-  function renderConsumableIllustration(id: ConsumableId, size = 36) {
-    if (id === 'score_multiplier_2x_4h') {
-      return <Multiplier variant="double" size={size} />;
-    }
-    if (id === 'score_multiplier_3x_30m') {
-      return <Multiplier variant="triple" size={size} />;
-    }
-    if (id === 'draw_time_boost_30s_2h') {
-      return <Clock size={size} />;
-    }
-    return null;
-  }
-
   const inventoryEntries = useMemo(() => {
     const entries = Object.entries(inventory ?? {});
     return entries
@@ -190,38 +173,19 @@ export function MyRewards({ onClose }: MyRewardsProps) {
             You don't have any consumables yet.
           </PixelFont>
         ) : (
-          inventoryEntries.map(([itemId, qty]) => {
+          inventoryEntries.map(([itemId, quantity]) => {
+            const id = itemId as ConsumableId;
+            const disabled =
+              activateMutation.isPending || hasAnyActiveEffect || quantity <= 0;
             return (
-              <div key={itemId} className="flex flex-col items-center gap-2">
-                <div
-                  className="flex h-24 w-24 items-center justify-center relative bg-white pixel-shadow cursor-pointer"
-                  onClick={() => setSelectedItemId(itemId as ConsumableId)}
-                >
-                  {renderConsumableIllustration(itemId as ConsumableId)}
-                  <PixelFont
-                    scale={2}
-                    className="text-muted absolute bottom-2 left-2"
-                  >
-                    {String(qty)}
-                  </PixelFont>
-                </div>
-
-                <Button
-                  variant="primary"
-                  size="small"
-                  className="w-full"
-                  disabled={
-                    activateMutation.isPending ||
-                    hasAnyActiveEffect ||
-                    (qty as number) <= 0
-                  }
-                  onClick={() =>
-                    activateMutation.mutate({ itemId: itemId as never })
-                  }
-                >
-                  Use
-                </Button>
-              </div>
+              <ConsumableItem
+                key={id}
+                itemId={id}
+                quantity={quantity}
+                onView={() => setSelectedItemId(id)}
+                onUse={() => activateMutation.mutate({ itemId: id })}
+                disabled={disabled}
+              />
             );
           })
         )}
@@ -247,4 +211,103 @@ export function MyRewards({ onClose }: MyRewardsProps) {
       </Modal>
     </main>
   );
+}
+
+/**
+ * Render the consumable illustration for a given item ID.
+ * @param id - The item ID.
+ * @param size - The size of the illustration.
+ * @returns The rendered illustration.
+ */
+
+function renderConsumableIllustration(id: ConsumableId, size = 36) {
+  if (id === 'score_multiplier_2x_4h') {
+    return <Multiplier variant="double" size={size} />;
+  }
+  if (id === 'score_multiplier_3x_30m') {
+    return <Multiplier variant="triple" size={size} />;
+  }
+  if (id === 'draw_time_boost_30s_2h') {
+    return <Clock size={size} />;
+  }
+  return null;
+}
+
+/**
+ * Props for the ConsumableItem component.
+ * @param itemId - The item ID.
+ * @param quantity - The quantity of the item.
+ * @param disabled - Whether the item is disabled.
+ * @param onUse - The function to call when the item is used.
+ * @param onView - The function to call when the item is viewed.
+ */
+
+interface ConsumableItemProps {
+  itemId: ConsumableId;
+  quantity: number;
+  disabled: boolean;
+  onUse: () => void;
+  onView: () => void;
+}
+
+/**
+ * Render a consumable item.
+ * @param itemId - The item ID.
+ * @param quantity - The quantity of the item.
+ * @param disabled - Whether the item is disabled.
+ * @param onUse - The function to call when the item is used.
+ * @param onView - The function to call when the item is viewed.
+ * @returns The rendered consumable item.
+ */
+
+function ConsumableItem({
+  itemId,
+  quantity,
+  onView,
+  onUse,
+  disabled,
+}: ConsumableItemProps) {
+  return (
+    <div className="flex flex-col items-center gap-2">
+      <div
+        className="flex h-24 w-24 items-center justify-center relative bg-white pixel-shadow cursor-pointer"
+        onClick={() => onView()}
+      >
+        {renderConsumableIllustration(itemId)}
+        <PixelFont scale={2} className="text-muted absolute bottom-2 left-2">
+          {String(quantity)}
+        </PixelFont>
+      </div>
+
+      <Button
+        variant="primary"
+        size="small"
+        className="w-full"
+        disabled={disabled}
+        onClick={() => onUse()}
+      >
+        Use
+      </Button>
+    </div>
+  );
+}
+
+/**
+ * Get the minimum level for a reward.
+ * @param reward - The reward.
+ * @returns The minimum level.
+ */
+
+function getRewardMinLevel(reward: string): number {
+  const levelMap: Record<string, number> = {
+    extra_drawing_time: 2,
+    extra_word_time: 2,
+    add_remove_words: 3,
+    extended_colors_tier_1: 2,
+    extended_colors_tier_2: 3,
+    extended_colors_tier_3: 4,
+    extended_colors_tier_4: 5,
+    level_flair: 1,
+  };
+  return levelMap[reward] ?? 1;
 }
