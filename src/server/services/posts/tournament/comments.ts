@@ -2,26 +2,26 @@ import type { T1, T3 } from '@devvit/shared-types/tid.js';
 import { getTournament } from './post';
 import { createPinnedComment } from '@server/services/comments/pinned';
 
-export async function generateTournamentCommentText(
-  word: string
-): Promise<string> {
-  return `Draw the word **"${word}"** in this tournament!
+export function generateTournamentCommentText(word: string): string {
+  return `**Pixelary Drawing Tournaments!**
 
-## How to Play
+The word is: "**${word}**"
 
-**Submit your drawing**: Click the "Draw Something" button to create your 16x16 pixel art submission for the word "${word}".
+**How it works**
+There are two ways to play in the game area above:
+- **Pick the best drawing**: In the game area above, you'll see pairs of community drawings. Choose the one you think deserves to win — every pick shifts the Elo scores.
+- **Join the battle**: Have your own take on “${word}”? Post your drawing as an image comment to enter and earn points.
 
-**Vote on pairs**: Help rank the submissions by voting between two drawings. Choose which one you think best represents the word "${word}".
+**Climb the leaderboard**
+Each drawing's rating changes with every pick. The top 10 of the day earn special rewards when the tournament resets every 24 hours.
 
-**Watch the leaderboard**: The tournament uses an Elo rating system. Top drawings rise to the top as more people vote.
+**Explore the gallery**: See every creative (and chaotic) interpretation of “${word}” in the full gallery.
 
-**View all submissions**: Check out the gallery to see everyone's creative interpretations of "${word}".
-
-Good luck and let the best drawing win! 🎨`;
+May the best artist win!`;
 }
 
 export async function createTournamentPostComment(postId: T3): Promise<T1> {
   const data = await getTournament(postId);
-  const text = await generateTournamentCommentText(data.word);
+  const text = generateTournamentCommentText(data.word);
   return await createPinnedComment(postId, text);
 }
