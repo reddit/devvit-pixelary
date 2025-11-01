@@ -5,10 +5,9 @@ import { createPinnedComment } from '@server/services/comments/pinned';
 export function generateTournamentCommentText(word: string): string {
   return `**Pixelary Drawing Tournaments!**
 
-The word is: "**${word}**"
+The current challenge is: "**${word}**"
 
 **How it works**
-There are two ways to play in the game area above:
 - **Pick the best drawing**: In the game area above, you'll see pairs of community drawings. Choose the one you think deserves to win — every pick shifts the Elo scores.
 - **Join the battle**: Have your own take on “${word}”? Post your drawing as an image comment to enter and earn points.
 
