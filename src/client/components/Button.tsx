@@ -46,13 +46,13 @@ export function Button({
   };
 
   const sizeClasses = {
-    small: 'px-2 py-1.5',
+    small: 'px-2 py-[5px]',
     medium: 'px-2 py-[9px]',
     large: 'px-3 py-[13px]',
   };
 
   const fontScales = {
-    small: 1,
+    small: 2,
     medium: 2,
     large: 2,
   };

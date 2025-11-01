@@ -2,17 +2,26 @@ import { PixelFont } from '@components/PixelFont';
 import { PixelSymbol } from '@components/PixelSymbol';
 import { IconButton } from '@components/IconButton';
 import { Button } from '@components/Button';
+import { Modal } from '@components/Modal';
+import { Multiplier, Clock } from '@components/illustrations';
 import { useTelemetry } from '@client/hooks/useTelemetry';
-import { useEffect, useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { trpc } from '@client/trpc/client';
+import { chunkByPixelWidth } from '@client/utils/pixelText';
+import { useToastHelpers } from '@components/ToastManager';
 import {
   getAllRewards,
   hasReward,
   getRewardLabel,
   getRewardValue,
 } from '@shared/rewards';
-import { CONSUMABLES_CONFIG } from '@shared/consumables';
+import {
+  CONSUMABLES_CONFIG,
+  getConsumableConfig,
+  getEffectDescription,
+} from '@shared/consumables';
 import { context } from '@devvit/web/client';
+import type { ConsumableEffect, ConsumableId } from '@shared/consumables';
 
 interface MyRewardsProps {
   onClose: () => void;
@@ -36,6 +45,7 @@ function getRewardMinLevel(reward: string): number {
 export function MyRewards({ onClose }: MyRewardsProps) {
   // Telemetry
   const { track } = useTelemetry();
+  const { success } = useToastHelpers();
   useEffect(() => {
     void track('view_my_rewards');
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -69,10 +79,54 @@ export function MyRewards({ onClose }: MyRewardsProps) {
     });
   const activateMutation = trpc.app.rewards.activateConsumable.useMutation({
     onSuccess: () => {
+      success('Used!');
       void refetchInventory();
       void refetchEffects();
     },
   });
+
+  const hasAnyActiveEffect = (activeEffects?.length ?? 0) > 0;
+
+  const [selectedItemId, setSelectedItemId] = useState<ConsumableId | null>(
+    null
+  );
+  const selectedConfig = useMemo(
+    () => (selectedItemId ? getConsumableConfig(selectedItemId) : null),
+    [selectedItemId]
+  );
+  const selectedDescription = useMemo(
+    () => (selectedConfig ? getEffectDescription(selectedConfig.effect) : ''),
+    [selectedConfig]
+  );
+  const descriptionLines = useMemo(
+    () => chunkByPixelWidth(selectedDescription, 128),
+    [selectedDescription]
+  );
+
+  const activeExtraDrawingSeconds = useMemo(() => {
+    const list = activeEffects ?? [];
+    let total = 0;
+    for (const e of list) {
+      const effect = e.effect as ConsumableEffect;
+      if (effect && effect.kind === 'extra_drawing_time') {
+        total += effect.extraSeconds;
+      }
+    }
+    return total;
+  }, [activeEffects]);
+
+  function renderConsumableIllustration(id: ConsumableId, size = 36) {
+    if (id === 'score_multiplier_2x_4h') {
+      return <Multiplier variant="double" size={size} />;
+    }
+    if (id === 'score_multiplier_3x_30m') {
+      return <Multiplier variant="triple" size={size} />;
+    }
+    if (id === 'draw_time_boost_30s_2h') {
+      return <Clock size={size} />;
+    }
+    return null;
+  }
 
   const inventoryEntries = useMemo(() => {
     const entries = Object.entries(inventory ?? {});
@@ -87,144 +141,110 @@ export function MyRewards({ onClose }: MyRewardsProps) {
       );
   }, [inventory]);
 
-  function formatTimeRemaining(expiresAt: number): string {
-    const ms = Math.max(0, expiresAt - Date.now());
-    const hours = Math.floor(ms / 3600000);
-    const minutes = Math.floor((ms % 3600000) / 60000);
-    if (hours > 0) return `${hours}h ${minutes}m remaining`;
-    return `${minutes}m remaining`;
-  }
-
   return (
-    <main className="absolute inset-0 flex flex-col p-4 gap-4">
+    <main className="absolute inset-0 flex flex-col p-4 gap-4 overflow-visible">
       {/* Header */}
       <header className="shrink-0 w-full flex flex-row items-center justify-between">
         <PixelFont scale={2.5}>My Rewards</PixelFont>
         <IconButton onClick={onClose} symbol="X" />
       </header>
 
-      {/* Stack of Reward Cards */}
-      <div className="flex-1 w-full space-y-3 overflow-y-auto">
-        {unlockedRewards.map((reward) => {
-          const minLevel = getRewardMinLevel(reward);
-          const currentValue = getRewardValue(userLevel, reward);
+      {/* Rewards - single card listing unlocked items */}
+      <div className="p-4 bg-white pixel-shadow flex flex-col items-start justify-start gap-4">
+        {unlockedRewards.length === 0 ? (
+          <PixelFont className="text-muted">No rewards unlocked yet</PixelFont>
+        ) : (
+          unlockedRewards.map((reward) => {
+            let displayLabel: string;
 
-          // Custom labels for progressive rewards
-          let displayLabel: string;
-          let levelInfo: string;
+            if (reward === 'extra_drawing_time') {
+              const base = getRewardValue(userLevel, 'extra_drawing_time') ?? 0;
+              displayLabel = `+${base + activeExtraDrawingSeconds}s drawing time`;
+            } else if (reward === 'extra_word_time') {
+              const base = getRewardValue(userLevel, 'extra_word_time') ?? 0;
+              displayLabel = `+${base}s selection time`;
+            } else if (reward === 'level_flair') {
+              displayLabel = `Level ${userLevel} flair`;
+            } else {
+              displayLabel = getRewardLabel(reward, userLevel);
+            }
 
-          if (reward === 'extra_drawing_time') {
-            displayLabel = 'Drawing time';
-            levelInfo = `+${currentValue}s at level ${userLevel}`;
-          } else if (reward === 'extra_word_time') {
-            displayLabel = 'Selection time';
-            levelInfo = `+${currentValue}s at level ${userLevel}`;
-          } else if (reward === 'level_flair') {
-            displayLabel = 'User flair';
-            levelInfo = `Level ${userLevel}`;
-          } else {
-            displayLabel = getRewardLabel(reward, userLevel);
-            levelInfo = `Level ${minLevel}`;
-          }
-
-          return (
-            <div
-              key={reward}
-              className="flex items-center gap-4 p-4 bg-white pixel-shadow"
-            >
-              <PixelSymbol
-                type="checkmark"
-                className="text-success"
-                scale={3}
-              />
-              <div className="flex flex-col gap-2">
-                <PixelFont scale={2}>{displayLabel}</PixelFont>
-                <PixelFont scale={2} className="text-black-40">
-                  {levelInfo}
-                </PixelFont>
+            return (
+              <div key={reward} className="flex items-center gap-4">
+                <PixelSymbol type="checkmark" className="text-success" />
+                <PixelFont>{displayLabel}</PixelFont>
               </div>
-            </div>
-          );
-        })}
-
-        {/* Consumables Inventory */}
-        <div className="mt-4">
-          <PixelFont scale={2.5}>Consumables</PixelFont>
-          {inventoryEntries.length === 0 ? (
-            <div className="mt-2 p-4 bg-white pixel-shadow">
-              <PixelFont scale={2} className="text-black-40">
-                You don't have any consumables yet.
-              </PixelFont>
-            </div>
-          ) : (
-            <div className="mt-2 space-y-2">
-              {inventoryEntries.map(([itemId, qty]) => {
-                const cfg =
-                  CONSUMABLES_CONFIG[itemId as keyof typeof CONSUMABLES_CONFIG];
-                return (
-                  <div
-                    key={itemId}
-                    className="flex items-center justify-between gap-4 p-4 bg-white pixel-shadow"
-                  >
-                    <div className="flex flex-col gap-1">
-                      <PixelFont scale={2}>{cfg.label}</PixelFont>
-                      <PixelFont scale={2} className="text-black-40">
-                        {String(qty)} available
-                      </PixelFont>
-                    </div>
-                    <Button
-                      variant="secondary"
-                      size="small"
-                      disabled={
-                        activateMutation.isPending || (qty as number) <= 0
-                      }
-                      onClick={() =>
-                        activateMutation.mutate({ itemId: itemId as never })
-                      }
-                    >
-                      Activate
-                    </Button>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-
-        {/* Active Effects */}
-        <div className="mt-4">
-          <PixelFont scale={2.5}>Active effects</PixelFont>
-          {activeEffects && activeEffects.length > 0 ? (
-            <div className="mt-2 space-y-2">
-              {activeEffects.map((e) => {
-                const cfg =
-                  CONSUMABLES_CONFIG[
-                    e.itemId as keyof typeof CONSUMABLES_CONFIG
-                  ];
-                return (
-                  <div
-                    key={e.activationId}
-                    className="flex items-center justify-between gap-4 p-4 bg-white pixel-shadow"
-                  >
-                    <div className="flex flex-col gap-1">
-                      <PixelFont scale={2}>{cfg.label}</PixelFont>
-                      <PixelFont scale={2} className="text-black-40">
-                        {formatTimeRemaining(e.expiresAt)}
-                      </PixelFont>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          ) : (
-            <div className="mt-2 p-4 bg-white pixel-shadow">
-              <PixelFont scale={2} className="text-black-40">
-                No active effects
-              </PixelFont>
-            </div>
-          )}
-        </div>
+            );
+          })
+        )}
       </div>
+
+      <div className="h-8 w-full flex flex-row items-center justify-start">
+        <PixelFont scale={2.5}>Inventory</PixelFont>
+      </div>
+
+      {/* Consumables Inventory */}
+      <div className="flex flex-row items-start justify-start gap-4">
+        {inventoryEntries.length === 0 ? (
+          <PixelFont className="text-muted">
+            You don't have any consumables yet.
+          </PixelFont>
+        ) : (
+          inventoryEntries.map(([itemId, qty]) => {
+            return (
+              <div key={itemId} className="flex flex-col items-center gap-2">
+                <div
+                  className="flex h-24 w-24 items-center justify-center relative bg-white pixel-shadow cursor-pointer"
+                  onClick={() => setSelectedItemId(itemId as ConsumableId)}
+                >
+                  {renderConsumableIllustration(itemId as ConsumableId)}
+                  <PixelFont
+                    scale={2}
+                    className="text-muted absolute bottom-2 left-2"
+                  >
+                    {String(qty)}
+                  </PixelFont>
+                </div>
+
+                <Button
+                  variant="primary"
+                  size="small"
+                  className="w-full"
+                  disabled={
+                    activateMutation.isPending ||
+                    hasAnyActiveEffect ||
+                    (qty as number) <= 0
+                  }
+                  onClick={() =>
+                    activateMutation.mutate({ itemId: itemId as never })
+                  }
+                >
+                  Use
+                </Button>
+              </div>
+            );
+          })
+        )}
+      </div>
+
+      <Modal isOpen={!!selectedItemId} onClose={() => setSelectedItemId(null)}>
+        <div className="flex flex-col items-center justify-center gap-6">
+          {selectedItemId && renderConsumableIllustration(selectedItemId, 48)}
+
+          <div className="flex flex-col items-center justify-center gap-2">
+            <PixelFont className="text-primary">
+              {selectedConfig?.label ?? ''}
+            </PixelFont>
+            {descriptionLines.map((line, i) => (
+              <PixelFont key={i} className="text-tertiary">
+                {line}
+              </PixelFont>
+            ))}
+          </div>
+
+          <Button onClick={() => setSelectedItemId(null)}>Okay</Button>
+        </div>
+      </Modal>
     </main>
   );
 }
