@@ -25,7 +25,7 @@ describe('drawing utilities', () => {
     mockCanvas.getContext = vi.fn().mockReturnValue(mockContext);
 
     // Setup atob mock
-    global.atob = mockAtob;
+    globalThis.atob = mockAtob as unknown as (data: string) => string;
 
     // Reset canvas properties
     mockCanvas.width = 0;
@@ -127,7 +127,7 @@ describe('drawing utilities', () => {
     });
 
     it('handles missing atob function', () => {
-      delete (global as { atob?: unknown }).atob;
+      delete (globalThis as { atob?: unknown }).atob;
 
       renderDrawingToCanvas(validDrawingData, mockCanvas);
 
