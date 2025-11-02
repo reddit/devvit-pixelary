@@ -43,6 +43,7 @@ export async function createPinnedComment(
   const comment = await reddit.submitComment({
     text,
     id: postId,
+    runAs: 'APP',
   });
   await comment.distinguish(true);
   await savePinnedCommentId(postId, comment.id);
@@ -79,6 +80,13 @@ export async function replyToPinnedComment(
   text: string
 ): Promise<void> {
   const pinnedCommentId = await getPinnedCommentId(postId);
-  if (!pinnedCommentId) return; // best-effort: skip if none
-  await reddit.submitComment({ text, id: pinnedCommentId });
+  if (!pinnedCommentId) {
+    console.error(`No pinned comment found for post ${postId}`);
+    return;
+  } // best-effort: skip if none
+  await reddit.submitComment({
+    text,
+    id: pinnedCommentId,
+    runAs: 'APP',
+  });
 }

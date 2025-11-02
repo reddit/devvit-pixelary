@@ -26,6 +26,8 @@ import {
 import { calculateEloChange } from './elo';
 import { incrementScore } from '@server/services/progression';
 import { normalizeWord } from '@shared/utils/string';
+import { generateTournamentCommentText } from '@server/services/posts/tournament/comments';
+import { createPinnedComment } from '@server/services/comments/pinned';
 
 export type TournamentDrawing = {
   commentId: T1;
@@ -75,17 +77,12 @@ export async function createTournament(word?: string): Promise<T3> {
       score: post.createdAt.getTime(),
     }),
   ]);
+  // Create tournament pinned comment synchronously to ensure availability
   try {
-    await scheduler.runJob({
-      name: 'CREATE_TOURNAMENT_POST_COMMENT',
-      data: { postId: post.id, word: tournamentWord },
-      runAt: new Date(),
-    });
+    const text = generateTournamentCommentText(tournamentWord);
+    await createPinnedComment(post.id, text);
   } catch (error) {
-    console.error(
-      'Failed to schedule tournament pinned comment creation:',
-      error
-    );
+    console.error('Failed to create tournament pinned comment:', error);
   }
   // Schedule payout snapshots (daily)
   try {
