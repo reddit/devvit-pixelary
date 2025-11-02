@@ -1,6 +1,10 @@
 import type { Request, Response } from 'express';
-import { getLevelByScore, getScore } from '../services/progression';
+import { getLevelByScore, getScore } from '@server/services/progression';
 import { scheduler } from '@devvit/web/server';
+
+/**
+ * Job handler for handling user level up
+ */
 
 export async function handleUserLevelUp(
   req: Request,

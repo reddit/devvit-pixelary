@@ -1,9 +1,8 @@
 import type { Request, Response } from 'express';
-import type { T3 } from '@devvit/shared-types/tid.js';
 import { assertT3 } from '@devvit/shared-types/tid.js';
 import { redis } from '@devvit/web/server';
-import { REDIS_KEYS, acquireLock, releaseLock } from '../core/redis';
-import { awardTournamentRewards } from '../services/posts/tournament/award';
+import { REDIS_KEYS, acquireLock, releaseLock } from '@server/core/redis';
+import { awardTournamentRewards } from '@server/services/posts/tournament/award';
 import {
   TOURNAMENT_PAYOUT_SNAPSHOT_COUNT,
   TOURNAMENT_PAYOUT_TOP_PERCENT,
@@ -12,25 +11,23 @@ import {
   TOURNAMENT_PAYOUT_LADDER_SECOND,
   TOURNAMENT_PAYOUT_LADDER_THIRD,
 } from '@shared/constants';
-import { replyToPinnedComment } from '../services/comments/pinned';
+import { replyToPinnedComment } from '@server/services/comments/pinned';
 import type { T1 } from '@devvit/shared-types/tid.js';
-import { getUsername } from '../core/user';
-import { getTournamentEntry } from '../services/posts/tournament/post';
+import { getUsername } from '@server/core/user';
+import { getTournamentEntry } from '@server/services/posts/tournament/post';
 
 /**
  * Job handler for running a tournament payout snapshot.
  * Ensures idempotency per dayIndex via a ledger + lightweight lock.
  */
+
 export async function handleTournamentPayoutSnapshot(
   req: Request,
   res: Response
 ): Promise<void> {
   try {
     const jobData = req.body.data || req.body;
-    const { postId, dayIndex } = jobData as {
-      postId: T3;
-      dayIndex: number;
-    };
+    const { postId, dayIndex } = jobData;
 
     // Validate postId and dayIndex
     try {

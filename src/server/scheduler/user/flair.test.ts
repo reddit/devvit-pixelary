@@ -9,17 +9,17 @@ vi.mock('@devvit/web/server', () => ({
   },
 }));
 
-vi.mock('../core/redis', () => ({
+vi.mock('../../core/user', () => ({
   getUsername: vi.fn().mockResolvedValue('TestUser'),
 }));
 
-vi.mock('../services/legacy', () => ({
+vi.mock('../../services/legacy', () => ({
   isLegacyUser: vi.fn(),
 }));
 
 import { reddit } from '@devvit/web/server';
-import { isLegacyUser } from '../services/legacy';
-import { handleSetUserFlair } from './user-flair';
+import { isLegacyUser } from '../../services/legacy';
+import { handleSetUserFlair } from './flair';
 
 function makeReq(data: unknown): Request {
   return { body: { data } } as unknown as Request;

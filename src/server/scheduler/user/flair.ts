@@ -1,13 +1,15 @@
 import type { Request, Response } from 'express';
 import type { T2 } from '@devvit/shared-types/tid.js';
-import { getUsername } from '../core/user';
+import { getUsername } from '@server/core/user';
 import { reddit } from '@devvit/web/server';
 import type { Level } from '@shared/types';
+import { isLegacyUser } from '@server/services/legacy';
 
 /**
  * Job handler for setting user flair
  * Runs in app context to ensure proper permissions
  */
+
 export async function handleSetUserFlair(
   req: Request,
   res: Response
@@ -41,7 +43,7 @@ export async function handleSetUserFlair(
     // First check if user flair is enabled
     const userTemplates = await reddit
       .getUserFlairTemplates(subredditName)
-      .catch((error) => {
+      .catch((_error) => {
         return [];
       });
 
@@ -57,7 +59,6 @@ export async function handleSetUserFlair(
     const baseText = `Level ${level.rank} - ${level.name}`;
     let flairText = baseText;
     try {
-      const { isLegacyUser } = await import('../services/legacy');
       if (await isLegacyUser(userId)) {
         flairText = `${baseText} [OG]`;
       }

@@ -9,7 +9,7 @@ vi.mock('@devvit/web/server', () => ({
   },
 }));
 
-vi.mock('../core/redis', () => ({
+vi.mock('../../core/redis', () => ({
   acquireLock: vi.fn().mockResolvedValue(true),
   releaseLock: vi.fn().mockResolvedValue(undefined),
   REDIS_KEYS: {
@@ -20,30 +20,30 @@ vi.mock('../core/redis', () => ({
   },
 }));
 
-vi.mock('../services/posts/tournament/award', () => ({
+vi.mock('../../services/posts/tournament/award', () => ({
   awardTournamentRewards: vi.fn(),
 }));
-vi.mock('../services/posts/tournament/post', () => ({
+vi.mock('../../services/posts/tournament/post', () => ({
   getTournamentEntry: vi.fn(),
 }));
 
-vi.mock('../services/comments/pinned', () => ({
+vi.mock('../../services/comments/pinned', () => ({
   replyToPinnedComment: vi.fn(),
 }));
 
-vi.mock('../core/user', () => ({
+vi.mock('../../core/user', () => ({
   getUsername: vi.fn(),
 }));
 
 import type { Request, Response } from 'express';
 import type { T1, T2, T3 } from '@devvit/shared-types/tid.js';
 import { redis } from '@devvit/web/server';
-import { handleTournamentPayoutSnapshot } from './tournament-payout';
-import { acquireLock, releaseLock } from '../core/redis';
-import { awardTournamentRewards } from '../services/posts/tournament/award';
-import { getTournamentEntry } from '../services/posts/tournament/post';
-import { replyToPinnedComment } from '../services/comments/pinned';
-import { getUsername } from '../core/user';
+import { handleTournamentPayoutSnapshot } from './payout';
+import { acquireLock, releaseLock } from '../../core/redis';
+import { awardTournamentRewards } from '../../services/posts/tournament/award';
+import { getTournamentEntry } from '../../services/posts/tournament/post';
+import { replyToPinnedComment } from '../../services/comments/pinned';
+import { getUsername } from '../../core/user';
 
 function mockRes(): Response {
   const res = {

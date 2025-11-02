@@ -1,5 +1,5 @@
 import type { Request, Response } from 'express';
-import { updateWordScores } from '../services/words/slate';
+import { updateWordScores } from '@server/services/words/slate';
 
 /**
  * Job handler for updating word scores. Runs every hour.

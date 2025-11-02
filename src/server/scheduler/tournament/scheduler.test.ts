@@ -11,16 +11,16 @@ vi.mock('@devvit/web/server', () => ({
   },
 }));
 
-vi.mock('../services/posts/tournament/hopper', () => ({
+vi.mock('../../services/posts/tournament/hopper', () => ({
   peekNextHopperPrompt: vi.fn(),
   removeHopperPrompt: vi.fn(),
 }));
 
-vi.mock('../services/posts/tournament/post', () => ({
+vi.mock('../../services/posts/tournament/post', () => ({
   createTournament: vi.fn(),
 }));
 
-vi.mock('../core/redis', () => ({
+vi.mock('../../core/redis', () => ({
   acquireLock: vi.fn().mockResolvedValue(true),
   REDIS_KEYS: {
     tournamentSchedulerEnabled: (s: string) =>
@@ -31,13 +31,13 @@ vi.mock('../core/redis', () => ({
 
 import type { Request, Response } from 'express';
 import { redis } from '@devvit/web/server';
-import { handleTournamentScheduler } from './tournament-scheduler';
+import { handleTournamentScheduler } from './scheduler';
 import {
   peekNextHopperPrompt,
   removeHopperPrompt,
-} from '../services/posts/tournament/hopper';
-import { createTournament } from '../services/posts/tournament/post';
-import { acquireLock } from '../core/redis';
+} from '../../services/posts/tournament/hopper';
+import { createTournament } from '../../services/posts/tournament/post';
+import { acquireLock } from '../../core/redis';
 
 function mockRes(): Response {
   const res = {

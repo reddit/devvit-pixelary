@@ -1,9 +1,14 @@
 import type { Request, Response } from 'express';
 import { context, redis } from '@devvit/web/server';
-import { REDIS_KEYS, acquireLock } from '../core/redis';
+import { REDIS_KEYS, acquireLock } from '@server/core/redis';
+import {
+  peekNextHopperPrompt,
+  removeHopperPrompt,
+} from '@server/services/posts/tournament/hopper';
+import { createTournament } from '@server/services/posts/tournament/post';
 
 export async function handleTournamentScheduler(
-  req: Request,
+  _req: Request,
   res: Response
 ): Promise<void> {
   try {
@@ -26,14 +31,6 @@ export async function handleTournamentScheduler(
     }
 
     try {
-      // Lazy import to avoid circular deps
-      const { peekNextHopperPrompt, removeHopperPrompt } = await import(
-        '../services/posts/tournament/hopper'
-      );
-      const { createTournament } = await import(
-        '../services/posts/tournament/post'
-      );
-
       const prompt = await peekNextHopperPrompt();
       if (!prompt) {
         res.json({ status: 'skipped', reason: 'no prompt available' });
