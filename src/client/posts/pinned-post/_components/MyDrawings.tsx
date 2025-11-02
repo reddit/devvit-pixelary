@@ -58,22 +58,11 @@ export function MyDrawings({ onClose }: MyDrawingsProps) {
 
       {/* Empty state */}
       {drawings.length === 0 && !isLoading && (
-        <div className="flex-1 flex items-center justify-center">
-          <div className="p-6 text-center">
-            <div className="mb-6">
-              <h2 className="font-pixel text-pixel-text-scale-3">
-                My Drawings
-              </h2>
-            </div>
-            <div className="mb-6">
-              <p className="font-pixel text-gray-600">
-                You haven't created any drawings yet.
-              </p>
-            </div>
-            <Button onClick={onClose} telemetryEvent="click_start_drawing">
-              Start Drawing
-            </Button>
-          </div>
+        <div className="flex-1 flex flex-col gap-4 items-center justify-center">
+          <Text className="text-muted">No drawings yet.</Text>
+          <Button onClick={onClose} telemetryEvent="click_start_drawing">
+            New Drawing
+          </Button>
         </div>
       )}
     </main>
