@@ -1,37 +1,51 @@
-// Pixelary game constants
-export const CANONICAL_SUBREDDIT_NAME = 'Pixelary';
-export const DEFAULT_PINNED_POST_TITLE = "Let's play Pixelary!";
+/*
+ * Pixelary game constants
+ */
 
-// Scoring constants (aliases for easier access)
+export const CANONICAL_SUBREDDIT_NAME = 'Pixelary';
+export const DRAWING_DURATION = 60;
+export const CARD_DRAW_DURATION = 10;
+export const TOAST_DURATION_MS = 3000;
+export const DRAWING_RESOLUTION = 16;
 
 /*
- * Rewards
+ * Pinned posts
+ */
+
+export const DEFAULT_PINNED_POST_TITLE = "Let's play Pixelary!";
+
+/*
+ * Collection posts
+ */
+
+export const DEFAULT_COLLECTION_POST_TITLE = 'Top drawings this week!';
+export const DEFAULT_COLLECTION_POST_LABEL = 'Top drawings\nthis week!';
+export const DEFAULT_COLLECTION_POST_NUMBER_OF_DAYS = 7;
+export const DEFAULT_COLLECTION_POST_NUMBER_OF_DRAWINGS = 6;
+
+/*
+ * Drawing posts
  */
 
 export const AUTHOR_REWARD_SUBMIT = 25;
 export const AUTHOR_REWARD_CORRECT_GUESS = 1;
 export const GUESSER_REWARD_SOLVE = 5;
 
-// Tournament rewards
+/*
+ * Drawing tournaments
+ */
+
+// Rewards
 export const TOURNAMENT_REWARD_VOTE = 1;
 export const TOURNAMENT_REWARD_WINNER = 250;
 export const TOURNAMENT_REWARD_TOP_10 = 100;
+
+// ELO constants
 export const TOURNAMENT_ELO_K_FACTOR = 32;
 export const TOURNAMENT_ELO_INITIAL_RATING = 1200;
 
-/*
- * Timers
- */
-
-export const DRAWING_DURATION = 60;
-export const CARD_DRAW_DURATION = 10;
-export const TOAST_DURATION_MS = 3000;
-
-/*
- * Drawings
- */
-
-export const DRAWING_RESOLUTION = 16;
+// Default drawing prompt
+export const TOURNAMENT_FALLBACK_WORD = 'Meatloaf';
 
 /*
  * Levels

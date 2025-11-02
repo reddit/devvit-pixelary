@@ -4,38 +4,33 @@ import { createExpressMiddleware } from '@trpc/server/adapters/express';
 import { appRouter } from './trpc/router';
 import { createContext } from './trpc/context';
 
-// Import menu actions
+// Import menu actions and associated handlers
 import {
-  handleCreatePost,
-  handleEditWords,
+  showPostSelectForm,
+  showPostDetailsForm,
+  handleCreateCollectionPost,
+  handleCreatePinnedPost,
+  handleCreateTournamentPost,
   handleEditBannedWords,
+  showEditBannedWordsForm,
+  handleEditLegacyUsers,
+  showEditLegacyUsersForm,
+  handleEditSlateBandit,
+  showEditSlateBanditForm,
+  handleEditWords,
+  showEditWordsForm,
   handleTournamentHopper,
-  handleRevealWord,
-  handleUpdateUserFlair,
+  showTournamentHopperForm,
   handleUpdatePinnedComment,
-  handleTelemetryLog,
-  handleTelemetryClear,
-  handleSlateBandit,
-  handleSetUserPoints,
   handleGetUserPoints,
-  handleLegacyUsers,
+  showGetUserPointsForm,
+  handleSetUserPoints,
+  showSetUserPointsForm,
+  handleRevealWord,
+  handleTelemetryClear,
+  handleTelemetryLog,
+  handleUpdateUserFlair,
 } from './menu-actions';
-
-// Import form handlers
-import {
-  handlePinnedPostSubmit,
-  handlePostTypeSelect,
-  handleWordsUpdate,
-  handleBannedWordsUpdate,
-  handleSlateBanditUpdate,
-  handleEditWordsForm,
-  handleCollectionPostSubmit,
-  handleTournamentPostSubmit,
-  handleTournamentHopperForm,
-  handleSetUserPointsForm,
-  handleGetUserPointsForm,
-  handleLegacyUsersUpdate,
-} from './forms';
 
 // Import scheduler handlers
 import {
@@ -115,44 +110,41 @@ router.post(
 // MENU ACTIONS
 // ============================================================================
 
-router.post('/internal/menu/create-post', handleCreatePost);
-router.post('/internal/menu/edit-words', handleEditWords);
-router.post('/internal/menu/edit-banned-words', handleEditBannedWords);
-router.post('/internal/menu/edit-tournament-prompts', handleTournamentHopper);
+router.post('/internal/menu/create-post', showPostSelectForm);
+router.post('/internal/menu/edit-words', showEditWordsForm);
+router.post('/internal/menu/edit-banned-words', showEditBannedWordsForm);
+router.post('/internal/menu/edit-tournament-prompts', showTournamentHopperForm);
 router.post('/internal/menu/reveal-word', handleRevealWord);
 router.post('/internal/menu/update-user-flair', handleUpdateUserFlair);
 router.post('/internal/menu/update-pinned-comment', handleUpdatePinnedComment);
 router.post('/internal/menu/telemetry-log', handleTelemetryLog);
 router.post('/internal/menu/telemetry-clear', handleTelemetryClear);
-router.post('/internal/menu/slate-bandit', handleSlateBandit);
-router.post('/internal/menu/set-user-points', handleSetUserPoints);
-router.post('/internal/menu/get-user-points', handleGetUserPoints);
-router.post('/internal/menu/legacy-users', handleLegacyUsers);
+router.post('/internal/menu/slate-bandit', showEditSlateBanditForm);
+router.post('/internal/menu/set-user-points', showSetUserPointsForm);
+router.post('/internal/menu/get-user-points', showGetUserPointsForm);
+router.post('/internal/menu/legacy-users', showEditLegacyUsersForm);
 
 // ============================================================================
 // FORM HANDLERS
 // ============================================================================
 
-router.post('/internal/form/post-type-select', handlePostTypeSelect);
-router.post('/internal/form/pinned-post-submit', handlePinnedPostSubmit);
-router.post('/internal/form/words-update', handleWordsUpdate);
-router.post('/internal/form/banned-words-update', handleBannedWordsUpdate);
-router.post(
-  '/internal/form/edit-tournament-prompts',
-  handleTournamentHopperForm
-);
-router.post('/internal/form/slate-bandit-update', handleSlateBanditUpdate);
-router.post('/internal/form/edit-words', handleEditWordsForm);
+router.post('/internal/form/post-type-select', showPostDetailsForm);
+router.post('/internal/form/pinned-post-submit', handleCreatePinnedPost);
+router.post('/internal/form/words-update', handleEditWords);
+router.post('/internal/form/banned-words-update', handleEditBannedWords);
+router.post('/internal/form/edit-tournament-prompts', handleTournamentHopper);
+router.post('/internal/form/slate-bandit-update', handleEditSlateBandit);
+router.post('/internal/form/edit-words', handleEditWords);
 router.post(
   '/internal/form/collection-post-submit',
-  handleCollectionPostSubmit
+  handleCreateCollectionPost
 );
-router.post('/internal/form/set-user-points', handleSetUserPointsForm);
-router.post('/internal/form/get-user-points', handleGetUserPointsForm);
-router.post('/internal/form/legacy-users-update', handleLegacyUsersUpdate);
+router.post('/internal/form/set-user-points', handleSetUserPoints);
+router.post('/internal/form/get-user-points', handleGetUserPoints);
+router.post('/internal/form/legacy-users-update', handleEditLegacyUsers);
 router.post(
   '/internal/form/tournament-post-submit',
-  handleTournamentPostSubmit
+  handleCreateTournamentPost
 );
 
 // Use router middleware

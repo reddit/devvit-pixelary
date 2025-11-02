@@ -1,15 +1,14 @@
 import type { Request, Response } from 'express';
 import { context } from '@devvit/web/server';
-import { getScore } from '../services/progression';
-import { getUsername } from '../core/user';
-import type { T2 } from '@devvit/shared-types/tid.js';
+import { getScore } from '@server/services/progression';
+import { getUsername } from '@server/core/user';
 
 /**
  * Menu action handler for setting user points
  * Shows a form for entering username and points
  */
 
-export async function handleSetUserPoints(
+export async function showSetUserPointsForm(
   _req: Request,
   res: Response
 ): Promise<void> {
@@ -22,8 +21,8 @@ export async function handleSetUserPoints(
     if (userId) {
       try {
         [defaultUsername, defaultPoints] = await Promise.all([
-          getUsername(userId as T2),
-          getScore(userId as T2),
+          getUsername(userId),
+          getScore(userId),
         ]);
       } catch (error) {
         console.error(`Error getting user info: ${error}`);
@@ -34,16 +33,16 @@ export async function handleSetUserPoints(
       showForm: {
         name: 'setUserPointsForm',
         form: {
-          title: 'Set User Points',
-          description: 'Set the exact number of points for a specific user',
+          title: 'User points',
+          description: 'Set the exact number of points for a user',
           fields: [
             {
               type: 'string',
               name: 'username',
               label: 'Username',
-              placeholder: 'Enter username (without u/)',
+              placeholder: 'Enter a username',
               required: true,
-              helpText: 'Username without u/ prefix',
+              helpText: 'No u/ prefix',
               defaultValue: defaultUsername,
             },
             {

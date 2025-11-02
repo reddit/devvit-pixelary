@@ -1,12 +1,12 @@
 import type { Request, Response } from 'express';
-import { getSlateBanditConfig } from '../services/words/slate';
+import { getSlateBanditConfig } from '@server/services/words/slate';
 
 /**
  * Menu action handler for slate bandit configuration
  * Shows a form for editing the slate bandit parameters
  */
 
-export async function handleSlateBandit(
+export async function showEditSlateBanditForm(
   _req: Request,
   res: Response
 ): Promise<void> {
@@ -15,9 +15,9 @@ export async function handleSlateBandit(
 
     res.json({
       showForm: {
-        name: 'slateBanditForm',
+        name: 'editSlateBanditForm',
         form: {
-          title: 'Configure slate bandit',
+          title: 'Slate bandit',
           description:
             'Configure the non-personalized slate bandit optimizing the word selection',
           fields: [
@@ -56,6 +56,22 @@ export async function handleSlateBandit(
               defaultValue: config.weightPostRate,
               placeholder: '1',
               helpText: 'Weight for post rate in word score',
+            },
+            {
+              type: 'number',
+              name: 'ucbConstant',
+              label: 'UCB constant',
+              required: true,
+              defaultValue: config.ucbConstant,
+              placeholder: '2',
+            },
+            {
+              type: 'number',
+              name: 'scoreDecayRate',
+              label: 'Score decay rate',
+              required: true,
+              defaultValue: config.scoreDecayRate,
+              placeholder: '0.1',
             },
           ],
           acceptLabel: 'Save',

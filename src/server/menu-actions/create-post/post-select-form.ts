@@ -1,20 +1,20 @@
 import type { Request, Response } from 'express';
 
 /**
- * Menu action handler for creating new posts
+ * Menu action handler for creating a Pixelary post
  * Shows a form for selecting post type
  */
-export async function handleCreatePost(
+
+export async function showPostSelectForm(
   _req: Request,
   res: Response
 ): Promise<void> {
   try {
-    // Return a form for selecting post type only
     res.json({
       showForm: {
-        name: 'postTypeForm',
+        name: 'createPostForm',
         form: {
-          title: 'Create Pixelary post',
+          title: 'Pixelary post types',
           description: 'Select a post type to continue.',
           fields: [
             {
@@ -22,12 +22,11 @@ export async function handleCreatePost(
               name: 'postType',
               label: 'Post type',
               options: [
-                { label: 'Pinned post', value: 'pinned' },
-                { label: 'Collection post', value: 'collection' },
-                { label: 'Drawing post', value: 'drawing' },
-                { label: 'Tournament post', value: 'tournament' },
+                { label: 'Pinned Post', value: 'pinned' },
+                { label: 'Collection Post', value: 'collection' },
+                { label: 'Tournament Post', value: 'tournament' },
               ],
-              defaultValue: ['pinned'],
+              defaultValue: ['tournament'],
               required: true,
             },
           ],

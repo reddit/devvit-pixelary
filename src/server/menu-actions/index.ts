@@ -1,13 +1,56 @@
-export { handleCreatePost } from './create-post';
-export { handleEditWords } from './edit-words';
-export { handleEditBannedWords } from './edit-banned-words';
-export { handleRevealWord } from './reveal-word';
-export { handleUpdateUserFlair } from './update-user-flair';
+// Create post
+export {
+  showPostSelectForm,
+  showPostDetailsForm,
+  handleCreateCollectionPost,
+  handleCreatePinnedPost,
+  handleCreateTournamentPost,
+} from './create-post';
+
+// Edit banned words
+export {
+  handleEditBannedWords,
+  showEditBannedWordsForm,
+} from './edit-banned-words';
+
+// Edit legacy users
+export {
+  handleEditLegacyUsers,
+  showEditLegacyUsersForm,
+} from './edit-legacy-users';
+
+// Edit slate bandit
+export {
+  handleEditSlateBandit,
+  showEditSlateBanditForm,
+} from './edit-slate-bandit';
+
+// Edit words
+export { handleEditWords, showEditWordsForm } from './edit-words';
+
+// Tournament hopper
+export {
+  handleTournamentHopper,
+  showTournamentHopperForm,
+} from './tournament-hopper';
+
+// Update pinned comment
 export { handleUpdatePinnedComment } from './update-pinned-comment';
-export { handleTelemetryLog } from './telemetry-log';
+
+// User points get
+export { handleGetUserPoints, showGetUserPointsForm } from './user-points-get';
+
+// User points set
+export { handleSetUserPoints, showSetUserPointsForm } from './user-points-set';
+
+// Reveal word
+export { handleRevealWord } from './reveal-word';
+
+// Telemetry clear
 export { handleTelemetryClear } from './telemetry-clear';
-export { handleSlateBandit } from './slate-bandit';
-export { handleSetUserPoints } from './user-points-set';
-export { handleGetUserPoints } from './user-points-get';
-export { handleTournamentHopper } from './tournament-hopper';
-export { handleLegacyUsers } from './legacy-users';
+
+// Telemetry log
+export { handleTelemetryLog } from './telemetry-log';
+
+// Update user flair
+export { handleUpdateUserFlair } from './update-user-flair';

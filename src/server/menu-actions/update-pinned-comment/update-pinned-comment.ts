@@ -3,21 +3,22 @@ import type { Request, Response } from 'express';
 import {
   saveLastCommentUpdate,
   clearNextScheduledJobId,
-} from '../services/posts/drawing';
-import { getPinnedCommentId } from '../services/comments/pinned';
-import { updatePinnedPostComment } from '../services/posts/pinned';
-import { updatePinnedComment } from '../services/comments/pinned';
-import { getTournament } from '../services/posts/tournament/post';
-import { generateTournamentCommentText } from '../services/posts/tournament/comments';
+} from '@server/services/posts/drawing';
+import { getPinnedCommentId } from '@server/services/comments/pinned';
+import { updatePinnedPostComment } from '@server/services/posts/pinned';
+import { updatePinnedComment } from '@server/services/comments/pinned';
+import { getTournament } from '@server/services/posts/tournament/post';
+import { generateTournamentCommentText } from '@server/services/posts/tournament/comments';
 import {
   generateDrawingCommentText,
   getDrawingCommentData,
-} from '../services/posts/drawing';
+} from '@server/services/posts/drawing';
 import type { PostType } from '@shared/schema/index';
 
 /**
  * Menu action handler for updating the pinned comment for a drawing post or pinned post
  */
+
 export async function handleUpdatePinnedComment(
   req: Request,
   res: Response
@@ -27,7 +28,7 @@ export async function handleUpdatePinnedComment(
 
     if (!postId) {
       res.status(400).json({
-        showToast: 'Post ID is required',
+        showToast: 'postId is missing',
       });
       return;
     }
@@ -44,7 +45,9 @@ export async function handleUpdatePinnedComment(
     // Determine post type from UI request
     const postType = (req.body?.postType as PostType | undefined) ?? undefined;
     if (!postType) {
-      res.status(400).json({ showToast: 'postType is required' });
+      res.status(400).json({
+        showToast: 'postType is missing',
+      });
       return;
     }
 
@@ -76,8 +79,7 @@ export async function handleUpdatePinnedComment(
     }
 
     res.json({
-      showToast: 'Comment updated',
-      appearance: 'success',
+      showToast: 'Updated!',
     });
   } catch (error) {
     console.error(`Error updating comment: ${error}`);

@@ -1,12 +1,13 @@
 import type { Request, Response } from 'express';
 import { redis, context } from '@devvit/web/server';
-import { getHopperPrompts } from '../services/posts/tournament/hopper';
-import { REDIS_KEYS } from '../core/redis';
+import { getHopperPrompts } from '@server/services/posts/tournament/hopper';
+import { REDIS_KEYS } from '@server/core/redis';
 
 /**
  * Menu action handler to view and edit the tournament prompt hopper
  */
-export async function handleTournamentHopper(
+
+export async function showTournamentHopperForm(
   _req: Request,
   res: Response
 ): Promise<void> {

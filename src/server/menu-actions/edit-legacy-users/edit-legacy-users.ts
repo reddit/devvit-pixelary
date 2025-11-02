@@ -1,9 +1,9 @@
 import type { Request, Response } from 'express';
-import { parseForm, z } from './_schema';
-import { resolveUsernamesToIds } from '../core/user';
-import { addLegacyUsers, removeLegacyUsers } from '../services/legacy';
+import { parseForm, z } from '../_schema';
+import { resolveUsernamesToIds } from '@server/core/user';
+import { addLegacyUsers, removeLegacyUsers } from '@server/services/legacy';
 
-export async function handleLegacyUsersUpdate(
+export async function handleEditLegacyUsers(
   req: Request,
   res: Response
 ): Promise<void> {

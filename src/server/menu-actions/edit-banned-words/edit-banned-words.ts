@@ -1,13 +1,12 @@
 import type { Request, Response } from 'express';
-import { replaceBannedWords } from '../services/words/dictionary';
-import { context } from '@devvit/web/server';
+import { replaceBannedWords } from '@server/services/words/dictionary';
 
 /**
  * Form handler for banned words update
  * Updates the banned words list in Redis
  */
 
-export async function handleBannedWordsUpdate(
+export async function handleEditBannedWords(
   req: Request,
   res: Response
 ): Promise<void> {

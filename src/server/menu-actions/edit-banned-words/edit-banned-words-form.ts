@@ -1,11 +1,11 @@
 import type { Request, Response } from 'express';
-import { getBannedWords } from '../services/words/dictionary';
+import { getBannedWords } from '@server/services/words/dictionary';
 
 /**
  * Menu action handler for showing a form to view and edit the banned words list
  */
 
-export async function handleEditBannedWords(
+export async function showEditBannedWordsForm(
   _req: Request,
   res: Response
 ): Promise<void> {
@@ -18,7 +18,7 @@ export async function handleEditBannedWords(
         form: {
           title: 'Edit banned words',
           description:
-            'These words can not be added to the word list or appear in the guesses shown.',
+            'These words can not be added to the word list or appear in guess results.',
           fields: [
             {
               type: 'paragraph',
@@ -27,7 +27,7 @@ export async function handleEditBannedWords(
               lineHeight: 8,
               required: true,
               defaultValue: bannedWords.join(', '),
-              placeholder: 'Apple, Banana, Meat Loaf, ...',
+              placeholder: 'Apple, Banana, Apple Pie, ...',
               helpText: 'Separate by commas. Case insensitive.',
             },
           ],

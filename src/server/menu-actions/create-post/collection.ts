@@ -3,23 +3,19 @@ import { context } from '@devvit/web/server';
 import {
   fetchTopDrawingPosts,
   createCollectionPost,
-} from '../services/posts/collection';
+} from '@server/services/posts/collection';
 import { CollectionFormInputSchema } from '@shared/schema';
 
 /**
  * Form handler for collection post submission
  * Creates a collection post with top drawing posts from a specified timeframe
  */
-export async function handleCollectionPostSubmit(
+
+export async function handleCreateCollectionPost(
   req: Request,
   res: Response
 ): Promise<void> {
   try {
-    console.log('Collection post submit request received:', {
-      body: req.body,
-      subredditName: context.subredditName,
-    });
-
     // Handle array inputs from form fields (especially select fields)
     const processedBody = {
       ...req.body,
@@ -57,12 +53,8 @@ export async function handleCollectionPostSubmit(
       return;
     }
 
-    console.log(`Found ${drawings.length} drawings, creating collection post`);
-
     // Create the collection post
     const post = await createCollectionPost(postTitle, label, drawings);
-
-    console.log('Collection post created successfully:', post.id);
 
     res.json({
       navigateTo: `https://reddit.com/r/${context.subredditName}/comments/${post.id}`,

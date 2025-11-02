@@ -1,10 +1,11 @@
 import type { Request, Response } from 'express';
-import { getLegacyUsersCount } from '../services/legacy';
+import { getLegacyUsersCount } from '@server/services/legacy';
 
 /**
  * Menu action handler to manage legacy users set
  */
-export async function handleLegacyUsers(
+
+export async function showEditLegacyUsersForm(
   _req: Request,
   res: Response
 ): Promise<void> {
@@ -13,9 +14,9 @@ export async function handleLegacyUsers(
 
     res.json({
       showForm: {
-        name: 'legacyUsersForm',
+        name: 'editLegacyUsersForm',
         form: {
-          title: 'Manage legacy users',
+          title: 'Edit legacy users',
           description: `Add or remove usernames from the legacy users set. There are ${count} legacy users in the set.`,
           fields: [
             {

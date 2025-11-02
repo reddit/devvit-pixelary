@@ -1,14 +1,13 @@
 import type { Request, Response } from 'express';
 import { context } from '@devvit/web/server';
-import { getUsername } from '../core/user';
-import type { T2 } from '@devvit/shared-types/tid.js';
+import { getUsername } from '@server/core/user';
 
 /**
  * Menu action handler for getting user points
  * Shows a form for entering username
  */
 
-export async function handleGetUserPoints(
+export async function showGetUserPointsForm(
   _req: Request,
   res: Response
 ): Promise<void> {
@@ -19,7 +18,7 @@ export async function handleGetUserPoints(
 
     if (userId) {
       try {
-        defaultUsername = await getUsername(userId as T2);
+        defaultUsername = await getUsername(userId);
       } catch (error) {
         console.error(`Error getting username: ${error}`);
       }
@@ -29,16 +28,16 @@ export async function handleGetUserPoints(
       showForm: {
         name: 'getUserPointsForm',
         form: {
-          title: 'Get User Points',
+          title: 'User points',
           description: "View a user's points",
           fields: [
             {
               type: 'string',
               name: 'username',
               label: 'Username',
-              placeholder: 'Enter username (without u/)',
+              placeholder: 'Enter a username',
               required: true,
-              helpText: 'Username without u/ prefix',
+              helpText: 'No u/ prefix',
               defaultValue: defaultUsername,
             },
           ],

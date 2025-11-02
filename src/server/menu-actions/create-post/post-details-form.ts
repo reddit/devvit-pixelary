@@ -1,12 +1,20 @@
 import type { Request, Response } from 'express';
-import { getRandomWords } from '../services/words/dictionary';
+import { getRandomWords } from '@server/services/words/dictionary';
+import {
+  DEFAULT_COLLECTION_POST_LABEL,
+  DEFAULT_COLLECTION_POST_NUMBER_OF_DAYS,
+  DEFAULT_COLLECTION_POST_NUMBER_OF_DRAWINGS,
+  DEFAULT_COLLECTION_POST_TITLE,
+  DEFAULT_PINNED_POST_TITLE,
+  TOURNAMENT_FALLBACK_WORD,
+} from '@shared/constants';
 
 /**
  * Form handler for post type selection
  * Returns form configuration based on selected post type
  */
 
-export async function handlePostTypeSelect(
+export async function showPostDetailsForm(
   req: Request,
   res: Response
 ): Promise<void> {
@@ -45,34 +53,21 @@ export async function handlePostTypeSelect(
     switch (postTypeValue) {
       case 'pinned':
         formName = 'pinnedPostForm';
-        formTitle = 'Create Pinned Post';
+        formTitle = 'Pinned post';
         formFields = [
           {
             type: 'string',
             name: 'title',
-            label: 'Post Title',
+            label: 'Post title',
             placeholder: 'Enter post title...',
-            defaultValue: "Let's play Pixelary!",
-            required: true,
-          },
-        ];
-        break;
-      case 'drawing':
-        formName = 'drawingPostForm';
-        formTitle = 'Create Drawing Post';
-        formFields = [
-          {
-            type: 'string',
-            name: 'title',
-            label: 'Post Title',
-            placeholder: 'Enter post title...',
+            defaultValue: DEFAULT_PINNED_POST_TITLE,
             required: true,
           },
         ];
         break;
       case 'collection':
         formName = 'collectionPostForm';
-        formTitle = 'Create collection post';
+        formTitle = 'Collection post';
         formFields = [
           {
             type: 'paragraph',
@@ -80,7 +75,7 @@ export async function handlePostTypeSelect(
             label: 'Post title',
             lineHeight: 2,
             placeholder: 'Post title',
-            defaultValue: 'Top drawings this week!',
+            defaultValue: DEFAULT_COLLECTION_POST_TITLE,
             required: true,
           },
           {
@@ -89,7 +84,7 @@ export async function handlePostTypeSelect(
             label: 'Label',
             lineHeight: 2,
             placeholder: 'Shown above drawings',
-            defaultValue: 'Top drawings\nthis week!',
+            defaultValue: DEFAULT_COLLECTION_POST_LABEL,
             required: true,
             helpText: 'Max 2 lines. No word wrapping.',
           },
@@ -97,7 +92,7 @@ export async function handlePostTypeSelect(
             type: 'number',
             name: 'numberOfDays',
             label: 'Number of days',
-            defaultValue: '7',
+            defaultValue: DEFAULT_COLLECTION_POST_NUMBER_OF_DAYS.toString(),
             min: 1,
             max: 365,
             required: true,
@@ -106,7 +101,9 @@ export async function handlePostTypeSelect(
             type: 'select',
             name: 'numberOfDrawings',
             label: 'Number of drawings',
-            defaultValue: ['6'],
+            defaultValue: [
+              DEFAULT_COLLECTION_POST_NUMBER_OF_DRAWINGS.toString(),
+            ],
             options: [
               { label: '3 drawings', value: '3' },
               { label: '6 drawings', value: '6' },
@@ -118,13 +115,12 @@ export async function handlePostTypeSelect(
         break;
       case 'tournament': {
         formName = 'tournamentPostForm';
-        formTitle = 'Create drawing tournament';
+        formTitle = 'Drawing tournament';
         formDescription =
-          'Start a community drawing tournament where players compete to draw the best drawing for a given word. You get to pick the word, or leave it blank for a random one.';
+          'Players compete to make the best drawing for a given word. You get to pick the word, or leave it blank for a random one.';
 
-        // Generate a candidate word for the default value
         const candidateWords = await getRandomWords(1);
-        const candidateWord = candidateWords[0] || 'Meatloaf';
+        const word = candidateWords[0] || TOURNAMENT_FALLBACK_WORD;
 
         formFields = [
           {
@@ -132,7 +128,7 @@ export async function handlePostTypeSelect(
             name: 'word',
             label: 'Word',
             placeholder: 'Using a random word',
-            defaultValue: candidateWord,
+            defaultValue: word,
             helpText: 'Case insensitive',
           },
         ];

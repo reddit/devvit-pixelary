@@ -1,14 +1,13 @@
 import type { Request, Response } from 'express';
 import { reddit } from '@devvit/web/server';
-import { setScore, getUserLevel } from '../services/progression';
-import type { T2 } from '@devvit/shared-types/tid.js';
+import { setScore, getUserLevel } from '@server/services/progression';
 
 /**
  * Form handler for setting user points
  * Sets the exact score for a user
  */
 
-export async function handleSetUserPointsForm(
+export async function handleSetUserPoints(
   req: Request,
   res: Response
 ): Promise<void> {
@@ -22,21 +21,16 @@ export async function handleSetUserPointsForm(
       return;
     }
 
-    // Strip u/ prefix if present
-    const cleanUsername = username.startsWith('u/')
-      ? username.slice(2)
-      : username.trim();
-
     // Look up user
-    const user = await reddit.getUserByUsername(cleanUsername);
+    const user = await reddit.getUserByUsername(username);
     if (!user) {
       res.status(400).json({
-        showToast: `User u/${cleanUsername} not found`,
+        showToast: `User u/${username} not found`,
       });
       return;
     }
 
-    const userId = user.id as T2;
+    const userId = user.id;
     const pointsNumber = Number(points);
 
     if (isNaN(pointsNumber)) {
@@ -52,7 +46,7 @@ export async function handleSetUserPointsForm(
     const rankText = level.rank;
 
     res.json({
-      showToast: `u/${cleanUsername} now has ${pointsNumber} points (Level ${rankText})`,
+      showToast: `u/${username} has ${pointsNumber} points (Level ${rankText})`,
     });
   } catch (error) {
     console.error(`Error setting user points: ${error}`);

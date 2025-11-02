@@ -5,44 +5,42 @@ vi.mock('@devvit/web/server', () => ({
   redis: {},
 }));
 
-vi.mock('../services/comments/pinned', () => ({
+vi.mock('@server/services/comments/pinned', () => ({
   getPinnedCommentId: vi.fn(),
   updatePinnedComment: vi.fn(),
 }));
 
 // No factory module anymore
 
-vi.mock('../services/posts/pinned', () => ({
+vi.mock('@server/services/posts/pinned', () => ({
   updatePinnedPostComment: vi.fn(),
 }));
 
-vi.mock('../services/posts/drawing', () => ({
+vi.mock('@server/services/posts/drawing', () => ({
   generateDrawingCommentText: vi.fn(),
   getDrawingCommentData: vi.fn(),
   saveLastCommentUpdate: vi.fn(),
   clearNextScheduledJobId: vi.fn(),
 }));
 
-vi.mock('../services/posts/tournament/comments', () => ({
+vi.mock('@server/services/posts/tournament/comments', () => ({
   generateTournamentCommentText: vi.fn(),
 }));
 
-vi.mock('../services/posts/tournament/post', () => ({
+vi.mock('@server/services/posts/tournament/post', () => ({
   getTournament: vi.fn(),
 }));
 
 import {
   getPinnedCommentId,
   updatePinnedComment,
-} from '../services/comments/pinned';
-import { updatePinnedPostComment } from '../services/posts/pinned';
+} from '@server/services/comments/pinned';
+import { updatePinnedPostComment } from '@server/services/posts/pinned';
 import { handleUpdatePinnedComment } from './update-pinned-comment';
-import { getTournament } from '../services/posts/tournament/post';
-import { generateTournamentCommentText } from '../services/posts/tournament/comments';
 import {
   generateDrawingCommentText,
   getDrawingCommentData,
-} from '../services/posts/drawing';
+} from '@server/services/posts/drawing';
 import type { Request, Response } from 'express';
 import type { T1 } from '@devvit/shared-types/tid.js';
 

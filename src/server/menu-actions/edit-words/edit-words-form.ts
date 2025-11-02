@@ -1,11 +1,12 @@
 import type { Request, Response } from 'express';
-import { getWords } from '../services/words/dictionary';
+import { getWords } from '@server/services/words/dictionary';
+import { context } from '@devvit/web/server';
 
 /**
  * Menu action handler for showing a form to view and edit the word list
  */
 
-export async function handleEditWords(
+export async function showEditWordsForm(
   _req: Request,
   res: Response
 ): Promise<void> {
@@ -16,8 +17,7 @@ export async function handleEditWords(
         name: 'editWordsForm',
         form: {
           title: 'Edit word list',
-          description:
-            'The list of words available for Pixelary players to draw',
+          description: `This is the Pixelary community dictionary for ${context.subredditName}. It controls what players see when they draw.`,
           fields: [
             {
               type: 'paragraph',
@@ -27,7 +27,8 @@ export async function handleEditWords(
               required: true,
               defaultValue: words.join(', '),
               placeholder: 'Apple, Banana, Meat Loaf, ...',
-              helpText: 'Separate by commas. Case insensitive.',
+              helpText:
+                'Separate by commas. Case insensitive. Max 12 characters.',
             },
           ],
           acceptLabel: 'Save',

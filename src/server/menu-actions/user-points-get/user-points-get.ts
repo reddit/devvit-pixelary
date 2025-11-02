@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import { reddit } from '@devvit/web/server';
-import { getScore } from '../services/progression';
-import { getUsername } from '../core/user';
+import { getScore } from '@server/services/progression';
+import { getUsername } from '@server/core/user';
 import type { T2 } from '@devvit/shared-types/tid.js';
 
 /**
@@ -9,7 +9,7 @@ import type { T2 } from '@devvit/shared-types/tid.js';
  * Returns a toast with user's points
  */
 
-export async function handleGetUserPointsForm(
+export async function handleGetUserPoints(
   req: Request,
   res: Response
 ): Promise<void> {
@@ -23,16 +23,11 @@ export async function handleGetUserPointsForm(
       return;
     }
 
-    // Strip u/ prefix if present
-    const cleanUsername = username.startsWith('u/')
-      ? username.slice(2)
-      : username.trim();
-
     // Look up user
-    const user = await reddit.getUserByUsername(cleanUsername);
+    const user = await reddit.getUserByUsername(username);
     if (!user) {
       res.status(400).json({
-        showToast: `User u/${cleanUsername} not found`,
+        showToast: `User not found`,
       });
       return;
     }

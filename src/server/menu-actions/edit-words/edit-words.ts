@@ -1,11 +1,11 @@
 import type { Request, Response } from 'express';
-import { updateWordsPreservingScores } from '../services/words/dictionary';
+import { updateWordsPreservingScores } from '../../services/words/dictionary';
 
 /**
  * Form handler for editing words
  * Replaces the community word list with new words from the text list
  */
-export async function handleEditWordsForm(
+export async function handleEditWords(
   req: Request,
   res: Response
 ): Promise<void> {
