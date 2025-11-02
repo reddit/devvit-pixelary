@@ -5,7 +5,22 @@
     "dir": "dist/client",
     "entrypoints": {
       "default": {
-        "entry": "index.html",
+        "entry": "drawing.html",
+        "height": "tall",
+        "inline": true
+      },
+      "pinned": {
+        "entry": "pinned.html",
+        "height": "tall",
+        "inline": true
+      },
+      "collection": {
+        "entry": "collection.html",
+        "height": "tall",
+        "inline": true
+      },
+      "tournament": {
+        "entry": "tournament.html",
         "height": "tall",
         "inline": true
       }

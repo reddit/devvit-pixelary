@@ -9,7 +9,7 @@
 
     "outDir": "../../dist/types/client",
 
-    // React
+    // React (aliased to Preact via paths below)
     "jsx": "react-jsx",
 
     "rootDir": "../../",
@@ -23,7 +23,24 @@
     "noEmit": true,
 
     // Add Vite types for import.meta.env
-    "types": ["vite/client"]
+    "types": ["vite/client"],
+
+    // Map React modules to Preact compat for TypeScript
+    "paths": {
+      "react": ["preact/compat"],
+      "react-dom": ["preact/compat"],
+      "react/jsx-runtime": ["preact/jsx-runtime"],
+      "react/jsx-dev-runtime": ["preact/jsx-dev-runtime"],
+
+      // Project path aliases (redeclare here because extending replaces paths)
+      "@client/*": ["src/client/*"],
+      "@server/*": ["src/server/*"],
+      "@src/*": ["src/*"],
+      "@components/*": ["src/client/components/*"],
+      "@utils/*": ["src/client/utils/*"],
+      "@hooks/*": ["src/client/hooks/*"],
+      "@shared/*": ["src/shared/*"]
+    }
   },
   // https://github.com/Microsoft/TypeScript/issues/25636
   "include": ["**/*", "**/*.json", "../../vitest.config.ts"],

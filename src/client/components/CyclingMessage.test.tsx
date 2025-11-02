@@ -1,4 +1,4 @@
-import { render, screen, act } from '@testing-library/react';
+import { render, screen, act } from '@testing-library/preact';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { CyclingMessage } from './CyclingMessage';
 
@@ -11,7 +11,7 @@ describe('CyclingMessage', () => {
   });
 
   afterEach(() => {
-    act(() => {
+    void act(() => {
       vi.runOnlyPendingTimers();
     });
     vi.useRealTimers();
@@ -21,7 +21,7 @@ describe('CyclingMessage', () => {
   it('renders the first message initially', () => {
     const messages = ['First message', 'Second message'];
 
-    act(() => {
+    void act(() => {
       render(<CyclingMessage messages={messages} />);
       // Flush any immediate timers
       vi.runOnlyPendingTimers();
@@ -34,7 +34,7 @@ describe('CyclingMessage', () => {
   it('cycles through messages after interval', () => {
     const messages = ['First message', 'Second message', 'Third message'];
 
-    act(() => {
+    void act(() => {
       render(<CyclingMessage messages={messages} intervalMs={3000} />);
       // Flush any immediate timers
       vi.runOnlyPendingTimers();
@@ -44,12 +44,12 @@ describe('CyclingMessage', () => {
     expect(screen.getByLabelText('Cycling message')).toBeInTheDocument();
 
     // Fast forward time to trigger cycle
-    act(() => {
+    void act(() => {
       vi.advanceTimersByTime(3000);
     });
 
     // Should show second message after animation
-    act(() => {
+    void act(() => {
       vi.advanceTimersByTime(300);
     });
 
@@ -60,14 +60,14 @@ describe('CyclingMessage', () => {
   it('cycles back to first message after last message', () => {
     const messages = ['First', 'Second'];
 
-    act(() => {
+    void act(() => {
       render(<CyclingMessage messages={messages} intervalMs={3000} />);
       // Flush any immediate timers
       vi.runOnlyPendingTimers();
     });
 
     // Cycle through all messages
-    act(() => {
+    void act(() => {
       vi.advanceTimersByTime(3000);
       vi.advanceTimersByTime(300);
     });
@@ -75,7 +75,7 @@ describe('CyclingMessage', () => {
     expect(screen.getByLabelText('Cycling message')).toBeInTheDocument();
 
     // Cycle back to first
-    act(() => {
+    void act(() => {
       vi.advanceTimersByTime(3000);
       vi.advanceTimersByTime(300);
     });
@@ -86,7 +86,7 @@ describe('CyclingMessage', () => {
   it('handles single message without cycling', () => {
     const messages = ['Only message'];
 
-    act(() => {
+    void act(() => {
       render(<CyclingMessage messages={messages} />);
       // Flush any immediate timers
       vi.runOnlyPendingTimers();
@@ -95,7 +95,7 @@ describe('CyclingMessage', () => {
     expect(screen.getByLabelText('Cycling message')).toBeInTheDocument();
 
     // Fast forward time - should still show same message
-    act(() => {
+    void act(() => {
       vi.advanceTimersByTime(10000);
     });
 
@@ -105,7 +105,7 @@ describe('CyclingMessage', () => {
   it('handles empty messages array', () => {
     let container: HTMLElement;
 
-    act(() => {
+    void act(() => {
       const result = render(<CyclingMessage messages={[]} />);
       container = result.container;
       // Flush any immediate timers
@@ -119,7 +119,7 @@ describe('CyclingMessage', () => {
     const messages = ['Test message'];
     let container: HTMLElement;
 
-    act(() => {
+    void act(() => {
       const result = render(
         <CyclingMessage messages={messages} className="custom-class" />
       );
@@ -134,7 +134,7 @@ describe('CyclingMessage', () => {
   it('uses custom interval duration', () => {
     const messages = ['First', 'Second'];
 
-    act(() => {
+    void act(() => {
       render(<CyclingMessage messages={messages} intervalMs={1000} />);
       // Flush any immediate timers
       vi.runOnlyPendingTimers();
@@ -143,7 +143,7 @@ describe('CyclingMessage', () => {
     expect(screen.getByLabelText('Cycling message')).toBeInTheDocument();
 
     // Should cycle after 1 second instead of default 3 seconds
-    act(() => {
+    void act(() => {
       vi.advanceTimersByTime(1000);
       vi.advanceTimersByTime(300);
     });
@@ -154,7 +154,7 @@ describe('CyclingMessage', () => {
   it('has proper accessibility attributes', () => {
     const messages = ['Accessible message'];
 
-    act(() => {
+    void act(() => {
       render(<CyclingMessage messages={messages} />);
       // Flush any immediate timers
       vi.runOnlyPendingTimers();

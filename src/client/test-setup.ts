@@ -1,5 +1,5 @@
 import { afterEach, vi } from 'vitest';
-import { cleanup } from '@testing-library/react';
+import { cleanup } from '@testing-library/preact';
 import '@testing-library/jest-dom';
 
 // Mock @devvit/web/client

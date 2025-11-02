@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach, type Mock } from 'vitest';
-import { render, screen, cleanup, fireEvent } from '@testing-library/react';
+import { render, screen, cleanup, fireEvent } from '@testing-library/preact';
 import { ActiveEffectsBadge } from './ActiveEffectsBadge';
 import * as ActiveEffectsHook from '@hooks/useActiveEffects';
 

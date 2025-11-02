@@ -32,6 +32,7 @@ describe('Post Service', () => {
       const result = await createPost(title, postData);
 
       expect(reddit.submitCustomPost).toHaveBeenCalledWith({
+        entry: 'default',
         userGeneratedContent: {
           text: 'Pixelary',
         },
@@ -56,6 +57,7 @@ describe('Post Service', () => {
       const result = await createPost(title, postData);
 
       expect(reddit.submitCustomPost).toHaveBeenCalledWith({
+        entry: 'pinned',
         userGeneratedContent: {
           text: 'Pixelary',
         },

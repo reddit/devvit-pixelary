@@ -53,7 +53,15 @@ export async function createPost(
     userGeneratedContent.imageUrls = [imageUrl];
   }
 
+  const entryByType = {
+    drawing: 'default',
+    pinned: 'pinned',
+    collection: 'collection',
+    tournament: 'tournament',
+  } as const;
+
   const post = await reddit.submitCustomPost({
+    entry: entryByType[postData.type],
     userGeneratedContent,
     splash: {
       appDisplayName: 'Pixelary',

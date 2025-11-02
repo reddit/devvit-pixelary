@@ -1,4 +1,4 @@
-import { render } from '@testing-library/react';
+import { render } from '@testing-library/preact';
 import { describe, it, expect } from 'vitest';
 import { Multiplier } from './Multiplier';
 

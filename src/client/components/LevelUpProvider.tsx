@@ -8,7 +8,7 @@ const LevelUpContext = React.createContext<{
   hasUnclaimedLevel: boolean;
 }>({ unclaimedLevel: null, hasUnclaimedLevel: false });
 
-export function LevelUpManager({ children }: { children: React.ReactNode }) {
+export function LevelUpProvider({ children }: { children: React.ReactNode }) {
   const { unclaimedLevel, isLoading, claimLevelUp } = useLevelUpClaim();
 
   const handleClaim = async () => {

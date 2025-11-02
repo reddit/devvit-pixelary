@@ -1,9 +1,46 @@
 import { defineConfig } from 'vitest/config';
-import react from '@vitejs/plugin-react';
+import preact from '@preact/preset-vite';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig({
-  plugins: [react(), tsconfigPaths()],
+  resolve: {
+    alias: {
+      '@client': path.resolve(
+        path.dirname(fileURLToPath(import.meta.url)),
+        'src/client'
+      ),
+      '@components': path.resolve(
+        path.dirname(fileURLToPath(import.meta.url)),
+        'src/client/components'
+      ),
+      '@utils': path.resolve(
+        path.dirname(fileURLToPath(import.meta.url)),
+        'src/client/utils'
+      ),
+      '@hooks': path.resolve(
+        path.dirname(fileURLToPath(import.meta.url)),
+        'src/client/hooks'
+      ),
+      '@src': path.resolve(path.dirname(fileURLToPath(import.meta.url)), 'src'),
+      '@server': path.resolve(
+        path.dirname(fileURLToPath(import.meta.url)),
+        'src/server'
+      ),
+      '@shared': path.resolve(
+        path.dirname(fileURLToPath(import.meta.url)),
+        'src/shared'
+      ),
+      react: 'preact/compat',
+      'react-dom/test-utils': 'preact/test-utils',
+      'react-dom': 'preact/compat',
+      'react-dom/client': 'preact/compat',
+      'react/jsx-runtime': 'preact/jsx-runtime',
+      'react/jsx-dev-runtime': 'preact/jsx-dev-runtime',
+    },
+  },
+  plugins: [preact(), tsconfigPaths()],
   test: {
     globals: true,
     exclude: ['node_modules', 'dist'],
