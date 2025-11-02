@@ -24,19 +24,17 @@
   },
   "media": {},
   "forms": {
-    "postTypeForm": "/internal/form/post-type-select",
-    "pinnedPostForm": "/internal/form/pinned-post-submit",
-    "wordsUpdateForm": "/internal/form/words-update",
-    "bannedWordsForm": "/internal/form/banned-words-update",
-    "slateBanditForm": "/internal/form/slate-bandit-update",
-    "editWordsForm": "/internal/form/edit-words",
-    "editBannedWordsForm": "/internal/form/edit-banned-words",
-    "tournamentHopperForm": "/internal/form/edit-tournament-prompts",
-    "collectionPostForm": "/internal/form/collection-post-submit",
-    "tournamentPostForm": "/internal/form/tournament-post-submit",
-    "setUserPointsForm": "/internal/form/set-user-points",
-    "getUserPointsForm": "/internal/form/get-user-points",
-    "legacyUsersForm": "/internal/form/legacy-users-update"
+    "createPostForm": "/internal/forms/posts/type/select",
+    "pinnedPostForm": "/internal/forms/posts/pinned/submit",
+    "editWordsForm": "/internal/forms/words/edit",
+    "editBannedWordsForm": "/internal/forms/banned-words/update",
+    "tournamentHopperForm": "/internal/forms/tournaments/prompts/edit",
+    "collectionPostForm": "/internal/forms/posts/collection/submit",
+    "tournamentPostForm": "/internal/forms/posts/tournament/submit",
+    "setUserPointsForm": "/internal/forms/users/points/set",
+    "getUserPointsForm": "/internal/forms/users/points/get",
+    "editLegacyUsersForm": "/internal/forms/legacy-users/update",
+    "editSlateBanditForm": "/internal/forms/slate-bandit/update"
   },
   "menu": {
     "items": [
@@ -45,21 +43,21 @@
         "description": "Start the new post creation flow",
         "location": "subreddit",
         "forUserType": "moderator",
-        "endpoint": "/internal/menu/create-post"
+        "endpoint": "/internal/menu-actions/posts/create"
       },
       {
         "label": "[Pixelary] Edit Words",
         "description": "View and edit the word list",
         "location": "subreddit",
         "forUserType": "moderator",
-        "endpoint": "/internal/menu/edit-words"
+        "endpoint": "/internal/menu-actions/words/edit"
       },
       {
         "label": "[Pixelary] Edit Banned Words",
         "description": "View and edit the banned words list",
         "location": "subreddit",
         "forUserType": "moderator",
-        "endpoint": "/internal/menu/edit-banned-words"
+        "endpoint": "/internal/menu-actions/banned-words/edit"
       },
       {
         "label": "[Pixelary] Reveal Word",
@@ -67,7 +65,7 @@
         "location": "post",
         "forUserType": "moderator",
         "postFilter": "currentApp",
-        "endpoint": "/internal/menu/reveal-word"
+        "endpoint": "/internal/menu-actions/words/reveal"
       },
       {
         "label": "[Pixelary] Update Pinned Comment",
@@ -75,102 +73,102 @@
         "location": "post",
         "forUserType": "moderator",
         "postFilter": "currentApp",
-        "endpoint": "/internal/menu/update-pinned-comment"
+        "endpoint": "/internal/menu-actions/posts/pinned-comment/update"
       },
       {
         "label": "[Pixelary] Update User Flair",
         "description": "Manually update your user flair",
         "location": "subreddit",
         "forUserType": "user",
-        "endpoint": "/internal/menu/update-user-flair"
+        "endpoint": "/internal/menu-actions/users/flair/update"
       },
       {
         "label": "[Pixelary] Log Telemetry",
         "description": "Print today's telemetry data to server logs",
         "location": "subreddit",
         "forUserType": "moderator",
-        "endpoint": "/internal/menu/telemetry-log"
+        "endpoint": "/internal/menu-actions/telemetry/log"
       },
       {
         "label": "[Pixelary] Clear Telemetry",
         "description": "Clear today's telemetry data",
         "location": "subreddit",
         "forUserType": "moderator",
-        "endpoint": "/internal/menu/telemetry-clear"
+        "endpoint": "/internal/menu-actions/telemetry/clear"
       },
       {
         "label": "[Pixelary] Slate Bandit",
         "description": "Configure word selection parameters",
         "location": "subreddit",
         "forUserType": "moderator",
-        "endpoint": "/internal/menu/slate-bandit"
+        "endpoint": "/internal/menu-actions/slate-bandit/edit"
       },
       {
         "label": "[Pixelary] Set User Points",
         "description": "Set the exact number of points for a user",
         "location": "subreddit",
         "forUserType": "moderator",
-        "endpoint": "/internal/menu/set-user-points"
+        "endpoint": "/internal/menu-actions/users/points/set"
       },
       {
         "label": "[Pixelary] Get User Points",
         "description": "View how many points a user has",
         "location": "subreddit",
         "forUserType": "moderator",
-        "endpoint": "/internal/menu/get-user-points"
+        "endpoint": "/internal/menu-actions/users/points/get"
       },
       {
         "label": "[Pixelary] Tournament Hopper",
         "description": "View and edit the tournament prompt hopper",
         "location": "subreddit",
         "forUserType": "moderator",
-        "endpoint": "/internal/menu/edit-tournament-prompts"
+        "endpoint": "/internal/menu-actions/tournaments/prompts/edit"
       },
       {
         "label": "[Pixelary] Legacy Users",
         "description": "Manage the legacy users set",
         "location": "subreddit",
         "forUserType": "moderator",
-        "endpoint": "/internal/menu/legacy-users"
+        "endpoint": "/internal/menu-actions/legacy-users/manage"
       }
     ]
   },
   "triggers": {
-    "onAppInstall": "/internal/trigger/app-install",
-    "onAppUpgrade": "/internal/trigger/app-upgrade",
-    "onCommentCreate": "/internal/trigger/comment-create",
-    "onCommentDelete": "/internal/trigger/comment-delete",
-    "onCommentUpdate": "/internal/trigger/comment-update"
+    "onAppInstall": "/internal/triggers/app/install",
+    "onAppUpgrade": "/internal/triggers/app/upgrade",
+    "onCommentCreate": "/internal/triggers/comments/create",
+    "onCommentDelete": "/internal/triggers/comments/delete",
+    "onCommentUpdate": "/internal/triggers/comments/update"
   },
   "scheduler": {
     "tasks": {
       "NEW_DRAWING_PINNED_COMMENT": {
-        "endpoint": "/internal/scheduler/new-drawing-pinned-comment"
+        "endpoint": "/internal/scheduler/drawings/pinned-comment/create"
       },
       "UPDATE_DRAWING_PINNED_COMMENT": {
-        "endpoint": "/internal/scheduler/update-drawing-pinned-comment"
+        "endpoint": "/internal/scheduler/drawings/pinned-comment/update"
       },
       "USER_LEVEL_UP": {
-        "endpoint": "/internal/scheduler/user-level-up"
+        "endpoint": "/internal/scheduler/users/level-up"
       },
       "CREATE_PINNED_POST_COMMENT": {
-        "endpoint": "/internal/scheduler/create-pinned-post-comment"
+        "endpoint": "/internal/scheduler/posts/pinned-comment/create"
       },
       "CREATE_TOURNAMENT_POST_COMMENT": {
-        "endpoint": "/internal/scheduler/create-tournament-post-comment"
+        "endpoint": "/internal/scheduler/tournaments/post-comment/create"
       },
       "SET_USER_FLAIR": {
-        "endpoint": "/internal/scheduler/set-user-flair"
+        "endpoint": "/internal/scheduler/users/flair/set"
       },
       "USER_LEVEL_CLAIMED": {
-        "endpoint": "/internal/scheduler/user-level-claimed"
+        "endpoint": "/internal/scheduler/users/level-claimed"
       },
       "UPDATE_WORD_SCORES": {
-        "endpoint": "/internal/scheduler/update-word-scores",
+        "endpoint": "/internal/scheduler/words/scores/update",
         "cron": "0 * * * *"
       },
       "RUN_TOURNAMENT_SCHEDULER": {
-        "endpoint": "/internal/scheduler/run-tournament-scheduler",
+        "endpoint": "/internal/scheduler/tournaments/run",
         "cron": "0 0 * * *"
       }
     }

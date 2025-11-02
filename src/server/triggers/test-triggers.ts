@@ -54,7 +54,7 @@ export async function handleTestScheduler(
 
     // Test the scheduler endpoint directly
     const response = await fetch(
-      `http://localhost:${getServerPort()}/internal/scheduler/new-drawing-pinned-comment`,
+      `http://localhost:${getServerPort()}/internal/scheduler/drawings/pinned-comment/create`,
       {
         method: 'POST',
         headers: {
