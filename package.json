@@ -6,11 +6,6 @@
   "scripts": {
     "build": "npm run build:client && npm run build:server",
     "build:client": "cd src/client && vite build",
-    "build:client:collection": "cd src/client && ENTRY=collection vite build",
-    "build:client:drawing": "cd src/client && ENTRY=drawing vite build",
-    "build:client:entries": "rm -rf dist/client && npm run build:client:collection && npm run build:client:drawing && npm run build:client:pinned && npm run build:client:tournament",
-    "build:client:pinned": "cd src/client && ENTRY=pinned vite build",
-    "build:client:tournament": "cd src/client && ENTRY=tournament vite build",
     "build:server": "cd src/server && vite build",
     "check": "npm run type-check && npm run lint && npm run prettier && npm test",
     "deploy": "npm run build && devvit upload && devvit publish",
@@ -40,11 +35,9 @@
     "@trpc/client": "^11.0.0-rc.502",
     "@trpc/react-query": "^11.0.0-rc.502",
     "@trpc/server": "^11.0.0-rc.502",
-    "clsx": "2.1.1",
     "devvit": "0.12.2-next-2025-10-30-20-18-30-6fb7303be.0",
     "express": "5.1.0",
     "preact": "^10.24.3",
-    "tailwind-merge": "^3.3.1",
     "zod": "^3.23.8"
   },
   "devDependencies": {
