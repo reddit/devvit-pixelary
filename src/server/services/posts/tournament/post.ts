@@ -355,3 +355,15 @@ export async function removeTournamentEntry(
     }
   }
 }
+
+/**
+ * Increments the view counter for a tournament entry.
+ */
+export async function incrementEntryViews(commentId: T1): Promise<void> {
+  const key = REDIS_KEYS.tournamentEntry(commentId);
+  try {
+    await redis.hIncrBy(key, 'views', 1);
+  } catch {
+    // best-effort increment
+  }
+}
