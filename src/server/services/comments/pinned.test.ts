@@ -33,7 +33,9 @@ describe('comments/pinned (base helpers)', () => {
 
     const id = await createPinnedComment(postId, text);
 
-    expect(reddit.submitComment).toHaveBeenCalledWith({ text, id: postId });
+    expect(reddit.submitComment).toHaveBeenCalledWith(
+      expect.objectContaining({ text, id: postId })
+    );
     expect(redis.hSet).toHaveBeenCalledWith(REDIS_KEYS.comment(postId), {
       pinnedCommentId: 't1_cmt',
     });

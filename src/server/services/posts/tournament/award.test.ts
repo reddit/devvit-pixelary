@@ -8,7 +8,9 @@ vi.mock('@devvit/web/server', () => ({
   },
   reddit: {
     submitComment: vi.fn(),
+    getUserById: vi.fn(async () => ({ username: 'testuser' })),
   },
+  cache: vi.fn((fn) => fn()),
 }));
 
 vi.mock('@server/services/progression', () => ({

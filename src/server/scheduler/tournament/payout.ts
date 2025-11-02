@@ -3,6 +3,8 @@ import { assertT3 } from '@devvit/shared-types/tid.js';
 import { redis } from '@devvit/web/server';
 import { REDIS_KEYS, acquireLock, releaseLock } from '@server/core/redis';
 import { awardTournamentRewards } from '@server/services/posts/tournament/award';
+import { buildTournamentPayoutSummary } from '@server/services/posts/tournament/summary';
+import { replyToPinnedComment } from '@server/services/comments/pinned';
 
 /**
  * Job handler for running a tournament payout snapshot.
@@ -48,15 +50,23 @@ export async function handleTournamentPayoutSnapshot(
         return;
       }
 
-      // Execute snapshot payout (posts summary as a side effect)
+      // Execute snapshot payout
       await awardTournamentRewards(postId, {
         dayIndex: day,
       });
 
+      // Build and post summary reply
+      const summary = await buildTournamentPayoutSummary(postId, {
+        dayIndex: day,
+      });
+      try {
+        await replyToPinnedComment(postId, summary);
+      } catch {
+        // non-fatal
+      }
+
       // Mark ledger
       await redis.hSet(ledgerKey, { [String(day)]: '1' });
-
-      // Summary already posted by awardTournamentRewards
 
       res.json({ status: 'success' });
     } finally {

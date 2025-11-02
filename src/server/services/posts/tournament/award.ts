@@ -11,7 +11,6 @@ import {
 import { incrementScore } from '@server/services/progression';
 import { getTournamentEntry } from './post';
 import { buildTournamentPayoutSummary } from './summary';
-import { replyToPinnedComment } from '@server/services/comments/pinned';
 
 /**
  * Awards per-snapshot tournament rewards using current ELO standings.
@@ -74,11 +73,5 @@ export async function awardTournamentRewards(
   await Promise.all(rewardPromises);
 
   const summary = await buildTournamentPayoutSummary(postId, options);
-
-  try {
-    await replyToPinnedComment(postId, summary);
-  } catch {
-    // non-fatal
-  }
   return { summary };
 }

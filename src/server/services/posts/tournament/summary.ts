@@ -31,7 +31,9 @@ export async function buildTournamentPayoutSummary(
   const percent = Math.max(0, Math.min(100, TOURNAMENT_PAYOUT_TOP_PERCENT));
   const cutoff = Math.max(1, Math.floor((entryCount * percent) / 100));
   const entryData = await Promise.all(
-    entries.slice(0, cutoff).map(async (e) => getTournamentEntry(e.member as T1))
+    entries
+      .slice(0, cutoff)
+      .map(async (e) => getTournamentEntry(e.member as T1))
   );
   const top3 = entryData
     .filter((d): d is NonNullable<typeof d> => Boolean(d))
