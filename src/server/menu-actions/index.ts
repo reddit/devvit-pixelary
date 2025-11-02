@@ -54,3 +54,6 @@ export { handleTelemetryLog } from './telemetry-log';
 
 // Update user flair
 export { handleUpdateUserFlair } from './update-user-flair';
+
+// Tournament manual payout
+export { handleRunTournamentPayout } from './tournament-payout-now';

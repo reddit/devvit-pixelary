@@ -30,6 +30,7 @@ import {
   handleTelemetryClear,
   handleTelemetryLog,
   handleUpdateUserFlair,
+  handleRunTournamentPayout,
 } from './menu-actions';
 
 // Import scheduler handlers
@@ -43,6 +44,7 @@ import {
   handleUpdateWords,
   handleCreateTournamentPostComment,
   handleTournamentScheduler,
+  handleTournamentPayoutSnapshot,
 } from './scheduler';
 
 // Import trigger handlers
@@ -99,6 +101,10 @@ router.post(
   '/internal/scheduler/tournaments/post-comment/create',
   handleCreateTournamentPostComment
 );
+router.post(
+  '/internal/scheduler/tournaments/payout',
+  handleTournamentPayoutSnapshot
+);
 router.post('/internal/scheduler/users/flair/set', handleSetUserFlair);
 router.post('/internal/scheduler/words/scores/update', handleUpdateWords);
 router.post('/internal/scheduler/tournaments/run', handleTournamentScheduler);
@@ -134,6 +140,10 @@ router.post('/internal/menu-actions/users/points/get', showGetUserPointsForm);
 router.post(
   '/internal/menu-actions/legacy-users/manage',
   showEditLegacyUsersForm
+);
+router.post(
+  '/internal/menu-actions/tournaments/payout-now',
+  handleRunTournamentPayout
 );
 
 // ============================================================================

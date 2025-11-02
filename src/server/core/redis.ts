@@ -89,6 +89,9 @@ export const REDIS_KEYS = {
   tournamentSchedulerEnabled: (subredditName: string) =>
     `tournament:scheduler:enabled:${subredditName}`,
   tournamentEloLock: (postId: T3) => `tournament:elo_lock:${postId}`,
+  tournamentPayoutLedger: (postId: T3) => `tournament:payout:ledger:${postId}`,
+  tournamentPayoutLock: (postId: T3, dayIndex: number) =>
+    `tournament:payout:lock:${postId}:${dayIndex}`,
   // Rate limit keys
   rateGuess: (userId: T2) => `rate:guess:${userId}`,
   rateVote: (userId: T2) => `rate:vote:${userId}`,

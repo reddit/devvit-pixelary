@@ -19,9 +19,9 @@ import { getRandomWords } from '@server/services/words/dictionary';
 import type { DrawingData, TournamentPostData } from '@shared/schema';
 import {
   TOURNAMENT_REWARD_VOTE,
-  TOURNAMENT_REWARD_WINNER,
-  TOURNAMENT_REWARD_TOP_10,
   TOURNAMENT_ELO_INITIAL_RATING,
+  TOURNAMENT_PAYOUT_SNAPSHOT_COUNT,
+  TOURNAMENT_PAYOUT_INTERVAL_HOURS,
 } from '@shared/constants';
 import { calculateEloChange } from './elo';
 import { incrementScore } from '@server/services/progression';
@@ -37,6 +37,12 @@ export type TournamentDrawing = {
   mediaUrl: string;
   mediaId: string;
 };
+
+/**
+ * Creates a tournament post.
+ * @param word - The word for the tournament.
+ * @returns The ID of the post.
+ */
 
 export async function createTournament(word?: string): Promise<T3> {
   let tournamentWord = word ? normalizeWord(word) : undefined;
@@ -81,8 +87,35 @@ export async function createTournament(word?: string): Promise<T3> {
       error
     );
   }
+  // Schedule payout snapshots (daily)
+  try {
+    const ops: Promise<unknown>[] = [];
+    const hoursToMs = (h: number) => h * 60 * 60 * 1000;
+    for (let day = 1; day <= TOURNAMENT_PAYOUT_SNAPSHOT_COUNT; day++) {
+      const runAt = new Date(
+        post.createdAt.getTime() +
+          day * hoursToMs(TOURNAMENT_PAYOUT_INTERVAL_HOURS)
+      );
+      ops.push(
+        scheduler.runJob({
+          name: 'TOURNAMENT_PAYOUT_SNAPSHOT',
+          data: { postId: post.id, dayIndex: day },
+          runAt,
+        })
+      );
+    }
+    await Promise.all(ops);
+  } catch (error) {
+    console.error('Failed to schedule tournament payouts:', error);
+  }
   return post.id;
 }
+
+/**
+ * Gets the tournament data for a post.
+ * @param postId - The ID of the post.
+ * @returns The tournament data.
+ */
 
 export async function getTournament(postId: T3): Promise<{
   word: string;
@@ -110,6 +143,13 @@ export async function getTournament(postId: T3): Promise<{
   );
 }
 
+/**
+ * Gets the rating for a tournament entry.
+ * @param postId - The ID of the post.
+ * @param commentId - The ID of the comment.
+ * @returns The rating.
+ */
+
 export async function getEntryRating(
   postId: T3,
   commentId: T1
@@ -121,6 +161,12 @@ export async function getEntryRating(
   return rating ?? TOURNAMENT_ELO_INITIAL_RATING;
 }
 
+/**
+ * Gets the tournament entries for a post.
+ * @param postId - The ID of the post.
+ * @returns The tournament entries.
+ */
+
 export async function getTournamentEntries(postId: T3): Promise<T1[]> {
   const commentIds = await redis.zRange(
     REDIS_KEYS.tournamentEntries(postId),
@@ -129,6 +175,14 @@ export async function getTournamentEntries(postId: T3): Promise<T1[]> {
   );
   return commentIds.map((item) => item.member as T1);
 }
+
+/**
+ * Submits a tournament entry.
+ * @param drawing - The drawing data.
+ * @param imageData - The image data.
+ * @param postId - The ID of the post.
+ * @returns The ID of the comment.
+ */
 
 export async function submitTournamentEntry(
   drawing: DrawingData,
@@ -175,6 +229,12 @@ export async function submitTournamentEntry(
   ]);
   return comment.id;
 }
+
+/**
+ * Votes for a tournament entry.
+ * @param winnerId - The ID of the winner.
+ * @param loserId - The ID of the loser.
+ */
 
 export async function tournamentVote(winnerId: T1, loserId: T1): Promise<void> {
   const { postId, userId } = context;
@@ -235,6 +295,12 @@ export async function tournamentVote(winnerId: T1, loserId: T1): Promise<void> {
   }
 }
 
+/**
+ * Gets a tournament entry.
+ * @param commentId - The ID of the comment.
+ * @returns The tournament entry.
+ */
+
 export async function getTournamentEntry(
   commentId: T1
 ): Promise<TournamentDrawing | undefined> {
@@ -262,6 +328,12 @@ export async function getTournamentEntry(
   };
 }
 
+/**
+ * Removes a tournament entry.
+ * @param postId - The ID of the post.
+ * @param commentId - The ID of the comment.
+ */
+
 export async function removeTournamentEntry(
   postId: T3,
   commentId: T1
@@ -282,30 +354,4 @@ export async function removeTournamentEntry(
       // best-effort decrement
     }
   }
-}
-
-export async function awardTournamentRewards(postId: T3): Promise<void> {
-  const entryCount = await redis.zCard(REDIS_KEYS.tournamentEntries(postId));
-  if (entryCount === 0) return;
-  const top20Cutoff = Math.floor(entryCount / 5);
-  const entries = await redis.zRange(
-    REDIS_KEYS.tournamentEntries(postId),
-    0,
-    top20Cutoff - 1,
-    { by: 'score', reverse: true }
-  );
-  const entryData = await Promise.all(
-    entries.map(async (entry) => await getTournamentEntry(entry.member as T1))
-  );
-  const rewardPromises: Promise<unknown>[] = [];
-  for (let i = 0; i < top20Cutoff; i++) {
-    const score = entries[i];
-    const data = entryData[i];
-    if (!score || !data) continue;
-    const userId = data.userId;
-    const reward =
-      i === 0 ? TOURNAMENT_REWARD_WINNER : TOURNAMENT_REWARD_TOP_10;
-    rewardPromises.push(incrementScore(userId, reward));
-  }
-  await Promise.all(rewardPromises);
 }

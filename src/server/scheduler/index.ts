@@ -9,3 +9,4 @@ export { handleSetUserFlair } from './user-flair';
 export { handleUpdateWords } from './update-word-stats';
 export { handleCreateTournamentPostComment } from './tournament-post-comment';
 export { handleTournamentScheduler } from './tournament-scheduler';
+export { handleTournamentPayoutSnapshot } from './tournament-payout';

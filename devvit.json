@@ -76,6 +76,14 @@
         "endpoint": "/internal/menu-actions/posts/pinned-comment/update"
       },
       {
+        "label": "[Pixelary] Run Tournament Payout",
+        "description": "Run a one-off payout for this tournament",
+        "location": "post",
+        "forUserType": "moderator",
+        "postFilter": "currentApp",
+        "endpoint": "/internal/menu-actions/tournaments/payout-now"
+      },
+      {
         "label": "[Pixelary] Update User Flair",
         "description": "Manually update your user flair",
         "location": "subreddit",
@@ -170,6 +178,9 @@
       "RUN_TOURNAMENT_SCHEDULER": {
         "endpoint": "/internal/scheduler/tournaments/run",
         "cron": "0 0 * * *"
+      },
+      "TOURNAMENT_PAYOUT_SNAPSHOT": {
+        "endpoint": "/internal/scheduler/tournaments/payout"
       }
     }
   },

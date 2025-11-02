@@ -37,8 +37,16 @@ export const GUESSER_REWARD_SOLVE = 5;
 
 // Rewards
 export const TOURNAMENT_REWARD_VOTE = 1;
-export const TOURNAMENT_REWARD_WINNER = 250;
-export const TOURNAMENT_REWARD_TOP_10 = 100;
+
+// Daily payout snapshots
+export const TOURNAMENT_PAYOUT_SNAPSHOT_COUNT = 5;
+export const TOURNAMENT_PAYOUT_INTERVAL_HOURS = 24;
+// Cohort and amounts
+export const TOURNAMENT_PAYOUT_TOP_PERCENT = 20; // Top N% each snapshot (min 1)
+export const TOURNAMENT_PAYOUT_REWARD_TOP_PERCENT = 10; // Per-user reward for being in top N%
+export const TOURNAMENT_PAYOUT_LADDER_FIRST = 30; // Additional bonus for rank 1
+export const TOURNAMENT_PAYOUT_LADDER_SECOND = 20; // Additional bonus for rank 2
+export const TOURNAMENT_PAYOUT_LADDER_THIRD = 10; // Additional bonus for rank 3
 
 // ELO constants
 export const TOURNAMENT_ELO_K_FACTOR = 32;
