@@ -10,15 +10,24 @@ import {
 } from '@shared/constants';
 import { incrementScore } from '@server/services/progression';
 import { getTournamentEntry } from './post';
+import { buildTournamentPayoutSummary } from './summary';
+import { replyToPinnedComment } from '@server/services/comments/pinned';
 
 /**
  * Awards per-snapshot tournament rewards using current ELO standings.
  * - Pays a base amount to top N% (min 1)
  * - Adds ladder bonuses for ranks 1, 2, and 3
  */
-export async function awardTournamentRewards(postId: T3): Promise<void> {
+export async function awardTournamentRewards(
+  postId: T3,
+  options?: { manual?: boolean; dayIndex?: number }
+): Promise<{ summary: string }> {
   const entryCount = await redis.zCard(REDIS_KEYS.tournamentEntries(postId));
-  if (entryCount === 0) return;
+  if (entryCount === 0) {
+    return {
+      summary: options?.manual ? 'Manual payout executed.' : 'Payout executed.',
+    };
+  }
 
   const percent = Math.max(0, Math.min(100, TOURNAMENT_PAYOUT_TOP_PERCENT));
   const cutoff = Math.max(1, Math.floor((entryCount * percent) / 100));
@@ -63,4 +72,13 @@ export async function awardTournamentRewards(postId: T3): Promise<void> {
   }
 
   await Promise.all(rewardPromises);
+
+  const summary = await buildTournamentPayoutSummary(postId, options);
+
+  try {
+    await replyToPinnedComment(postId, summary);
+  } catch {
+    // non-fatal
+  }
+  return { summary };
 }

@@ -20,7 +20,7 @@ import type { Request, Response } from 'express';
 import { handleRunTournamentPayout } from './tournament-payout-now';
 import { getTournament } from '../services/posts/tournament/post';
 import { awardTournamentRewards } from '../services/posts/tournament/award';
-import { replyToPinnedComment } from '../services/comments/pinned';
+// reply is handled inside award service
 
 function mockRes(): Response {
   const res = {
@@ -65,8 +65,10 @@ describe('menu-actions: tournament payout now', () => {
     const req = {} as Request;
     const res = mockRes();
     await handleRunTournamentPayout(req, res);
-    expect(awardTournamentRewards).toHaveBeenCalled();
-    expect(replyToPinnedComment).toHaveBeenCalled();
+    expect(awardTournamentRewards).toHaveBeenCalledWith(
+      't3_abc',
+      expect.objectContaining({ manual: true })
+    );
     expect(res.json).toHaveBeenCalledWith(
       expect.objectContaining({ showToast: 'Payout complete' })
     );

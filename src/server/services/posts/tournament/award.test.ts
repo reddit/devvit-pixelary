@@ -6,6 +6,9 @@ vi.mock('@devvit/web/server', () => ({
     zRange: vi.fn(),
     hGetAll: vi.fn(),
   },
+  reddit: {
+    submitComment: vi.fn(),
+  },
 }));
 
 vi.mock('@server/services/progression', () => ({
