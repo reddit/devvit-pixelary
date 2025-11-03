@@ -41,7 +41,7 @@ export function Lightbox({
 
   const lightboxContent = (
     <div
-      className="absolute inset-0 flex flex-col p-6 gap-6 items-center justify-center bg-black-90"
+      className="absolute inset-0 flex flex-col p-6 gap-6 items-center justify-center bg-black/90"
       onClick={onClose}
     >
       {/* Drawing container */}

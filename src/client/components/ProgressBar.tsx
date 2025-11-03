@@ -28,7 +28,7 @@ export function ProgressBar({
     >
       {/* Background */}
       <div
-        className="absolute inset-0 bg-black-20"
+        className="absolute inset-0 bg-black/20"
         style={{
           height: `${height}px`,
         }}

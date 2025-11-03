@@ -102,7 +102,7 @@ export function LevelDetails({ onClose }: LevelDetailsProps) {
         {/* XP Bar */}
         <div className="flex flex-col items-start justify-start gap-2 w-full mb-6">
           {/* Progress Bar */}
-          <div className="flex w-full h-2 relative bg-black-20">
+          <div className="flex w-full h-2 relative bg-black/20">
             <div
               className="absolute left-0 top-0 h-full bg-orangered transition-all duration-300"
               style={{ width: `${progressPercentage}%` }}
@@ -113,7 +113,7 @@ export function LevelDetails({ onClose }: LevelDetailsProps) {
           <div className="flex flex-row items-center justify-between w-full">
             <div className="flex flex-row items-center justify-start gap-3">
               <Text
-                className={overMinimum ? 'text-orangered' : 'text-black-40'}
+                className={overMinimum ? 'text-orangered' : 'text-black/40'}
               >
                 {abbreviateNumber(
                   overMinimum ? (userProfile?.score ?? 0) : currentLevel.min
@@ -126,7 +126,7 @@ export function LevelDetails({ onClose }: LevelDetailsProps) {
               )}
             </div>
 
-            <Text className={overMaximum ? 'text-orangered' : 'text-black-40'}>
+            <Text className={overMaximum ? 'text-orangered' : 'text-black/40'}>
               {abbreviateNumber(currentLevel.max)}
             </Text>
           </div>
@@ -175,9 +175,9 @@ function RewardItem(props: RewardItemProps) {
     <div className="flex flex-row items-center justify-start gap-3">
       <Icon
         type={unlocked ? 'checkmark' : 'x'}
-        className={unlocked ? 'text-orangered' : 'text-black-20'}
+        className={unlocked ? 'text-orangered' : 'text-black/20'}
       />
-      <Text className={unlocked ? 'text-black' : 'text-black-50'}>
+      <Text className={unlocked ? 'text-black' : 'text-black/50'}>
         {reward}
       </Text>
     </div>

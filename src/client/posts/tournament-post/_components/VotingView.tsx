@@ -136,7 +136,7 @@ function DrawingCard({
       {drawing ? (
         <Drawing data={drawing.drawing} size={136} />
       ) : (
-        <div className="w-34 h-34 bg-white-25" />
+        <div className="w-34 h-34 bg-white/25" />
       )}
       <Button
         onClick={onVote}

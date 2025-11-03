@@ -185,7 +185,7 @@ function GuessRow(props: GuessRowProps) {
 
   // Check if this is an empty row (no data provided)
   if (guess === undefined || count === undefined || percentage === undefined) {
-    return <div className="w-full h-1/5 bg-white-25" />;
+    return <div className="w-full h-1/5 bg-white/25" />;
   }
 
   const handleClick = () => {
@@ -196,7 +196,7 @@ function GuessRow(props: GuessRowProps) {
 
   return (
     <div
-      className="flex items-center gap-3 px-3 justify-between w-full h-1/5 bg-white-25 relative"
+      className="flex items-center gap-3 px-3 justify-between w-full h-1/5 bg-white/25 relative"
       onClick={handleClick}
     >
       <div
