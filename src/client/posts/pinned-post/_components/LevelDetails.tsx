@@ -121,7 +121,7 @@ export function LevelDetails({ onClose }: LevelDetailsProps) {
               </Text>
               {overMinimum && !overMaximum && (
                 <Text className="text-orangered">
-                  ({progressPercentage.toFixed(1)}%)
+                  {`(${progressPercentage.toFixed(1)}%)`}
                 </Text>
               )}
             </div>
