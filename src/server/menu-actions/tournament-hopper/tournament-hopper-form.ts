@@ -50,7 +50,7 @@ export async function showTournamentHopperForm(
       },
     });
   } catch (error) {
-    console.error(`Error loading tournament prompts: ${error}`);
+    console.error('Error loading tournament prompts:', error);
     res.json({
       showToast: {
         text: 'Failed to load tournament prompts',

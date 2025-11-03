@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { connectRealtime } from '@devvit/web/client';
+import { connectRealtime, disconnectRealtime } from '@devvit/web/client';
 import { trpc } from '../trpc/client';
 import { context } from '@devvit/web/client';
 import { REALTIME_CHANNELS } from '@shared/realtime';
@@ -35,12 +35,16 @@ class LevelUpClaimManager {
         this.connection = await connectRealtime({
           channel: channelName,
           onMessage: (data) => {
-            if (data && typeof data === 'object' && 'type' in data) {
-              const message = data as RealtimeMessage;
-              if (message.type === 'levelup_claimed') {
-                // Notify all subscribers
-                this.subscribers.forEach((callback) => callback(true));
-              }
+            if (
+              data &&
+              typeof data === 'object' &&
+              'type' in data &&
+              (data as { type?: unknown }).type === 'levelup_claimed'
+            ) {
+              // Notify all subscribers
+              this.subscribers.forEach((callback) => {
+                callback(true);
+              });
             }
           },
         });
@@ -55,7 +59,7 @@ class LevelUpClaimManager {
       // If no more subscribers, close connection
       if (this.subscribers.size === 0) {
         if (this.connection) {
-          void this.connection.disconnect();
+          void disconnectRealtime(channelName);
           this.connection = null;
         }
       }

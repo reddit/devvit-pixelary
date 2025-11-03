@@ -37,7 +37,7 @@ export async function showEditWordsForm(
       },
     });
   } catch (error) {
-    console.error(`Error loading words: ${error}`);
+    console.error('Error loading words:', error);
     res.json({
       showToast: {
         text: 'Failed to load words',

@@ -6,13 +6,15 @@ import type { HEX, RGB } from '../types';
 
 function hexToRgb(hex: HEX): RGB | null {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  return result
-    ? {
-        r: parseInt(result[1]!, 16),
-        g: parseInt(result[2]!, 16),
-        b: parseInt(result[3]!, 16),
-      }
-    : null;
+  if (!result) return null;
+  const rHex = result[1] ?? '00';
+  const gHex = result[2] ?? '00';
+  const bHex = result[3] ?? '00';
+  return {
+    r: parseInt(rHex, 16),
+    g: parseInt(gHex, 16),
+    b: parseInt(bHex, 16),
+  };
 }
 
 /**

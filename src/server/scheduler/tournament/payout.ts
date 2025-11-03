@@ -16,7 +16,7 @@ export async function handleTournamentPayoutSnapshot(
   res: Response
 ): Promise<void> {
   try {
-    const jobData = req.body.data || req.body;
+    const jobData = req.body.data ?? req.body;
     const { postId, dayIndex } = jobData;
 
     // Validate postId and dayIndex

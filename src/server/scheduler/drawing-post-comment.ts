@@ -20,7 +20,7 @@ export async function handleNewDrawingPinnedComment(
 ): Promise<void> {
   try {
     // Extract data from the scheduler payload
-    const jobData = req.body.data || req.body;
+    const jobData = req.body.data ?? req.body;
     const { postId } = jobData;
 
     // Validate and parse postId as T3
@@ -55,7 +55,7 @@ export async function handleUpdateDrawingPinnedComment(
 ): Promise<void> {
   try {
     // Extract data from the scheduler payload
-    const jobData = req.body.data || req.body;
+    const jobData = req.body.data ?? req.body;
 
     // Validate and parse postId as validateT3
     let postId: T3;
@@ -75,7 +75,7 @@ export async function handleUpdateDrawingPinnedComment(
     // Set difficulty flair if threshold is met (non-blocking)
     try {
       const stats = await getDrawingCommentData(postId);
-      if (stats && stats.guessCount >= 100) {
+      if (stats.guessCount >= 100) {
         const difficulty = getDifficultyFromStats(stats);
         if (difficulty) {
           await setPostFlair(postId, context.subredditName, difficulty);

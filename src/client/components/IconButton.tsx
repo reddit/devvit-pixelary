@@ -1,8 +1,9 @@
-import { Icon, SupportedGlyph } from './PixelFont';
+import { Icon } from './PixelFont';
+import type { SupportedGlyph } from './PixelFont';
 import { useTelemetry } from '@client/hooks/useTelemetry';
 import type { TelemetryEventType } from '@shared/types';
 
-interface IconButtonProps {
+type IconButtonProps = {
   symbol: SupportedGlyph;
   onClick?: () => void;
   variant?: 'primary' | 'secondary';
@@ -10,7 +11,7 @@ interface IconButtonProps {
   disabled?: boolean;
   className?: string;
   telemetryEvent?: TelemetryEventType;
-}
+};
 
 export function IconButton({
   symbol,

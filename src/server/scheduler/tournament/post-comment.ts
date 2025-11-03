@@ -15,7 +15,7 @@ export async function handleCreateTournamentPostComment(
 ): Promise<void> {
   try {
     // Extract data from the scheduler payload
-    const jobData = req.body.data || req.body;
+    const jobData = req.body.data ?? req.body;
     const { postId, word } = jobData;
 
     // Validate and parse postId as T3

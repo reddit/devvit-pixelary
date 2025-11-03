@@ -16,6 +16,7 @@ import {
   isRateLimited,
 } from '@server/core/redis';
 import { getRandomWords } from '@server/services/words/dictionary';
+import { TOURNAMENT_FALLBACK_WORD } from '@shared/constants';
 import type { DrawingData, TournamentPostData } from '@shared/schema';
 import {
   TOURNAMENT_REWARD_VOTE,
@@ -50,7 +51,7 @@ export async function createTournament(word?: string): Promise<T3> {
   let tournamentWord = word ? normalizeWord(word) : undefined;
   if (!tournamentWord || tournamentWord.trim() === '') {
     const words = await getRandomWords(1);
-    tournamentWord = words[0]!;
+    tournamentWord = words[0] ?? TOURNAMENT_FALLBACK_WORD;
   }
   const postData: TournamentPostData = {
     type: 'tournament',
@@ -86,13 +87,14 @@ export async function createTournament(word?: string): Promise<T3> {
   }
   // Schedule payout snapshots (daily)
   try {
-    const ops: Promise<unknown>[] = [];
+    const ops: Array<Promise<unknown>> = [];
     const hoursToMs = (h: number) => h * 60 * 60 * 1000;
     for (let day = 1; day <= TOURNAMENT_PAYOUT_SNAPSHOT_COUNT; day++) {
-      const runAt = new Date(
-        post.createdAt.getTime() +
-          day * hoursToMs(TOURNAMENT_PAYOUT_INTERVAL_HOURS)
-      );
+      const msOffset: number =
+        day * hoursToMs(TOURNAMENT_PAYOUT_INTERVAL_HOURS);
+      const baseTime: number = post.createdAt.getTime();
+      const runAtMs: number = baseTime + msOffset;
+      const runAt = new Date(runAtMs);
       ops.push(
         scheduler.runJob({
           name: 'TOURNAMENT_PAYOUT_SNAPSHOT',
@@ -129,10 +131,10 @@ export async function getTournament(postId: T3): Promise<{
         redis.zCard(REDIS_KEYS.tournamentPlayers(postId)),
       ]);
       return {
-        word: data.word || '',
-        type: data.type || '',
+        word: data.word ?? '',
+        type: data.type ?? '',
         submissionCount,
-        voteCount: parseInt(data.votes || '0'),
+        voteCount: parseInt((data.votes ?? '0') as string, 10),
         playerCount,
       };
     },
@@ -186,8 +188,12 @@ export async function submitTournamentEntry(
   imageData: string,
   tournamentPostId?: T3
 ): Promise<T1> {
-  const postId = tournamentPostId || context.postId!;
-  if (await isRateLimited(REDIS_KEYS.rateSubmit(context.userId!), 2, 10)) {
+  const postId = tournamentPostId ?? context.postId;
+  const uid = context.userId;
+  if (!postId || !uid) {
+    throw new Error('Must be in a tournament post and logged in');
+  }
+  if (await isRateLimited(REDIS_KEYS.rateSubmit(uid), 2, 10)) {
     throw new Error('Too many submissions, slow down');
   }
   let response: MediaAsset;
@@ -207,7 +213,7 @@ export async function submitTournamentEntry(
   const entryKey = REDIS_KEYS.tournamentEntry(comment.id);
   const entryData = {
     postId: postId,
-    userId: context.userId!,
+    userId: uid,
     commentId: comment.id,
     drawing: JSON.stringify(drawing),
     mediaUrl: response.mediaUrl,
@@ -222,7 +228,7 @@ export async function submitTournamentEntry(
       score: TOURNAMENT_ELO_INITIAL_RATING,
     }),
     redis.hSet(entryKey, entryData),
-    redis.zIncrBy(REDIS_KEYS.tournamentPlayers(postId), context.userId!, 1),
+    redis.zIncrBy(REDIS_KEYS.tournamentPlayers(postId), uid, 1),
   ]);
   return comment.id;
 }
@@ -238,20 +244,25 @@ export async function tournamentVote(winnerId: T1, loserId: T1): Promise<void> {
   if (!postId || !userId)
     throw new Error('Must be in a tournament post and logged in');
   if (await isRateLimited(REDIS_KEYS.rateVote(userId), 3, 1)) return;
-  const [winnerRating, loserRating, _score, _playerCount, _votes] =
-    await Promise.all([
-      getEntryRating(postId, winnerId),
-      getEntryRating(postId, loserId),
-      incrementScore(userId, TOURNAMENT_REWARD_VOTE),
-      redis.zIncrBy(REDIS_KEYS.tournamentPlayers(postId), userId, 1),
-      redis.hIncrBy(REDIS_KEYS.tournament(postId), 'votes', 1),
-      redis.hIncrBy(REDIS_KEYS.tournamentEntry(winnerId), 'votes', 1),
-    ]);
+  const [winnerRating, loserRating, _score, _playerCount, _votes]: [
+    number,
+    number,
+    unknown,
+    unknown,
+    unknown,
+  ] = await Promise.all([
+    getEntryRating(postId, winnerId),
+    getEntryRating(postId, loserId),
+    incrementScore(userId, TOURNAMENT_REWARD_VOTE),
+    redis.zIncrBy(REDIS_KEYS.tournamentPlayers(postId), userId, 1),
+    redis.hIncrBy(REDIS_KEYS.tournament(postId), 'votes', 1),
+    redis.hIncrBy(REDIS_KEYS.tournamentEntry(winnerId), 'votes', 1),
+  ]);
   const eloLockKey = REDIS_KEYS.tournamentEloLock(postId);
   const gotLock = await acquireLock(eloLockKey, 2);
   try {
     if (gotLock) {
-      const [latestWinner, latestLoser] = await Promise.all([
+      const [latestWinner, latestLoser]: [number, number] = await Promise.all([
         getEntryRating(postId, winnerId),
         getEntryRating(postId, loserId),
       ]);
@@ -318,8 +329,8 @@ export async function getTournamentEntry(
     drawing: JSON.parse(data.drawing),
     userId: data.userId as T2,
     postId: data.postId as T3,
-    votes: parseInt(data.votes || '0'),
-    views: parseInt(data.views || '0'),
+    votes: parseInt(data.votes ?? '0', 10),
+    views: parseInt(data.views ?? '0', 10),
     mediaUrl: data.mediaUrl,
     mediaId: data.mediaId,
   };

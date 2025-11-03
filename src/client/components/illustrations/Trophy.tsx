@@ -5,7 +5,7 @@ type TrophyVariant = 'gold' | 'silver' | 'bronze';
 export function Trophy({
   variant = 'gold',
   size = 12,
-  title = '',
+  title,
   className = '',
   ...props
 }: IllustrationProps & { variant?: TrophyVariant }) {

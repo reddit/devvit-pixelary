@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
 import { clamp } from '@src/shared/utils/numbers';
 
-interface ProgressBarProps {
+type ProgressBarProps = {
   percentage: number;
   width?: number;
   height?: number;
   className?: string;
-}
+};
 
 export function ProgressBar({
   percentage,

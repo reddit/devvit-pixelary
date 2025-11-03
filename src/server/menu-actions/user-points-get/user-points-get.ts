@@ -32,7 +32,7 @@ export async function handleGetUserPoints(
       return;
     }
 
-    const userId = user.id as T2;
+    const userId = user.id;
 
     // Fetch user data
     const [score, actualUsername] = await Promise.all([
@@ -44,7 +44,7 @@ export async function handleGetUserPoints(
       showToast: `u/${actualUsername} has ${score} points`,
     });
   } catch (error) {
-    console.error(`Error getting user points: ${error}`);
+    console.error('Error getting user points:', error);
     res.status(500).json({
       showToast: 'Failed to get points',
     });

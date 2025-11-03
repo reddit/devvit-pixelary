@@ -25,7 +25,7 @@ export async function showSetUserPointsForm(
           getScore(userId),
         ]);
       } catch (error) {
-        console.error(`Error getting user info: ${error}`);
+        console.error('Error getting user info:', error);
       }
     }
 
@@ -61,7 +61,7 @@ export async function showSetUserPointsForm(
       },
     });
   } catch (error) {
-    console.error(`Error loading set user points form: ${error}`);
+    console.error('Error loading set user points form:', error);
     res.json({
       showToast: {
         text: 'Failed to load form',

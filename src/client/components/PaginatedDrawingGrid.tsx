@@ -2,13 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { Drawing } from './Drawing';
 import { IconButton } from './IconButton';
 import { Text } from './PixelFont';
-import { DrawingData } from '@shared/schema/drawing';
+import type { DrawingData } from '@shared/schema/drawing';
 
-interface PaginatedDrawingGridProps {
+type PaginatedDrawingGridProps = {
   drawings: Array<{ postId: string; drawing: DrawingData }>;
   onDrawingClick: (postId: string) => void;
   isLoading?: boolean;
-}
+};
 
 export const PaginatedDrawingGrid = React.memo(function PaginatedDrawingGrid({
   drawings,
@@ -39,7 +39,9 @@ export const PaginatedDrawingGrid = React.memo(function PaginatedDrawingGrid({
 
     calculateLayout();
     window.addEventListener('resize', calculateLayout);
-    return () => window.removeEventListener('resize', calculateLayout);
+    return () => {
+      window.removeEventListener('resize', calculateLayout);
+    };
   }, [drawings.length]);
 
   // Reset to page 1 when drawings change
@@ -97,7 +99,9 @@ export const PaginatedDrawingGrid = React.memo(function PaginatedDrawingGrid({
               key={drawing.postId}
               data={drawing.drawing}
               size={87}
-              onClick={() => onDrawingClick(drawing.postId)}
+              onClick={() => {
+                onDrawingClick(drawing.postId);
+              }}
             />
           ))}
         </div>
@@ -108,7 +112,9 @@ export const PaginatedDrawingGrid = React.memo(function PaginatedDrawingGrid({
         {hasPrevPage ? (
           <IconButton
             symbol="arrow-left"
-            onClick={() => setCurrentPage(currentPage - 1)}
+            onClick={() => {
+              setCurrentPage(currentPage - 1);
+            }}
             size="medium"
             variant="primary"
           />
@@ -123,7 +129,9 @@ export const PaginatedDrawingGrid = React.memo(function PaginatedDrawingGrid({
         {hasNextPage ? (
           <IconButton
             symbol="arrow-right"
-            onClick={() => setCurrentPage(currentPage + 1)}
+            onClick={() => {
+              setCurrentPage(currentPage + 1);
+            }}
             size="medium"
             variant="primary"
           />

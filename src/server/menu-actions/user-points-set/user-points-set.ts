@@ -49,7 +49,7 @@ export async function handleSetUserPoints(
       showToast: `u/${username} has ${pointsNumber} points (Level ${rankText})`,
     });
   } catch (error) {
-    console.error(`Error setting user points: ${error}`);
+    console.error('Error setting user points:', error);
     res.status(500).json({
       showToast: 'Failed to set points',
     });

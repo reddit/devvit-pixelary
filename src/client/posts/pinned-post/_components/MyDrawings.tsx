@@ -8,9 +8,9 @@ import { context } from '@devvit/web/client';
 import { useTelemetry } from '@client/hooks/useTelemetry';
 import { useEffect } from 'react';
 
-interface MyDrawingsProps {
+type MyDrawingsProps = {
   onClose: () => void;
-}
+};
 
 export function MyDrawings({ onClose }: MyDrawingsProps) {
   // Telemetry

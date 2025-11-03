@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react';
 
-interface ConfettiProps {
+type ConfettiProps = {
   count?: number; // Number of particles to spawn (default: 100)
   speed?: number; // Base falling speed (default: 3)
   delay?: number; // Delay between particle spawns in ms (default: 200)
-}
+};
 
-interface ConfettiParticle {
+type ConfettiParticle = {
   x: number;
   y: number;
   vy: number;
@@ -14,7 +14,7 @@ interface ConfettiParticle {
   width: number;
   height: number;
   life: number; // 0-1 life value
-}
+};
 
 const CONFETTI_COLORS = [
   '#eb5757', // red
@@ -93,7 +93,7 @@ export function Confetti({
               x: Math.random() * window.innerWidth,
               y: -20, // Start at the top
               vy: (Math.random() * speed + speed) * 50, // Scale up for delta time (speed to speed*2) * 50
-              color: CONFETTI_COLORS[colorIndex]!,
+              color: CONFETTI_COLORS[colorIndex],
               width: 4,
               height: 12,
               life: 1.0,
@@ -176,7 +176,9 @@ export function Confetti({
     };
 
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
 
   // Clean up animation on unmount

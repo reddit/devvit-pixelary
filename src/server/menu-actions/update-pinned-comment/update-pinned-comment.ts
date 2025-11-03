@@ -82,7 +82,7 @@ export async function handleUpdatePinnedComment(
       showToast: 'Updated!',
     });
   } catch (error) {
-    console.error(`Error updating comment: ${error}`);
+    console.error('Error updating comment:', error);
     res.status(500).json({
       showToast: 'Failed to update',
     });

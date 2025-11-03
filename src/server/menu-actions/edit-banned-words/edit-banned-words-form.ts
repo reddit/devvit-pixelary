@@ -37,7 +37,7 @@ export async function showEditBannedWordsForm(
       },
     });
   } catch (error) {
-    console.error(`Error loading banned words: ${error}`);
+    console.error('Error loading banned words:', error);
     res.json({
       showToast: {
         text: 'Failed to load banned words',

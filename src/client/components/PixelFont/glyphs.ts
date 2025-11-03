@@ -3,11 +3,11 @@
  * Based on the original Pixelary glyph system but enhanced for better developer ergonomics
  */
 
-export interface PixelGlyph {
+export type PixelGlyph = {
   path: string;
   width: number;
   height: number;
-}
+};
 
 // Import the glyph data from the old pixelary system
 const glyphData = {
@@ -354,7 +354,7 @@ export type SupportedGlyph = keyof typeof glyphData;
  * Get a glyph by character
  */
 export function getGlyph(char: string): PixelGlyph | null {
-  return (glyphData as Record<string, PixelGlyph | undefined>)[char] || null;
+  return (glyphData as Record<string, PixelGlyph | undefined>)[char] ?? null;
 }
 
 /**

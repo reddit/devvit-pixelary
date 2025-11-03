@@ -35,7 +35,7 @@ export async function showPostSelectForm(
       },
     });
   } catch (error) {
-    console.error(`Error showing post creation form: ${error}`);
+    console.error('Error showing post creation form:', error);
     res.json({
       showToast: {
         text: 'Failed to show post creation form',

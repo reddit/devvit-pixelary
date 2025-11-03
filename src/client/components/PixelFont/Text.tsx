@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { getGlyph, getStringWidth, getFontHeight } from './glyphs';
 
-export interface TextProps {
+export type TextProps = {
   children: string;
   scale?: number;
   color?: string;
@@ -12,7 +12,7 @@ export interface TextProps {
   shadowOffset?: { x: number; y: number };
   className?: string;
   onPress?: () => void;
-}
+};
 
 /**
  * PixelFont component - renders as SVG for pixel-perfect text

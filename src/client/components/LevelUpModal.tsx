@@ -8,10 +8,10 @@ import { getRewardsByLevel, getRewardLabel } from '@shared/rewards';
 import type { RewardType } from '@shared/rewards';
 import { createPortal } from 'react-dom';
 
-interface LevelUpModalProps {
+type LevelUpModalProps = {
   level: number;
   onClaim: () => void;
-}
+};
 
 /**
  * Level up modal component
@@ -64,10 +64,10 @@ export function LevelUpModal(props: LevelUpModalProps) {
   return createPortal(content, portalRoot);
 }
 
-interface RewardItemProps {
+type RewardItemProps = {
   reward: RewardType;
   level: number;
-}
+};
 
 /**
  * Reward item component for the level up modal

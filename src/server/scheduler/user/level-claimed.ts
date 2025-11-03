@@ -10,7 +10,7 @@ export async function handleUserLevelClaimed(
   res: Response
 ): Promise<void> {
   try {
-    const jobData = req.body.data || req.body;
+    const jobData = req.body.data ?? req.body;
     const { userId, level } = jobData;
 
     if (!userId || typeof level !== 'number') {

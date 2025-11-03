@@ -5,10 +5,10 @@ import { Text, Icon } from '@components/PixelFont';
 import { useTelemetry } from '@client/hooks/useTelemetry';
 import type { SlateAction } from '@shared/types';
 
-interface WordStepProps {
+type WordStepProps = {
   selectCandidate: (word: string) => void;
   slateId: string | null;
-  words: (string | null)[];
+  words: Array<string | null>;
   isLoading: boolean;
   refreshCandidates: () => void;
   trackSlateAction: (
@@ -17,7 +17,7 @@ interface WordStepProps {
     metadata?: Record<string, string | number>
   ) => Promise<void>;
   userLevel: number;
-}
+};
 
 export function WordStep(props: WordStepProps) {
   const {
@@ -80,7 +80,9 @@ export function WordStep(props: WordStepProps) {
       setElapsedTime(Date.now() - startTime);
     }, 100);
 
-    return () => clearInterval(timer);
+    return () => {
+      clearInterval(timer);
+    };
   }, [startTime]);
 
   // Calculate total word selection time with reward
@@ -111,9 +113,9 @@ export function WordStep(props: WordStepProps) {
 
       {/* Word Candidates */}
       <div className="flex flex-col gap-3 items-center justify-center h-full w-full max-w-xs flex-1">
-        {words?.map((word: string | null, index: number) => (
+        {words.map((word: string | null, index: number) => (
           <WordCandidate
-            key={`word-${index}-${word || 'loading'}`}
+            key={`word-${index}-${word ?? 'loading'}`}
             word={word}
             index={index}
             isLoading={isLoading}
@@ -146,8 +148,10 @@ export function WordStep(props: WordStepProps) {
       {/* Refresh Button */}
       <button
         onClick={() => {
-          void track('click_refresh_words');
-          void refreshCandidates();
+          track('click_refresh_words').catch(() => {
+            return;
+          });
+          refreshCandidates();
         }}
         className="flex items-center hover:opacity-70 transition-opacity p-6 absolute right-0 bottom-0 cursor-pointer"
       >
@@ -161,7 +165,7 @@ export function WordStep(props: WordStepProps) {
  * Word Candidate
  */
 
-interface WordCandidateProps {
+type WordCandidateProps = {
   word: string | null;
   index: number;
   isLoading: boolean;
@@ -171,7 +175,7 @@ interface WordCandidateProps {
     word?: string,
     metadata?: Record<string, string | number>
   ) => Promise<void>;
-}
+};
 
 function WordCandidate(props: WordCandidateProps) {
   const { word, index, isLoading, onSelect, trackSlateAction } = props;
@@ -181,9 +185,13 @@ function WordCandidate(props: WordCandidateProps) {
     <button
       onClick={() => {
         if (word) {
-          void track('click_word_candidate');
-          void trackSlateAction('slate_picked', word, {
+          track('click_word_candidate').catch(() => {
+            return;
+          });
+          trackSlateAction('slate_picked', word, {
             selectionType: 'manual',
+          }).catch(() => {
+            return;
           });
           onSelect(word);
         }

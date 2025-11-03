@@ -33,6 +33,7 @@
     // Allow JSON type-checking and imports.
     "module": "ESNext",
     "moduleResolution": "Bundler",
+    "verbatimModuleSyntax": true,
 
     // Assume library types are checked and compatible.
     "skipLibCheck": true,

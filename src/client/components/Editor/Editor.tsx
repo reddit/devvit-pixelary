@@ -5,19 +5,19 @@ import { ReviewStep } from './_components/ReviewStep';
 import { TournamentReviewStep } from './_components/TournamentReviewStep';
 import { trpc } from '@client/trpc/client';
 import { DRAWING_DURATION } from '@shared/constants';
-import { DrawingData, DrawingUtils } from '@shared/schema/drawing';
+import { DrawingUtils, type DrawingData } from '@shared/schema/drawing';
 import { useTelemetry } from '@client/hooks/useTelemetry';
 import type { SlateAction } from '@shared/types';
 import { context } from '@devvit/web/client';
 import { getExtraDrawingTime } from '@shared/rewards';
 
-interface DrawingEditorProps {
+type DrawingEditorProps = {
   onClose: () => void;
   onSuccess?: () => void;
   mode?: 'post' | 'tournament-comment';
   tournamentPostId?: string;
   tournamentWord?: string;
-}
+};
 
 type Step = 'word' | 'draw' | 'review';
 
@@ -73,8 +73,8 @@ export function DrawingEditor({
   } = trpc.app.dictionary.getCandidates.useQuery();
 
   // Extract slateId and words from response
-  const currentSlateId = slateData?.slateId || null;
-  const words = slateData?.words || [null, null, null];
+  const currentSlateId = slateData?.slateId ?? null;
+  const words = slateData?.words ?? [null, null, null];
 
   // Debug slate data
   useEffect(() => {
@@ -102,7 +102,7 @@ export function DrawingEditor({
       metadata?: Record<string, string | number>
     ) => {
       // Use currentSlateId if slateId is not set yet
-      const effectiveSlateId = slateId || currentSlateId;
+      const effectiveSlateId = slateId ?? currentSlateId;
 
       if (!effectiveSlateId) {
         return;
@@ -124,7 +124,7 @@ export function DrawingEditor({
       setTime(DRAWING_DURATION + effectiveBonuses.extraDrawingTimeSeconds);
       return;
     }
-    const level = levelData?.level || userProfile?.level;
+    const level = levelData?.level ?? userProfile?.level;
     if (level) {
       const extraTime = getExtraDrawingTime(level);
       setTime(DRAWING_DURATION + extraTime);
@@ -154,7 +154,7 @@ export function DrawingEditor({
   }, [mode, tournamentWord, tournamentPostId, selectedWord]);
 
   // Use prefetched level data for instant access, fallback to profile
-  const userLevel = levelData?.level || userProfile?.level || 1;
+  const userLevel = levelData?.level ?? userProfile?.level ?? 1;
 
   return (
     <>

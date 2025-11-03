@@ -27,9 +27,9 @@ import type { ConsumableEffect, ConsumableId } from '@shared/consumables';
  * @param onClose - The function to call when the modal is closed.
  */
 
-interface MyRewardsProps {
+type MyRewardsProps = {
   onClose: () => void;
-}
+};
 
 /**
  * My Rewards component.
@@ -102,8 +102,8 @@ export function MyRewards({ onClose }: MyRewardsProps) {
     const list = activeEffects ?? [];
     let total = 0;
     for (const e of list) {
-      const effect = e.effect as ConsumableEffect;
-      if (effect && effect.kind === 'extra_drawing_time') {
+      const effect = e.effect;
+      if (effect.kind === 'extra_drawing_time') {
         total += effect.extraSeconds;
       }
     }
@@ -113,7 +113,7 @@ export function MyRewards({ onClose }: MyRewardsProps) {
   const inventoryEntries = useMemo(() => {
     const entries = Object.entries(inventory ?? {});
     return entries
-      .filter(([, qty]) => (qty as number) > 0)
+      .filter(([, qty]) => typeof qty === 'number' && qty > 0)
       .sort((a, b) =>
         CONSUMABLES_CONFIG[
           a[0] as keyof typeof CONSUMABLES_CONFIG
@@ -181,8 +181,12 @@ export function MyRewards({ onClose }: MyRewardsProps) {
                 key={id}
                 itemId={id}
                 quantity={quantity}
-                onView={() => setSelectedItemId(id)}
-                onUse={() => activateMutation.mutate({ itemId: id })}
+                onView={() => {
+                  setSelectedItemId(id);
+                }}
+                onUse={() => {
+                  activateMutation.mutate({ itemId: id });
+                }}
                 disabled={disabled}
               />
             );
@@ -190,7 +194,12 @@ export function MyRewards({ onClose }: MyRewardsProps) {
         )}
       </div>
 
-      <Modal isOpen={!!selectedItemId} onClose={() => setSelectedItemId(null)}>
+      <Modal
+        isOpen={!!selectedItemId}
+        onClose={() => {
+          setSelectedItemId(null);
+        }}
+      >
         <div className="flex flex-col items-center justify-center gap-6">
           {selectedItemId && renderConsumableIllustration(selectedItemId, 48)}
 
@@ -203,7 +212,13 @@ export function MyRewards({ onClose }: MyRewardsProps) {
             ))}
           </div>
 
-          <Button onClick={() => setSelectedItemId(null)}>Okay</Button>
+          <Button
+            onClick={() => {
+              setSelectedItemId(null);
+            }}
+          >
+            Okay
+          </Button>
         </div>
       </Modal>
     </main>
@@ -218,16 +233,16 @@ export function MyRewards({ onClose }: MyRewardsProps) {
  */
 
 function renderConsumableIllustration(id: ConsumableId, size = 36) {
-  if (id === 'score_multiplier_2x_4h') {
-    return <Multiplier variant="double" size={size} />;
+  switch (id) {
+    case 'score_multiplier_2x_4h':
+      return <Multiplier variant="double" size={size} />;
+    case 'score_multiplier_3x_30m':
+      return <Multiplier variant="triple" size={size} />;
+    case 'draw_time_boost_30s_2h':
+      return <Clock size={size} />;
+    default:
+      return null;
   }
-  if (id === 'score_multiplier_3x_30m') {
-    return <Multiplier variant="triple" size={size} />;
-  }
-  if (id === 'draw_time_boost_30s_2h') {
-    return <Clock size={size} />;
-  }
-  return null;
 }
 
 /**
@@ -239,13 +254,13 @@ function renderConsumableIllustration(id: ConsumableId, size = 36) {
  * @param onView - The function to call when the item is viewed.
  */
 
-interface ConsumableItemProps {
+type ConsumableItemProps = {
   itemId: ConsumableId;
   quantity: number;
   disabled: boolean;
   onUse: () => void;
   onView: () => void;
-}
+};
 
 /**
  * Render a consumable item.
@@ -268,7 +283,9 @@ function ConsumableItem({
     <div className="flex flex-col items-center gap-2">
       <div
         className="flex h-24 w-24 items-center justify-center relative bg-white pixel-shadow cursor-pointer"
-        onClick={() => onView()}
+        onClick={() => {
+          onView();
+        }}
       >
         {renderConsumableIllustration(itemId)}
         <Text scale={2} className="text-muted absolute bottom-2 left-2">
@@ -281,7 +298,9 @@ function ConsumableItem({
         size="small"
         className="w-full"
         disabled={disabled}
-        onClick={() => onUse()}
+        onClick={() => {
+          onUse();
+        }}
       >
         Use
       </Button>

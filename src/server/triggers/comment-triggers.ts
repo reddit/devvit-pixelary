@@ -1,7 +1,7 @@
 import type { Request, Response } from 'express';
 import { context, reddit } from '@devvit/web/server';
 import {
-  CommandContext,
+  type CommandContext,
   isCommand,
   parseCommand,
   handleCommentEdit,

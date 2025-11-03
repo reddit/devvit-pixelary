@@ -4,8 +4,8 @@ import React, {
   useRef,
   useCallback,
   useMemo,
-  ReactNode,
 } from 'react';
+import type { ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { Text } from './PixelFont';
 
@@ -18,7 +18,7 @@ export type ToastPosition =
   | 'top-center'
   | 'bottom-center';
 
-export interface ToastConfig {
+export type ToastConfig = {
   id: string;
   message: string;
   type?: ToastType;
@@ -32,15 +32,15 @@ export interface ToastConfig {
   attachment?: ReactNode;
   onClose?: () => void;
   onAction?: () => void;
-}
+};
 
-interface ToastProps extends Omit<ToastConfig, 'onClose'> {
+type ToastProps = {
   onClose: (id: string) => void;
   index: number;
   totalToasts: number;
   previousToastHeights?: number[];
   onHeightChange?: (height: number) => void;
-}
+} & Omit<ToastConfig, 'onClose'>;
 
 // Production-grade ID generation using crypto API
 // const generateToastId = (): string => {
@@ -137,14 +137,16 @@ export function Toast({
     ); // 8px gap between toasts
 
     if (position.includes('top')) {
+      const topValue = (basePosition as { top?: number }).top ?? 0;
       return {
         ...basePosition,
-        top: (basePosition.top as number) + cumulativeHeight,
+        top: topValue + cumulativeHeight,
       };
     } else if (position.includes('bottom')) {
+      const bottomValue = (basePosition as { bottom?: number }).bottom ?? 0;
       return {
         ...basePosition,
-        bottom: (basePosition.bottom as number) + cumulativeHeight,
+        bottom: bottomValue + cumulativeHeight,
       };
     }
 
@@ -216,7 +218,9 @@ export function Toast({
       setIsVisible(true);
     }, 10); // Small delay for smooth animation
 
-    return () => clearTimeout(showTimer);
+    return () => {
+      clearTimeout(showTimer);
+    };
   }, []);
 
   // Measure and report height when toast becomes visible

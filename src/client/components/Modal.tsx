@@ -4,12 +4,12 @@ import { Text } from './PixelFont';
 import { ModalScrim } from './ModalScrim';
 import { ModalBody } from './ModalBody';
 
-interface ModalProps {
+type ModalProps = {
   isOpen: boolean;
   onClose: () => void;
   title?: string;
   children: React.ReactNode;
-}
+};
 
 export function Modal({ isOpen, onClose, title, children }: ModalProps) {
   useEffect(() => {

@@ -17,6 +17,19 @@
   --shadow-pixel-sm: 2px 2px 0 var(--color-shadow);
 }
 
+@utility pixel-shadow {
+  box-shadow: var(--shadow-pixel);
+}
+
+@utility pixel-shadow-sm {
+  box-shadow: var(--shadow-pixel-sm);
+}
+
+@utility skeleton {
+  background-color: var(--color-skeleton);
+  @apply animate-pulse;
+}
+
 @layer base {
   /* CSS Custom Properties */
   :root {
@@ -60,20 +73,7 @@
     image-rendering: crisp-edges;
   }
 
-  /* Pixel shadow utilities */
-  .pixel-shadow {
-    box-shadow: var(--shadow-pixel);
-  }
-
-  .pixel-shadow-sm {
-    box-shadow: var(--shadow-pixel-sm);
-  }
-
-  /* Skeleton utilities */
-  .skeleton {
-    background-color: var(--color-skeleton);
-    @apply animate-pulse;
-  }
+  /* Pixel shadow utilities moved to @utility */
 
   /* Reduced motion support */
   @media (prefers-reduced-motion: reduce) {
@@ -102,13 +102,7 @@
     }
   }
 
-  @layer utilities {
-    /* Skeleton utilities */
-    .skeleton {
-      background-color: var(--color-skeleton);
-      @apply animate-pulse;
-    }
-  }
+  /* Removed nested @layer utilities; use @utility blocks instead */
 
   /* Animation utilities */
   @keyframes nudge-right {

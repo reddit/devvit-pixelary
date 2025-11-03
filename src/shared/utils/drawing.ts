@@ -7,7 +7,12 @@ declare const atob: ((data: string) => string) | undefined;
 declare const console: Console | undefined;
 
 export function renderDrawingToCanvas(
-  drawingData: { data: string; colors: string[]; bg: number; size: number },
+  drawingData: {
+    data?: string;
+    colors?: string[];
+    bg?: number;
+    size?: number;
+  } | null,
   canvas: HTMLCanvasElement
 ): void {
   // Validate input data
@@ -19,9 +24,9 @@ export function renderDrawingToCanvas(
     return;
   }
 
-  const resolution = drawingData.size || 16;
-  const bgIndex = drawingData.bg || 0;
-  const colors = drawingData.colors || ['#FFFFFF'];
+  const resolution = drawingData.size ?? 16;
+  const bgIndex = drawingData.bg ?? 0;
+  const colors = drawingData.colors ?? ['#FFFFFF'];
 
   // Set canvas size to match drawing resolution
   canvas.width = resolution;
@@ -34,7 +39,7 @@ export function renderDrawingToCanvas(
   ctx.imageSmoothingEnabled = false;
 
   // Fill background
-  ctx.fillStyle = colors[bgIndex] || '#FFFFFF';
+  ctx.fillStyle = colors[bgIndex] ?? '#FFFFFF';
   ctx.fillRect(0, 0, resolution, resolution);
 
   // Validate and decode data
@@ -54,7 +59,7 @@ export function renderDrawingToCanvas(
 
   // Draw pixels
   for (let pixelIndex = 0; pixelIndex < data.length; pixelIndex++) {
-    const colorIndex = data[pixelIndex] || 0;
+    const colorIndex = data[pixelIndex] ?? 0;
     const color = colors[colorIndex];
 
     if (color && colorIndex !== bgIndex) {

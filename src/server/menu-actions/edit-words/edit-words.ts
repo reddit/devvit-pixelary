@@ -34,7 +34,7 @@ export async function handleEditWords(
       },
     });
   } catch (error) {
-    console.error(`Error updating words: ${error}`);
+    console.error('Error updating words:', error);
     res.status(400).json({
       status: 'error',
       message: 'Failed to update words',

@@ -17,11 +17,11 @@ export async function getRandomPair(postId: T3): Promise<[T1, T1]> {
 export async function getDrawingPairs(
   postId: T3,
   count: number = 5
-): Promise<[TournamentDrawing, TournamentDrawing][]> {
+): Promise<Array<[TournamentDrawing, TournamentDrawing]>> {
   const submissions = await getTournamentEntries(postId);
   if (submissions.length < 2)
     throw new Error('Not enough submissions for voting');
-  const pairIds: [T1, T1][] = [];
+  const pairIds: Array<[T1, T1]> = [];
   let pool = shuffle(submissions);
   let idx = 0;
   while (pairIds.length < count) {
@@ -33,10 +33,17 @@ export async function getDrawingPairs(
     const b = pool[idx + 1];
     idx += 2;
     if (!a || !b || a === b) continue;
-    const lastPair = pairIds[pairIds.length - 1];
-    if (lastPair && lastPair[0] === a && lastPair[1] === b) {
+    const lastIndex = pairIds.length - 1;
+    if (
+      lastIndex >= 0 &&
+      pairIds[lastIndex][0] === a &&
+      pairIds[lastIndex][1] === b
+    ) {
       pairIds.push([b, a]);
-    } else if (lastPair && (lastPair[0] === a || lastPair[1] === b)) {
+    } else if (
+      lastIndex >= 0 &&
+      (pairIds[lastIndex][0] === a || pairIds[lastIndex][1] === b)
+    ) {
       continue;
     } else {
       pairIds.push([a, b]);
@@ -49,7 +56,7 @@ export async function getDrawingPairs(
   const dataMap = new Map<T1, Awaited<ReturnType<typeof getTournamentEntry>>>();
   uniqueIds.forEach((id, i) => {
     const data = fetchedData[i];
-    if (id && data) dataMap.set(id, data);
+    if (data) dataMap.set(id, data);
   });
   const pairs: Array<[TournamentDrawing, TournamentDrawing]> = [];
   for (const [firstId, secondId] of pairIds) {

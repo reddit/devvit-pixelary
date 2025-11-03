@@ -1,10 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Text, TextProps, getFontHeight } from './PixelFont';
+import { Text, getFontHeight } from './PixelFont';
+import type { TextProps } from './PixelFont';
 
-export interface CounterProps extends Omit<TextProps, 'children'> {
+export type CounterProps = {
   value: number | null | undefined;
   fallback?: number;
-}
+} & Omit<TextProps, 'children'>;
 
 export function Counter({
   value,

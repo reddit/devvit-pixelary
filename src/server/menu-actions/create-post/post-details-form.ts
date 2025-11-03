@@ -120,7 +120,7 @@ export async function showPostDetailsForm(
           'Players compete to make the best drawing for a given word. You get to pick the word, or leave it blank for a random one.';
 
         const candidateWords = await getRandomWords(1);
-        const word = candidateWords[0] || TOURNAMENT_FALLBACK_WORD;
+        const word = candidateWords[0] ?? TOURNAMENT_FALLBACK_WORD;
 
         formFields = [
           {
@@ -154,7 +154,7 @@ export async function showPostDetailsForm(
       },
     });
   } catch (error) {
-    console.error(`Error showing post-specific form: ${error}`);
+    console.error('Error showing post-specific form:', error);
     res.status(400).json({
       status: 'error',
       message: 'Failed to show post-specific form',

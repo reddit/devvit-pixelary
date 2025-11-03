@@ -20,20 +20,26 @@ export type EffectiveBonuses = {
 export async function getEffectiveBonuses(
   userId: T2
 ): Promise<EffectiveBonuses> {
-  const [score, activity, consumableExtra, scoreMultiplier] = await Promise.all(
-    [
-      getScore(userId),
-      getActivityDrawingTimeBonus(userId),
-      getActiveExtraDrawingTimeSeconds(userId),
-      getEffectiveScoreMultiplier(userId),
-    ]
-  );
+  const [score, rawActivity, consumableExtra, scoreMultiplier]: [
+    number,
+    unknown,
+    number,
+    number,
+  ] = await Promise.all([
+    getScore(userId),
+    getActivityDrawingTimeBonus(userId),
+    getActiveExtraDrawingTimeSeconds(userId),
+    getEffectiveScoreMultiplier(userId),
+  ]);
+  const activity = rawActivity as
+    | { extraDrawingTimeSeconds: number }
+    | undefined;
 
   const level = getUserLevel(score);
   const levelExtra = getExtraDrawingTime(level.rank);
   const activityExtra = activity?.extraDrawingTimeSeconds ?? 0;
-  const consumableExtraSafe = Number.isFinite(consumableExtra as number)
-    ? (consumableExtra as number)
+  const consumableExtraSafe = Number.isFinite(consumableExtra)
+    ? consumableExtra
     : 0;
   const extraDrawingTimeSeconds =
     levelExtra + activityExtra + consumableExtraSafe;

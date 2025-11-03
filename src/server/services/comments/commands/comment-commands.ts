@@ -49,8 +49,9 @@ export function parseCommand(text: string): {
   args: string[];
 } {
   const parts = text.trim().split(' ');
-  const command = parts[0]!.toLowerCase();
-  const args = parts.slice(1) ?? [];
+  const [first, ...rest] = parts;
+  const command = (first ?? '').toLowerCase();
+  const args = rest;
   return { command, args };
 }
 

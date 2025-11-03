@@ -20,7 +20,7 @@ export async function showGetUserPointsForm(
       try {
         defaultUsername = await getUsername(userId);
       } catch (error) {
-        console.error(`Error getting username: ${error}`);
+        console.error('Error getting username:', error);
       }
     }
 
@@ -47,7 +47,7 @@ export async function showGetUserPointsForm(
       },
     });
   } catch (error) {
-    console.error(`Error loading get user points form: ${error}`);
+    console.error('Error loading get user points form:', error);
     res.json({
       showToast: {
         text: 'Failed to load form',

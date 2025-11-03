@@ -16,7 +16,7 @@ export async function buildTournamentPayoutSummary(
   options?: { dayIndex?: number; manual?: boolean }
 ): Promise<string> {
   let entryCount = 0;
-  let entries: { member: string; score: number }[] = [];
+  let entries: Array<{ member: string; score: number }> = [];
   try {
     const { redis } = await import('@devvit/web/server');
     entryCount = await redis.zCard(REDIS_KEYS.tournamentEntries(postId));
@@ -50,14 +50,12 @@ export async function buildTournamentPayoutSummary(
   } else {
     parts.push(`Payout: paid top ${percent}% (${cutoff})`);
   }
-  if (TOURNAMENT_PAYOUT_REWARD_TOP_PERCENT > 0) {
-    parts.push(` +${TOURNAMENT_PAYOUT_REWARD_TOP_PERCENT} each`);
-  }
-  if (names[0] && TOURNAMENT_PAYOUT_LADDER_FIRST > 0)
+  parts.push(` +${TOURNAMENT_PAYOUT_REWARD_TOP_PERCENT} each`);
+  if (names[0])
     parts.push(` | 1st +${TOURNAMENT_PAYOUT_LADDER_FIRST} (u/${names[0]})`);
-  if (names[1] && TOURNAMENT_PAYOUT_LADDER_SECOND > 0)
+  if (names[1])
     parts.push(`, 2nd +${TOURNAMENT_PAYOUT_LADDER_SECOND} (u/${names[1]})`);
-  if (names[2] && TOURNAMENT_PAYOUT_LADDER_THIRD > 0)
+  if (names[2])
     parts.push(`, 3rd +${TOURNAMENT_PAYOUT_LADDER_THIRD} (u/${names[2]})`);
 
   return parts.join('');

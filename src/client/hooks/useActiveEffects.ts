@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { connectRealtime, context } from '@devvit/web/client';
+import {
+  connectRealtime,
+  context,
+  disconnectRealtime,
+} from '@devvit/web/client';
 import { REALTIME_CHANNELS } from '@shared/realtime';
 import { trpc } from '@client/trpc/client';
 import type { ConsumableEffect, ConsumableId } from '@shared/consumables';
@@ -26,7 +30,10 @@ class RealtimeRewardsManager {
     onEffectsUpdate: (effects: ActiveEffectEntry[]) => void
   ): Promise<() => void> {
     const userId = context.userId;
-    if (!userId) return () => {};
+    if (!userId)
+      return () => {
+        return;
+      };
 
     const channelName = REALTIME_CHANNELS.userRewards(userId);
 
@@ -39,15 +46,18 @@ class RealtimeRewardsManager {
         this.connection = await connectRealtime({
           channel: channelName,
           onMessage: (data) => {
-            if (data && typeof data === 'object' && 'type' in data) {
+            if (
+              data &&
+              typeof data === 'object' &&
+              'type' in data &&
+              (data as { type?: unknown }).type === 'effects_updated'
+            ) {
               const message = data as EffectsUpdatedMessage;
-              if (message.type === 'effects_updated') {
-                const now = Date.now();
-                const filtered = (message.effects || []).filter(
-                  (e) => e.expiresAt > now
-                );
-                this.subscribers.forEach((cb) => cb(filtered));
-              }
+              const now = Date.now();
+              const filtered = message.effects.filter((e) => e.expiresAt > now);
+              this.subscribers.forEach((cb) => {
+                cb(filtered);
+              });
             }
           },
         });
@@ -60,7 +70,7 @@ class RealtimeRewardsManager {
     return () => {
       this.subscribers.delete(onEffectsUpdate);
       if (this.subscribers.size === 0 && this.connection) {
-        void this.connection.disconnect();
+        void disconnectRealtime(channelName);
         this.connection = null;
       }
     };

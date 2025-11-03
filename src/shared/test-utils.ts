@@ -162,16 +162,13 @@ export const createMockPostDataInput = (
 });
 
 // Utility functions for testing
-export const expectValidZodSchema = <T>(schema: z.ZodSchema<T>, data: T) => {
+export const expectValidZodSchema = <T>(schema: z.ZodType<T>, data: T) => {
   const result = schema.safeParse(data);
   expect(result.success).toBe(true);
   return result.success ? result.data : null;
 };
 
-export const expectInvalidZodSchema = <T>(
-  schema: z.ZodSchema<T>,
-  data: unknown
-) => {
+export const expectInvalidZodSchema = (schema: z.ZodType, data: unknown) => {
   const result = schema.safeParse(data);
   expect(result.success).toBe(false);
   return result.success ? null : result.error;

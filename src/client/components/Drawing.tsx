@@ -1,15 +1,15 @@
 import React, { useEffect, useRef } from 'react';
 import { renderDrawingToCanvas } from '@shared/utils/drawing';
-import { DrawingData } from '@shared/schema/drawing';
+import type { DrawingData } from '@shared/schema/drawing';
 
-interface DrawingProps {
+type DrawingProps = {
   data: DrawingData;
   size?: number;
   onClick?: () => void;
   className?: string;
   enableBreathing?: boolean;
   isPaused?: boolean;
-}
+};
 
 export const Drawing = React.memo(function Drawing({
   data,
@@ -22,7 +22,7 @@ export const Drawing = React.memo(function Drawing({
   const canvasRef = useRef<HTMLCanvasElement>(null);
 
   useEffect(() => {
-    if (canvasRef.current && data) {
+    if (canvasRef.current) {
       renderDrawingToCanvas(data, canvasRef.current);
     }
   }, [data]);

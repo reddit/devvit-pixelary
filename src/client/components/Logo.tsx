@@ -1,7 +1,7 @@
-interface LogoProps {
+type LogoProps = {
   size?: number;
   className?: string;
-}
+};
 
 export const Logo = ({ size = 64, className = '' }: LogoProps) => {
   return (

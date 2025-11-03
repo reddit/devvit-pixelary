@@ -38,7 +38,7 @@ export async function handleEditBannedWords(
       showToast: 'Updated!',
     });
   } catch (error) {
-    console.error(`Error updating banned words: ${error}`);
+    console.error('Error updating banned words:', error);
     res.status(400).json({
       status: 'error',
       message: 'Failed to update',

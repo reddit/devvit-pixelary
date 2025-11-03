@@ -99,7 +99,7 @@ describe('tournament payout snapshot', () => {
     vi.mocked(getTournamentEntry).mockImplementation(async (id: T1) => ({
       commentId: id,
       drawing: {} as unknown as import('@shared/schema').DrawingData,
-      userId: ('t2_' + String(id)).slice(0, 6) as unknown as T2,
+      userId: ('t2_' + id).slice(0, 6) as unknown as T2,
       postId: postId,
       votes: 0,
       views: 0,

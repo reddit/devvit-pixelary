@@ -7,7 +7,7 @@ export async function handleWords(
 ): Promise<CommandResult> {
   try {
     const pageSize = 200;
-    const page = parseInt(args[0] || '1', 10) || 1;
+    const page = parseInt(args[0] ?? '1', 10) || 1;
 
     if (page < 1 || page > 1000) {
       return { success: false, error: 'Invalid page number (1-1000)' };

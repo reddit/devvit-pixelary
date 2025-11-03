@@ -41,7 +41,7 @@ export async function resolveUsernamesToIds(
       slice.map(async (name) => reddit.getUserByUsername(name))
     );
     for (const user of users) {
-      if (user && user.id) {
+      if (user?.id) {
         results.push(user.id);
       }
     }

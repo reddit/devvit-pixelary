@@ -4,7 +4,11 @@
 
 export function obfuscateString(input: string): string {
   if (input.length <= 2) return '*'.repeat(input.length);
-  return input[0] + '*'.repeat(input.length - 2) + input[input.length - 1];
+  return (
+    input.charAt(0) +
+    '*'.repeat(input.length - 2) +
+    input.charAt(input.length - 1)
+  );
 }
 
 /**

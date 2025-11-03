@@ -11,7 +11,7 @@ export async function handleUserLevelUp(
   res: Response
 ): Promise<void> {
   try {
-    const jobData = req.body.data || req.body;
+    const jobData = req.body.data ?? req.body;
     const { userId, subredditName } = jobData;
 
     // Validate required parameters

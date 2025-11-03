@@ -85,7 +85,7 @@ export async function updateWordsPreservingScores(
     (word) => !newWordSet.has(word)
   );
   const wordsToAdd = filteredWords.filter((word) => !currentWordSet.has(word));
-  const promises: Promise<unknown>[] = [];
+  const promises: Array<Promise<unknown>> = [];
   if (wordsToRemove.length > 0) {
     promises.push(redis.global.zRem(key, wordsToRemove));
   }

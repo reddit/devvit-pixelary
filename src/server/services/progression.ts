@@ -16,12 +16,14 @@ import type { Level } from '@shared/types';
  * @returns The leaderboard entries
  */
 
-export async function getLeaderboard(options?: {
-  cursor?: number;
-  limit?: number;
-  reverse?: boolean;
-  by?: 'rank' | 'score' | 'lex';
-}): Promise<{
+export async function getLeaderboard(
+  options: {
+    cursor?: number;
+    limit?: number;
+    reverse?: boolean;
+    by?: 'rank' | 'score' | 'lex';
+  } = {}
+): Promise<{
   entries: Array<{
     username: string;
     userId: T2;
@@ -30,7 +32,7 @@ export async function getLeaderboard(options?: {
   }>;
   nextCursor: number;
 }> {
-  const { cursor = 0, limit = 10, reverse = true, by = 'rank' } = options ?? {};
+  const { cursor = 0, limit = 10, reverse = true, by = 'rank' } = options;
 
   // Fetch from Redis
   const entries = (await redis.zRange(
@@ -38,14 +40,14 @@ export async function getLeaderboard(options?: {
     cursor,
     cursor + limit - 1,
     { reverse, by }
-  )) as { member: T2; score: number }[];
+  )) as Array<{ member: T2; score: number }>;
 
   // Hydrate with usernames (getUsername is already cached for 30 days)
   const data = await Promise.all(
     entries.map(async (entry, index) => {
       const username = await getUsername(entry.member);
       return {
-        username: username ?? 'Unknown',
+        username: username,
         userId: entry.member,
         score: entry.score,
         rank: cursor + index + 1,
@@ -95,7 +97,7 @@ export async function setScore(userId: T2, score: number): Promise<number> {
     await redis.set(newClaimedKey, level.rank.toString());
   }
 
-  const didUserLevelUp = level.min > (oldScore ?? 0);
+  const didUserLevelUp = level.min > oldScore;
 
   if (didUserLevelUp) {
     await scheduler.runJob({
@@ -141,7 +143,7 @@ export async function incrementScore(
   const score = await redis.zIncrBy(key, userId, amount);
   const level = getLevelByScore(score);
   const oldLevel = getLevelByScore(oldScore);
-  const didUserLevelUp = level.min > (oldScore ?? 0);
+  const didUserLevelUp = level.min > oldScore;
 
   // Update claimed level if user leveled up
   if (level.rank > oldLevel.rank && didUserLevelUp) {

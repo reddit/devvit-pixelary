@@ -30,7 +30,7 @@ export const DrawingPost = () => {
   }, []);
 
   // Fetch realtime stats for both child components
-  const { stats, isLoading } = useRealtimeStats(currentPostId || '');
+  const { stats, isLoading } = useRealtimeStats(currentPostId);
 
   // Initialize state based on immediate author check to prevent flash
   const getInitialState = (): DrawingState => {
@@ -47,7 +47,7 @@ export const DrawingPost = () => {
   const [earnedPoints, setEarnedPoints] = useState<number | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const { data: userProfile } = trpc.app.user.getProfile.useQuery(
-    currentPostId ? { postId: currentPostId } : undefined,
+    { postId: currentPostId },
     { enabled: true }
   );
   const queryClient = useQueryClient();
@@ -176,7 +176,6 @@ export const DrawingPost = () => {
   useEffect(() => {
     const shouldCheckFirstView =
       isAuthor &&
-      currentPostId &&
       userProfile &&
       !isAuthorFirstView.isPending &&
       !isAuthorFirstView.isSuccess &&
@@ -196,7 +195,7 @@ export const DrawingPost = () => {
   ]);
 
   const handleGuess = async (guess: string) => {
-    if (!currentPostId || !word) {
+    if (!word) {
       return;
     }
 
@@ -205,7 +204,9 @@ export const DrawingPost = () => {
     setFeedback(isCorrect);
 
     // Clear feedback after a brief moment
-    setTimeout(() => setFeedback(null), 800);
+    setTimeout(() => {
+      setFeedback(null);
+    }, 800);
 
     // Submit to server and wait for response before changing state
     try {
@@ -231,7 +232,7 @@ export const DrawingPost = () => {
   };
 
   const handleSkip = async () => {
-    if (!currentPostId) return;
+    // currentPostId is always present for drawing posts
 
     try {
       await skipPost.mutateAsync({ postId: currentPostId });
@@ -277,8 +278,8 @@ export const DrawingPost = () => {
     return (
       <>
         <ResultsView
-          drawing={drawingData!}
-          word={word!}
+          drawing={drawingData}
+          word={word}
           authorUsername={postData?.authorName}
           dictionary={dictionary}
           currentSubreddit={currentSubreddit}

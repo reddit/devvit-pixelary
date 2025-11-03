@@ -9,7 +9,7 @@ import type { DrawingData } from '@shared/schema/drawing';
 import { ActiveEffectsBadge } from '@components/ActiveEffectsBadge';
 import { Drawings, Trophy } from '@components/illustrations';
 
-interface VotingViewProps {
+type VotingViewProps = {
   postId: string;
   stats:
     | {
@@ -22,7 +22,7 @@ interface VotingViewProps {
   word: string;
   onToggleGallery: () => void;
   onToggleTrophy: () => void;
-}
+};
 
 type AnimationState = 'idle' | 'highlighting' | 'exiting' | 'entering';
 
@@ -56,15 +56,20 @@ function DrawingCard({
 
   // Determine card state based on state machine
   const cardState = (() => {
-    if (animationState === 'idle') return 'idle';
-    if (animationState === 'highlighting') {
-      return winnerSide === side ? 'highlighting-winner' : 'highlighting-loser';
+    switch (animationState) {
+      case 'idle':
+        return 'idle';
+      case 'highlighting':
+        return winnerSide === side
+          ? 'highlighting-winner'
+          : 'highlighting-loser';
+      case 'exiting':
+        return winnerSide === side ? 'exiting-winner' : 'exiting-loser';
+      case 'entering':
+        return 'entering';
+      default:
+        return 'idle';
     }
-    if (animationState === 'exiting') {
-      return winnerSide === side ? 'exiting-winner' : 'exiting-loser';
-    }
-    if (animationState === 'entering') return 'entering';
-    return 'idle';
   })();
 
   // Map state to animation classes
@@ -159,7 +164,7 @@ export function VotingView({
   const [pairsQueue, setPairsQueue] = useState<Pair[]>([]);
   const [currentPairIndex, setCurrentPairIndex] = useState(0);
   const [showCollision, setShowCollision] = useState(false);
-  const timeoutRefs = useRef<ReturnType<typeof setTimeout>[]>([]);
+  const timeoutRefs = useRef<Array<ReturnType<typeof setTimeout>>>([]);
   const isPrefetching = useRef(false);
   const trackedViews = useRef<Set<string>>(new Set());
 
@@ -240,7 +245,9 @@ export function VotingView({
       const collisionTimeout = setTimeout(() => {
         setShowCollision(true);
         // Auto-hide after 1.75 seconds total (0.25s delay + 1.5s collision = 1.75s)
-        const hideTimeout = setTimeout(() => setShowCollision(false), 1750);
+        const hideTimeout = setTimeout(() => {
+          setShowCollision(false);
+        }, 1750);
         timeoutRefs.current.push(hideTimeout);
       }, 250);
       timeoutRefs.current.push(collisionTimeout);
@@ -261,7 +268,7 @@ export function VotingView({
 
   // Get current pair from queue
   const currentPair = pairsQueue[currentPairIndex];
-  const [leftDrawing, rightDrawing] = currentPair || [];
+  const [leftDrawing, rightDrawing] = currentPair ?? [];
 
   // Fetch initial pairs only when there are enough submissions
   useEffect(() => {
@@ -289,7 +296,9 @@ export function VotingView({
   // Cleanup timeouts on unmount
   useEffect(() => {
     return () => {
-      timeoutRefs.current.forEach((timeout) => clearTimeout(timeout));
+      timeoutRefs.current.forEach((timeout) => {
+        clearTimeout(timeout);
+      });
       timeoutRefs.current = [];
     };
   }, []);
@@ -391,12 +400,12 @@ export function VotingView({
             side="left"
             animationState={animationState}
             winnerSide={winnerSide}
-            onVote={() =>
+            onVote={() => {
               handleVote(
-                leftDrawing?.commentId || '',
-                rightDrawing?.commentId || ''
-              )
-            }
+                leftDrawing?.commentId ?? '',
+                rightDrawing?.commentId ?? ''
+              );
+            }}
             isDisabled={isButtonDisabled}
           />
           <DrawingCard
@@ -404,12 +413,12 @@ export function VotingView({
             side="right"
             animationState={animationState}
             winnerSide={winnerSide}
-            onVote={() =>
+            onVote={() => {
               handleVote(
-                rightDrawing?.commentId || '',
-                leftDrawing?.commentId || ''
-              )
-            }
+                rightDrawing?.commentId ?? '',
+                leftDrawing?.commentId ?? ''
+              );
+            }}
             isDisabled={isButtonDisabled}
           />
         </div>

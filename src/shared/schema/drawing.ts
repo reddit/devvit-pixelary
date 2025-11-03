@@ -18,7 +18,10 @@ const encodeBase64 = (str: string): string => {
     return btoa(str);
   }
   // Node.js fallback
-  return Buffer!.from(str, 'binary').toString('base64');
+  if (typeof Buffer === 'undefined') {
+    throw new Error('Buffer is not available for base64 encoding');
+  }
+  return Buffer.from(str, 'binary').toString('base64');
 };
 
 const decodeBase64 = (str: string): string => {
@@ -26,7 +29,10 @@ const decodeBase64 = (str: string): string => {
     return atob(str);
   }
   // Node.js fallback
-  return Buffer!.from(str, 'base64').toString('binary');
+  if (typeof Buffer === 'undefined') {
+    throw new Error('Buffer is not available for base64 decoding');
+  }
+  return Buffer.from(str, 'base64').toString('binary');
 };
 
 // Optimized drawing schema for maximum efficiency
@@ -71,8 +77,9 @@ export const DrawingUtils = {
   _decodeData: (base64Data: string): Uint8Array => {
     const binaryString = decodeBase64(base64Data);
     const bytes = new Uint8Array(binaryString.length);
-    for (let i = 0; i < binaryString.length; i++) {
-      bytes[i] = binaryString.charCodeAt(i);
+    let idx = 0;
+    for (const ch of binaryString) {
+      bytes[idx++] = ch.charCodeAt(0);
     }
     return bytes;
   },
@@ -82,8 +89,8 @@ export const DrawingUtils = {
    */
   _encodeData: (data: Uint8Array): string => {
     let binaryString = '';
-    for (let i = 0; i < data.length; i++) {
-      binaryString += String.fromCharCode(data[i]!);
+    for (const byte of data) {
+      binaryString += String.fromCharCode(byte);
     }
     return encodeBase64(binaryString);
   },
@@ -93,8 +100,8 @@ export const DrawingUtils = {
    */
   getPixelColor: (v3: DrawingData, pixelIndex: number): string => {
     const data = DrawingUtils._decodeData(v3.data);
-    const colorIndex = data[pixelIndex] || 0;
-    return v3.colors[colorIndex] || v3.colors[v3.bg] || '#FFFFFF';
+    const colorIndex = data[pixelIndex] ?? 0;
+    return v3.colors[colorIndex] ?? v3.colors[v3.bg] ?? '#FFFFFF';
   },
 
   /**
@@ -152,8 +159,8 @@ export const DrawingUtils = {
   getPixelCount: (v3: DrawingData): number => {
     const data = DrawingUtils._decodeData(v3.data);
     let count = 0;
-    for (let i = 0; i < data.length; i++) {
-      if (data[i] !== v3.bg) count++;
+    for (const byte of data) {
+      if (byte !== v3.bg) count++;
     }
     return count;
   },
@@ -204,9 +211,9 @@ export const DrawingUtils = {
     const data = DrawingUtils._decodeData(v3.data);
     const result: string[] = new Array(data.length);
 
-    for (let i = 0; i < data.length; i++) {
-      const colorIndex = data[i] || 0;
-      result[i] = v3.colors[colorIndex] || v3.colors[v3.bg] || '#FFFFFF';
+    for (const [i, colorIndexRaw] of data.entries()) {
+      const colorIndex = colorIndexRaw;
+      result[i] = v3.colors[colorIndex] ?? v3.colors[v3.bg] ?? '#FFFFFF';
     }
 
     return result;

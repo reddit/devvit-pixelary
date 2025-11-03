@@ -15,7 +15,9 @@ export function ModalBody({
   return (
     <div
       className={`bg-white flex flex-col gap-6 p-6 items-center justify-center relative ${className}`}
-      onClick={(e) => e.stopPropagation()}
+      onClick={(e) => {
+        e.stopPropagation();
+      }}
     >
       {children}
 

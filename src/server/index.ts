@@ -183,6 +183,6 @@ const port = getServerPort();
 const server = createServer(app);
 server.on('error', (error) => {
   // Server error handling
-  console.error(`server error; ${error}`);
+  console.error('server error;', error);
 });
 server.listen(port);

@@ -42,7 +42,7 @@ describe('awardTournamentRewards (snapshot engine)', () => {
     ] as unknown as Array<{ member: string; score: number }>);
     // getTournamentEntry is called via hGetAll path in module; mock hGetAll
     vi.mocked(redis.hGetAll).mockImplementation(async (key: string) => {
-      const id = String(key).split(':').pop()!;
+      const id = key.split(':').pop() ?? '';
       return {
         drawing: JSON.stringify({}),
         userId: `t2_${id}`,
@@ -62,14 +62,14 @@ describe('awardTournamentRewards (snapshot engine)', () => {
     expect(
       calls.some(
         (c) =>
-          c[0]?.startsWith('t2_t1_a') &&
+          c[0].startsWith('t2_t1_a') &&
           c[1] === TOURNAMENT_PAYOUT_REWARD_TOP_PERCENT
       )
     ).toBe(true);
     expect(
       calls.some(
         (c) =>
-          c[0]?.startsWith('t2_t1_b') &&
+          c[0].startsWith('t2_t1_b') &&
           c[1] === TOURNAMENT_PAYOUT_REWARD_TOP_PERCENT
       )
     ).toBe(true);
@@ -77,14 +77,13 @@ describe('awardTournamentRewards (snapshot engine)', () => {
     expect(
       calls.some(
         (c) =>
-          c[0]?.startsWith('t2_t1_a') && c[1] === TOURNAMENT_PAYOUT_LADDER_FIRST
+          c[0].startsWith('t2_t1_a') && c[1] === TOURNAMENT_PAYOUT_LADDER_FIRST
       )
     ).toBe(true);
     expect(
       calls.some(
         (c) =>
-          c[0]?.startsWith('t2_t1_b') &&
-          c[1] === TOURNAMENT_PAYOUT_LADDER_SECOND
+          c[0].startsWith('t2_t1_b') && c[1] === TOURNAMENT_PAYOUT_LADDER_SECOND
       )
     ).toBe(true);
   });

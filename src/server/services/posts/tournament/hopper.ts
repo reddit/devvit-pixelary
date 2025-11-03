@@ -43,7 +43,8 @@ export async function peekNextHopperPrompt(): Promise<string | null> {
   const key = REDIS_KEYS.tournamentHopper(subName);
   const result = await redis.global.zRange(key, 0, 0);
   if (result.length === 0) return null;
-  return result[0]!.member;
+  const first = result[0];
+  return first?.member ?? null;
 }
 
 export async function removeHopperPrompt(prompt: string): Promise<boolean> {

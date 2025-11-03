@@ -1,13 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 
-interface CollisionProps {
+type CollisionProps = {
   count?: number; // Number of particles to spawn (default: 75)
   spawnHeight?: { min: number; max: number }; // Vertical line spawn range
   explosionSpeed?: number; // Base explosion speed (default: 200)
   duration?: number; // Animation duration in ms (default: 1500)
-}
+};
 
-interface CollisionParticle {
+type CollisionParticle = {
   x: number;
   y: number;
   vx: number; // horizontal velocity
@@ -16,7 +16,7 @@ interface CollisionParticle {
   width: number;
   height: number;
   life: number; // 0-1 life value
-}
+};
 
 const CONFETTI_COLORS = [
   '#eb5757', // red
@@ -65,7 +65,7 @@ export function Collision({
         y: y,
         vx: Math.cos(angle) * speed,
         vy: Math.sin(angle) * speed,
-        color: CONFETTI_COLORS[colorIndex]!,
+        color: CONFETTI_COLORS[colorIndex],
         width: 8,
         height: 24,
         life: 1.0,
@@ -202,7 +202,9 @@ export function Collision({
     };
 
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
 
   // Clean up animation on unmount

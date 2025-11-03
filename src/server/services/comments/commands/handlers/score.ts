@@ -28,7 +28,7 @@ export async function handleScore(
         return { success: false, error: `User u/${cleanUsername} not found` };
       }
 
-      userId = user.id as T2;
+      userId = user.id;
     }
 
     const [score, rank, level, username] = await Promise.all([

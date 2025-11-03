@@ -34,7 +34,7 @@ export async function getInventory(userId: T2): Promise<Inventory> {
   const result: Partial<Inventory> = {};
   Object.entries(raw).forEach(([k, v]) => {
     const id = k as ConsumableId;
-    const qty = parseInt(String(v || '0'), 10);
+    const qty = parseInt(typeof v === 'string' ? v : '0', 10);
     if (qty > 0) {
       result[id] = qty;
     }
@@ -48,7 +48,7 @@ export async function grantItems(
 ): Promise<void> {
   if (items.length === 0) return;
   const key = REDIS_KEYS.userInventory(userId);
-  const ops: Promise<unknown>[] = [];
+  const ops: Array<Promise<unknown>> = [];
   for (const { itemId, quantity } of items) {
     if (quantity <= 0) continue;
     ops.push(redis.hIncrBy(key, itemId, quantity));
@@ -62,7 +62,9 @@ export async function activateConsumable(
 ): Promise<{ activationId: string; expiresAt: number } | null> {
   // Check inventory first
   const inv = await getInventory(userId);
-  const currentQty = inv[itemId] ?? 0;
+  const currentQty = Object.hasOwn(inv, itemId)
+    ? ((inv as Partial<Inventory>)[itemId] ?? 0)
+    : 0;
   if (currentQty <= 0) {
     return null;
   }
@@ -83,7 +85,7 @@ export async function activateConsumable(
 
   const activationKey = REDIS_KEYS.boostActivation(activationId);
   const setData: Record<string, string> = {
-    userId: String(userId),
+    userId: userId as string,
     itemId,
     expiresAt: String(expiresAt),
   };

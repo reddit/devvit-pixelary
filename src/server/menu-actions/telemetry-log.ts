@@ -18,7 +18,7 @@ export async function handleTelemetryLog(
     await redis.hGetAll(telemetryKey);
     res.json({ showToast: 'Done. See server logs' });
   } catch (error) {
-    console.error(`Error logging telemetry: ${error}`);
+    console.error('Error logging telemetry:', error);
     res.status(400).json({
       showToast: 'Failed to log telemetry',
     });

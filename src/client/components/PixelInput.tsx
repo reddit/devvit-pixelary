@@ -11,7 +11,7 @@ import { Text, Icon } from './PixelFont';
 const TYPE_SPEED = 150; // ms per character
 const HOLD_DURATION = 1000; // ms to hold complete text
 
-interface PixelInputProps {
+type PixelInputProps = {
   value: string;
   onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   placeholderPhrases: string[];
@@ -20,12 +20,12 @@ interface PixelInputProps {
   disabled?: boolean;
   onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
   showClearButton?: boolean;
-}
+};
 
-interface PixelInputRef {
+type PixelInputRef = {
   focus: () => void;
   blur: () => void;
-}
+};
 
 export const PixelInput = forwardRef<PixelInputRef, PixelInputProps>(
   (
@@ -134,7 +134,9 @@ export const PixelInput = forwardRef<PixelInputRef, PixelInputProps>(
         setShowCursor((prev) => !prev);
       }, 530);
 
-      return () => clearInterval(interval);
+      return () => {
+        clearInterval(interval);
+      };
     }, [isFocused]);
 
     // Auto-scroll to keep the end of text visible
@@ -200,7 +202,9 @@ export const PixelInput = forwardRef<PixelInputRef, PixelInputProps>(
         }
       }
 
-      return () => clearTimeout(timeoutId);
+      return () => {
+        clearTimeout(timeoutId);
+      };
     }, [value, placeholderPhrases, currentPhraseIndex, visibleChars, isTyping]);
 
     return (
@@ -278,7 +282,7 @@ export const PixelInput = forwardRef<PixelInputRef, PixelInputProps>(
                     {placeholderPhrases[currentPhraseIndex]?.slice(
                       0,
                       visibleChars
-                    ) || ''}
+                    ) ?? ''}
                   </Text>
                 </div>
               </>

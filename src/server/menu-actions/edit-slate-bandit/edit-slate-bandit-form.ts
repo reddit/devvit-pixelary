@@ -80,7 +80,7 @@ export async function showEditSlateBanditForm(
       },
     });
   } catch (error) {
-    console.error(`Error loading slate bandit config: ${error}`);
+    console.error('Error loading slate bandit config:', error);
     res.json({
       showToast: {
         text: 'Failed to configuration',

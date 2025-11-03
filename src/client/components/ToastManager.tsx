@@ -3,33 +3,34 @@ import {
   useContext,
   useCallback,
   useState,
-  ReactNode,
   useRef,
   useMemo,
 } from 'react';
-import { Toast, ToastConfig, ToastPosition } from './Toast';
+import type { ReactNode } from 'react';
+import { Toast } from './Toast';
+import type { ToastConfig, ToastPosition } from './Toast';
 
-export interface ToastData extends Omit<ToastConfig, 'id'> {
+export type ToastData = {
   id: string;
   timestamp: number;
   height?: number;
-}
+} & Omit<ToastConfig, 'id'>;
 
-interface ToastContextType {
+type ToastContextType = {
   showToast: (toast: Omit<ToastData, 'id' | 'timestamp'>) => string;
   hideToast: (id: string) => void;
   hideAllToasts: () => void;
   getToastCount: () => number;
   updateToastHeight: (id: string, height: number) => void;
-}
+};
 
 const ToastContext = createContext<ToastContextType | undefined>(undefined);
 
 // Toast queue management
-interface ToastQueue {
+type ToastQueue = {
   toasts: ToastData[];
   maxToasts: number;
-}
+};
 
 // Production-grade toast manager with enterprise features
 export function ToastProvider({
@@ -131,10 +132,8 @@ export function ToastProvider({
   const toastsByPosition = useMemo(() => {
     const groups: Record<string, ToastData[]> = {};
     toastQueue.toasts.forEach((toast) => {
-      const position = toast.position || defaultPosition;
-      if (!groups[position]) {
-        groups[position] = [];
-      }
+      const position = toast.position ?? defaultPosition;
+      groups[position] ??= [];
       groups[position].push(toast);
     });
 
@@ -155,7 +154,7 @@ export function ToastProvider({
           // Calculate heights of previous toasts for proper stacking
           const previousToastHeights = toasts
             .slice(0, index)
-            .map((prevToast) => prevToast.height || 80) // Default height if not measured yet
+            .map((prevToast) => prevToast.height ?? 80) // Default height if not measured yet
             .reverse(); // Reverse to get correct stacking order
 
           return (
@@ -166,7 +165,9 @@ export function ToastProvider({
               index={index}
               totalToasts={toasts.length}
               previousToastHeights={previousToastHeights}
-              onHeightChange={(height) => updateToastHeight(toast.id, height)}
+              onHeightChange={(height) => {
+                updateToastHeight(toast.id, height);
+              }}
             />
           );
         })

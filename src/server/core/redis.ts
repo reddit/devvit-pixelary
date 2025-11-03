@@ -135,7 +135,7 @@ export async function isAdmin(userId: T2): Promise<boolean> {
   return await cache(
     async () => {
       const user = await reddit.getUserById(userId);
-      if (user && user.isAdmin) {
+      if (user?.isAdmin) {
         return true;
       }
       return false;

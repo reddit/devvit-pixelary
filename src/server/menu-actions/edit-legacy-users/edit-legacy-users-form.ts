@@ -47,7 +47,7 @@ export async function showEditLegacyUsersForm(
       },
     });
   } catch (error) {
-    console.error(`Error loading legacy users form: ${error}`);
+    console.error('Error loading legacy users form:', error);
     res.json({
       showToast: {
         text: 'Failed to load legacy users form',

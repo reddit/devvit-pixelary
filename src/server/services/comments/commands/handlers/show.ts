@@ -47,7 +47,7 @@ export async function handleShow(
 
     await addBacker(normalizedWord, context.commentId);
 
-    if (isFirstTimeBacking && context.authorId) {
+    if (isFirstTimeBacking) {
       try {
         await incrementScore(context.authorId, 1);
       } catch {

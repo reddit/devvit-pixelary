@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
 import { Text } from './PixelFont';
 
-interface CyclingMessageProps {
+type CyclingMessageProps = {
   messages: string[];
   intervalMs?: number;
   className?: string;
-}
+};
 
 export function CyclingMessage({
   messages,
@@ -29,25 +29,27 @@ export function CyclingMessage({
       }, 50);
     }, intervalMs);
 
-    return () => clearInterval(interval);
+    return () => {
+      clearInterval(interval);
+    };
   }, [messages.length, intervalMs]);
 
   if (messages.length === 0) return null;
 
   return (
     <div
-      className={`relative h-[14px] ${className || ''}`}
+      className={`relative h-[14px] ${className ?? ''}`}
       aria-live="polite"
       aria-label="Cycling message"
     >
       <div
-        className={`${
+        className={
           isAnimating
             ? 'opacity-0 translate-y-1/2'
             : 'opacity-100 translate-y-0 transition-all duration-300 ease-in'
-        }`}
+        }
       >
-        <Text>{messages[currentIndex] || ''}</Text>
+        <Text>{messages[currentIndex] ?? ''}</Text>
       </div>
     </div>
   );

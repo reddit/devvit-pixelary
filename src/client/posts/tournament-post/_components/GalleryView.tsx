@@ -6,10 +6,10 @@ import { IconButton } from '@components/IconButton';
 import { Lightbox } from '@components/Lightbox';
 import type { DrawingData } from '@shared/schema/drawing';
 
-interface GalleryViewProps {
+type GalleryViewProps = {
   postId: string;
   onToggleView: () => void;
-}
+};
 
 export function GalleryView({ postId, onToggleView }: GalleryViewProps) {
   const [selectedDrawing, setSelectedDrawing] = useState<{
@@ -50,7 +50,14 @@ export function GalleryView({ postId, onToggleView }: GalleryViewProps) {
     submissions?.map((sub) => ({
       postId: sub.commentId,
       drawing: sub.drawing,
-    })) || [];
+    })) ?? [];
+
+  const errorMessage = (() => {
+    const msg = (error as { message?: unknown } | undefined)?.message;
+    if (Array.isArray(msg)) return msg.join(', ');
+    if (typeof msg === 'string') return msg;
+    return 'Failed to load';
+  })();
 
   return (
     <main className="absolute inset-0 flex flex-col p-4 gap-4">
@@ -63,9 +70,7 @@ export function GalleryView({ postId, onToggleView }: GalleryViewProps) {
       {/* Error state */}
       {error && (
         <div className="flex items-center justify-center w-full">
-          <Text className="text-red-500">
-            {`Error: ${Array.isArray(error.message) ? error.message.join(', ') : error.message || 'Failed to load'}`}
-          </Text>
+          <Text className="text-red-500">{`Error: ${errorMessage}`}</Text>
         </div>
       )}
 
@@ -89,8 +94,10 @@ export function GalleryView({ postId, onToggleView }: GalleryViewProps) {
       {/* Lightbox */}
       {selectedDrawing && (
         <Lightbox
-          isOpen={selectedDrawing !== null}
-          onClose={() => setSelectedDrawing(null)}
+          isOpen
+          onClose={() => {
+            setSelectedDrawing(null);
+          }}
           drawing={selectedDrawing.drawing}
           author={selectedDrawing.author}
         >

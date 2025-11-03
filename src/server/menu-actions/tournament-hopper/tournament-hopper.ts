@@ -21,7 +21,7 @@ export async function handleTournamentHopper(
       req.body
     );
 
-    const list = (prompts || '')
+    const list = (prompts ?? '')
       .split(/[\n,]/)
       .map((x) => x.trim())
       .filter(Boolean);
@@ -42,7 +42,7 @@ export async function handleTournamentHopper(
       },
     });
   } catch (error) {
-    console.error(`Error updating tournament prompts: ${error}`);
+    console.error('Error updating tournament prompts:', error);
     res.status(400).json({
       status: 'error',
       message: 'Something went wrong',

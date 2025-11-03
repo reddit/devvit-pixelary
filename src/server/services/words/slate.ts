@@ -142,7 +142,10 @@ export async function initSlateBandit(): Promise<void> {
 
 export async function pickWordsWithUCB(count: number = 3): Promise<string[]> {
   const config = await getSlateBanditConfig();
-  const [allWords, uncertainties] = await Promise.all([
+  const [allWords, uncertainties]: [
+    Array<{ member: string; score: number }>,
+    Array<{ member: string; score: number }>,
+  ] = await Promise.all([
     redis.global.zRange(REDIS_KEYS.wordsAll(context.subredditName), 0, -1),
     redis.global.zRange(
       REDIS_KEYS.wordsUncertainty(context.subredditName),
@@ -159,7 +162,7 @@ export async function pickWordsWithUCB(count: number = 3): Promise<string[]> {
   for (const word of allWords) {
     const uncertainty =
       uncertainties.find((u) => u.member === word.member)?.score ?? 0;
-    const ucbScore = (word.score ?? 0) + config.ucbConstant * uncertainty;
+    const ucbScore = word.score + config.ucbConstant * uncertainty;
     ucbScores.push({ word: word.member, ucbScore });
   }
   ucbScores.sort((a, b) => b.ucbScore - a.ucbScore);
@@ -172,20 +175,28 @@ export async function pickWordsWithUCB(count: number = 3): Promise<string[]> {
     );
     if (totalScore === 0) {
       const randomIndex = Math.floor(Math.random() * remainingWords.length);
-      selectedWords.push(remainingWords[randomIndex]!.word);
-      remainingWords.splice(randomIndex, 1);
+      const chosen = remainingWords[randomIndex];
+      if (chosen) {
+        selectedWords.push(chosen.word);
+        remainingWords.splice(randomIndex, 1);
+      }
     } else {
       let random = Math.random() * totalScore;
       let selectedIndex = 0;
       for (let j = 0; j < remainingWords.length; j++) {
-        random -= Math.max(0, remainingWords[j]!.ucbScore);
+        const rw = remainingWords[j];
+        const score = rw ? rw.ucbScore : 0;
+        random -= Math.max(0, score);
         if (random <= 0) {
           selectedIndex = j;
           break;
         }
       }
-      selectedWords.push(remainingWords[selectedIndex]!.word);
-      remainingWords.splice(selectedIndex, 1);
+      const chosen2 = remainingWords[selectedIndex];
+      if (chosen2) {
+        selectedWords.push(chosen2.word);
+        remainingWords.splice(selectedIndex, 1);
+      }
     }
   }
   return selectedWords;
@@ -229,76 +240,85 @@ export async function generateSlate(): Promise<Slate> {
 export async function handleSlateEvent(event: SlateEvent): Promise<void> {
   const { slateId, name } = event;
   const timestamp = getCurrentTimestamp();
-  const promises: Promise<unknown>[] = [];
-  if (name === 'slate_served') {
-    const rawWords = await redis.hGet(REDIS_KEYS.slate(slateId), 'words');
-    if (!rawWords) return;
-    const words = JSON.parse(rawWords) as string[];
-    for (const word of words) {
+  const promises: Array<Promise<unknown>> = [];
+  switch (name) {
+    case 'slate_served': {
+      const rawWords = await redis.hGet(REDIS_KEYS.slate(slateId), 'words');
+      if (!rawWords) return;
+      const words = JSON.parse(rawWords) as string[];
+      for (const word of words) {
+        promises.push(
+          redis.hIncrBy(
+            REDIS_KEYS.wordsHourlyStats(context.subredditName, timestamp),
+            `${word}:served`,
+            1
+          ),
+          redis.hIncrBy(
+            REDIS_KEYS.wordsTotalStats(context.subredditName),
+            `${word}:served`,
+            1
+          ),
+          redis.zAdd(REDIS_KEYS.wordsLastServed(context.subredditName), {
+            member: word,
+            score: Date.now(),
+          })
+        );
+      }
+      promises.push(
+        redis.hSet(REDIS_KEYS.slate(slateId), { servedAt: timestamp }),
+        ...words.map((word) =>
+          redis.zAdd(REDIS_KEYS.wordsActive(context.subredditName, timestamp), {
+            member: word,
+            score: 0,
+          })
+        )
+      );
+      break;
+    }
+    case 'slate_picked': {
+      const { word, position } = event;
       promises.push(
         redis.hIncrBy(
           REDIS_KEYS.wordsHourlyStats(context.subredditName, timestamp),
-          `${word}:served`,
+          `${word}:picked`,
           1
         ),
         redis.hIncrBy(
           REDIS_KEYS.wordsTotalStats(context.subredditName),
-          `${word}:served`,
+          `${word}:picked`,
           1
         ),
-        redis.zAdd(REDIS_KEYS.wordsLastServed(context.subredditName), {
-          member: word,
-          score: Date.now(),
+        redis.hSet(REDIS_KEYS.slate(slateId), {
+          word,
+          position: position.toString(),
+          pickedAt: timestamp,
         })
       );
+      break;
     }
-    promises.push(
-      redis.hSet(REDIS_KEYS.slate(slateId), { servedAt: timestamp }),
-      ...words.map((word) =>
-        redis.zAdd(REDIS_KEYS.wordsActive(context.subredditName, timestamp), {
-          member: word,
-          score: 0,
+    case 'slate_posted': {
+      const { word, postId } = event;
+      promises.push(
+        redis.hIncrBy(
+          REDIS_KEYS.wordsHourlyStats(context.subredditName, timestamp),
+          `${word}:posted`,
+          1
+        ),
+        redis.hIncrBy(
+          REDIS_KEYS.wordsTotalStats(context.subredditName),
+          `${word}:posted`,
+          1
+        ),
+        redis.hSet(REDIS_KEYS.slate(slateId), {
+          word,
+          postId,
+          postedAt: timestamp,
         })
-      )
-    );
-  } else if (name === 'slate_picked') {
-    const { word, position } = event as SlateEventPicked;
-    promises.push(
-      redis.hIncrBy(
-        REDIS_KEYS.wordsHourlyStats(context.subredditName, timestamp),
-        `${word}:picked`,
-        1
-      ),
-      redis.hIncrBy(
-        REDIS_KEYS.wordsTotalStats(context.subredditName),
-        `${word}:picked`,
-        1
-      ),
-      redis.hSet(REDIS_KEYS.slate(slateId), {
-        word,
-        position: position.toString(),
-        pickedAt: timestamp,
-      })
-    );
-  } else if (name === 'slate_posted') {
-    const { word, postId } = event as SlateEventPosted;
-    promises.push(
-      redis.hIncrBy(
-        REDIS_KEYS.wordsHourlyStats(context.subredditName, timestamp),
-        `${word}:posted`,
-        1
-      ),
-      redis.hIncrBy(
-        REDIS_KEYS.wordsTotalStats(context.subredditName),
-        `${word}:posted`,
-        1
-      ),
-      redis.hSet(REDIS_KEYS.slate(slateId), {
-        word,
-        postId,
-        postedAt: timestamp,
-      })
-    );
+      );
+      break;
+    }
+    default:
+      break;
   }
   await Promise.all(promises);
 }
@@ -344,11 +364,11 @@ export async function applyScoreDecay(
   );
   const now = Date.now();
   const lastServedMap = new Map(
-    (lastServedData || []).map((item) => [item.member, item.score])
+    (lastServedData ?? []).map((item) => [item.member, item.score])
   );
   for (const word in wordStats) {
     const wordStat = wordStats[word];
-    if (!wordStat || !wordStat.drawerScore) continue;
+    if (!wordStat?.drawerScore) continue;
     if (wordStat.total.served === 0) continue;
     const lastServed = lastServedMap.get(word);
     if (!lastServed) continue;

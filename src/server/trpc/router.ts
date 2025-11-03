@@ -250,7 +250,7 @@ export const appRouter = t.router({
           }
 
           assertT3(input.postId);
-          const firstView = await isAuthorFirstView(input.postId as T3);
+          const firstView = await isAuthorFirstView(input.postId);
 
           return { firstView };
         }),
@@ -470,33 +470,42 @@ export const appRouter = t.router({
           // Map action names to slate event types
           const timestamp = getCurrentTimestamp();
 
-          if (input.action === 'slate_served') {
-            await handleSlateEvent({
-              slateId: input.slateId as SlateId,
-              name: 'slate_served',
-              timestamp,
-            });
-          } else if (input.action === 'slate_picked') {
-            if (!input.word) {
-              return { ok: true };
-            }
-            await handleSlateEvent({
-              slateId: input.slateId as SlateId,
-              name: 'slate_picked',
-              timestamp,
-              word: input.word,
-              position: (input.metadata?.position as number) ?? 0,
-            });
-          } else if (input.action === 'slate_posted') {
-            if (!input.word || !ctx.postId) {
-              return { ok: true };
-            }
-            await handleSlateEvent({
-              slateId: input.slateId as SlateId,
-              name: 'slate_posted',
-              word: input.word,
-              postId: ctx.postId,
-            });
+          switch (input.action) {
+            case 'slate_served':
+              await handleSlateEvent({
+                slateId: input.slateId as SlateId,
+                name: 'slate_served',
+                timestamp,
+              });
+              break;
+            case 'slate_picked':
+              if (!input.word) {
+                return { ok: true };
+              }
+              await handleSlateEvent({
+                slateId: input.slateId as SlateId,
+                name: 'slate_picked',
+                timestamp,
+                word: input.word,
+                position:
+                  typeof input.metadata?.position === 'number'
+                    ? input.metadata.position
+                    : 0,
+              });
+              break;
+            case 'slate_posted':
+              if (!input.word || !ctx.postId) {
+                return { ok: true };
+              }
+              await handleSlateEvent({
+                slateId: input.slateId as SlateId,
+                name: 'slate_posted',
+                word: input.word,
+                postId: ctx.postId,
+              });
+              break;
+            default:
+              break;
           }
           // All other events should be handled by telemetry.ts instead
 
@@ -793,7 +802,7 @@ export const appRouter = t.router({
           );
           const usernameMap = new Map<string, string>();
           uniqueUserIds.forEach((uid, i) => {
-            usernameMap.set(uid, usernameResults[i] || '');
+            usernameMap.set(uid, usernameResults[i] ?? '');
           });
 
           // Assemble results in the same rank order, skipping missing entries
@@ -806,7 +815,7 @@ export const appRouter = t.router({
                 commentId,
                 drawing: data.drawing,
                 userId: data.userId,
-                username: usernameMap.get(data.userId) || '',
+                username: usernameMap.get(data.userId) ?? '',
                 postId: data.postId,
                 score: item.score,
                 rating: item.score,

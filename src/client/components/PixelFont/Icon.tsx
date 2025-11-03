@@ -1,11 +1,12 @@
-import { getGlyph, SupportedGlyph } from './glyphs';
+import { getGlyph } from './glyphs';
+import type { SupportedGlyph } from './glyphs';
 
-interface PixelSymbolProps {
+type PixelSymbolProps = {
   type: SupportedGlyph;
   scale?: number;
   color?: string;
   className?: string;
-}
+};
 
 export function Icon({
   type,

@@ -4,14 +4,14 @@ import { Icon } from '@components/PixelFont';
 import { DRAWING_COLORS, getAvailableExtendedColors } from '@client/constants';
 import { DRAWING_DURATION } from '@shared/constants';
 import { Text } from '@components/PixelFont';
-import { DrawingData, DrawingUtils } from '@shared/schema/drawing';
+import { DrawingUtils, type DrawingData } from '@shared/schema/drawing';
 import { getContrastColor } from '@shared/utils/color';
 import type { HEX } from '@shared/types';
 import { useTelemetry } from '@client/hooks/useTelemetry';
 import type { SlateAction } from '@shared/types';
 import { Modal } from '@components/Modal';
 
-interface DrawStepProps {
+type DrawStepProps = {
   word: string;
   time: number;
   onComplete: (drawing: DrawingData) => void;
@@ -22,7 +22,7 @@ interface DrawStepProps {
     metadata?: Record<string, string | number>
   ) => Promise<void>;
   userLevel: number;
-}
+};
 
 export function DrawStep(props: DrawStepProps) {
   const { word, time, onComplete, slateId, trackSlateAction, userLevel } =
@@ -68,21 +68,20 @@ export function DrawStep(props: DrawStepProps) {
     const timer = setInterval(() => {
       const currentElapsed = Date.now() - startTime;
       setElapsedTime(currentElapsed);
-      const remainingTime = (time || DRAWING_DURATION) * 1000 - currentElapsed;
+      const remainingTime = time * 1000 - currentElapsed;
       if (remainingTime <= 0) {
         void track('drawing_done_auto');
         onComplete(drawingDataRef.current);
       }
     }, 100);
 
-    return () => clearInterval(timer);
+    return () => {
+      clearInterval(timer);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [startTime, time, onComplete, word]);
 
-  const secondsLeft = Math.max(
-    0,
-    Math.round((time || DRAWING_DURATION) - elapsedTime / 1000)
-  );
+  const secondsLeft = Math.max(0, Math.round(time - elapsedTime / 1000));
 
   const handleDone = () => {
     void track('click_done_drawing');
@@ -123,7 +122,7 @@ export function DrawStep(props: DrawStepProps) {
     ctx.clearRect(0, 0, canvasInternalSize, canvasInternalSize);
 
     // Draw background
-    ctx.fillStyle = drawingData.colors[drawingData.bg] || '#FFFFFF';
+    ctx.fillStyle = drawingData.colors[drawingData.bg] ?? '#FFFFFF';
     ctx.fillRect(0, 0, canvasInternalSize, canvasInternalSize);
 
     // Draw pixels (optimized rendering)
@@ -366,18 +365,20 @@ export function DrawStep(props: DrawStepProps) {
   );
 }
 
-interface ColorSwatchProps {
+type ColorSwatchProps = {
   color: HEX;
   isSelected: boolean;
   onSelect: (color: HEX) => void;
-}
+};
 
 function ColorSwatch(props: ColorSwatchProps) {
   const { color, isSelected, onSelect } = props;
 
   return (
     <button
-      onClick={() => onSelect(color)}
+      onClick={() => {
+        onSelect(color);
+      }}
       className="w-8 h-8 border-4 border-black cursor-pointer transition-all flex items-center justify-center hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[4px] active:translate-y-[4px] shadow-pixel hover:shadow-pixel-sm active:shadow-none"
       style={{ backgroundColor: color }}
     >
@@ -391,9 +392,9 @@ function ColorSwatch(props: ColorSwatchProps) {
   );
 }
 
-interface ColorPickerPlusButtonProps {
+type ColorPickerPlusButtonProps = {
   onClick: () => void;
-}
+};
 
 function ColorPickerPlusButton(props: ColorPickerPlusButtonProps) {
   const { onClick } = props;
@@ -408,13 +409,13 @@ function ColorPickerPlusButton(props: ColorPickerPlusButtonProps) {
   );
 }
 
-interface ColorPickerModalProps {
+type ColorPickerModalProps = {
   isOpen: boolean;
   onClose: () => void;
   onSelectColor: (color: HEX) => void;
   currentColor: HEX;
   userLevel: number;
-}
+};
 
 function ColorPickerModal(props: ColorPickerModalProps) {
   const { isOpen, onClose, onSelectColor, currentColor, userLevel } = props;

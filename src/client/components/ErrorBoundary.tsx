@@ -1,17 +1,18 @@
-import { Component, ErrorInfo, ReactNode } from 'react';
+import { Component } from 'react';
+import type { ErrorInfo, ReactNode } from 'react';
 import { Text } from './PixelFont';
 import { Button } from './Button';
 
-interface ErrorBoundaryState {
+type ErrorBoundaryState = {
   hasError: boolean;
   error: Error | undefined;
   errorInfo: ErrorInfo | undefined;
-}
+};
 
-interface ErrorBoundaryProps {
+type ErrorBoundaryProps = {
   children: ReactNode;
   onError?: (error: Error, errorInfo: ErrorInfo) => void;
-}
+};
 
 /**
  * Root-level error boundary that catches all unhandled React errors

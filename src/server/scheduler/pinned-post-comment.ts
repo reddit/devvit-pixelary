@@ -14,7 +14,7 @@ export async function handleCreatePinnedPostComment(
 ): Promise<void> {
   try {
     // Extract data from the scheduler payload
-    const jobData = req.body.data || req.body;
+    const jobData = req.body.data ?? req.body;
 
     // Validate and parse postId as T3
     let postId: T3;

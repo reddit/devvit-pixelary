@@ -18,7 +18,8 @@ const TELEMETRY_TTL_SECONDS = 30 * 24 * 60 * 60;
  */
 export function getTelemetryDateKey(date?: Date): string {
   const targetDate = date ?? new Date();
-  return targetDate.toISOString().split('T')[0]!;
+  const [datePart] = targetDate.toISOString().split('T');
+  return datePart;
 }
 
 export async function trackEvent(
@@ -97,7 +98,7 @@ export async function getEventStats(
         continue;
       }
 
-      result[field] = parseInt(value as string, 10);
+      result[field] = parseInt(value, 10);
     }
 
     return result;

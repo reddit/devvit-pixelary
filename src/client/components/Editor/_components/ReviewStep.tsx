@@ -4,7 +4,7 @@ import { Button } from '@components/Button';
 import { Drawing } from '@components/Drawing';
 import { Modal } from '@components/Modal';
 import { trpc } from '@client/trpc/client';
-import { DrawingData } from '@shared/schema/drawing';
+import type { DrawingData } from '@shared/schema/drawing';
 import { Text } from '@components/PixelFont';
 import { navigateTo } from '@devvit/web/client';
 import { useTelemetry } from '@client/hooks/useTelemetry';
@@ -12,7 +12,7 @@ import { useEffect } from 'react';
 import type { SlateAction } from '@shared/types';
 import { renderDrawingToCanvas } from '@shared/utils/drawing';
 
-interface ReviewStepProps {
+type ReviewStepProps = {
   word: string;
   dictionary: string;
   drawing: DrawingData;
@@ -28,7 +28,7 @@ interface ReviewStepProps {
     word?: string,
     metadata?: Record<string, string | number>
   ) => Promise<void>;
-}
+};
 
 /**
  * Generate a PNG data URL from DrawingData
@@ -161,7 +161,9 @@ export function ReviewStep(props: ReviewStepProps) {
       {/* Delete Confirmation Modal */}
       <DeleteConfirmationModal
         isOpen={showCancelConfirm}
-        onClose={() => setShowCancelConfirm(false)}
+        onClose={() => {
+          setShowCancelConfirm(false);
+        }}
         onDelete={confirmCancel}
       />
     </main>
@@ -172,11 +174,11 @@ export function ReviewStep(props: ReviewStepProps) {
  * Delete Confirmation Modal
  */
 
-interface DeleteConfirmationModalProps {
+type DeleteConfirmationModalProps = {
   isOpen: boolean;
   onClose: () => void;
   onDelete: () => void;
-}
+};
 
 function DeleteConfirmationModal(props: DeleteConfirmationModalProps) {
   const { isOpen, onClose, onDelete } = props;

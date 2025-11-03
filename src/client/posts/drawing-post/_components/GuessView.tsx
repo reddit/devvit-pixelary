@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { Button } from '@components/Button';
 import { Drawing } from '@components/Drawing';
 import { Shimmer } from '@components/Shimmer';
-import { DrawingData } from '@shared/schema/drawing';
+import type { DrawingData } from '@shared/schema/drawing';
 import { PixelInput } from '@components/PixelInput';
 import { useToastHelpers } from '@components/ToastManager';
 import { Text } from '@components/PixelFont';
@@ -10,14 +10,14 @@ import type { PostGuesses } from '@shared/schema/pixelary';
 import { useTelemetry } from '@client/hooks/useTelemetry';
 import { ActiveEffectsBadge } from '@components/ActiveEffectsBadge';
 
-interface GuessViewProps {
+type GuessViewProps = {
   drawing: DrawingData;
   onGuess: (guess: string) => Promise<void>;
   onGiveUp: () => Promise<void>;
   feedback?: boolean | null;
   stats?: PostGuesses | null;
   isLoading?: boolean;
-}
+};
 
 export function GuessView({
   drawing,
@@ -60,8 +60,8 @@ export function GuessView({
     }
   };
 
-  const playerCount = stats?.playerCount || 0;
-  const solvedCount = stats?.solvedCount || 0;
+  const playerCount = stats?.playerCount ?? 0;
+  const solvedCount = stats?.solvedCount ?? 0;
   const solvePercentage =
     playerCount > 0 ? Math.round((solvedCount / playerCount) * 100) : 0;
 
@@ -122,7 +122,9 @@ export function GuessView({
         <PixelInput
           ref={inputRef}
           value={guess}
-          onChange={(e) => setGuess(e.target.value)}
+          onChange={(e) => {
+            setGuess(e.target.value);
+          }}
           onKeyDown={(e) => {
             if (e.key === 'Enter') {
               void handleGuessSubmit();

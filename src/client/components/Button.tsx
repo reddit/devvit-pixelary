@@ -3,7 +3,7 @@ import { type SupportedGlyph } from './PixelFont';
 import { useTelemetry } from '@client/hooks/useTelemetry';
 import type { TelemetryEventType } from '@shared/types';
 
-interface ButtonProps {
+type ButtonProps = {
   children?: string;
   onClick?: () => void;
   variant?: 'primary' | 'secondary' | 'white';
@@ -14,11 +14,11 @@ interface ButtonProps {
   className?: string;
   title?: string;
   telemetryEvent?: TelemetryEventType;
-}
+};
 
 export function Button({
   children,
-  onClick = () => {},
+  onClick,
   variant = 'primary',
   size = 'medium',
   disabled = false,
@@ -63,7 +63,7 @@ export function Button({
     }
 
     // Call original onClick
-    onClick();
+    onClick?.();
   };
 
   return (

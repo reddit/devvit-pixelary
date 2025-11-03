@@ -24,7 +24,7 @@ const FLAIR_CONFIG = {
 } as const;
 
 // Type-safe stats interface
-interface DrawingStats {
+type DrawingStats = {
   playerCount: number;
   guessCount: number;
   solves: number;
@@ -32,8 +32,8 @@ interface DrawingStats {
   skips: number;
   skipPercentage: number;
   wordCount: number;
-  guesses: { word: string; count: number }[];
-}
+  guesses: Array<{ word: string; count: number }>;
+};
 
 /**
  * Ensure all required flair templates exist for the subreddit

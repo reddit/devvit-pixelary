@@ -4,7 +4,7 @@ import { Drawing } from '@components/Drawing';
 import { Lightbox } from '@components/Lightbox';
 import { trpc } from '@client/trpc/client';
 import { abbreviateNumber } from '@shared/utils/numbers';
-import { DrawingData } from '@shared/schema/drawing';
+import type { DrawingData } from '@shared/schema/drawing';
 import { Text } from '@components/PixelFont';
 import { CyclingMessage } from '@components/CyclingMessage';
 import { AUTHOR_REWARD_SUBMIT } from '@shared/constants';
@@ -14,7 +14,7 @@ import { useToastHelpers } from '@components/ToastManager';
 import type { PostGuesses } from '@shared/schema/pixelary';
 import { useTelemetry } from '@client/hooks/useTelemetry';
 
-interface ResultsViewProps {
+type ResultsViewProps = {
   drawing: DrawingData;
   word: string;
   authorUsername?: string | undefined;
@@ -24,7 +24,7 @@ interface ResultsViewProps {
   stats?: PostGuesses | null;
   isLoading?: boolean;
   postId?: string;
-}
+};
 
 export function ResultsView({
   drawing,
@@ -55,27 +55,27 @@ export function ResultsView({
       // Fire event for all users, server will decide if they get the reveal
       const normalizedGuess = titleCase(guess.trim());
       const result = await revealGuess.mutateAsync({
-        postId: postId || '',
+        postId: postId ?? '',
         guess: normalizedGuess,
       });
 
       // Show toast if server revealed the guess
       if (result.revealed) {
-        success(result.guess || normalizedGuess, { duration: 2000 });
+        success(result.guess ?? normalizedGuess, { duration: 2000 });
       }
     } catch (error) {
       // Server will handle permission checks, so we can ignore errors silently
     }
   };
 
-  const guesses = stats?.guesses || {};
-  const guessCount = stats?.guessCount || 0;
-  const playerCount = stats?.playerCount || 0;
+  const guesses: Record<string, number> = stats?.guesses ?? {};
+  const guessCount = stats?.guessCount ?? 0;
+  const playerCount = stats?.playerCount ?? 0;
 
   // Sort guesses by count (descending) and take top 5
   const topGuesses = Object.entries(guesses)
     .filter(([, count]) => typeof count === 'number' && count > 0)
-    .sort(([, a], [, b]) => (b as number) - (a as number))
+    .sort(([, a], [, b]) => b - a)
     .slice(0, 5);
 
   // Rendering flags
@@ -91,7 +91,9 @@ export function ResultsView({
         <Drawing
           data={drawing}
           size={64}
-          onClick={() => setIsLightboxOpen(true)}
+          onClick={() => {
+            setIsLightboxOpen(true);
+          }}
         />
         <div className="flex flex-col items-start justify-center gap-1.5">
           {/* Word */}
@@ -121,7 +123,7 @@ export function ResultsView({
       <div className="w-full max-w-lg flex flex-col gap-2 h-full flex-1">
         {Array.from({ length: 5 }, (_, index) => {
           const guessData = topGuesses[index];
-          if (guessData && guessData.length >= 2) {
+          if (guessData) {
             const [guess, count] = guessData;
             if (typeof guess === 'string' && typeof count === 'number') {
               const percentage =
@@ -159,7 +161,9 @@ export function ResultsView({
       {/* Lightbox */}
       <Lightbox
         isOpen={isLightboxOpen}
-        onClose={() => setIsLightboxOpen(false)}
+        onClose={() => {
+          setIsLightboxOpen(false);
+        }}
         drawing={drawing}
         author={authorUsername}
       >
@@ -169,12 +173,12 @@ export function ResultsView({
   );
 }
 
-interface GuessRowProps {
+type GuessRowProps = {
   guess?: string;
   count?: number;
   percentage?: number;
   onGuessClick?: (guess: string) => void;
-}
+};
 
 function GuessRow(props: GuessRowProps) {
   const { guess, count, percentage, onGuessClick } = props;

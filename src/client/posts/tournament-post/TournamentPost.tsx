@@ -22,8 +22,8 @@ export function TournamentPost() {
 
   // Get data from context immediately (no loading state)
   const postData = getPostData<TournamentPostData>();
-  const word = tournamentData?.word || postData?.word || '';
-  const currentPostId = tournamentData?.postId || context.postId || '';
+  const word = tournamentData?.word ?? postData?.word ?? '';
+  const currentPostId = tournamentData?.postId ?? context.postId;
 
   const { data: stats, refetch: refetchStats } =
     trpc.app.tournament.getStats.useQuery(
@@ -79,10 +79,14 @@ export function TournamentPost() {
             postId={currentPostId}
             stats={stats}
             onDraw={handleDrawSomething}
-            hasEnoughSubmissions={(stats?.submissionCount || 0) >= 2}
+            hasEnoughSubmissions={(stats?.submissionCount ?? 0) >= 2}
             word={word}
-            onToggleGallery={() => setViewMode('gallery')}
-            onToggleTrophy={() => setViewMode('trophy')}
+            onToggleGallery={() => {
+              setViewMode('gallery');
+            }}
+            onToggleTrophy={() => {
+              setViewMode('trophy');
+            }}
           />
 
           {/* Timed shimmer overlay */}
@@ -94,7 +98,9 @@ export function TournamentPost() {
       <div className={viewMode === 'gallery' ? 'absolute inset-0' : 'hidden'}>
         <GalleryView
           postId={currentPostId}
-          onToggleView={() => setViewMode('voting')}
+          onToggleView={() => {
+            setViewMode('voting');
+          }}
         />
       </div>
 
@@ -102,7 +108,9 @@ export function TournamentPost() {
       <div className={viewMode === 'trophy' ? 'absolute inset-0' : 'hidden'}>
         <TrophyView
           postId={currentPostId}
-          onToggleView={() => setViewMode('voting')}
+          onToggleView={() => {
+            setViewMode('voting');
+          }}
           onDraw={handleDrawSomething}
         />
       </div>

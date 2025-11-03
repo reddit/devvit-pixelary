@@ -17,8 +17,12 @@ export function ActiveEffectsBadge() {
     () => (currentEffect ? getConsumableConfig(currentEffect.itemId) : null),
     [currentEffect]
   );
-  const onOpen = useCallback(() => setIsOpen(true), []);
-  const onClose = useCallback(() => setIsOpen(false), []);
+  const onOpen = useCallback(() => {
+    setIsOpen(true);
+  }, []);
+  const onClose = useCallback(() => {
+    setIsOpen(false);
+  }, []);
 
   if (!currentEffect) return null;
 

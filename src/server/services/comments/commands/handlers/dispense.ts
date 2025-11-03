@@ -27,9 +27,10 @@ export async function handleDispense(
       };
     }
 
-    const rawUsername = args[0]!.trim();
-    const itemId = args[1]!.trim() as ConsumableId;
-    const qty = parseInt(args[2]!.trim(), 10);
+    const [uArg, itemArg, qtyArg] = args;
+    const rawUsername = uArg.trim();
+    const itemId = itemArg.trim() as ConsumableId;
+    const qty = parseInt(qtyArg.trim(), 10);
 
     if (!rawUsername.startsWith('u/')) {
       return { success: false, error: 'Username must start with u/' };
@@ -47,11 +48,12 @@ export async function handleDispense(
       return { success: false, error: `User ${rawUsername} not found` };
     }
 
-    const targetUserId = user.id as T2;
+    const targetUserId = user.id;
     const { grantItems } = await import('../../../rewards/consumables');
     await grantItems(targetUserId, [{ itemId, quantity: qty }]);
 
-    const label = CONSUMABLES_CONFIG[itemId]!.label;
+    const itemCfg = CONSUMABLES_CONFIG[itemId];
+    const label = itemCfg.label;
     const response = `Dispensed ${qty} × ${label} to ${rawUsername}.`;
     return { success: true, response };
   } catch {

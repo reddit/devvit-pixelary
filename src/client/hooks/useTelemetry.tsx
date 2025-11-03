@@ -2,12 +2,12 @@ import React, { createContext, useContext, useCallback } from 'react';
 import { trpc } from '@client/trpc/client';
 import type { TelemetryEventType } from '@shared/types';
 
-interface TelemetryContextType {
+type TelemetryContextType = {
   track: (
     eventType: TelemetryEventType,
     metadata?: Record<string, string | number>
   ) => Promise<{ ok: boolean }>;
-}
+};
 
 const TelemetryContext = createContext<TelemetryContextType | null>(null);
 

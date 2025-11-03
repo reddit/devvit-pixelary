@@ -29,7 +29,7 @@ export async function handleUpdateUserFlair(
       appearance: 'success',
     });
   } catch (error) {
-    console.error(`Error in update user flair menu action: ${error}`);
+    console.error('Error in update user flair menu action:', error);
     res.status(500).json({
       showToast: 'Error. Try later.',
     });

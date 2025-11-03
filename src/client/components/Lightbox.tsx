@@ -1,16 +1,16 @@
 import { useEffect, type ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { Drawing } from './Drawing';
-import { DrawingData } from '@shared/schema/drawing';
+import type { DrawingData } from '@shared/schema/drawing';
 import { Icon, Text } from './PixelFont';
 
-interface LightboxProps {
+type LightboxProps = {
   isOpen: boolean;
   onClose: () => void;
   drawing: DrawingData;
   author?: string | undefined;
   children?: ReactNode;
-}
+};
 
 export function Lightbox({
   isOpen,

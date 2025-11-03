@@ -60,9 +60,15 @@ export async function getWordMetrics(word: string): Promise<WordMetrics> {
       REDIS_KEYS.wordsTotalStats(context.subredditName)
     );
 
-    const impressions = parseInt(totalStats[`${normalizedWord}:served`] || '0');
-    const clicks = parseInt(totalStats[`${normalizedWord}:picked`] || '0');
-    const publishes = parseInt(totalStats[`${normalizedWord}:posted`] || '0');
+    const impressions = parseInt(
+      totalStats[`${normalizedWord}:served`] ?? '0',
+      10
+    );
+    const clicks = parseInt(totalStats[`${normalizedWord}:picked`] ?? '0', 10);
+    const publishes = parseInt(
+      totalStats[`${normalizedWord}:posted`] ?? '0',
+      10
+    );
 
     const wordDrawings = await redis.zRange(
       REDIS_KEYS.wordDrawings(normalizedWord),

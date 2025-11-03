@@ -335,15 +335,15 @@ export async function getUserDrawingsWithData(
   );
   const allStats = await Promise.all(statsPromises);
   validDrawings.forEach(({ postId, drawingData }, index) => {
-    const stats = allStats[index]!;
+    const stats = allStats[index] ?? { playerCount: 0, solvedPercentage: 0 };
     drawings.push({
       postId,
       type: 'drawing',
-      word: drawingData.word || '',
-      dictionary: drawingData.dictionary || '',
-      drawing: JSON.parse(drawingData.drawing || '{}'),
+      word: drawingData.word ?? '',
+      dictionary: drawingData.dictionary ?? '',
+      drawing: JSON.parse(drawingData.drawing ?? '{}'),
       authorId: drawingData.authorId as T2,
-      authorName: drawingData.authorName || '',
+      authorName: drawingData.authorName ?? '',
       playerCount: stats.playerCount,
       solvedPercentage: stats.solvedPercentage,
     });
@@ -376,10 +376,10 @@ export async function submitGuess(options: {
   )
     return empty;
   const normalizedGuess = normalizeWord(guess);
-  const normalizedWord = drawingNormalizedWord || normalizeWord(word);
+  const normalizedWord = drawingNormalizedWord ?? normalizeWord(word);
   const correct = normalizedGuess === normalizedWord;
   const now = Date.now();
-  const redisOperations: Promise<unknown>[] = [
+  const redisOperations: Array<Promise<unknown>> = [
     redis.zIncrBy(REDIS_KEYS.drawingAttempts(postId), userId, 1),
     redis.zIncrBy(REDIS_KEYS.wordDrawings(word), postId, 1),
     redis.zIncrBy(REDIS_KEYS.drawingGuesses(postId), normalizedGuess, 1),
@@ -426,16 +426,16 @@ export async function getGuesses(
         by: 'rank',
       })
       .then((guesses) =>
-        guesses.reduce(
+        guesses.reduce<Record<string, number>>(
           (acc, guess) => ({ ...acc, [guess.member]: guess.score }),
-          {} as Record<string, number>
+          {}
         )
       ),
     getDrawingStats(postId),
     redis.zCard(REDIS_KEYS.drawingSolves(postId)),
   ]);
-  const guessCount = Object.values(guesses).reduce(
-    (sum, count) => sum + count,
+  const guessCount = Object.values(guesses).reduce<number>(
+    (sum, count) => sum + Number(count),
     0
   );
   const wordCount = Object.keys(guesses).length;
@@ -446,7 +446,7 @@ export async function getGuesses(
   const obfuscatedGuesses: Record<string, number> = {};
   words.forEach((word, i) => {
     const displayWord = showChecks[i] ? word : obfuscateString(word);
-    obfuscatedGuesses[displayWord] = guesses[word]!;
+    obfuscatedGuesses[displayWord] = guesses[word] ?? 0;
   });
   return {
     guesses: obfuscatedGuesses,
@@ -465,7 +465,7 @@ export async function getDrawingCommentData(postId: T3): Promise<{
   wordCount: number;
   guessCount: number;
   playerCount: number;
-  guesses: { word: string; count: number }[];
+  guesses: Array<{ word: string; count: number }>;
 }> {
   const [playerCount, solvedCount, skippedCount, wordCount, guesses] =
     await Promise.all([
@@ -478,6 +478,7 @@ export async function getDrawingCommentData(postId: T3): Promise<{
         by: 'rank',
       }),
     ]);
+  const guessesTyped = guesses as Array<{ member: string; score: number }>;
   const solvedPercentage =
     playerCount === 0
       ? 0
@@ -486,11 +487,14 @@ export async function getDrawingCommentData(postId: T3): Promise<{
     playerCount === 0
       ? 0
       : Math.round((skippedCount / playerCount) * 100 * 10) / 10;
-  const guessesParsed = guesses.map((guess) => ({
+  const guessesParsed = guessesTyped.map((guess) => ({
     word: guess.member,
     count: guess.score,
   }));
-  const guessCount = guessesParsed.reduce((sum, guess) => sum + guess.count, 0);
+  const guessCount = guessesParsed.reduce<number>(
+    (sum, guess) => sum + guess.count,
+    0
+  );
   return {
     solves: solvedCount,
     solvedPercentage,
@@ -601,7 +605,8 @@ export async function getUserDrawingStatus(
     redis.zScore(REDIS_KEYS.drawingSkips(postId), userId),
     redis.zRange(REDIS_KEYS.drawingGuesses(postId), 0, -1, { by: 'rank' }),
   ]);
-  const guessCount = guesses.reduce((sum, g) => sum + g.score, 0);
+  const guessesTyped2 = guesses as Array<{ member: string; score: number }>;
+  const guessCount = guessesTyped2.reduce<number>((sum, g) => sum + g.score, 0);
   return { solved: solved != null, skipped: skipped != null, guessCount };
 }
 

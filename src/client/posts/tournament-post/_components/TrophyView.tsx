@@ -7,21 +7,21 @@ import { Button } from '@components/Button';
 import { Lightbox } from '@components/Lightbox';
 import type { DrawingData } from '@shared/schema/drawing';
 
-interface TrophyViewProps {
+type TrophyViewProps = {
   postId: string;
   onToggleView: () => void;
   onDraw: () => void;
-}
+};
 
 type TrophyPosition = 'gold' | 'silver' | 'bronze';
 
-interface WinnerDisplayProps {
+type WinnerDisplayProps = {
   position: TrophyPosition;
   artist: string;
   rating: number;
   drawing: DrawingData;
   onClick: () => void;
-}
+};
 
 function TrophyIcon({ position }: { position: TrophyPosition }) {
   const colors = {
@@ -104,7 +104,14 @@ export function TrophyView({ postId, onToggleView, onDraw }: TrophyViewProps) {
   const incrementViews = trpc.app.tournament.incrementViews.useMutation();
 
   // Get top 3 submissions
-  const top3 = submissions?.slice(0, 3) || [];
+  const top3 = submissions?.slice(0, 3) ?? [];
+
+  const errorMessage = (() => {
+    const msg = (error as { message?: unknown } | undefined)?.message;
+    if (Array.isArray(msg)) return msg.join(', ');
+    if (typeof msg === 'string') return msg;
+    return 'Failed to load';
+  })();
 
   const handleDrawingClick = (index: number) => {
     const submission = top3[index];
@@ -130,9 +137,7 @@ export function TrophyView({ postId, onToggleView, onDraw }: TrophyViewProps) {
           <IconButton onClick={onToggleView} symbol="X" />
         </header>
         <div className="flex items-center justify-center w-full h-full">
-          <Text className="text-red-500">
-            {`Error: ${Array.isArray(error.message) ? error.message.join(', ') : error.message || 'Failed to load'}`}
-          </Text>
+          <Text className="text-red-500">{`Error: ${errorMessage}`}</Text>
         </div>
       </main>
     );
@@ -163,7 +168,9 @@ export function TrophyView({ postId, onToggleView, onDraw }: TrophyViewProps) {
               artist={top3[0].username}
               rating={top3[0].rating}
               drawing={top3[0].drawing}
-              onClick={() => handleDrawingClick(0)}
+              onClick={() => {
+                handleDrawingClick(0);
+              }}
             />
           )}
           {top3.length >= 2 && top3[1] && (
@@ -172,7 +179,9 @@ export function TrophyView({ postId, onToggleView, onDraw }: TrophyViewProps) {
               artist={top3[1].username}
               rating={top3[1].rating}
               drawing={top3[1].drawing}
-              onClick={() => handleDrawingClick(1)}
+              onClick={() => {
+                handleDrawingClick(1);
+              }}
             />
           )}
           {top3.length >= 3 && top3[2] && (
@@ -181,7 +190,9 @@ export function TrophyView({ postId, onToggleView, onDraw }: TrophyViewProps) {
               artist={top3[2].username}
               rating={top3[2].rating}
               drawing={top3[2].drawing}
-              onClick={() => handleDrawingClick(2)}
+              onClick={() => {
+                handleDrawingClick(2);
+              }}
             />
           )}
         </div>
@@ -194,8 +205,10 @@ export function TrophyView({ postId, onToggleView, onDraw }: TrophyViewProps) {
       {/* Lightbox */}
       {selectedDrawing && (
         <Lightbox
-          isOpen={selectedDrawing !== null}
-          onClose={() => setSelectedDrawing(null)}
+          isOpen
+          onClose={() => {
+            setSelectedDrawing(null);
+          }}
           drawing={selectedDrawing.drawing}
           author={selectedDrawing.author}
         >

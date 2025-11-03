@@ -112,7 +112,7 @@ export async function handleEditSlateBandit(
       showToast: 'Updated!',
     });
   } catch (error) {
-    console.error(`Error updating slate bandit config: ${error}`);
+    console.error('Error updating slate bandit config:', error);
     res.status(400).json({
       status: 'error',
       message: 'Failed to update configuration',

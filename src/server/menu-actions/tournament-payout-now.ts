@@ -20,11 +20,8 @@ export async function handleRunTournamentPayout(
       res.status(400).json({ showToast: 'Post ID is required' });
       return;
     }
-    const postId = (
-      String(rawPostId).startsWith('t3_')
-        ? String(rawPostId)
-        : `t3_${rawPostId}`
-    ) as T3;
+    const raw = rawPostId as string;
+    const postId = (raw.startsWith('t3_') ? raw : `t3_${raw}`) as T3;
 
     // Check post type by reading tournament metadata (best-effort)
     let isTournament = false;

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { connectRealtime } from '@devvit/web/client';
+import { connectRealtime, disconnectRealtime } from '@devvit/web/client';
 import { REALTIME_CHANNELS } from '@shared/realtime';
 import { useQueryClient } from '@tanstack/react-query';
 import { trpc } from '@client/trpc/client';
@@ -28,10 +28,12 @@ class RealtimeManager {
     const channelName = REALTIME_CHANNELS.post(postId);
 
     // Add subscriber
-    if (!this.subscribers.has(channelName)) {
-      this.subscribers.set(channelName, new Set());
+    let channelSubscribers = this.subscribers.get(channelName);
+    if (!channelSubscribers) {
+      channelSubscribers = new Set();
+      this.subscribers.set(channelName, channelSubscribers);
     }
-    this.subscribers.get(channelName)!.add(onStatsUpdate);
+    channelSubscribers.add(onStatsUpdate);
 
     // Create connection if it doesn't exist
     if (!this.connections.has(channelName)) {
@@ -44,7 +46,9 @@ class RealtimeManager {
               // Notify all subscribers
               const subscribers = this.subscribers.get(channelName);
               if (subscribers) {
-                subscribers.forEach((callback) => callback(message.stats));
+                subscribers.forEach((callback) => {
+                  callback(message.stats);
+                });
               }
             }
           },
@@ -64,7 +68,7 @@ class RealtimeManager {
         if (subscribers.size === 0) {
           const connection = this.connections.get(channelName);
           if (connection) {
-            void connection.disconnect();
+            void disconnectRealtime(channelName);
             this.connections.delete(channelName);
             this.subscribers.delete(channelName);
           }
@@ -94,7 +98,7 @@ export function useRealtimeStats(postId: string): {
   );
 
   // Use optimistic stats if available, otherwise fall back to initial stats
-  const stats = optimisticStats || initialStats || null;
+  const stats = optimisticStats ?? initialStats ?? null;
 
   // Handle realtime updates
   useEffect(() => {

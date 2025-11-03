@@ -11,7 +11,7 @@ export async function addBacker(word: string, commentId: T1): Promise<void> {
     getBacker(normalizedWord),
   ]);
   if (isBanned) return;
-  const promises: Promise<unknown>[] = [
+  const promises: Array<Promise<unknown>> = [
     redis.set(REDIS_KEYS.wordBacking(normalizedWord), commentId),
     redis.set(REDIS_KEYS.wordBackingComment(commentId), normalizedWord),
   ];

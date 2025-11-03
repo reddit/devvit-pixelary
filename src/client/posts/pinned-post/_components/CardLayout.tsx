@@ -2,11 +2,11 @@ import React from 'react';
 import { Text } from '@components/PixelFont';
 import { IconButton } from '@components/IconButton';
 
-interface CardLayoutProps {
+type CardLayoutProps = {
   title: string;
   onClose: () => void;
   children: React.ReactNode;
-}
+};
 
 export function CardLayout(props: CardLayoutProps) {
   const { title, onClose, children } = props;

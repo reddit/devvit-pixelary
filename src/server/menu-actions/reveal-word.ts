@@ -33,7 +33,7 @@ export async function handleRevealWord(
       showToast: drawing.word,
     });
   } catch (error) {
-    console.error(`Error revealing word: ${error}`);
+    console.error('Error revealing word:', error);
     res.status(500).json({
       showToast: 'Failed to reveal word',
     });

@@ -6,6 +6,9 @@ import tailwindcss from '@tailwindcss/vite';
 import tsconfigPaths from 'vite-tsconfig-paths';
 
 export default defineConfig({
+  css: {
+    transformer: 'lightningcss',
+  },
   resolve: {
     alias: {
       '@client': path.resolve(path.dirname(fileURLToPath(import.meta.url))),
@@ -34,6 +37,7 @@ export default defineConfig({
   },
   plugins: [tsconfigPaths(), preact(), tailwindcss()],
   build: {
+    cssMinify: 'lightningcss',
     outDir: '../../dist/client',
     emptyOutDir: !process.env.ENTRY,
     modulePreload: { polyfill: false },
@@ -66,7 +70,12 @@ export default defineConfig({
         },
         // Ensure CSS doesn't inherit arbitrary shared chunk names like "errors"
         assetFileNames(assetInfo) {
-          const ext = assetInfo.name?.split('.').pop();
+          const baseName = Array.isArray(
+            (assetInfo as { names?: unknown }).names
+          )
+            ? ((assetInfo as { names: string[] }).names[0] ?? '')
+            : '';
+          const ext = baseName.split('.').pop();
           if (ext === 'css') return 'assets/styles-[hash][extname]';
           return 'assets/[name]-[hash][extname]';
         },

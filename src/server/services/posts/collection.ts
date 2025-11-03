@@ -44,9 +44,9 @@ export async function fetchTopDrawingPosts(
         return {
           postId,
           drawing: JSON.parse(drawingData.drawing) as DrawingData,
-          word: drawingData.word || '',
-          authorName: drawingData.authorName || '',
-          score: post.score || 0,
+          word: drawingData.word ?? '',
+          authorName: drawingData.authorName ?? '',
+          score: post.score ?? 0,
         };
       } catch (error) {
         return null;

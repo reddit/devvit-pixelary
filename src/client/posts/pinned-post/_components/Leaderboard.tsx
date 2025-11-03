@@ -6,9 +6,9 @@ import type { LeaderboardEntry } from '@shared/schema/index';
 import { useTelemetry } from '@client/hooks/useTelemetry';
 import { useEffect } from 'react';
 
-interface LeaderboardProps {
+type LeaderboardProps = {
   onClose: () => void;
-}
+};
 
 export function Leaderboard({ onClose }: LeaderboardProps) {
   // Telemetry
@@ -61,13 +61,13 @@ export function Leaderboard({ onClose }: LeaderboardProps) {
  * Leaderboard Row
  */
 
-interface LeaderboardRowProps {
+type LeaderboardRowProps = {
   rank: number;
   username: string;
   score: number;
   onClick?: () => void;
   className?: string;
-}
+};
 
 function LeaderboardRow({
   rank,

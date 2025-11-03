@@ -7,7 +7,7 @@ export async function handleCreateTournamentPost(
   res: Response
 ): Promise<void> {
   try {
-    const word = req.body.word || undefined;
+    const word = req.body.word ?? undefined;
     const postId = await createTournament(word);
     const postUrl = `https://reddit.com/r/${context.subredditName}/comments/${postId}`;
 
@@ -15,7 +15,7 @@ export async function handleCreateTournamentPost(
       navigateTo: postUrl,
     });
   } catch (error) {
-    console.error(`Error creating tournament post: ${error}`);
+    console.error('Error creating tournament post:', error);
     res.status(500).json({
       status: 'error',
       message: 'Failed to create tournament post',

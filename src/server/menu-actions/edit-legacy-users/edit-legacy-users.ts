@@ -17,7 +17,7 @@ export async function handleEditLegacyUsers(
     );
 
     // Parse and deduplicate usernames
-    const parsed = (usernames || '')
+    const parsed = (usernames ?? '')
       .split(',')
       .map((x) => x.trim())
       .filter(Boolean);
@@ -38,7 +38,7 @@ export async function handleEditLegacyUsers(
     }
 
     // Handle remove action
-    if (action === 'remove') {
+    else {
       const removed = await removeLegacyUsers(userIds);
       res.json({
         showToast: {
@@ -48,7 +48,7 @@ export async function handleEditLegacyUsers(
       return;
     }
   } catch (error) {
-    console.error(`Error updating legacy users: ${error}`);
+    console.error('Error updating legacy users:', error);
     res.status(400).json({
       status: 'error',
       message: 'Failed to update',

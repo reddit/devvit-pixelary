@@ -48,11 +48,21 @@ export function PinnedPost() {
     case 'menu':
       return (
         <Menu
-          onDraw={() => goToPage('drawing')}
-          onMyDrawings={() => goToPage('my-drawings')}
-          onLeaderboard={() => goToPage('leaderboard')}
-          onHowToPlay={() => goToPage('my-rewards')}
-          onLevelClick={() => goToPage('level-details')}
+          onDraw={() => {
+            goToPage('drawing');
+          }}
+          onMyDrawings={() => {
+            goToPage('my-drawings');
+          }}
+          onLeaderboard={() => {
+            goToPage('leaderboard');
+          }}
+          onHowToPlay={() => {
+            goToPage('my-rewards');
+          }}
+          onLevelClick={() => {
+            goToPage('level-details');
+          }}
         />
       );
     case 'drawing':

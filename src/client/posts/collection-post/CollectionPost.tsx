@@ -11,7 +11,7 @@ import type { CollectionPostData } from '@src/shared/schema';
 export function CollectionPost() {
   const postData = getPostData<CollectionPostData>();
 
-  if (!postData || postData.type !== 'collection') {
+  if (postData?.type !== 'collection') {
     return null;
   }
 
@@ -74,7 +74,9 @@ export function CollectionPost() {
             key={d.postId}
             data={d.drawing}
             size={88}
-            onClick={() => handleDrawingClick(d.postId)}
+            onClick={() => {
+              handleDrawingClick(d.postId);
+            }}
           />
         ))}
       </div>

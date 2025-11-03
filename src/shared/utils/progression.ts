@@ -9,7 +9,7 @@ import type { Level } from '../types';
 export function generateLevel(rank: number): Level {
   // Handle named levels (1-10)
   if (rank >= 1 && rank <= LEVELS.length) {
-    const namedLevel = LEVELS[rank - 1]!;
+    const namedLevel = LEVELS[rank - 1] ?? LEVELS[0];
     return {
       ...namedLevel,
     };
@@ -31,7 +31,7 @@ export function generateLevel(rank: number): Level {
 
   // Fallback to level 1 for invalid ranks
   return {
-    ...LEVELS[0]!,
+    ...LEVELS[0],
   };
 }
 

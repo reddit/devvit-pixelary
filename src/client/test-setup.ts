@@ -48,7 +48,9 @@ Object.defineProperty(HTMLCanvasElement.prototype, 'toDataURL', {
 });
 
 Object.defineProperty(HTMLCanvasElement.prototype, 'toBlob', {
-  value: vi.fn((callback: (blob: Blob | null) => void) => callback(new Blob())),
+  value: vi.fn((callback: (blob: Blob | null) => void) => {
+    callback(new Blob());
+  }),
 });
 
 // Mock ResizeObserver

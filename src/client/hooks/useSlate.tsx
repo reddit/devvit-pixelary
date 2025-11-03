@@ -8,7 +8,7 @@ import React, {
 import { trpc } from '@client/trpc/client';
 import type { SlateAction } from '@shared/types';
 
-interface SlateContextType {
+type SlateContextType = {
   slateId: string | null;
   setSlateId: (slateId: string | null) => void;
   trackSlateAction: (
@@ -16,7 +16,7 @@ interface SlateContextType {
     word?: string,
     metadata?: Record<string, string | number>
   ) => Promise<void>;
-}
+};
 
 const SlateContext = createContext<SlateContextType | null>(null);
 

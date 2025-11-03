@@ -17,7 +17,7 @@ export async function handleTelemetryClear(
       showToast: 'Cleared',
     });
   } catch (error) {
-    console.error(`Error clearing telemetry: ${error}`);
+    console.error('Error clearing telemetry:', error);
     res.status(400).json({
       showToast: 'Failed to clear telemetry',
     });

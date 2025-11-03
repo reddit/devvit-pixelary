@@ -9,13 +9,11 @@ export async function handleAdd(
   context: CommandContext
 ): Promise<CommandResult> {
   try {
-    if (context.authorId) {
-      const userScore = await getScore(context.authorId);
-      const userLevel = getLevelByScore(userScore);
+    const userScore = await getScore(context.authorId);
+    const userLevel = getLevelByScore(userScore);
 
-      if (!hasReward(userLevel.rank, 'add_remove_words')) {
-        return { success: false, error: 'Requires Level 3 to add words.' };
-      }
+    if (!hasReward(userLevel.rank, 'add_remove_words')) {
+      return { success: false, error: 'Requires Level 3 to add words.' };
     }
 
     if (args.length === 0) {

@@ -5,7 +5,7 @@ type MultiplierVariant = 'double' | 'triple';
 export function Multiplier({
   variant = 'double',
   size = 12,
-  title = '',
+  title,
   className = '',
   ...props
 }: IllustrationProps & { variant?: MultiplierVariant }) {

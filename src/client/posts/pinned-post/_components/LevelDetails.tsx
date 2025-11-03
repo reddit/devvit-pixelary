@@ -7,9 +7,9 @@ import { trpc } from '@client/trpc/client';
 import { useTelemetry } from '@client/hooks/useTelemetry';
 import { getRewardsByLevel, getRewardLabel } from '@shared/rewards';
 
-interface LevelDetailsProps {
+type LevelDetailsProps = {
   onClose: () => void;
-}
+};
 
 export function LevelDetails({ onClose }: LevelDetailsProps) {
   const { track } = useTelemetry();
@@ -38,18 +38,17 @@ export function LevelDetails({ onClose }: LevelDetailsProps) {
   }, [userProfile]);
 
   // Calculate actual progress percentage
-  const actualProgressPercentage =
-    userProfile && currentLevel
-      ? Math.max(
-          0,
-          Math.min(
-            100,
-            ((userProfile.score - currentLevel.min) /
-              (currentLevel.max - currentLevel.min)) *
-              100
-          )
+  const actualProgressPercentage = userProfile
+    ? Math.max(
+        0,
+        Math.min(
+          100,
+          ((userProfile.score - currentLevel.min) /
+            (currentLevel.max - currentLevel.min)) *
+            100
         )
-      : 0;
+      )
+    : 0;
 
   // Animate progress bar from 0 to actual percentage
   useEffect(() => {
@@ -58,7 +57,9 @@ export function LevelDetails({ onClose }: LevelDetailsProps) {
       const timer = setTimeout(() => {
         setDisplayProgress(actualProgressPercentage);
       }, 100);
-      return () => clearTimeout(timer);
+      return () => {
+        clearTimeout(timer);
+      };
     } else {
       setDisplayProgress(0);
     }
@@ -113,17 +114,21 @@ export function LevelDetails({ onClose }: LevelDetailsProps) {
             <div className="flex flex-row items-center justify-start gap-3">
               <Text
                 className={overMinimum ? 'text-orangered' : 'text-black-40'}
-              >{`${abbreviateNumber(overMinimum ? (userProfile?.score ?? 0) : currentLevel.min)}`}</Text>
+              >
+                {abbreviateNumber(
+                  overMinimum ? (userProfile?.score ?? 0) : currentLevel.min
+                )}
+              </Text>
               {overMinimum && !overMaximum && (
-                <Text
-                  className={overMinimum ? 'text-orangered' : 'text-black-40'}
-                >{`(${progressPercentage.toFixed(1)}%)`}</Text>
+                <Text className="text-orangered">
+                  ({progressPercentage.toFixed(1)}%)
+                </Text>
               )}
             </div>
 
-            <Text
-              className={overMaximum ? 'text-orangered' : 'text-black-40'}
-            >{`${abbreviateNumber(currentLevel.max)}`}</Text>
+            <Text className={overMaximum ? 'text-orangered' : 'text-black-40'}>
+              {abbreviateNumber(currentLevel.max)}
+            </Text>
           </div>
         </div>
 
@@ -159,10 +164,10 @@ export function LevelDetails({ onClose }: LevelDetailsProps) {
   );
 }
 
-interface RewardItemProps {
+type RewardItemProps = {
   reward: string;
   unlocked: boolean;
-}
+};
 
 function RewardItem(props: RewardItemProps) {
   const { reward, unlocked } = props;

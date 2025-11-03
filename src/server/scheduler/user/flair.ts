@@ -19,31 +19,43 @@ export async function handleSetUserFlair(
   let level: Level;
 
   try {
-    const jobData = req.body.data || req.body;
-    ({ userId, subredditName, level } = jobData);
+    const jobData = req.body.data ?? req.body;
+    const {
+      userId: rawUserId,
+      subredditName: rawSubredditName,
+      level: rawLevel,
+    } = jobData as {
+      userId?: T2;
+      subredditName?: string;
+      level?: Level;
+    };
 
     // Validate required parameters
-    if (!userId) {
+    if (!rawUserId) {
       res.status(400).json({ status: 'error', message: 'userId is required' });
       return;
     }
 
-    if (!subredditName) {
+    if (!rawSubredditName) {
       res
         .status(400)
         .json({ status: 'error', message: 'subredditName is required' });
       return;
     }
 
-    if (!level) {
+    if (!rawLevel) {
       res.status(400).json({ status: 'error', message: 'level is required' });
       return;
     }
 
+    userId = rawUserId;
+    subredditName = rawSubredditName;
+    level = rawLevel;
+
     // First check if user flair is enabled
     const userTemplates = await reddit
       .getUserFlairTemplates(subredditName)
-      .catch((_error) => {
+      .catch((_error: unknown) => {
         return [];
       });
 

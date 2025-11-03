@@ -4,17 +4,17 @@ import { Button } from '@components/Button';
 import { Drawing } from '@components/Drawing';
 import { Modal } from '@components/Modal';
 import { trpc } from '@client/trpc/client';
-import { DrawingData } from '@shared/schema/drawing';
+import type { DrawingData } from '@shared/schema/drawing';
 import { Text } from '@components/PixelFont';
 import { useTelemetry } from '@client/hooks/useTelemetry';
 import { renderDrawingToCanvas } from '@shared/utils/drawing';
 
-interface TournamentReviewStepProps {
+type TournamentReviewStepProps = {
   drawing: DrawingData;
   onCancel: () => void;
   onSuccess?: () => void;
   tournamentPostId: string;
-}
+};
 
 function generatePNGFromDrawing(drawingData: DrawingData): string {
   const canvas = document.createElement('canvas');
@@ -132,18 +132,20 @@ export function TournamentReviewStep(props: TournamentReviewStepProps) {
 
       <DeleteConfirmationModal
         isOpen={showCancelConfirm}
-        onClose={() => setShowCancelConfirm(false)}
+        onClose={() => {
+          setShowCancelConfirm(false);
+        }}
         onDelete={confirmCancel}
       />
     </main>
   );
 }
 
-interface DeleteConfirmationModalProps {
+type DeleteConfirmationModalProps = {
   isOpen: boolean;
   onClose: () => void;
   onDelete: () => void;
-}
+};
 
 function DeleteConfirmationModal(props: DeleteConfirmationModalProps) {
   const { isOpen, onClose, onDelete } = props;

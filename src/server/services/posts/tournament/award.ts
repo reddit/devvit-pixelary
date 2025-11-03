@@ -42,28 +42,26 @@ export async function awardTournamentRewards(
     entries.map(async (entry) => await getTournamentEntry(entry.member as T1))
   );
 
-  const rewardPromises: Promise<unknown>[] = [];
+  const rewardPromises: Array<Promise<unknown>> = [];
   for (let i = 0; i < cutoff; i++) {
     const score = entries[i];
     const data = entryData[i];
     if (!score || !data) continue;
     const userId = data.userId;
 
-    if (TOURNAMENT_PAYOUT_REWARD_TOP_PERCENT > 0) {
-      rewardPromises.push(
-        incrementScore(userId, TOURNAMENT_PAYOUT_REWARD_TOP_PERCENT)
-      );
-    }
+    rewardPromises.push(
+      incrementScore(userId, TOURNAMENT_PAYOUT_REWARD_TOP_PERCENT)
+    );
 
-    if (i === 0 && TOURNAMENT_PAYOUT_LADDER_FIRST > 0) {
+    if (i === 0) {
       rewardPromises.push(
         incrementScore(userId, TOURNAMENT_PAYOUT_LADDER_FIRST)
       );
-    } else if (i === 1 && TOURNAMENT_PAYOUT_LADDER_SECOND > 0) {
+    } else if (i === 1) {
       rewardPromises.push(
         incrementScore(userId, TOURNAMENT_PAYOUT_LADDER_SECOND)
       );
-    } else if (i === 2 && TOURNAMENT_PAYOUT_LADDER_THIRD > 0) {
+    } else if (i === 2) {
       rewardPromises.push(
         incrementScore(userId, TOURNAMENT_PAYOUT_LADDER_THIRD)
       );
