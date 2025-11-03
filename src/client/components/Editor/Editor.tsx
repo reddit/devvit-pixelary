@@ -108,12 +108,16 @@ export function DrawingEditor({
         return;
       }
 
-      await trackSlateActionRef.current({
-        slateId: effectiveSlateId,
-        action,
-        word,
-        metadata,
-      });
+      try {
+        await trackSlateActionRef.current({
+          slateId: effectiveSlateId,
+          action,
+          word,
+          metadata,
+        });
+      } catch {
+        // ignore telemetry errors
+      }
     },
     [slateId, currentSlateId]
   );

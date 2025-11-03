@@ -41,9 +41,22 @@ import { isAdmin, isModerator } from '@server/core/redis';
 import { DrawingDataSchema } from '@shared/schema/pixelary';
 import { trackEventFromContext } from '@server/services/telemetry';
 import type { TelemetryEventType } from '@shared/types';
-import { z } from 'zod';
+import { z, ZodError } from 'zod';
 
-const t = initTRPC.context<Context>().create();
+const t = initTRPC.context<Context>().create({
+  errorFormatter({ shape, error }) {
+    return {
+      ...shape,
+      data: {
+        ...shape.data,
+        zodError:
+          error.code === 'BAD_REQUEST' && error.cause instanceof ZodError
+            ? error.cause.flatten()
+            : null,
+      },
+    };
+  },
+});
 
 export const appRouter = t.router({
   system: t.router({
@@ -463,8 +476,10 @@ export const appRouter = t.router({
           })
         )
         .mutation(async ({ ctx, input }) => {
+          // In webview/local contexts, subredditName may be unavailable.
+          // Treat tracking as a no-op instead of throwing to avoid noisy errors.
           if (!ctx.subredditName) {
-            throw new Error('Subreddit not found');
+            return { ok: true } as const;
           }
 
           // Map action names to slate event types
@@ -509,7 +524,7 @@ export const appRouter = t.router({
           }
           // All other events should be handled by telemetry.ts instead
 
-          return { ok: true };
+          return { ok: true } as const;
         }),
     }),
 

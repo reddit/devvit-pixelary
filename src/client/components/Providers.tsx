@@ -1,6 +1,7 @@
 import React from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { httpBatchLink } from '@trpc/client';
+import { loggerLink } from '@trpc/client/links/loggerLink';
 
 import { ToastProvider } from '@components/ToastManager';
 import { TelemetryProvider } from '@hooks/useTelemetry';
@@ -14,7 +15,17 @@ export function Providers(props: React.PropsWithChildren): React.ReactElement {
 
   const queryClient = React.useMemo(() => new QueryClient(), []);
   const trpcClient = React.useMemo(
-    () => trpc.createClient({ links: [httpBatchLink({ url: '/api/trpc' })] }),
+    () =>
+      trpc.createClient({
+        links: [
+          loggerLink({
+            enabled: (opts) =>
+              import.meta.env.DEV ||
+              (opts.direction === 'down' && opts.result instanceof Error),
+          }),
+          httpBatchLink({ url: '/api/trpc' }),
+        ],
+      }),
     []
   );
 

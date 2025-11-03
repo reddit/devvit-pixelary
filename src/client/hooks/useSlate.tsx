@@ -39,12 +39,16 @@ export function SlateProvider({ children }: { children: React.ReactNode }) {
         return;
       }
 
-      await trackSlateActionMutation.mutateAsync({
-        slateId,
-        action,
-        word,
-        metadata,
-      });
+      try {
+        await trackSlateActionMutation.mutateAsync({
+          slateId,
+          action,
+          word,
+          metadata,
+        });
+      } catch {
+        // Ignore telemetry errors in web/local contexts
+      }
     },
     [slateId, trackSlateActionMutation]
   );
