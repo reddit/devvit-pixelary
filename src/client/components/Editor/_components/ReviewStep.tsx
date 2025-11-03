@@ -6,7 +6,7 @@ import { Modal } from '@components/Modal';
 import { trpc } from '@client/trpc/client';
 import type { DrawingData } from '@shared/schema/drawing';
 import { Text } from '@components/PixelFont';
-import { navigateTo } from '@devvit/web/client';
+import { navigateTo, context } from '@devvit/web/client';
 import { useTelemetry } from '@client/hooks/useTelemetry';
 import { useEffect } from 'react';
 import type { SlateAction } from '@shared/types';
@@ -102,11 +102,24 @@ export function ReviewStep(props: ReviewStepProps) {
       });
 
       if (result.success) {
-        // Track slate publish - await to ensure delivery before navigation
-        await trackSlateAction('slate_posted', word);
+        // Attempt to deliver slate event, but cap wait to keep UX snappy
+        try {
+          await Promise.race([
+            trackSlateAction('slate_posted', word, { postId: result.postId }),
+            new Promise((resolve) => setTimeout(resolve, 400)),
+          ]);
+        } catch {
+          // Ignore telemetry errors
+        }
 
-        if (result.navigateTo) {
-          navigateTo(result.navigateTo);
+        const url =
+          result.navigateTo ||
+          (context.subredditName
+            ? `https://reddit.com/r/${context.subredditName}/comments/${result.postId}`
+            : undefined);
+
+        if (url) {
+          navigateTo(url);
         } else if (onSuccess) {
           onSuccess(result);
         }
