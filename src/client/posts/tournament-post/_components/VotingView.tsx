@@ -4,6 +4,7 @@ import { Drawing } from '@components/Drawing';
 import { Button } from '@components/Button';
 import { Text } from '@components/PixelFont';
 import { CyclingMessage } from '@components/CyclingMessage';
+import { requestExpandedMode } from '@devvit/web/client';
 import { Collision } from '@components/Collision';
 import type { DrawingData } from '@shared/schema/drawing';
 import { ActiveEffectsBadge } from '@components/ActiveEffectsBadge';
@@ -431,7 +432,16 @@ export function VotingView({
             Pick the best, or ...
           </Text>
         )}
-        <Button onClick={onDraw} size="large" variant="primary">
+        <Button
+          onNativeClick={(e) => {
+            void requestExpandedMode(
+              e.nativeEvent as unknown as MouseEvent,
+              'editor'
+            );
+          }}
+          size="large"
+          variant="primary"
+        >
           ADD A DRAWING
         </Button>
       </div>

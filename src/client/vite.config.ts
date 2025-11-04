@@ -54,6 +54,7 @@ export default defineConfig({
           pinned: './pinned.html',
           collection: './collection.html',
           tournament: './tournament.html',
+          editor: './editor.html',
         };
       })(),
       output: {

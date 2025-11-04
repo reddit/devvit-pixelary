@@ -23,6 +23,11 @@
         "entry": "tournament.html",
         "height": "tall",
         "inline": true
+      },
+      "editor": {
+        "entry": "editor.html",
+        "height": "tall",
+        "inline": false
       }
     }
   },

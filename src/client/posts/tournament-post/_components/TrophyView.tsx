@@ -6,6 +6,7 @@ import { IconButton } from '@components/IconButton';
 import { Button } from '@components/Button';
 import { Lightbox } from '@components/Lightbox';
 import type { DrawingData } from '@shared/schema/drawing';
+import { requestExpandedMode } from '@devvit/web/client';
 
 type TrophyViewProps = {
   postId: string;
@@ -198,7 +199,16 @@ export function TrophyView({ postId, onToggleView, onDraw }: TrophyViewProps) {
         </div>
       )}
       {/* Draw button at the bottom */}
-      <Button onClick={onDraw} size="large" className="w-min">
+      <Button
+        onNativeClick={(e) => {
+          void requestExpandedMode(
+            e.nativeEvent as unknown as MouseEvent,
+            'editor'
+          );
+        }}
+        size="large"
+        className="w-min"
+      >
         DRAW THE WORD
       </Button>
 

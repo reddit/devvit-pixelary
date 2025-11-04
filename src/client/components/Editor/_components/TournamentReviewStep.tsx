@@ -7,6 +7,7 @@ import { trpc } from '@client/trpc/client';
 import type { DrawingData } from '@shared/schema/drawing';
 import { Text } from '@components/PixelFont';
 import { useTelemetry } from '@client/hooks/useTelemetry';
+import { exitExpandedMode } from '@devvit/web/client';
 import { renderDrawingToCanvas } from '@shared/utils/drawing';
 
 type TournamentReviewStepProps = {
@@ -157,7 +158,15 @@ function DeleteConfirmationModal(props: DeleteConfirmationModalProps) {
       </div>
 
       <div className="flex flex-row gap-3 items-center justify-center w-full">
-        <Button variant="white" onClick={onDelete}>
+        <Button
+          variant="white"
+          onNativeClick={(e) => {
+            void exitExpandedMode(
+              e.nativeEvent as unknown as PointerEvent
+            ).catch(() => undefined);
+          }}
+          onClick={onDelete}
+        >
           Delete
         </Button>
         <Button onClick={onClose}>Cancel</Button>

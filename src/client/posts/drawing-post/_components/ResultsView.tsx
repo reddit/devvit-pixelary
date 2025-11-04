@@ -13,6 +13,7 @@ import { useState, useEffect } from 'react';
 import { useToastHelpers } from '@components/ToastManager';
 import type { PostGuesses } from '@shared/schema/pixelary';
 import { useTelemetry } from '@client/hooks/useTelemetry';
+import { requestExpandedMode } from '@devvit/web/client';
 
 type ResultsViewProps = {
   drawing: DrawingData;
@@ -152,7 +153,12 @@ export function ResultsView({
       />
       {/* Primary CTA */}
       <Button
-        onClick={onDrawSomething}
+        onNativeClick={(e) => {
+          void requestExpandedMode(
+            e.nativeEvent as unknown as MouseEvent,
+            'editor'
+          );
+        }}
         size="large"
         telemetryEvent="click_draw_something"
       >

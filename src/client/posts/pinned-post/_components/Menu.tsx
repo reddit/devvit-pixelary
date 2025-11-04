@@ -7,6 +7,7 @@ import { trpc } from '@client/trpc/client';
 import { useTelemetry } from '@client/hooks/useTelemetry';
 import { useEffect } from 'react';
 import { ActiveEffectsBadge } from '@components/ActiveEffectsBadge';
+import { requestExpandedMode } from '@devvit/web/client';
 
 type MenuProps = {
   onDraw: () => void;
@@ -17,8 +18,7 @@ type MenuProps = {
 };
 
 export function Menu(props: MenuProps) {
-  const { onDraw, onMyDrawings, onLeaderboard, onHowToPlay, onLevelClick } =
-    props;
+  const { onMyDrawings, onLeaderboard, onHowToPlay, onLevelClick } = props;
 
   // Telemetry
   const { track } = useTelemetry();
@@ -49,7 +49,16 @@ export function Menu(props: MenuProps) {
 
       {/* Menu */}
       <nav className="flex flex-col gap-3 w-full max-w-3xs">
-        <Button onClick={onDraw} size="large" telemetryEvent="click_draw">
+        <Button
+          onNativeClick={(e) => {
+            void requestExpandedMode(
+              e.nativeEvent as unknown as MouseEvent,
+              'editor'
+            );
+          }}
+          size="large"
+          telemetryEvent="click_draw"
+        >
           Draw
         </Button>
 

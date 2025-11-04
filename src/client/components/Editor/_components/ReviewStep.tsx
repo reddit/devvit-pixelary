@@ -6,7 +6,7 @@ import { Modal } from '@components/Modal';
 import { trpc } from '@client/trpc/client';
 import type { DrawingData } from '@shared/schema/drawing';
 import { Text } from '@components/PixelFont';
-import { navigateTo, context } from '@devvit/web/client';
+import { navigateTo, context, exitExpandedMode } from '@devvit/web/client';
 import { useTelemetry } from '@client/hooks/useTelemetry';
 import { useEffect } from 'react';
 import type { SlateAction } from '@shared/types';
@@ -206,7 +206,15 @@ function DeleteConfirmationModal(props: DeleteConfirmationModalProps) {
       {/* Actions - The primary action has been placed on the left side and deemphasized to avoid accidental misclicks given the severity of the action.
        */}
       <div className="flex flex-row gap-3 items-center justify-center w-full">
-        <Button variant="white" onClick={onDelete}>
+        <Button
+          variant="white"
+          onNativeClick={(e) => {
+            void exitExpandedMode(
+              e.nativeEvent as unknown as PointerEvent
+            ).catch(() => undefined);
+          }}
+          onClick={onDelete}
+        >
           Delete
         </Button>
         <Button onClick={onClose}>Cancel</Button>
