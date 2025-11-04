@@ -66,7 +66,7 @@ export function TournamentReviewStep(props: TournamentReviewStepProps) {
     }
   );
 
-  const handlePost = async () => {
+  const handlePost = async (nativeEvent?: PointerEvent) => {
     void track('click_post_drawing');
 
     try {
@@ -84,6 +84,9 @@ export function TournamentReviewStep(props: TournamentReviewStepProps) {
       });
 
       console.log('TournamentReviewStep: Submission successful');
+
+      // Exit expanded mode after a successful submission
+      await exitExpandedMode(nativeEvent).catch(() => undefined);
 
       if (onSuccess) {
         onSuccess();
@@ -124,7 +127,9 @@ export function TournamentReviewStep(props: TournamentReviewStepProps) {
         </Button>
 
         <Button
-          onClick={handlePost}
+          onNativeClick={(e) => {
+            void handlePost(e.nativeEvent as unknown as PointerEvent);
+          }}
           disabled={submitTournamentDrawing.isPending}
         >
           {submitTournamentDrawing.isPending ? 'SUBMITTING...' : 'SUBMIT'}
