@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { DrawingEditor } from '@client/components/Editor/Editor';
 import { MyDrawings } from './_components/MyDrawings';
 import { Leaderboard } from './_components/Leaderboard';
 import { MyRewards } from './_components/MyRewards';
@@ -9,7 +8,6 @@ import { trpc } from '@client/trpc/client';
 
 type Page =
   | 'menu'
-  | 'drawing'
   | 'my-drawings'
   | 'leaderboard'
   | 'my-rewards'
@@ -48,9 +46,6 @@ export function PinnedPost() {
     case 'menu':
       return (
         <Menu
-          onDraw={() => {
-            goToPage('drawing');
-          }}
           onMyDrawings={() => {
             goToPage('my-drawings');
           }}
@@ -65,8 +60,6 @@ export function PinnedPost() {
           }}
         />
       );
-    case 'drawing':
-      return <DrawingEditor onClose={handleClose} />;
     case 'my-drawings':
       return <MyDrawings onClose={handleClose} />;
     case 'leaderboard':

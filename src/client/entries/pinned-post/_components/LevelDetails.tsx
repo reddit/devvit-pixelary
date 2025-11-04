@@ -86,9 +86,7 @@ export function LevelDetails({ onClose }: LevelDetailsProps) {
         {/* Header */}
         <header className="flex flex-row items-start justify-between gap-2 w-full">
           <div className="flex flex-col items-start justify-start gap-2 flex-1">
-            <Text color="var(--color-orangered)">
-              {`Level ${currentLevel.rank}`}
-            </Text>
+            <Text color="var(--color-orangered)">{`Level ${currentLevel.rank}`}</Text>
             <Text scale={3}>{currentLevel.name}</Text>
           </div>
 
@@ -120,9 +118,7 @@ export function LevelDetails({ onClose }: LevelDetailsProps) {
                 )}
               </Text>
               {overMinimum && !overMaximum && (
-                <Text className="text-orangered">
-                  {`(${progressPercentage.toFixed(1)}%)`}
-                </Text>
+                <Text className="text-orangered">{`(${progressPercentage.toFixed(1)}%)`}</Text>
               )}
             </div>
 

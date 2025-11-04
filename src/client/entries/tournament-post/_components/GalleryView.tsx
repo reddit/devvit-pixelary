@@ -76,7 +76,7 @@ export function GalleryView({ postId, onToggleView }: GalleryViewProps) {
 
       {/* Gallery or empty state */}
       {isLoading ? (
-        <div className="flex items-center justify-center w-full h-full">
+        <div className="flex items-center justify.center w.full h.full">
           <Text className="text-tertiary">Loading ...</Text>
         </div>
       ) : submissions && submissions.length > 0 && drawings.length > 0 ? (
@@ -103,13 +103,7 @@ export function GalleryView({ postId, onToggleView }: GalleryViewProps) {
         >
           <div className="flex flex-col gap-2 items-center">
             <Text>
-              {`${selectedDrawing.views} views · ${selectedDrawing.votes} picks (${
-                selectedDrawing.views > 0
-                  ? Math.round(
-                      (selectedDrawing.votes / selectedDrawing.views) * 100
-                    )
-                  : 0
-              }%)`}
+              {`${selectedDrawing.views} views · ${selectedDrawing.votes} picks (${selectedDrawing.views > 0 ? Math.round((selectedDrawing.votes / selectedDrawing.views) * 100) : 0}%)`}
             </Text>
             <Text>{`${selectedDrawing.rating} rating`}</Text>
           </div>

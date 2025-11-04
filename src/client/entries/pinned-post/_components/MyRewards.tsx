@@ -97,7 +97,6 @@ export function MyRewards({ onClose }: MyRewardsProps) {
     () => wrapTextByWidth(selectedDescription, 128),
     [selectedDescription]
   );
-
   const activeExtraDrawingSeconds = useMemo(() => {
     const list = activeEffects ?? [];
     let total = 0;
@@ -225,13 +224,6 @@ export function MyRewards({ onClose }: MyRewardsProps) {
   );
 }
 
-/**
- * Render the consumable illustration for a given item ID.
- * @param id - The item ID.
- * @param size - The size of the illustration.
- * @returns The rendered illustration.
- */
-
 function renderConsumableIllustration(id: ConsumableId, size = 36) {
   switch (id) {
     case 'score_multiplier_2x_4h':
@@ -245,15 +237,6 @@ function renderConsumableIllustration(id: ConsumableId, size = 36) {
   }
 }
 
-/**
- * Props for the ConsumableItem component.
- * @param itemId - The item ID.
- * @param quantity - The quantity of the item.
- * @param disabled - Whether the item is disabled.
- * @param onUse - The function to call when the item is used.
- * @param onView - The function to call when the item is viewed.
- */
-
 type ConsumableItemProps = {
   itemId: ConsumableId;
   quantity: number;
@@ -261,16 +244,6 @@ type ConsumableItemProps = {
   onUse: () => void;
   onView: () => void;
 };
-
-/**
- * Render a consumable item.
- * @param itemId - The item ID.
- * @param quantity - The quantity of the item.
- * @param disabled - Whether the item is disabled.
- * @param onUse - The function to call when the item is used.
- * @param onView - The function to call when the item is viewed.
- * @returns The rendered consumable item.
- */
 
 function ConsumableItem({
   itemId,
@@ -307,12 +280,6 @@ function ConsumableItem({
     </div>
   );
 }
-
-/**
- * Get the minimum level for a reward.
- * @param reward - The reward.
- * @returns The minimum level.
- */
 
 function getRewardMinLevel(reward: string): number {
   const levelMap: Record<string, number> = {

@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import { trpc } from '@client/trpc/client';
-import { DrawingEditor } from '@components/Editor/Editor';
 import { VotingView } from './_components/VotingView';
 import { GalleryView } from './_components/GalleryView';
 import { TrophyView } from './_components/TrophyView';
@@ -13,7 +12,7 @@ import type { TournamentPostData } from '@shared/schema';
 type ViewMode = 'voting' | 'gallery' | 'trophy';
 
 export function TournamentPost() {
-  const [showEditor, setShowEditor] = useState(false);
+  // Editor launches in expanded mode now; no inline editor state
   const [viewMode, setViewMode] = useState<ViewMode>('voting');
   const { success: showSuccessToast } = useToastHelpers();
 
@@ -42,39 +41,20 @@ export function TournamentPost() {
   }, [utils]);
 
   const handleDrawSomething = () => {
-    setShowEditor(true);
-  };
-
-  const handleCloseEditor = () => {
-    setShowEditor(false);
+    return;
   };
 
   const handleEditorSuccess = async () => {
-    setShowEditor(false);
     showSuccessToast('Submitted!', { duration: 3000 });
-    // Refetch stats to update submission count
     await refetchStats();
   };
-
-  // Drawing state
-  if (showEditor) {
-    return (
-      <DrawingEditor
-        onClose={handleCloseEditor}
-        onSuccess={handleEditorSuccess}
-        mode="tournament-comment"
-        tournamentPostId={currentPostId}
-        tournamentWord={word}
-      />
-    );
-  }
 
   // Show gallery/voting UI
   return (
     <>
       {/* Voting view - preserve state when hidden */}
       <div className={viewMode === 'voting' ? 'absolute inset-0' : 'hidden'}>
-        <div className="absolute flex flex-col gap-6 items-center justify-center h-full w-full p-6">
+        <div className="absolute flex flex-col gap-6 items-center justify-center h.full w.full p-6">
           <VotingView
             postId={currentPostId}
             stats={stats}

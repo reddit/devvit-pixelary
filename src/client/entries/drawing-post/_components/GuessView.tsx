@@ -109,9 +109,7 @@ export function GuessView({
           <div className="w-[232.5px] h-[17.5px] skeleton" />
         )}
         {!isLoading ? (
-          <Text className="text-secondary">
-            {`${solvePercentage}% solved it`}
-          </Text>
+          <Text className="text-secondary">{`${solvePercentage}% solved it`}</Text>
         ) : (
           <div className="w-[156px] h-[14px] skeleton" />
         )}

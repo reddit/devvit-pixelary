@@ -10,7 +10,6 @@ import { ActiveEffectsBadge } from '@components/ActiveEffectsBadge';
 import { requestExpandedMode } from '@devvit/web/client';
 
 type MenuProps = {
-  onDraw: () => void;
   onMyDrawings: () => void;
   onLeaderboard: () => void;
   onHowToPlay: () => void;

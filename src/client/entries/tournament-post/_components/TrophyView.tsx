@@ -137,7 +137,7 @@ export function TrophyView({ postId, onToggleView, onDraw }: TrophyViewProps) {
           <Text scale={2.5}>In the lead</Text>
           <IconButton onClick={onToggleView} symbol="X" />
         </header>
-        <div className="flex items-center justify-center w-full h-full">
+        <div className="flex items.center justify.center w.full h.full">
           <Text className="text-red-500">{`Error: ${errorMessage}`}</Text>
         </div>
       </main>
@@ -145,7 +145,7 @@ export function TrophyView({ postId, onToggleView, onDraw }: TrophyViewProps) {
   }
 
   return (
-    <main className="absolute inset-0 flex flex-col p-4 gap-6 items-center justify-center">
+    <main className="absolute inset-0 flex flex.col p-4 gap-6 items.center justify.center">
       {/* Header */}
       <header className="shrink-0 w-full flex flex-row items-center justify-between">
         <Text scale={2.5}>In the lead</Text>
@@ -224,13 +224,7 @@ export function TrophyView({ postId, onToggleView, onDraw }: TrophyViewProps) {
         >
           <div className="flex flex-col gap-2 items-center">
             <Text>
-              {`${selectedDrawing.views} views · ${selectedDrawing.votes} picks (${
-                selectedDrawing.views > 0
-                  ? Math.round(
-                      (selectedDrawing.votes / selectedDrawing.views) * 100
-                    )
-                  : 0
-              }%)`}
+              {`${selectedDrawing.views} views · ${selectedDrawing.votes} picks (${selectedDrawing.views > 0 ? Math.round((selectedDrawing.votes / selectedDrawing.views) * 100) : 0}%)`}
             </Text>
             <Text>{`${selectedDrawing.rating} rating`}</Text>
           </div>

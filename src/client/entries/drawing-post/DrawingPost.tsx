@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { GuessView } from './_components/GuessView';
 import { ResultsView } from './_components/ResultsView';
-import { DrawingEditor } from '@components/Editor/Editor';
 import { Confetti } from '@components/Confetti';
 import { ProgressBar } from '@components/ProgressBar';
 import { trpc } from '@client/trpc/client';
@@ -43,7 +42,6 @@ export const DrawingPost = () => {
   const [currentState, setCurrentState] =
     useState<DrawingState>(getInitialState);
   const [feedback, setFeedback] = useState<boolean | null>(null);
-  const [showEditor, setShowEditor] = useState(false);
   const [earnedPoints, setEarnedPoints] = useState<number | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const { data: userProfile } = trpc.app.user.getProfile.useQuery(
@@ -245,11 +243,7 @@ export const DrawingPost = () => {
   };
 
   const handleDrawSomething = () => {
-    setShowEditor(true);
-  };
-
-  const handleCloseEditor = () => {
-    setShowEditor(false);
+    return;
   };
 
   // Use actual post data
@@ -264,11 +258,6 @@ export const DrawingPost = () => {
       setCurrentState('unsolved');
     }
   }, [currentState, drawingData, word]);
-
-  // Show editor if requested
-  if (showEditor) {
-    return <DrawingEditor onClose={handleCloseEditor} />;
-  }
 
   if (
     currentState === 'solved' ||

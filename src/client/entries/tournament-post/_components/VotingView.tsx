@@ -85,17 +85,14 @@ function DrawingCard({
       case 'idle':
         // No animations
         break;
-
       case 'highlighting-winner':
         classes.push('is-highlighting', 'is-winner');
         classes.push('tournaments-animate-winner-highlight');
         break;
-
       case 'highlighting-loser':
         classes.push('is-highlighting', 'is-loser');
         classes.push('tournaments-animate-loser-fadeout');
         break;
-
       case 'exiting-winner':
         classes.push('is-sliding-out', 'is-winner-sliding-out');
         classes.push(
@@ -104,7 +101,6 @@ function DrawingCard({
             : 'tournaments-animate-slide-out-right'
         );
         break;
-
       case 'exiting-loser':
         classes.push('is-sliding-out', 'is-loser-sliding-out');
         classes.push(
@@ -113,7 +109,6 @@ function DrawingCard({
             : 'tournaments-animate-slide-out-right-loser'
         );
         break;
-
       case 'entering':
         classes.push('is-sliding-in');
         classes.push(
@@ -175,9 +170,7 @@ export function VotingView({
     isFetching: isFetchingPairs,
   } = trpc.app.tournament.getDrawingPairs.useQuery(
     { postId, count: 5 },
-    {
-      enabled: false,
-    }
+    { enabled: false }
   );
 
   const submitVote = trpc.app.tournament.submitVote.useMutation();
@@ -213,7 +206,6 @@ export function VotingView({
         // Move to next pair
         setCurrentPairIndex((prev) => {
           const nextIndex = prev + 1;
-
           // Refill queue if getting low
           if (
             nextIndex >= pairsQueue.length - 2 &&
@@ -222,19 +214,16 @@ export function VotingView({
           ) {
             void prefetchPairs();
           }
-
           return nextIndex;
         });
-
         // Start entering animation
         setAnimationState('entering');
-
         const enterTimeout = setTimeout(() => {
           setAnimationState('idle');
           setWinnerSide(null);
         }, 500);
         timeoutRefs.current.push(enterTimeout);
-      }, 500); // Wait for exit slide-out to complete
+      }, 500);
       timeoutRefs.current.push(transitionTimeout);
     }
   }, [animationState, hasEnoughSubmissions, prefetchPairs, pairsQueue.length]);
@@ -242,10 +231,8 @@ export function VotingView({
   // Trigger collision effect when entering the entering state
   useEffect(() => {
     if (animationState === 'entering') {
-      // Trigger collision effect mid-way when cards meet (250ms = midpoint of 500ms animation)
       const collisionTimeout = setTimeout(() => {
         setShowCollision(true);
-        // Auto-hide after 1.75 seconds total (0.25s delay + 1.5s collision = 1.75s)
         const hideTimeout = setTimeout(() => {
           setShowCollision(false);
         }, 1750);
@@ -282,7 +269,6 @@ export function VotingView({
   // Track views when drawings are displayed (only once per pair)
   useEffect(() => {
     if (leftDrawing && rightDrawing && animationState === 'idle') {
-      // Track views for both drawings when they're first displayed
       if (!trackedViews.current.has(leftDrawing.commentId)) {
         trackedViews.current.add(leftDrawing.commentId);
         void incrementViews.mutateAsync({ commentId: leftDrawing.commentId });
@@ -294,7 +280,6 @@ export function VotingView({
     }
   }, [leftDrawing, rightDrawing, animationState, incrementViews]);
 
-  // Cleanup timeouts on unmount
   useEffect(() => {
     return () => {
       timeoutRefs.current.forEach((timeout) => {
@@ -306,20 +291,13 @@ export function VotingView({
 
   const handleVote = (winnerId: string, loserId: string) => {
     if (animationState !== 'idle' || !leftDrawing || !rightDrawing) return;
-
-    // Determine winner side
     const isLeftWinner = leftDrawing.commentId === winnerId;
     setWinnerSide(isLeftWinner ? 'left' : 'right');
-
-    // Stage 1: Highlight winner (300ms)
     setAnimationState('highlighting');
-
     const highlightTimeout = setTimeout(() => {
       setAnimationState('exiting');
     }, 300);
     timeoutRefs.current.push(highlightTimeout);
-
-    // Submit vote after highlight starts (non-blocking)
     void submitVote.mutateAsync({
       postId,
       winnerCommentId: winnerId,
@@ -327,17 +305,13 @@ export function VotingView({
     });
   };
 
-  // Don't show loading if we're animating - keep old content visible
   const isLoading = animationState === 'idle' && !leftDrawing && !rightDrawing;
-
-  // Determine if buttons should be disabled
   const isButtonDisabled =
     submitVote.isPending ||
     isLoading ||
     animationState !== 'idle' ||
     !hasEnoughSubmissions;
 
-  // Show error message if fetching pairs failed
   if (pairsError) {
     return (
       <div className="absolute inset-0 flex flex-col items-center justify-center gap-8 w-full h-full">
@@ -361,17 +335,13 @@ export function VotingView({
   return (
     <div className="absolute inset-0 flex flex-col items-center justify-center gap-10 w-full h-full">
       <ActiveEffectsBadge />
-      {/* Gallery toggle button */}
       <div className="absolute flex flex-row gap-4 items-center top-4 right-4">
-        {/* Drawing */}
         <button
           onClick={onToggleGallery}
           className="w-8 h-8 flex items-center justify-center cursor-pointer transition-all duration-300 hover:scale-115 active:scale-90"
         >
           <Drawings size={24} />
         </button>
-
-        {/* Gold Trophy */}
         <button
           onClick={onToggleTrophy}
           className="w-8 h-8 flex items-center justify-center cursor-pointer transition-all duration-300 hover:scale-115 active:scale-90"
@@ -425,7 +395,6 @@ export function VotingView({
         </div>
       )}
 
-      {/* Action bar */}
       <div className="flex flex-col gap-3 items-center">
         {hasEnoughSubmissions && (
           <Text scale={2} className="text-secondary">
@@ -446,7 +415,6 @@ export function VotingView({
         </Button>
       </div>
 
-      {/* Collision effect overlay */}
       {showCollision && <Collision />}
     </div>
   );

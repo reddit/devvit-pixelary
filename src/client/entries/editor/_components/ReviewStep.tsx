@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@components/Button';
 import { Drawing } from '@components/Drawing';
@@ -8,7 +8,6 @@ import type { DrawingData } from '@shared/schema/drawing';
 import { Text } from '@components/PixelFont';
 import { navigateTo, context, exitExpandedMode } from '@devvit/web/client';
 import { useTelemetry } from '@client/hooks/useTelemetry';
-import { useEffect } from 'react';
 import type { SlateAction } from '@shared/types';
 import { renderDrawingToCanvas } from '@shared/utils/drawing';
 
