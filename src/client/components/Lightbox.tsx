@@ -9,6 +9,7 @@ type LightboxProps = {
   onClose: () => void;
   drawing: DrawingData;
   author?: string | undefined;
+  word?: string | undefined;
   children?: ReactNode;
 };
 
@@ -17,6 +18,7 @@ export function Lightbox({
   onClose,
   drawing,
   author,
+  word,
   children,
 }: LightboxProps) {
   useEffect(() => {
@@ -49,8 +51,8 @@ export function Lightbox({
 
       <div className="flex flex-col items-center justify-center gap-2 text-white">
         {/* Author (built-in) */}
-        {author && <Text scale={3}>{`By u/${author}`}</Text>}
-
+        {word && <Text scale={3}>{word}</Text>}
+        {author && <Text>{`By u/${author}`}</Text>}
         {/* Custom metadata */}
         {children}
       </div>

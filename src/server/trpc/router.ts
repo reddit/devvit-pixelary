@@ -39,6 +39,7 @@ import {
 } from '@server/services/progression';
 import { isAdmin, isModerator } from '@server/core/redis';
 import { DrawingDataSchema } from '@shared/schema/pixelary';
+import type { DrawingData } from '@shared/schema/drawing';
 import { trackEventFromContext } from '@server/services/telemetry';
 import type { TelemetryEventType } from '@shared/types';
 import { z, ZodError } from 'zod';
@@ -840,7 +841,7 @@ export const appRouter = t.router({
             })
             .filter(Boolean) as Array<{
             commentId: T1;
-            drawing: unknown;
+            drawing: DrawingData;
             userId: string;
             username: string;
             postId: string;

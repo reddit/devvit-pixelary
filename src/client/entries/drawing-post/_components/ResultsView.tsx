@@ -171,10 +171,9 @@ export function ResultsView({
           setIsLightboxOpen(false);
         }}
         drawing={drawing}
+        word={word}
         author={authorUsername}
-      >
-        <Text scale={3}>{word}</Text>
-      </Lightbox>
+      />
     </main>
   );
 }

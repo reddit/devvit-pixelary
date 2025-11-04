@@ -81,6 +81,7 @@ export function TournamentPost() {
           onToggleView={() => {
             setViewMode('voting');
           }}
+          word={word}
         />
       </div>
 
@@ -92,6 +93,7 @@ export function TournamentPost() {
             setViewMode('voting');
           }}
           onDraw={handleDrawSomething}
+          word={word}
         />
       </div>
     </>

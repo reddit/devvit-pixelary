@@ -9,9 +9,10 @@ import type { DrawingData } from '@shared/schema/drawing';
 type GalleryViewProps = {
   postId: string;
   onToggleView: () => void;
+  word?: string;
 };
 
-export function GalleryView({ postId, onToggleView }: GalleryViewProps) {
+export function GalleryView({ postId, onToggleView, word }: GalleryViewProps) {
   const [selectedDrawing, setSelectedDrawing] = useState<{
     drawing: DrawingData;
     author: string;
@@ -100,6 +101,7 @@ export function GalleryView({ postId, onToggleView }: GalleryViewProps) {
           }}
           drawing={selectedDrawing.drawing}
           author={selectedDrawing.author}
+          word={word}
         >
           <div className="flex flex-col gap-2 items-center">
             <Text>

@@ -12,6 +12,7 @@ type TrophyViewProps = {
   postId: string;
   onToggleView: () => void;
   onDraw: () => void;
+  word?: string;
 };
 
 type TrophyPosition = 'gold' | 'silver' | 'bronze';
@@ -86,7 +87,12 @@ function WinnerDisplay({
   );
 }
 
-export function TrophyView({ postId, onToggleView, onDraw }: TrophyViewProps) {
+export function TrophyView({
+  postId,
+  onToggleView,
+  onDraw,
+  word,
+}: TrophyViewProps) {
   const [selectedDrawing, setSelectedDrawing] = useState<{
     drawing: DrawingData;
     author: string;
@@ -201,6 +207,7 @@ export function TrophyView({ postId, onToggleView, onDraw }: TrophyViewProps) {
       {/* Draw button at the bottom */}
       <Button
         onNativeClick={(e) => {
+          onDraw();
           void requestExpandedMode(
             e.nativeEvent as unknown as MouseEvent,
             'editor'
@@ -221,6 +228,7 @@ export function TrophyView({ postId, onToggleView, onDraw }: TrophyViewProps) {
           }}
           drawing={selectedDrawing.drawing}
           author={selectedDrawing.author}
+          word={word}
         >
           <div className="flex flex-col gap-2 items-center">
             <Text>
