@@ -54,7 +54,7 @@ export function TournamentPost() {
     <>
       {/* Voting view - preserve state when hidden */}
       <div className={viewMode === 'voting' ? 'absolute inset-0' : 'hidden'}>
-        <div className="absolute flex flex-col gap-6 items-center justify-center h.full w.full p-6">
+        <div className="absolute flex flex-col gap-6 items-center justify-center h-full w-full p-6">
           <VotingView
             postId={currentPostId}
             stats={stats}
