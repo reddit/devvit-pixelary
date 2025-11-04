@@ -1,8 +1,8 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { WordStep } from './_components/WordStep';
-import { DrawStep } from './_components/DrawStep';
-import { ReviewStep } from './_components/ReviewStep';
-import { TournamentReviewStep } from './_components/TournamentReviewStep';
+import { WordStep } from './WordStep';
+import { DrawStep } from './DrawStep';
+import { ReviewStep } from './ReviewStep';
+import { TournamentReviewStep } from './TournamentReviewStep';
 import { trpc } from '@client/trpc/client';
 import { DRAWING_DURATION } from '@shared/constants';
 import { DrawingUtils, type DrawingData } from '@shared/schema/drawing';
