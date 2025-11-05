@@ -244,13 +244,14 @@ export async function tournamentVote(winnerId: T1, loserId: T1): Promise<void> {
   if (!postId || !userId)
     throw new Error('Must be in a tournament post and logged in');
   if (await isRateLimited(REDIS_KEYS.rateVote(userId), 3, 1)) return;
-  const [winnerRating, loserRating, _score, _playerCount, _votes]: [
-    number,
-    number,
-    unknown,
-    unknown,
-    unknown,
-  ] = await Promise.all([
+  const [
+    winnerRating,
+    loserRating,
+    _score,
+    _playerCount,
+    _votes,
+    _winnerEntryVotes,
+  ]: [number, number, unknown, unknown, unknown, unknown] = await Promise.all([
     getEntryRating(postId, winnerId),
     getEntryRating(postId, loserId),
     incrementScore(userId, TOURNAMENT_REWARD_VOTE),
