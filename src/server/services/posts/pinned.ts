@@ -1,5 +1,4 @@
 import { scheduler } from '@devvit/web/server';
-import { REDIS_KEYS } from '@server/core/redis';
 import { createPost } from '@server/core/post';
 import { getLeaderboard } from '@server/services/progression';
 import type { T1, T3 } from '@devvit/shared-types/tid.js';

@@ -20,17 +20,11 @@ export async function countUserPostsLast7d(
   const startScore = now - SEVEN_DAYS_MS;
   const key = REDIS_KEYS.userDrawings(userId);
   try {
-    // Use zCount if available; otherwise fetch range and get length
-    const count = await redis.zCount(key, startScore, now);
-    return typeof count === 'number' ? count : 0;
+    const items = await redis.zRange(key, 0, -1, { by: 'rank' });
+    const filtered = items.filter((entry) => entry.score >= startScore);
+    return filtered.length;
   } catch {
-    try {
-      const items = await redis.zRange(key, 0, -1, { by: 'rank' });
-      const filtered = items.filter((entry) => entry.score >= startScore);
-      return filtered.length;
-    } catch {
-      return 0;
-    }
+    return 0;
   }
 }
 

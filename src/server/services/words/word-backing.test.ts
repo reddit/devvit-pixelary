@@ -16,7 +16,7 @@ vi.mock('./dictionary', () => ({
 }));
 
 import { redis } from '@devvit/web/server';
-import { addBacker, getBacker, removeBacker } from './word-backing';
+import { addBacker, removeBacker } from './word-backing';
 import { REDIS_KEYS } from '@server/core/redis';
 
 describe('Word Backing Service', () => {
@@ -30,9 +30,9 @@ describe('Word Backing Service', () => {
     const previousCommentId = 't1_previous123' as const;
     vi.mocked(redis.get)
       .mockResolvedValueOnce(previousCommentId)
-      .mockResolvedValueOnce(null);
+      .mockResolvedValueOnce(undefined);
     vi.mocked(redis.set).mockResolvedValue('OK');
-    vi.mocked(redis.del).mockResolvedValue(1);
+    vi.mocked(redis.del).mockResolvedValue(undefined);
     await addBacker(word, commentId);
     expect(redis.set).toHaveBeenCalledWith(
       REDIS_KEYS.wordBacking('Test'),

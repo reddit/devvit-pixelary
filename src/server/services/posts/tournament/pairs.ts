@@ -33,17 +33,10 @@ export async function getDrawingPairs(
     const b = pool[idx + 1];
     idx += 2;
     if (!a || !b || a === b) continue;
-    const lastIndex = pairIds.length - 1;
-    if (
-      lastIndex >= 0 &&
-      pairIds[lastIndex][0] === a &&
-      pairIds[lastIndex][1] === b
-    ) {
+    const lastPair = pairIds[pairIds.length - 1];
+    if (lastPair?.[0] === a && lastPair[1] === b) {
       pairIds.push([b, a]);
-    } else if (
-      lastIndex >= 0 &&
-      (pairIds[lastIndex][0] === a || pairIds[lastIndex][1] === b)
-    ) {
+    } else if (lastPair?.[0] === a || lastPair?.[1] === b) {
       continue;
     } else {
       pairIds.push([a, b]);

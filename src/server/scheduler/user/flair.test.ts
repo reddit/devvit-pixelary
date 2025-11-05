@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { Request, Response } from 'express';
 import type { Level } from '@shared/types';
+import { isLegacyUser } from '../../services/legacy';
+import { handleSetUserFlair } from './flair';
 
 vi.mock('@devvit/web/server', () => ({
   reddit: {
@@ -16,10 +18,6 @@ vi.mock('../../core/user', () => ({
 vi.mock('../../services/legacy', () => ({
   isLegacyUser: vi.fn(),
 }));
-
-import { reddit } from '@devvit/web/server';
-import { isLegacyUser } from '../../services/legacy';
-import { handleSetUserFlair } from './flair';
 
 function makeReq(data: unknown): Request {
   return { body: { data } } as unknown as Request;

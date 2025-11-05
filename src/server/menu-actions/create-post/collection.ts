@@ -30,7 +30,7 @@ export async function handleCreateCollectionPost(
       res.status(400).json({
         status: 'error',
         message: 'Invalid input data',
-        errors: validationResult.error.errors,
+        errors: validationResult.error.issues,
       });
       return;
     }
@@ -39,11 +39,7 @@ export async function handleCreateCollectionPost(
       validationResult.data;
 
     // Fetch top drawing posts
-    const drawings = await fetchTopDrawingPosts(
-      context.subredditName || '',
-      numberOfDays,
-      numberOfDrawings
-    );
+    const drawings = await fetchTopDrawingPosts(numberOfDays, numberOfDrawings);
 
     if (drawings.length === 0) {
       res.status(400).json({

@@ -1,4 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
+import type { Comment } from '@devvit/reddit';
 
 vi.mock('@devvit/web/server', () => ({
   reddit: {
@@ -29,7 +30,7 @@ describe('comments/pinned (base helpers)', () => {
     vi.mocked(reddit.submitComment).mockResolvedValue({
       id: 't1_cmt' as T1,
       distinguish: vi.fn().mockResolvedValue(undefined),
-    } as unknown as { id: T1; distinguish: (mod: boolean) => Promise<void> });
+    } as unknown as Comment);
 
     const id = await createPinnedComment(postId, text);
 
@@ -49,7 +50,7 @@ describe('comments/pinned (base helpers)', () => {
     const edit = vi.fn().mockResolvedValue(undefined);
     vi.mocked(reddit.getCommentById).mockResolvedValue({
       edit,
-    } as unknown as { edit: (opts: { text: string }) => Promise<void> });
+    } as unknown as Comment);
 
     await updatePinnedComment(postId, newText);
 

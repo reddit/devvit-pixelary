@@ -2,7 +2,6 @@ import type { Request, Response } from 'express';
 import { reddit } from '@devvit/web/server';
 import { getScore } from '@server/services/progression';
 import { getUsername } from '@server/core/user';
-import type { T2 } from '@devvit/shared-types/tid.js';
 
 /**
  * Form handler for getting user points

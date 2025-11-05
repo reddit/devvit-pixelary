@@ -9,6 +9,6 @@ export function parseForm<T>(schema: z.ZodType<T>, body: unknown): T {
 export function safeParseForm<T>(
   schema: z.ZodType<T>,
   body: unknown
-): z.SafeParseReturnType<unknown, T> {
+): ReturnType<typeof schema.safeParse> {
   return schema.safeParse(body);
 }
