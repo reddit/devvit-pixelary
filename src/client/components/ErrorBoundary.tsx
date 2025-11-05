@@ -6,7 +6,7 @@ import { Button } from './Button';
 type ErrorBoundaryState = {
   hasError: boolean;
   error: Error | undefined;
-  errorInfo: ErrorInfo | undefined;
+  errorInfo?: ErrorInfo;
 };
 
 type ErrorBoundaryProps = {
@@ -24,7 +24,7 @@ export class ErrorBoundary extends Component<
 > {
   constructor(props: ErrorBoundaryProps) {
     super(props);
-    this.state = { hasError: false, error: undefined, errorInfo: undefined };
+    this.state = { hasError: false, error: undefined };
   }
 
   static getDerivedStateFromError(error: Error): ErrorBoundaryState {

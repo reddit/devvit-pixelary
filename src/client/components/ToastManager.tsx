@@ -49,10 +49,11 @@ export function ToastProvider({
     maxToasts,
   });
 
-  const toastIdCounter = useRef(0);
+  const toastIdCounter = useRef<number>(0);
 
   // Generate unique, predictable IDs for better debugging
   const generateId = useCallback(() => {
+    // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
     toastIdCounter.current += 1;
     return `toast-${Date.now()}-${toastIdCounter.current}`;
   }, []);
@@ -130,7 +131,7 @@ export function ToastProvider({
 
   // Group toasts by position for better rendering
   const toastsByPosition = useMemo(() => {
-    const groups: Record<string, ToastData[]> = {};
+    const groups: Partial<Record<string, ToastData[]>> = {};
     toastQueue.toasts.forEach((toast) => {
       const position = toast.position ?? defaultPosition;
       groups[position] ??= [];

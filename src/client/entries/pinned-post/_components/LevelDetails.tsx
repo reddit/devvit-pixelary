@@ -24,8 +24,8 @@ export function LevelDetails({ onClose }: LevelDetailsProps) {
     enabled: true,
   });
 
-  const [currentLevelRank, setCurrentLevelRank] = useState(1);
-  const [displayProgress, setDisplayProgress] = useState(0);
+  const [currentLevelRank, setCurrentLevelRank] = useState<number>(1);
+  const [displayProgress, setDisplayProgress] = useState<number>(0);
 
   const currentLevel = generateLevel(currentLevelRank);
 
@@ -68,6 +68,7 @@ export function LevelDetails({ onClose }: LevelDetailsProps) {
   // Use the animated display progress
   const progressPercentage = displayProgress;
   const nextLevel = () => {
+    // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
     setCurrentLevelRank(currentLevelRank + 1);
   };
 

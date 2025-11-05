@@ -158,7 +158,7 @@ export function VotingView({
   const [animationState, setAnimationState] = useState<AnimationState>('idle');
   const [winnerSide, setWinnerSide] = useState<'left' | 'right' | null>(null);
   const [pairsQueue, setPairsQueue] = useState<Pair[]>([]);
-  const [currentPairIndex, setCurrentPairIndex] = useState(0);
+  const [currentPairIndex, setCurrentPairIndex] = useState<number>(0);
   const [showCollision, setShowCollision] = useState(false);
   const timeoutRefs = useRef<Array<ReturnType<typeof setTimeout>>>([]);
   const isPrefetching = useRef(false);
@@ -205,6 +205,7 @@ export function VotingView({
       const transitionTimeout = setTimeout(() => {
         // Move to next pair
         setCurrentPairIndex((prev) => {
+          // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
           const nextIndex = prev + 1;
           // Refill queue if getting low
           if (

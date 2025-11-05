@@ -149,7 +149,8 @@ export const DrawingPost = () => {
       const attachment = (
         <ProgressBar
           percentage={getLevelProgressPercentage(
-            userProfile.score + earnedPoints
+            // eslint-disable-next-line @typescript-eslint/restrict-plus-operands, @typescript-eslint/no-unnecessary-type-assertion
+            (userProfile.score as number) + (earnedPoints ?? 0)
           )}
           width={200}
           height={8}

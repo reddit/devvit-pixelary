@@ -12,8 +12,8 @@ export function CyclingMessage({
   intervalMs = 3000,
   className,
 }: CyclingMessageProps) {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [isAnimating, setIsAnimating] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState<number>(0);
+  const [isAnimating, setIsAnimating] = useState<boolean>(false);
 
   useEffect(() => {
     if (messages.length <= 1) return;
@@ -22,6 +22,7 @@ export function CyclingMessage({
       setIsAnimating(true);
 
       // Change content immediately
+      // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
       setCurrentIndex((prev) => (prev + 1) % messages.length);
       // Small delay before starting slide up animation
       setTimeout(() => {

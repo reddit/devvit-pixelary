@@ -85,7 +85,7 @@ export function useActiveEffects(): {
   secondsRemaining: number;
 } {
   const [effects, setEffects] = useState<ActiveEffectEntry[]>([]);
-  const [cycleIndex, setCycleIndex] = useState(0);
+  const [cycleIndex, setCycleIndex] = useState<number>(0);
   const [nowTs, setNowTs] = useState(() => Date.now());
   const cycleTimerRef = useRef<number | null>(null);
   const tickTimerRef = useRef<number | null>(null);
@@ -147,6 +147,7 @@ export function useActiveEffects(): {
     }
     if (effects.length > 1) {
       cycleTimerRef.current = window.setInterval(() => {
+        // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
         setCycleIndex((idx) => (idx + 1) % effects.length);
       }, 3000) as unknown as number;
     }

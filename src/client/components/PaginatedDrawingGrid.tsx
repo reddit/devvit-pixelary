@@ -15,9 +15,9 @@ export const PaginatedDrawingGrid = React.memo(function PaginatedDrawingGrid({
   onDrawingClick,
   isLoading = false,
 }: PaginatedDrawingGridProps) {
-  const [currentPage, setCurrentPage] = useState(1);
-  const [tilesPerRow, setTilesPerRow] = useState(3);
-  const [tilesPerPage, setTilesPerPage] = useState(12);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [tilesPerRow, setTilesPerRow] = useState<number>(3);
+  const [tilesPerPage, setTilesPerPage] = useState<number>(12);
 
   // Calculate responsive layout
   useEffect(() => {
@@ -68,6 +68,7 @@ export const PaginatedDrawingGrid = React.memo(function PaginatedDrawingGrid({
 
   const totalPages = Math.ceil(drawings.length / tilesPerPage);
   const startIndex = (currentPage - 1) * tilesPerPage;
+  // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
   const endIndex = Math.min(startIndex + tilesPerPage, drawings.length);
   const currentDrawings = drawings.slice(startIndex, endIndex);
 
@@ -130,6 +131,7 @@ export const PaginatedDrawingGrid = React.memo(function PaginatedDrawingGrid({
           <IconButton
             symbol="arrow-right"
             onClick={() => {
+              // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
               setCurrentPage(currentPage + 1);
             }}
             size="medium"

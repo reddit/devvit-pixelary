@@ -23,7 +23,7 @@ function App() {
           }}
           mode="tournament-comment"
           tournamentPostId={context.postId}
-          tournamentWord={postData?.word ?? ''}
+          tournamentWord={postData.word}
         />
       ) : (
         <DrawingEditor

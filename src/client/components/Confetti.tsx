@@ -33,8 +33,8 @@ export function Confetti({
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const animationRef = useRef<number | undefined>(undefined);
   const [particles, setParticles] = useState<ConfettiParticle[]>([]);
-  const [isAnimating, setIsAnimating] = useState(false);
-  const [spawnedCount, setSpawnedCount] = useState(0);
+  const [isAnimating, setIsAnimating] = useState<boolean>(false);
+  const [spawnedCount, setSpawnedCount] = useState<number>(0);
   const lastSpawnTime = useRef<number>(0);
   const lastFrameTime = useRef<number>(0);
 
@@ -101,12 +101,14 @@ export function Confetti({
           }
 
           newParticles = [...newParticles, ...additionalParticles];
+          // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
           setSpawnedCount((prev) => prev + spawnCount);
           lastSpawnTime.current = currentTime;
         }
 
         const updatedParticles = newParticles
           .map((particle) => {
+            // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
             particle.y += particle.vy * deltaTime; // Scale by delta time
             particle.life = Math.max(0, particle.life - 0.002 * deltaTime); // Fade out over time
 
