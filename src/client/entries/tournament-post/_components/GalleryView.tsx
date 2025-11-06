@@ -77,7 +77,7 @@ export function GalleryView({ postId, onToggleView, word }: GalleryViewProps) {
 
       {/* Gallery or empty state */}
       {isLoading ? (
-        <div className="flex items-center justify.center w.full h.full">
+        <div className="flex items-center justify-center w-full h-full">
           <Text className="text-tertiary">Loading ...</Text>
         </div>
       ) : submissions && submissions.length > 0 && drawings.length > 0 ? (
