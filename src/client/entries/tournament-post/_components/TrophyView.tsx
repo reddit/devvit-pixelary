@@ -47,13 +47,13 @@ function TrophyIcon({ position }: { position: TrophyPosition }) {
       <path
         d="M3 11H9V10H10V12H2V10H3V11ZM10 1H12V4H11V2H10V4H11V5H10V6H9V7H8V9H9V10H3V9H4V7H3V6H2V5H1V4H2V2H1V4H0V1H2V0H10V1ZM5 9H7V7H5V9ZM3 5H4V6H8V5H9V1H3V5Z"
         fill="black"
-        fill-opacity="0.8"
+        fillOpacity="0.8"
       />
-      <path d="M5 3H4V1H5V3Z" fill="white" fill-opacity="0.5" />
+      <path d="M5 3H4V1H5V3Z" fill="white" fillOpacity="0.5" />
       <path
         d="M9 11H7V10H9V11ZM7 9H6V7H7V9ZM8 6H7V5H8V6ZM9 5H8V1H9V5ZM11 4H10V2H11V4Z"
         fill="black"
-        fill-opacity="0.3"
+        fillOpacity="0.3"
       />
     </svg>
   );
@@ -106,7 +106,10 @@ export function TrophyView({
     data: submissions,
     isLoading,
     error,
-  } = trpc.app.tournament.getSubmissionsWithDrawings.useQuery({ postId });
+  } = trpc.app.tournament.getSubmissionsWithDrawings.useQuery(
+    { postId },
+    { enabled: !!postId }
+  );
 
   const incrementViews = trpc.app.tournament.incrementViews.useMutation();
 
@@ -143,7 +146,7 @@ export function TrophyView({
           <Text scale={2.5}>In the lead</Text>
           <IconButton onClick={onToggleView} symbol="X" />
         </header>
-        <div className="flex items.center justify.center w.full h.full">
+        <div className="flex items-center justify-center w-full h-full">
           <Text className="text-red-500">{`Error: ${errorMessage}`}</Text>
         </div>
       </main>
@@ -151,7 +154,7 @@ export function TrophyView({
   }
 
   return (
-    <main className="absolute inset-0 flex flex.col p-4 gap-6 items.center justify.center">
+    <main className="absolute inset-0 flex flex-col p-4 gap-6 items-center justify-center">
       {/* Header */}
       <header className="shrink-0 w-full flex flex-row items-center justify-between">
         <Text scale={2.5}>In the lead</Text>
