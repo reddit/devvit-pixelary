@@ -243,10 +243,6 @@ export const DrawingPost = () => {
     }
   };
 
-  const handleDrawSomething = () => {
-    return;
-  };
-
   // Use actual post data
   const drawingData = postData?.drawing;
   const word = postData?.word;
@@ -259,6 +255,10 @@ export const DrawingPost = () => {
       setCurrentState('unsolved');
     }
   }, [currentState, drawingData, word]);
+
+  if (!drawingData || !word) {
+    return null;
+  }
 
   if (
     currentState === 'solved' ||
@@ -273,7 +273,6 @@ export const DrawingPost = () => {
           authorUsername={postData?.authorName}
           dictionary={dictionary}
           currentSubreddit={currentSubreddit}
-          onDrawSomething={handleDrawSomething}
           stats={stats}
           isLoading={isLoading}
           postId={currentPostId}
@@ -281,10 +280,6 @@ export const DrawingPost = () => {
         {showConfetti && <Confetti />}
       </>
     );
-  }
-
-  if (!drawingData) {
-    return null;
   }
 
   return (

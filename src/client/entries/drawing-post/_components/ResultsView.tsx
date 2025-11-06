@@ -21,7 +21,6 @@ type ResultsViewProps = {
   authorUsername?: string | undefined;
   dictionary?: string | undefined;
   currentSubreddit?: string | undefined;
-  onDrawSomething: () => void;
   stats?: PostGuesses | null;
   isLoading?: boolean;
   postId?: string;
@@ -33,7 +32,6 @@ export function ResultsView({
   authorUsername,
   dictionary,
   currentSubreddit,
-  onDrawSomething,
   stats,
   isLoading,
   postId,

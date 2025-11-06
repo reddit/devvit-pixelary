@@ -1,12 +1,9 @@
-import React from 'react';
-import ReactDOM from 'react-dom/client';
-
-import { Providers } from '@components/Providers';
 import { Background } from '@components/Background';
 import { DrawingEditor } from '@client/entries/editor/_components/Editor';
 import { context } from '@devvit/web/client';
 import { getPostData } from '@client/utils/context';
 import type { TournamentPostData } from '@shared/schema';
+import { renderEntry } from '@client/entries/_render';
 
 function App() {
   const postData = getPostData<TournamentPostData>();
@@ -36,12 +33,4 @@ function App() {
   );
 }
 
-const rootElement = document.getElementById('root');
-if (!rootElement) throw new Error('Root element not found');
-ReactDOM.createRoot(rootElement).render(
-  <React.StrictMode>
-    <Providers>
-      <App />
-    </Providers>
-  </React.StrictMode>
-);
+renderEntry(<App />);
