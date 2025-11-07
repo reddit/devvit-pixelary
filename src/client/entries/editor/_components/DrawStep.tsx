@@ -79,6 +79,28 @@ export function DrawStep(props: DrawStepProps) {
     size: number;
   }>({ x: 0, y: 0, size: 0 });
 
+  // Particle canvas and state
+  const particleCanvasRef = useRef<HTMLCanvasElement>(null);
+  const particleCanvasCssSizeRef = useRef<{ width: number; height: number }>({
+    width: 0,
+    height: 0,
+  });
+  const animationFrameRef = useRef<number | null>(null);
+  const lastPaintedIndexRef = useRef<number | null>(null);
+  const lastSpawnTimeRef = useRef<number>(0);
+
+  type Particle = {
+    x: number; // CSS px
+    y: number; // CSS px
+    vx: number; // CSS px/s
+    vy: number; // CSS px/s
+    age: number; // seconds
+    ttl: number; // seconds
+    size: number; // CSS px
+    color: HEX;
+  };
+  const particlesRef = useRef<Particle[]>([]);
+
   // Color picker modal state
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
 
@@ -125,6 +147,123 @@ export function DrawStep(props: DrawStepProps) {
   useEffect(() => {
     drawingDataRef.current = drawingData;
   }, [drawingData]);
+
+  // Size particle canvas to viewport and set crisp transform
+  useEffect(() => {
+    const canvas = particleCanvasRef.current;
+    if (!canvas) return;
+    const { width: vw, height: vh } = viewportSize;
+    if (vw <= 0 || vh <= 0) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    canvas.style.width = `${vw}px`;
+    canvas.style.height = `${vh}px`;
+    const rect = canvas.getBoundingClientRect();
+    const cssW = Math.max(1, Math.round(rect.width));
+    const cssH = Math.max(1, Math.round(rect.height));
+    canvas.width = Math.max(1, Math.floor(cssW * dpr));
+    canvas.height = Math.max(1, Math.floor(cssH * dpr));
+
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    ctx.imageSmoothingEnabled = false;
+    particleCanvasCssSizeRef.current = { width: cssW, height: cssH };
+  }, [viewportSize]);
+
+  // Particle animation loop
+  useEffect(() => {
+    const canvas = particleCanvasRef.current;
+    const ctx = canvas?.getContext('2d');
+    if (!canvas || !ctx) return;
+
+    let isRunning = true;
+    let lastTs = performance.now();
+
+    const tick = (now: number) => {
+      if (!isRunning) return;
+      const dt = Math.max(0, (now - lastTs) / 1000);
+      lastTs = now;
+
+      const { width, height } = particleCanvasCssSizeRef.current;
+      ctx.clearRect(0, 0, width, height);
+
+      const particles = particlesRef.current;
+
+      // Update in-place with compaction, iterate with for-of to satisfy lint rule
+      let writeIndex = 0;
+      for (const p of particles) {
+        // physics
+        p.vy += 350 * dt; // softer gravity
+        p.x += p.vx * dt;
+        p.y += p.vy * dt;
+        p.age += dt;
+        if (p.age < p.ttl) {
+          particles[writeIndex++] = p;
+        }
+      }
+      particles.length = writeIndex;
+
+      // Draw (small squares, fading out)
+      for (const p of particles) {
+        const t = Math.min(1, p.age / p.ttl);
+        const alpha = 0.7 * (1 - t); // reduce peak opacity
+        ctx.globalAlpha = alpha;
+        ctx.fillStyle = p.color;
+        ctx.fillRect(p.x - p.size / 2, p.y - p.size / 2, p.size, p.size);
+      }
+      ctx.globalAlpha = 1;
+
+      animationFrameRef.current = requestAnimationFrame(tick);
+    };
+
+    animationFrameRef.current = requestAnimationFrame(tick);
+    return () => {
+      isRunning = false;
+      if (animationFrameRef.current != null) {
+        cancelAnimationFrame(animationFrameRef.current);
+      }
+    };
+  }, []);
+
+  function spawnParticlesAt(
+    x: number,
+    y: number,
+    color: HEX,
+    pixelSizeCss: number
+  ) {
+    // throttle very fast spawns (e.g., rapid drags)
+    const now = performance.now();
+    if (now - lastSpawnTimeRef.current < 45) return;
+    lastSpawnTimeRef.current = now;
+
+    const count = Math.max(4, Math.min(10, Math.round(pixelSizeCss / 3)));
+    const size = 4; // CSS px; DPR handled by canvas transform
+    for (let i = 0; i < count; i++) {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = 80 + Math.random() * 100; // px/s (slower)
+      const vx = Math.cos(angle) * speed;
+      const vy = Math.sin(angle) * speed - 50; // gentler upward bias
+      particlesRef.current.push({
+        x,
+        y,
+        vx,
+        vy,
+        age: 0,
+        ttl: 0.45 + Math.random() * 0.25, // shorter lifespan
+        size,
+        color,
+      });
+    }
+    // Cap total particles for perf
+    const maxParticles = 400;
+    if (particlesRef.current.length > maxParticles) {
+      particlesRef.current.splice(
+        0,
+        particlesRef.current.length - maxParticles
+      );
+    }
+  }
 
   // Timer effect
   useEffect(() => {
@@ -341,6 +480,15 @@ export function DrawStep(props: DrawStepProps) {
       });
 
       const index = pixelY * drawingData.size + pixelX;
+      // Particle burst (only when entering a new pixel index)
+      if (index !== lastPaintedIndexRef.current) {
+        const { x: sx, y: sy, size: ss } = drawAreaRef.current;
+        const pixelSize = ss / drawingData.size;
+        const cx = sx + pixelX * pixelSize + pixelSize / 2;
+        const cy = sy + pixelY * pixelSize + pixelSize / 2;
+        spawnParticlesAt(cx, cy, currentColor, pixelSize);
+        lastPaintedIndexRef.current = index;
+      }
       setDrawingData((prev) =>
         DrawingUtils.setPixel(prev, index, currentColor)
       );
@@ -373,6 +521,7 @@ export function DrawStep(props: DrawStepProps) {
 
   const handleMouseUp = useCallback(() => {
     setIsDrawing(false);
+    lastPaintedIndexRef.current = null;
   }, []);
 
   const handleTouchStart = useCallback(
@@ -403,6 +552,14 @@ export function DrawStep(props: DrawStepProps) {
           Math.floor((relY / ss) * drawingData.size)
         );
         const index = pixelY * drawingData.size + pixelX;
+        // Particle burst on touch start
+        {
+          const pixelSize = ss / drawingData.size;
+          const cx = sx + pixelX * pixelSize + pixelSize / 2;
+          const cy = sy + pixelY * pixelSize + pixelSize / 2;
+          spawnParticlesAt(cx, cy, currentColor, pixelSize);
+          lastPaintedIndexRef.current = index;
+        }
         setDrawingData((prev) =>
           DrawingUtils.setPixel(prev, index, currentColor)
         );
@@ -454,6 +611,14 @@ export function DrawStep(props: DrawStepProps) {
           Math.floor((relY / ss) * drawingData.size)
         );
         const index = pixelY * drawingData.size + pixelX;
+        // Only spawn when moving into a new pixel
+        if (index !== lastPaintedIndexRef.current) {
+          const pixelSize = ss / drawingData.size;
+          const cx = sx + pixelX * pixelSize + pixelSize / 2;
+          const cy = sy + pixelY * pixelSize + pixelSize / 2;
+          spawnParticlesAt(cx, cy, currentColor, pixelSize);
+          lastPaintedIndexRef.current = index;
+        }
         setDrawingData((prev) =>
           DrawingUtils.setPixel(prev, index, currentColor)
         );
@@ -481,6 +646,7 @@ export function DrawStep(props: DrawStepProps) {
     (e: React.TouchEvent<HTMLCanvasElement>) => {
       e.preventDefault();
       setIsDrawing(false);
+      lastPaintedIndexRef.current = null;
     },
     []
   );
@@ -498,6 +664,12 @@ export function DrawStep(props: DrawStepProps) {
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
+      />
+
+      {/* Particle canvas overlay (does not block input) */}
+      <canvas
+        ref={particleCanvasRef}
+        className="fixed inset-0 z-15 pointer-events-none"
       />
 
       {/* Header */}
