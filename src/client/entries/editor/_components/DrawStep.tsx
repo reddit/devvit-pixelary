@@ -37,6 +37,8 @@ export function DrawStep(props: DrawStepProps) {
 
   const [startTime] = useState(Date.now());
   const [elapsedTime, setElapsedTime] = useState(0);
+  const [hasEntered, setHasEntered] = useState(false);
+  const [layoutVersion, setLayoutVersion] = useState(0);
 
   const { track } = useTelemetry();
 
@@ -50,6 +52,35 @@ export function DrawStep(props: DrawStepProps) {
     }
   }, [track, trackSlateAction, word, slateId]);
 
+  // Entry animation trigger
+  useEffect(() => {
+    const rafId = requestAnimationFrame(() => {
+      setHasEntered(true);
+    });
+    return () => {
+      cancelAnimationFrame(rafId);
+    };
+  }, []);
+
+  // After entry transition ends, recompute layout to avoid post-click resize
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const particleCanvas = particleCanvasRef.current;
+    if (!canvas && !particleCanvas) return;
+
+    const onTransitionEnd = (e: TransitionEvent) => {
+      if (e.propertyName === 'transform' || e.propertyName === 'opacity') {
+        setLayoutVersion((v) => v + 1);
+      }
+    };
+    canvas?.addEventListener('transitionend', onTransitionEnd);
+    particleCanvas?.addEventListener('transitionend', onTransitionEnd);
+    return () => {
+      canvas?.removeEventListener('transitionend', onTransitionEnd);
+      particleCanvas?.removeEventListener('transitionend', onTransitionEnd);
+    };
+  }, []);
+
   // Canvas state
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -60,6 +91,10 @@ export function DrawStep(props: DrawStepProps) {
   );
   const hasTrackedFirstPixel = useRef(false);
   const drawingDataRef = useRef<DrawingData>(DrawingUtils.createBlank());
+  const mainCanvasCssSizeRef = useRef<{ width: number; height: number }>({
+    width: 0,
+    height: 0,
+  });
   const [containerSize, setContainerSize] = useState<{
     width: number;
     height: number;
@@ -165,11 +200,11 @@ export function DrawStep(props: DrawStepProps) {
     const dpr = window.devicePixelRatio || 1;
     canvas.style.width = `${vw}px`;
     canvas.style.height = `${vh}px`;
-    const rect = canvas.getBoundingClientRect();
-    const cssW = Math.max(1, Math.round(rect.width));
-    const cssH = Math.max(1, Math.round(rect.height));
-    canvas.width = Math.max(1, Math.floor(cssW * dpr));
-    canvas.height = Math.max(1, Math.floor(cssH * dpr));
+    // Use base viewport size (pre-transform) to match main canvas coordinate space
+    const cssW = Math.max(1, Math.round(vw));
+    const cssH = Math.max(1, Math.round(vh));
+    canvas.width = Math.max(1, Math.floor(vw * dpr));
+    canvas.height = Math.max(1, Math.floor(vh * dpr));
 
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
@@ -327,12 +362,13 @@ export function DrawStep(props: DrawStepProps) {
     // Ensure CSS size matches viewport (draw coordinates in CSS pixels)
     canvas.style.width = `${vw}px`;
     canvas.style.height = `${vh}px`;
-    const canvasRectPre = canvas.getBoundingClientRect();
-    const cssW = Math.max(1, Math.round(canvasRectPre.width));
-    const cssH = Math.max(1, Math.round(canvasRectPre.height));
+    // Use viewport size directly for layout to avoid transform-induced size drift
+    const cssW = Math.max(1, Math.round(vw));
+    const cssH = Math.max(1, Math.round(vh));
     // Set backing buffer to device pixels for crispness
     canvas.width = Math.max(1, Math.floor(cssW * dpr));
     canvas.height = Math.max(1, Math.floor(cssH * dpr));
+    mainCanvasCssSizeRef.current = { width: cssW, height: cssH };
 
     // Draw in CSS pixel coordinates
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
@@ -342,10 +378,9 @@ export function DrawStep(props: DrawStepProps) {
     ctx.clearRect(0, 0, cssW, cssH);
 
     // Placement using fixed insets from canvas edges
-    const canvasRect = canvas.getBoundingClientRect();
     debugLog('canvasRectAfterStyle', {
-      width: canvasRect.width,
-      height: canvasRect.height,
+      width: cssW,
+      height: cssH,
     });
 
     const insetX = 16; // horizontal inset on each side
@@ -376,12 +411,6 @@ export function DrawStep(props: DrawStepProps) {
       vw,
       vh,
       dpr,
-      canvasRect: {
-        left: canvasRect.left,
-        top: canvasRect.top,
-        width: canvasRect.width,
-        height: canvasRect.height,
-      },
       canvasBuffer: { width: canvas.width, height: canvas.height },
       canvasCss: { width: cssW, height: cssH },
       insets: { insetX, insetY },
@@ -460,7 +489,7 @@ export function DrawStep(props: DrawStepProps) {
         }
       }
     }
-  }, [drawingData, containerSize, viewportSize, isReviewing]);
+  }, [drawingData, containerSize, viewportSize, isReviewing, layoutVersion]);
 
   // Keep CSS variables in sync when toggling review mode (scale changes)
   useEffect(() => {
@@ -476,7 +505,7 @@ export function DrawStep(props: DrawStepProps) {
     root.style.setProperty('--draw-top', `${topScaled}px`);
     root.style.setProperty('--draw-left', `${leftScaled}px`);
     root.style.setProperty('--draw-size', `${sizeScaled}px`);
-  }, [isReviewing, viewportSize]);
+  }, [isReviewing, viewportSize, layoutVersion]);
 
   const handlePixelClick = useCallback(
     (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -484,8 +513,12 @@ export function DrawStep(props: DrawStepProps) {
       if (!canvas) return;
 
       const rect = canvas.getBoundingClientRect();
-      const x = e.clientX - rect.left;
-      const y = e.clientY - rect.top;
+      const cssBase = mainCanvasCssSizeRef.current;
+      const scaleX = cssBase.width > 0 ? rect.width / cssBase.width : 1;
+      const scaleY = cssBase.height > 0 ? rect.height / cssBase.height : 1;
+      // Map from transformed client coords to unscaled canvas coords
+      const x = (e.clientX - rect.left) / (scaleX || 1);
+      const y = (e.clientY - rect.top) / (scaleY || 1);
 
       const { x: sx, y: sy, size: ss } = drawAreaRef.current;
       if (ss <= 0) return;
@@ -571,8 +604,11 @@ export function DrawStep(props: DrawStepProps) {
         if (!canvas) return;
 
         const rect = canvas.getBoundingClientRect();
-        const x = touch.clientX - rect.left;
-        const y = touch.clientY - rect.top;
+        const cssBase = mainCanvasCssSizeRef.current;
+        const scaleX = cssBase.width > 0 ? rect.width / cssBase.width : 1;
+        const scaleY = cssBase.height > 0 ? rect.height / cssBase.height : 1;
+        const x = (touch.clientX - rect.left) / (scaleX || 1);
+        const y = (touch.clientY - rect.top) / (scaleY || 1);
 
         const { x: sx, y: sy, size: ss } = drawAreaRef.current;
         if (ss <= 0) return;
@@ -630,8 +666,11 @@ export function DrawStep(props: DrawStepProps) {
         if (!canvas) return;
 
         const rect = canvas.getBoundingClientRect();
-        const x = touch.clientX - rect.left;
-        const y = touch.clientY - rect.top;
+        const cssBase = mainCanvasCssSizeRef.current;
+        const scaleX = cssBase.width > 0 ? rect.width / cssBase.width : 1;
+        const scaleY = cssBase.height > 0 ? rect.height / cssBase.height : 1;
+        const x = (touch.clientX - rect.left) / (scaleX || 1);
+        const y = (touch.clientY - rect.top) / (scaleY || 1);
 
         const { x: sx, y: sy, size: ss } = drawAreaRef.current;
         if (ss <= 0) return;
@@ -690,33 +729,46 @@ export function DrawStep(props: DrawStepProps) {
 
   return (
     <main className="absolute inset-0 flex flex-col items-center justify-center p-6 gap-6">
-      {/* Fullscreen canvas layer behind UI */}
-      <canvas
-        ref={canvasRef}
-        className={`fixed inset-0 z-10 transform-gpu transition-transform duration-600 ease-[cubic-bezier(.22,1,.36,1)] ${
-          isReviewing ? 'scale-[0.88] pointer-events-none' : 'scale-100'
-        } ${isReviewing ? '' : 'cursor-crosshair'}`}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-      />
-
-      {/* Particle canvas overlay (does not block input) */}
-      <canvas
-        ref={particleCanvasRef}
-        className={`fixed inset-0 z-15 pointer-events-none transform-gpu transition-transform duration-600 ease-[cubic-bezier(.22,1,.36,1)] ${
-          isReviewing ? 'scale-[0.88]' : 'scale-100'
+      {/* Scaled wrapper so both canvases share the exact same transform */}
+      <div
+        className={`fixed inset-0 z-10 transform-gpu origin-center transition-all duration-600 ease-[cubic-bezier(.22,1,.36,1)] ${
+          isReviewing
+            ? 'scale-[0.88] opacity-100'
+            : hasEntered
+              ? 'scale-100 opacity-100'
+              : 'scale-[0.8] opacity-0'
         }`}
-      />
+      >
+        {/* Fullscreen canvas layer behind UI */}
+        <canvas
+          ref={canvasRef}
+          className={`absolute inset-0 z-10 ${
+            isReviewing ? 'pointer-events-none' : 'cursor-crosshair'
+          }`}
+          onMouseDown={handleMouseDown}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        />
+
+        {/* Particle canvas overlay (does not block input) */}
+        <canvas
+          ref={particleCanvasRef}
+          className="absolute inset-0 z-20 pointer-events-none"
+        />
+      </div>
 
       {/* Header */}
       <header
-        className={`relative z-20 flex flex-row items-center justify-center h-min w-full gap-3 transition-all duration-300 ease-out ${
-          isReviewing ? 'translate-y-4 opacity-0' : 'translate-y-0 opacity-100'
+        className={`relative z-20 flex flex-row items-center justify-center h-min w-full gap-3 transition-all duration-300 ease-out delay-100 ${
+          isReviewing
+            ? '-translate-y-4 opacity-0'
+            : hasEntered
+              ? 'translate-y-0 opacity-100'
+              : '-translate-y-2 opacity-0'
         }`}
         aria-hidden={isReviewing}
       >
@@ -736,21 +788,23 @@ export function DrawStep(props: DrawStepProps) {
       {/* Middle overlay area used for sizing/centering the drawing square */}
       <div
         ref={containerRef}
-        className="relative z-20 flex-1 flex items-center justify-center pointer-events-none"
+        className="relative z-30 flex-1 flex items-center justify-center pointer-events-none"
       >
         {DrawingUtils.isEmpty(drawingData) && (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <Text scale={2} className="text-tertiary">
-              Tap to draw
-            </Text>
-          </div>
+          <Text scale={2} className="text-tertiary">
+            Tap to draw
+          </Text>
         )}
       </div>
 
       {/* Color Palette */}
       <div
-        className={`relative z-20 flex flex-row gap-2 items-center justify-center transition-all duration-300 ease-out ${
-          isReviewing ? '-translate-y-4 opacity-0' : 'translate-y-0 opacity-100'
+        className={`relative z-20 flex flex-row gap-2 items-center justify-center transition-all duration-300 ease-out delay-150 ${
+          isReviewing
+            ? '-translate-y-4 opacity-0'
+            : hasEntered
+              ? 'translate-y-0 opacity-100'
+              : 'translate-y-2 opacity-0'
         }`}
         aria-hidden={isReviewing}
       >
