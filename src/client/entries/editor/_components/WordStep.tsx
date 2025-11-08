@@ -34,6 +34,8 @@ export function WordStep(props: WordStepProps) {
   const [startTime, setStartTime] = useState<number | null>(null);
   const [elapsedTime, setElapsedTime] = useState(0);
   const trackedSlateIdRef = useRef<string | null>(null);
+  const [isExiting, setIsExiting] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
 
   const { track } = useTelemetry();
 
@@ -93,10 +95,16 @@ export function WordStep(props: WordStepProps) {
     const remainingTime = totalWordTime * 1000 - elapsedTime;
     if (remainingTime <= 0 && words.length > 0 && words[0]) {
       // Track auto-select before selecting
-      void trackSlateAction('slate_picked', words[0], {
+      const w = words[0];
+      void trackSlateAction('slate_picked', w, {
         selectionType: 'auto',
       });
-      selectCandidate(words[0]);
+      // Play exit animation then navigate
+      setIsExiting(true);
+      setSelectedIndex(0);
+      window.setTimeout(() => {
+        selectCandidate(w);
+      }, 550);
     }
   }, [elapsedTime, selectCandidate, words, trackSlateAction, totalWordTime]);
 
@@ -112,15 +120,31 @@ export function WordStep(props: WordStepProps) {
       <Text scale={3}>Pick a word</Text>
 
       {/* Word Candidates */}
-      <div className="flex flex-col gap-3 items-center justify-center h-full w-full max-w-xs flex-1">
+      <div
+        className={`flex flex-col gap-3 items-center justify-center h-full w-full max-w-xs flex-1 ${
+          isExiting ? 'pointer-events-none' : ''
+        }`}
+      >
         {words.map((word: string | null, index: number) => (
           <WordCandidate
             key={`word-${index}-${word ?? 'loading'}`}
             word={word}
             index={index}
             isLoading={isLoading}
-            onSelect={selectCandidate}
-            trackSlateAction={trackSlateAction}
+            isExiting={isExiting}
+            isSelected={selectedIndex === index}
+            onPress={() => {
+              if (!word || isLoading) return;
+              void track('click_word_candidate');
+              void trackSlateAction('slate_picked', word, {
+                selectionType: 'manual',
+              });
+              setIsExiting(true);
+              setSelectedIndex(index);
+              window.setTimeout(() => {
+                selectCandidate(word);
+              }, 550);
+            }}
           />
         ))}
       </div>
@@ -169,35 +193,31 @@ type WordCandidateProps = {
   word: string | null;
   index: number;
   isLoading: boolean;
-  onSelect: (word: string) => void;
-  trackSlateAction: (
-    action: SlateAction,
-    word?: string,
-    metadata?: Record<string, string | number>
-  ) => Promise<void>;
+  onPress: () => void;
+  isExiting: boolean;
+  isSelected: boolean;
 };
 
 function WordCandidate(props: WordCandidateProps) {
-  const { word, index, isLoading, onSelect, trackSlateAction } = props;
+  const { word, index, isLoading, onPress, isExiting, isSelected } = props;
   const { track } = useTelemetry();
 
   return (
     <button
       onClick={() => {
         if (word) {
-          track('click_word_candidate').catch(() => {
-            return;
-          });
-          trackSlateAction('slate_picked', word, {
-            selectionType: 'manual',
-          }).catch(() => {
-            return;
-          });
-          onSelect(word);
+          void track('click_word_candidate');
+          onPress();
         }
       }}
       disabled={isLoading}
-      className="bg-white border-4 border-black shadow-pixel cursor-pointer w-full h-1/3 flex flex-col gap-2 items-center justify-center"
+      className={`bg-white border-4 border-black shadow-pixel cursor-pointer w-full h-1/3 flex flex-col gap-2 items-center justify-center transform-gpu transition-all duration-500 ${
+        isExiting
+          ? isSelected
+            ? 'translate-x-8 opacity-0'
+            : '-translate-x-8 opacity-0'
+          : 'translate-x-0 opacity-100'
+      }`}
     >
       {/* Word */}
       <div className="flex flex-row items-center justify-center gap-2">

@@ -121,13 +121,10 @@ export function Collision({
           const updatedParticles = prevParticles
             .map((particle) => {
               // Apply initial velocity (explosion)
-              // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
               particle.x += particle.vx * deltaTime;
-              // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
               particle.y += particle.vy * deltaTime;
 
               // Add gravity after initial burst
-              // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
               particle.vy += 1500 * deltaTime; // gravity
 
               // Fade out over time

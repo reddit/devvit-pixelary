@@ -54,6 +54,7 @@
     -webkit-text-size-adjust: 100%;
     -moz-text-size-adjust: 100%;
     text-size-adjust: 100%;
+    overflow: hidden;
   }
 
   html,
@@ -62,6 +63,9 @@
   #portal-root {
     height: 100%;
     width: 100%;
+  }
+  body {
+    overflow: hidden;
   }
 
   /* Pixel-perfect rendering */
@@ -353,5 +357,41 @@
 
   .pixel-input-native-selection::-moz-selection {
     background: transparent !important;
+  }
+
+  /* Editor stage animations */
+  @keyframes pop-in {
+    0% {
+      transform: scale(0.92);
+      opacity: 0;
+    }
+    60% {
+      transform: scale(1.05);
+      opacity: 1;
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+
+  @keyframes spring-up {
+    0% {
+      transform: translateY(100%);
+    }
+    70% {
+      transform: translateY(-4%);
+    }
+    100% {
+      transform: translateY(0%);
+    }
+  }
+
+  .animate-pop-in {
+    animation: pop-in 0.55s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  .animate-spring-up {
+    animation: spring-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
 }

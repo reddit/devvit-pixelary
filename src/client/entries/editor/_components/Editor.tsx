@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { WordStep } from './WordStep';
 import { DrawStep } from './DrawStep';
 import { ReviewStep } from './ReviewStep';
-import { TournamentReviewStep } from './TournamentReviewStep';
 import { trpc } from '@client/trpc/client';
 import { DRAWING_DURATION } from '@shared/constants';
 import { DrawingUtils, type DrawingData } from '@shared/schema/drawing';
@@ -174,35 +173,42 @@ export function DrawingEditor({
           userLevel={userLevel}
         />
       )}
-      {step === 'draw' && selectedWord && (
-        <DrawStep
-          word={selectedWord}
-          time={time}
-          onComplete={handleOnComplete}
-          slateId={slateId}
-          trackSlateAction={trackSlateAction}
-          userLevel={userLevel}
-        />
-      )}
-      {step === 'review' && selectedWord && (
+      {selectedWord && (step === 'draw' || step === 'review') && (
         <>
-          {mode === 'tournament-comment' && !!tournamentPostId ? (
-            <TournamentReviewStep
-              drawing={drawing}
-              onCancel={onClose}
-              {...(onSuccess && { onSuccess })}
-              tournamentPostId={tournamentPostId}
-            />
-          ) : (
-            <ReviewStep
-              word={selectedWord}
-              dictionary={`r/${subredditNameRef.current}`}
-              drawing={drawing}
-              onCancel={onClose}
-              onSuccess={onClose}
-              slateId={slateId}
-              trackSlateAction={trackSlateAction}
-            />
+          {/* Keep DrawStep mounted across draw → review and control via prop */}
+          <DrawStep
+            word={selectedWord}
+            time={time}
+            onComplete={handleOnComplete}
+            slateId={slateId}
+            trackSlateAction={trackSlateAction}
+            userLevel={userLevel}
+            isReviewing={step === 'review'}
+          />
+          {/* Review overlay container - static; inner elements animate independently */}
+          {step === 'review' && (
+            <div className="absolute inset-0 z-30 pointer-events-auto">
+              <ReviewStep
+                {...(mode === 'tournament-comment' && !!tournamentPostId
+                  ? {
+                      mode: 'tournament' as const,
+                      tournamentPostId,
+                      drawing,
+                      onCancel: onClose,
+                      ...(onSuccess && { onSuccess }),
+                    }
+                  : {
+                      mode: 'post' as const,
+                      word: selectedWord,
+                      dictionary: `r/${subredditNameRef.current}`,
+                      drawing,
+                      onCancel: onClose,
+                      onSuccess: onClose,
+                      slateId,
+                      trackSlateAction,
+                    })}
+              />
+            </div>
           )}
         </>
       )}

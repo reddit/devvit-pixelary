@@ -21,11 +21,19 @@ type DrawStepProps = {
     metadata?: Record<string, string | number>
   ) => Promise<void>;
   userLevel: number;
+  isReviewing?: boolean;
 };
 
 export function DrawStep(props: DrawStepProps) {
-  const { word, time, onComplete, slateId, trackSlateAction, userLevel } =
-    props;
+  const {
+    word,
+    time,
+    onComplete,
+    slateId,
+    trackSlateAction,
+    userLevel,
+    isReviewing = false,
+  } = props;
 
   const [startTime] = useState(Date.now());
   const [elapsedTime, setElapsedTime] = useState(0);
@@ -68,7 +76,6 @@ export function DrawStep(props: DrawStepProps) {
   });
 
   const debugLog = (...args: unknown[]) => {
-    // eslint-disable-next-line no-console
     console.log('[DrawStep]', ...args);
   };
 
@@ -392,6 +399,18 @@ export function DrawStep(props: DrawStepProps) {
       pixelSize: squareSize / drawingData.size,
     });
 
+    // Expose scaled draw square geometry via CSS variables for overlay positioning
+    {
+      const scale = isReviewing ? 0.88 : 1;
+      const topScaled = squareY * scale + (1 - scale) * (vh / 2);
+      const leftScaled = squareX * scale + (1 - scale) * (vw / 2);
+      const sizeScaled = squareSize * scale;
+      const root = document.documentElement;
+      root.style.setProperty('--draw-top', `${topScaled}px`);
+      root.style.setProperty('--draw-left', `${leftScaled}px`);
+      root.style.setProperty('--draw-size', `${sizeScaled}px`);
+    }
+
     // Shadow (match pixel-shadow util: 4px offset, same color)
     const shadowOffset = 4;
     const cssRoot = getComputedStyle(document.documentElement);
@@ -424,22 +443,40 @@ export function DrawStep(props: DrawStepProps) {
       }
     }
 
-    // Checkerboard overlay
-    for (let x = 0; x < drawingData.size; x++) {
-      for (let y = 0; y < drawingData.size; y++) {
-        const isEven = (x + y) % 2 === 0;
-        ctx.fillStyle = isEven
-          ? 'rgba(255, 255, 255, 0.05)'
-          : 'rgba(0, 0, 0, 0.05)';
-        ctx.fillRect(
-          squareX + x * pixelSize,
-          squareY + y * pixelSize,
-          pixelSize,
-          pixelSize
-        );
+    // Checkerboard overlay (disabled during review)
+    if (!isReviewing) {
+      for (let x = 0; x < drawingData.size; x++) {
+        for (let y = 0; y < drawingData.size; y++) {
+          const isEven = (x + y) % 2 === 0;
+          ctx.fillStyle = isEven
+            ? 'rgba(255, 255, 255, 0.05)'
+            : 'rgba(0, 0, 0, 0.05)';
+          ctx.fillRect(
+            squareX + x * pixelSize,
+            squareY + y * pixelSize,
+            pixelSize,
+            pixelSize
+          );
+        }
       }
     }
-  }, [drawingData, containerSize, viewportSize]);
+  }, [drawingData, containerSize, viewportSize, isReviewing]);
+
+  // Keep CSS variables in sync when toggling review mode (scale changes)
+  useEffect(() => {
+    const { width: vw, height: vh } = viewportSize;
+    if (vw <= 0 || vh <= 0) return;
+    const { x, y, size } = drawAreaRef.current;
+    if (size <= 0) return;
+    const scale = isReviewing ? 0.88 : 1;
+    const topScaled = y * scale + (1 - scale) * (vh / 2);
+    const leftScaled = x * scale + (1 - scale) * (vw / 2);
+    const sizeScaled = size * scale;
+    const root = document.documentElement;
+    root.style.setProperty('--draw-top', `${topScaled}px`);
+    root.style.setProperty('--draw-left', `${leftScaled}px`);
+    root.style.setProperty('--draw-size', `${sizeScaled}px`);
+  }, [isReviewing, viewportSize]);
 
   const handlePixelClick = useCallback(
     (e: React.MouseEvent<HTMLCanvasElement>) => {
@@ -656,7 +693,9 @@ export function DrawStep(props: DrawStepProps) {
       {/* Fullscreen canvas layer behind UI */}
       <canvas
         ref={canvasRef}
-        className="fixed inset-0 z-10 cursor-crosshair"
+        className={`fixed inset-0 z-10 transform-gpu transition-transform duration-600 ease-[cubic-bezier(.22,1,.36,1)] ${
+          isReviewing ? 'scale-[0.88] pointer-events-none' : 'scale-100'
+        } ${isReviewing ? '' : 'cursor-crosshair'}`}
         onMouseDown={handleMouseDown}
         onMouseMove={handleMouseMove}
         onMouseUp={handleMouseUp}
@@ -669,11 +708,18 @@ export function DrawStep(props: DrawStepProps) {
       {/* Particle canvas overlay (does not block input) */}
       <canvas
         ref={particleCanvasRef}
-        className="fixed inset-0 z-15 pointer-events-none"
+        className={`fixed inset-0 z-15 pointer-events-none transform-gpu transition-transform duration-600 ease-[cubic-bezier(.22,1,.36,1)] ${
+          isReviewing ? 'scale-[0.88]' : 'scale-100'
+        }`}
       />
 
       {/* Header */}
-      <header className="relative z-20 flex flex-row items-center justify-center h-min w-full gap-3">
+      <header
+        className={`relative z-20 flex flex-row items-center justify-center h-min w-full gap-3 transition-all duration-300 ease-out ${
+          isReviewing ? 'translate-y-4 opacity-0' : 'translate-y-0 opacity-100'
+        }`}
+        aria-hidden={isReviewing}
+      >
         <div className="flex flex-col items-start justify-center gap-1 w-full h-full flex-1">
           <Text scale={2.5}>{word}</Text>
           <div className="flex flex-row items-center gap-2 text-secondary">
@@ -702,7 +748,12 @@ export function DrawStep(props: DrawStepProps) {
       </div>
 
       {/* Color Palette */}
-      <div className="relative z-20 flex flex-row gap-2 items-center justify-center">
+      <div
+        className={`relative z-20 flex flex-row gap-2 items-center justify-center transition-all duration-300 ease-out ${
+          isReviewing ? '-translate-y-4 opacity-0' : 'translate-y-0 opacity-100'
+        }`}
+        aria-hidden={isReviewing}
+      >
         {DRAWING_COLORS.map((color) => (
           <ColorSwatch
             key={color}

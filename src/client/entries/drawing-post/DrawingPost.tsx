@@ -149,8 +149,7 @@ export const DrawingPost = () => {
       const attachment = (
         <ProgressBar
           percentage={getLevelProgressPercentage(
-            // eslint-disable-next-line @typescript-eslint/restrict-plus-operands, @typescript-eslint/no-unnecessary-type-assertion
-            (userProfile.score as number) + (earnedPoints ?? 0)
+            userProfile.score + earnedPoints
           )}
           width={200}
           height={8}
@@ -270,7 +269,7 @@ export const DrawingPost = () => {
         <ResultsView
           drawing={drawingData}
           word={word}
-          authorUsername={postData?.authorName}
+          authorUsername={postData.authorName}
           dictionary={dictionary}
           currentSubreddit={currentSubreddit}
           stats={stats}

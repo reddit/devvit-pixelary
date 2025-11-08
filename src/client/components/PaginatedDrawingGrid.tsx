@@ -68,7 +68,6 @@ export const PaginatedDrawingGrid = React.memo(function PaginatedDrawingGrid({
 
   const totalPages = Math.ceil(drawings.length / tilesPerPage);
   const startIndex = (currentPage - 1) * tilesPerPage;
-  // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
   const endIndex = Math.min(startIndex + tilesPerPage, drawings.length);
   const currentDrawings = drawings.slice(startIndex, endIndex);
 
@@ -131,7 +130,6 @@ export const PaginatedDrawingGrid = React.memo(function PaginatedDrawingGrid({
           <IconButton
             symbol="arrow-right"
             onClick={() => {
-              // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
               setCurrentPage(currentPage + 1);
             }}
             size="medium"

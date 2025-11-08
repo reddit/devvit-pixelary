@@ -22,7 +22,6 @@ export function CyclingMessage({
       setIsAnimating(true);
 
       // Change content immediately
-      // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
       setCurrentIndex((prev) => (prev + 1) % messages.length);
       // Small delay before starting slide up animation
       setTimeout(() => {

@@ -101,14 +101,12 @@ export function Confetti({
           }
 
           newParticles = [...newParticles, ...additionalParticles];
-          // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
           setSpawnedCount((prev) => prev + spawnCount);
           lastSpawnTime.current = currentTime;
         }
 
         const updatedParticles = newParticles
           .map((particle) => {
-            // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
             particle.y += particle.vy * deltaTime; // Scale by delta time
             particle.life = Math.max(0, particle.life - 0.002 * deltaTime); // Fade out over time
 

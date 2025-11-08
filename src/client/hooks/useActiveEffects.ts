@@ -147,7 +147,6 @@ export function useActiveEffects(): {
     }
     if (effects.length > 1) {
       cycleTimerRef.current = window.setInterval(() => {
-        // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
         setCycleIndex((idx) => (idx + 1) % effects.length);
       }, 3000) as unknown as number;
     }

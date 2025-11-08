@@ -3,7 +3,7 @@ import { DrawingEditor } from '@client/entries/editor/_components/Editor';
 import { context } from '@devvit/web/client';
 import { getPostData } from '@client/utils/context';
 import type { TournamentPostData } from '@shared/schema';
-import { renderEntry } from '@client/entries/_render';
+import { renderEntry } from '@client/utils/renderEntry';
 
 function App() {
   const postData = getPostData<TournamentPostData>();

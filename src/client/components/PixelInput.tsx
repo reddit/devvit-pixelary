@@ -179,7 +179,6 @@ export const PixelInput = forwardRef<PixelInputRef, PixelInputProps>(
         // Typing phase - add characters one by one
         if (visibleChars < currentPhrase.length) {
           timeoutId = setTimeout(() => {
-            // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
             setVisibleChars((prev) => prev + 1);
           }, TYPE_SPEED);
         } else {
@@ -197,7 +196,6 @@ export const PixelInput = forwardRef<PixelInputRef, PixelInputProps>(
         } else {
           // Finished erasing, move to next phrase
           setCurrentPhraseIndex(
-            // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
             (prev) => (prev + 1) % placeholderPhrases.length
           );
           setIsTyping(true);

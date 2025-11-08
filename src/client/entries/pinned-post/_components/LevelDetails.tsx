@@ -68,7 +68,6 @@ export function LevelDetails({ onClose }: LevelDetailsProps) {
   // Use the animated display progress
   const progressPercentage = displayProgress;
   const nextLevel = () => {
-    // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
     setCurrentLevelRank(currentLevelRank + 1);
   };
 

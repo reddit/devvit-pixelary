@@ -141,7 +141,6 @@ export function MyRewards({ onClose }: MyRewardsProps) {
             if (reward === 'extra_drawing_time') {
               const base: number =
                 getRewardValue(userLevel, 'extra_drawing_time') ?? 0;
-              // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
               displayLabel = `+${base + activeExtraDrawingSeconds}s drawing time`;
             } else if (reward === 'extra_word_time') {
               const base = getRewardValue(userLevel, 'extra_word_time') ?? 0;

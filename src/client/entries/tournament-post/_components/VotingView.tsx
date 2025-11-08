@@ -205,7 +205,6 @@ export function VotingView({
       const transitionTimeout = setTimeout(() => {
         // Move to next pair
         setCurrentPairIndex((prev) => {
-          // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
           const nextIndex = prev + 1;
           // Refill queue if getting low
           if (

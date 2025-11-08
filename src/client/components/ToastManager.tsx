@@ -53,7 +53,6 @@ export function ToastProvider({
 
   // Generate unique, predictable IDs for better debugging
   const generateId = useCallback(() => {
-    // eslint-disable-next-line @typescript-eslint/restrict-plus-operands
     toastIdCounter.current += 1;
     return `toast-${Date.now()}-${toastIdCounter.current}`;
   }, []);
