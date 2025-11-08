@@ -132,16 +132,20 @@ function DrawingCard({
       {drawing ? (
         <Drawing data={drawing.drawing} size={136} />
       ) : (
-        <div className="w-34 h-34 bg-white/25" />
+        <div className="w-34 h-34 skeleton" />
       )}
-      <Button
-        onClick={onVote}
-        disabled={isDisabled}
-        className="w-full"
-        variant="primary"
-      >
-        PICK
-      </Button>
+      {drawing ? (
+        <Button
+          onClick={onVote}
+          disabled={isDisabled}
+          className="w-full"
+          variant="primary"
+        >
+          PICK
+        </Button>
+      ) : (
+        <div className="w-full h-10 skeleton" />
+      )}
     </div>
   );
 }
@@ -364,43 +368,41 @@ export function VotingView({
         />
       </div>
 
-      {hasEnoughSubmissions && (
-        <div className="flex gap-6 items-center justify-center">
-          <DrawingCard
-            drawing={leftDrawing}
-            side="left"
-            animationState={animationState}
-            winnerSide={winnerSide}
-            onVote={() => {
-              handleVote(
-                leftDrawing?.commentId ?? '',
-                rightDrawing?.commentId ?? ''
-              );
-            }}
-            isDisabled={isButtonDisabled}
-          />
-          <DrawingCard
-            drawing={rightDrawing}
-            side="right"
-            animationState={animationState}
-            winnerSide={winnerSide}
-            onVote={() => {
-              handleVote(
-                rightDrawing?.commentId ?? '',
-                leftDrawing?.commentId ?? ''
-              );
-            }}
-            isDisabled={isButtonDisabled}
-          />
-        </div>
-      )}
+      <div className="flex gap-6 items-center justify-center">
+        <DrawingCard
+          drawing={leftDrawing}
+          side="left"
+          animationState={animationState}
+          winnerSide={winnerSide}
+          onVote={() => {
+            handleVote(
+              leftDrawing?.commentId ?? '',
+              rightDrawing?.commentId ?? ''
+            );
+          }}
+          isDisabled={isButtonDisabled}
+        />
+        <DrawingCard
+          drawing={rightDrawing}
+          side="right"
+          animationState={animationState}
+          winnerSide={winnerSide}
+          onVote={() => {
+            handleVote(
+              rightDrawing?.commentId ?? '',
+              leftDrawing?.commentId ?? ''
+            );
+          }}
+          isDisabled={isButtonDisabled}
+        />
+      </div>
 
       <div className="flex flex-col gap-3 items-center">
-        {hasEnoughSubmissions && (
-          <Text scale={2} className="text-secondary">
-            Pick the best, or ...
-          </Text>
-        )}
+        <Text scale={2} className="text-secondary">
+          {hasEnoughSubmissions
+            ? 'Pick the best, or ...'
+            : 'Wait for entries, or ...'}
+        </Text>
         <Button
           onNativeClick={(e) => {
             void requestExpandedMode(
