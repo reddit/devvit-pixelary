@@ -791,7 +791,16 @@ export function DrawStep(props: DrawStepProps) {
         className="relative z-30 flex-1 flex items-center justify-center pointer-events-none"
       >
         {DrawingUtils.isEmpty(drawingData) && (
-          <Text scale={2} className="text-tertiary">
+          <Text
+            scale={2}
+            className={`text-tertiary transition-opacity duration-300 ease-out delay-150 ${
+              isReviewing
+                ? 'opacity-0'
+                : hasEntered
+                  ? 'opacity-100'
+                  : 'opacity-0'
+            }`}
+          >
             Tap to draw
           </Text>
         )}
