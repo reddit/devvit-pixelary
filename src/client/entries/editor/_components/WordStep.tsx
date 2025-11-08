@@ -117,7 +117,14 @@ export function WordStep(props: WordStepProps) {
   return (
     <main className="absolute inset-0 flex flex-col gap-6 p-6 items-center justify-center">
       {/* Page Title */}
-      <Text scale={3}>Pick a word</Text>
+      <Text
+        scale={3}
+        className={`transition-opacity duration-200 ${
+          isExiting ? 'opacity-0' : 'opacity-100'
+        }`}
+      >
+        Pick a word
+      </Text>
 
       {/* Word Candidates */}
       <div
@@ -143,14 +150,18 @@ export function WordStep(props: WordStepProps) {
               setSelectedIndex(index);
               window.setTimeout(() => {
                 selectCandidate(word);
-              }, 550);
+              }, 700);
             }}
           />
         ))}
       </div>
 
       {/* Timer */}
-      <div className="flex flex-row items-center justify-center gap-4">
+      <div
+        className={`flex flex-row items-center justify-center gap-4 transition-opacity duration-200 ${
+          isExiting ? 'opacity-0' : 'opacity-100'
+        }`}
+      >
         <Icon
           scale={3}
           type="arrow-right"
@@ -177,7 +188,9 @@ export function WordStep(props: WordStepProps) {
           });
           refreshCandidates();
         }}
-        className="flex items-center hover:opacity-70 transition-opacity p-6 absolute right-0 bottom-0 cursor-pointer"
+        className={`flex items-center hover:opacity-70 transition-opacity duration-200 p-6 absolute right-0 bottom-0 cursor-pointer ${
+          isExiting ? 'opacity-0 pointer-events-none' : 'opacity-100'
+        }`}
       >
         <Icon scale={3} type="undo" className="text-secondary" />
       </button>
@@ -211,12 +224,12 @@ function WordCandidate(props: WordCandidateProps) {
         }
       }}
       disabled={isLoading}
-      className={`bg-white border-4 border-black shadow-pixel cursor-pointer w-full h-1/3 flex flex-col gap-2 items-center justify-center transform-gpu transition-all duration-500 ${
+      className={`bg-white border-4 border-black shadow-pixel cursor-pointer w-full h-1/3 flex flex-col gap-2 items-center justify-center ${
         isExiting
           ? isSelected
-            ? 'translate-x-8 opacity-0'
-            : '-translate-x-8 opacity-0'
-          : 'translate-x-0 opacity-100'
+            ? 'transition-opacity duration-700 opacity-0'
+            : 'transition-opacity duration-200 opacity-0'
+          : 'transition-opacity duration-300 opacity-100'
       }`}
     >
       {/* Word */}
