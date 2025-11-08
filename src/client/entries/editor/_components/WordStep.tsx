@@ -167,12 +167,16 @@ export function WordStep(props: WordStepProps) {
           type="arrow-right"
           className={secondsLeft > 2 ? 'text-tertiary' : 'text-orangered'}
         />
-        <Text
-          scale={3}
-          className={secondsLeft > 2 ? 'text-primary' : 'text-orangered'}
-        >
-          {secondsLeft.toString()}
-        </Text>
+        {!isLoading ? (
+          <Text
+            scale={3}
+            className={secondsLeft > 2 ? 'text-primary' : 'text-orangered'}
+          >
+            {secondsLeft.toString()}
+          </Text>
+        ) : (
+          <div className="w-9 h-[21px] skeleton" />
+        )}
         <Icon
           scale={3}
           type="arrow-left"
@@ -256,8 +260,6 @@ function WordCandidate(props: WordCandidateProps) {
           />
         )}
       </div>
-
-      {/* Dictionary name - removed since we're just using strings now */}
     </button>
   );
 }
