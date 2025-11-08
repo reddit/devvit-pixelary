@@ -14,7 +14,7 @@ export function ModalBody({
   const borderClasses = 'absolute bg-black';
   return (
     <div
-      className={`bg-white flex flex-col gap-6 p-6 items-center justify-center relative ${className}`}
+      className={`bg-white flex flex-col gap-6 p-6 items-center justify-center relative animate-slide-up-fade-in will-change-transform origin-center ${className}`}
       onClick={(e) => {
         e.stopPropagation();
       }}

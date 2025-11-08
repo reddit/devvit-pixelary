@@ -394,4 +394,59 @@
   .animate-spring-up {
     animation: spring-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
   }
+
+  /* Modal slide up + fade in */
+  @keyframes slide-up-fade-in {
+    0% {
+      transform: translateY(20px) scale(0.98);
+      opacity: 0;
+    }
+    60% {
+      transform: translateY(-3px) scale(1.005);
+      opacity: 1;
+    }
+    100% {
+      transform: translateY(0) scale(1);
+      opacity: 1;
+    }
+  }
+  .animate-slide-up-fade-in {
+    animation: slide-up-fade-in 0.32s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+
+  /* More dramatic modal pop-in */
+  @keyframes pop-in-dramatic {
+    0% {
+      transform: scale(0.82);
+      opacity: 0;
+    }
+    55% {
+      transform: scale(1.08);
+      opacity: 1;
+    }
+    75% {
+      transform: scale(0.98);
+    }
+    100% {
+      transform: scale(1);
+    }
+  }
+  .animate-pop-in-dramatic {
+    animation: pop-in-dramatic 0.65s cubic-bezier(0.175, 0.885, 0.32, 1.275)
+      both;
+  }
+
+  /* Modal scrim fade */
+  @keyframes scrim-fade-in {
+    0% {
+      background-color: rgba(0, 0, 0, 0);
+    }
+    100% {
+      background-color: rgba(0, 0, 0, 0.7);
+    }
+  }
+
+  .animate-scrim-fade-in {
+    animation: scrim-fade-in 0.22s ease-out both;
+  }
 }
