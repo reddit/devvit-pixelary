@@ -84,6 +84,8 @@ export function DrawStep(props: DrawStepProps) {
   // Canvas state
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const headerRef = useRef<HTMLElement>(null);
+  const paletteRef = useRef<HTMLDivElement>(null);
   const [currentColor, setCurrentColor] = useState<HEX>('#000000');
   const [isDrawing, setIsDrawing] = useState(false);
   const [drawingData, setDrawingData] = useState<DrawingData>(() =>
@@ -507,6 +509,31 @@ export function DrawStep(props: DrawStepProps) {
     root.style.setProperty('--draw-size', `${sizeScaled}px`);
   }, [isReviewing, viewportSize, layoutVersion]);
 
+  // When entering review mode, make UI sections inert and ensure focus is not inside them
+  useEffect(() => {
+    const elements: HTMLElement[] = [];
+    if (headerRef.current) elements.push(headerRef.current);
+    if (paletteRef.current) elements.push(paletteRef.current);
+    for (const el of elements) {
+      if (isReviewing) {
+        el.setAttribute('inert', '');
+      } else {
+        el.removeAttribute('inert');
+      }
+    }
+    if (isReviewing) {
+      const active = document.activeElement as HTMLElement | null;
+      if (active) {
+        for (const el of elements) {
+          if (el.contains(active)) {
+            active.blur();
+            break;
+          }
+        }
+      }
+    }
+  }, [isReviewing]);
+
   const handlePixelClick = useCallback(
     (e: React.MouseEvent<HTMLCanvasElement>) => {
       const canvas = canvasRef.current;
@@ -770,7 +797,7 @@ export function DrawStep(props: DrawStepProps) {
               ? 'translate-y-0 opacity-100'
               : '-translate-y-2 opacity-0'
         }`}
-        aria-hidden={isReviewing}
+        ref={headerRef}
       >
         <div className="flex flex-col items-start justify-center gap-1 w-full h-full flex-1">
           <Text scale={2.5}>{word}</Text>
@@ -815,7 +842,7 @@ export function DrawStep(props: DrawStepProps) {
               ? 'translate-y-0 opacity-100'
               : 'translate-y-2 opacity-0'
         }`}
-        aria-hidden={isReviewing}
+        ref={paletteRef}
       >
         {DRAWING_COLORS.map((color) => (
           <ColorSwatch

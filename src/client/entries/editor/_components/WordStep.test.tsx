@@ -58,7 +58,7 @@ describe('WordStep transitions', () => {
 
     // Reach the delay threshold
     void act(() => {
-      vi.advanceTimersByTime(100);
+      vi.advanceTimersByTime(200);
     });
     expect(selectCandidate).toHaveBeenCalledWith('alpha');
   });

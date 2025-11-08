@@ -48,7 +48,9 @@ describe('DrawStep reviewing state', () => {
     const mainCanvas = container.querySelector('canvas.z-10');
     expect(mainCanvas).toBeTruthy();
     expect(mainCanvas).toHaveClass('pointer-events-none');
-    // Scaled down class applied
-    expect(mainCanvas?.className ?? '').toMatch(/scale-\[0\.88\]/);
+    // Scaled down class applied on the shared transform wrapper
+    const scaledWrapper = container.querySelector('div.fixed.inset-0.z-10');
+    expect(scaledWrapper).toBeTruthy();
+    expect(scaledWrapper?.className ?? '').toMatch(/scale-\[0\.88\]/);
   });
 });
