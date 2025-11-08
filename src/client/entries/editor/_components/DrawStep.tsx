@@ -522,6 +522,8 @@ export function DrawStep(props: DrawStepProps) {
       }
     }
     if (isReviewing) {
+      // Ensure any open color picker is closed when transitioning to review
+      setIsColorPickerOpen(false);
       const active = document.activeElement as HTMLElement | null;
       if (active) {
         for (const el of elements) {
