@@ -60,7 +60,7 @@ export const Drawing = React.memo(function Drawing({
     <div className={`relative ${className}`} onClick={onClick}>
       {/* Drawing */}
       <div
-        className={`relative bg-white ${clickableClasses} ${breathingClass}`}
+        className={`pixel-drawing relative bg-white ${clickableClasses} ${breathingClass}`}
         style={{ width: size, height: size }}
       >
         <canvas

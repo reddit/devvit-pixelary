@@ -101,7 +101,9 @@
     .tournaments-animate-slide-out-left-loser,
     .tournaments-animate-slide-out-right-loser,
     .tournaments-animate-slide-in-from-left,
-    .tournaments-animate-slide-in-from-right {
+    .tournaments-animate-slide-in-from-right,
+    .tournaments-animate-attract,
+    .tournaments-animate-attract .pixel-drawing {
       animation: none !important;
     }
   }
@@ -348,6 +350,51 @@
   .tournaments-animate-slide-in-from-right {
     animation: tournaments-slide-in-from-right 0.5s
       cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+
+  /* Idle attract animation for tournament drawings */
+  @keyframes tournaments-attract {
+    0%,
+    100% {
+      transform: translate3d(0, 0, 0);
+      box-shadow: var(--shadow-pixel);
+    }
+    50% {
+      transform: translate3d(2px, 2px, 0);
+      box-shadow: var(--shadow-pixel-sm);
+    }
+  }
+
+  /* Apply to the inner pixel drawing surface when parent has the flag */
+  .tournaments-animate-attract {
+    --t-attract-duration: 1s;
+  }
+  .tournaments-animate-attract .pixel-drawing {
+    animation: tournaments-attract var(--t-attract-duration) ease-in-out
+      infinite;
+    will-change: transform;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+  }
+  /* 50% phase offset between sides using negative delay */
+  .side-left .tournaments-animate-attract .pixel-drawing {
+    animation-delay: 0s;
+  }
+  .side-right .tournaments-animate-attract .pixel-drawing {
+    animation-delay: calc(var(--t-attract-duration) / -2);
+  }
+  /* Pause attract when user is hovering */
+  .tournaments-animate-attract:hover .pixel-drawing {
+    animation-play-state: paused;
+  }
+
+  /* If either card is hovered, disable attract on both; resumes in sync after hover */
+  .tournaments-attract-group:has(.drawing-card:hover)
+    .tournaments-animate-attract
+    .pixel-drawing {
+    animation: none !important;
+    transform: translate3d(0, 0, 0);
+    box-shadow: var(--shadow-pixel);
   }
 
   /* Hide native text selection for PixelInput */

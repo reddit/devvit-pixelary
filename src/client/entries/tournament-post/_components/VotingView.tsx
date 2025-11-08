@@ -123,28 +123,23 @@ function DrawingCard({
   };
 
   const classes = [
-    'flex flex-col gap-3 items-center',
+    'drawing-card flex flex-col gap-3 items-center',
     ...getAnimationClasses(cardState),
   ].join(' ');
 
   return (
     <div className={classes} style={{ willChange: 'transform' }}>
       {drawing ? (
-        <Drawing data={drawing.drawing} size={136} />
+        <Drawing
+          data={drawing.drawing}
+          size={136}
+          className={
+            animationState === 'idle' ? 'tournaments-animate-attract' : ''
+          }
+          {...(!isDisabled ? { onClick: onVote } : {})}
+        />
       ) : (
         <div className="w-34 h-34 skeleton" />
-      )}
-      {drawing ? (
-        <Button
-          onClick={onVote}
-          disabled={isDisabled}
-          className="w-full"
-          variant="primary"
-        >
-          PICK
-        </Button>
-      ) : (
-        <div className="w-full h-10 skeleton" />
       )}
     </div>
   );
@@ -368,7 +363,7 @@ export function VotingView({
         />
       </div>
 
-      <div className="flex gap-6 items-center justify-center">
+      <div className="tournaments-attract-group flex gap-6 items-center justify-center">
         <DrawingCard
           drawing={leftDrawing}
           side="left"
