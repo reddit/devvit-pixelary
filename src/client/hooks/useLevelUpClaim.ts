@@ -80,6 +80,7 @@ export function useLevelUpClaim(): {
   claimLevelUp: (level: number) => Promise<void>;
 } {
   const queryClient = useQueryClient();
+  const utils = trpc.useUtils();
   const [shouldClaim, setShouldClaim] = useState(false);
   const refetchTimeoutRef = useRef<number | undefined>(undefined);
 
@@ -105,9 +106,12 @@ export function useLevelUpClaim(): {
       setUnclaimedLevel(null);
       setShouldClaim(false);
       // Invalidate and refetch unclaimed level data
-      void queryClient.invalidateQueries({
-        queryKey: ['pixelary', 'user', 'getUnclaimedLevelUp'],
-      });
+      void utils.app.user.getUnclaimedLevelUp.invalidate();
+      // Refresh profile (level/progress bar) and related user info
+      void utils.app.user.getProfile.invalidate();
+      void utils.app.user.getLevel.invalidate();
+      void utils.app.user.getProfile.refetch();
+      void utils.app.user.getLevel.refetch();
     },
   });
 
@@ -122,6 +126,11 @@ export function useLevelUpClaim(): {
     if (refetchTimeoutRef.current != null) return;
     refetchTimeoutRef.current = window.setTimeout(() => {
       void refetch();
+      // Also refresh profile (menu, level details, etc.)
+      void utils.app.user.getProfile.invalidate();
+      void utils.app.user.getLevel.invalidate();
+      void utils.app.user.getProfile.refetch();
+      void utils.app.user.getLevel.refetch();
       refetchTimeoutRef.current = undefined;
     }, 250);
   };

@@ -7,11 +7,17 @@ import { ToastProvider } from '@components/ToastManager';
 import { TelemetryProvider } from '@hooks/useTelemetry';
 import { ErrorBoundary } from '@components/ErrorBoundary';
 import { LevelUpProvider } from '@components/LevelUpProvider';
+import { useUserProfileRealtime } from '@client/hooks/useUserProfileRealtime';
 
 import { trpc } from '@client/trpc/client';
 
 export function Providers(props: React.PropsWithChildren): React.ReactElement {
   const { children } = props;
+
+  function GlobalRealtimeSync(): React.ReactElement | null {
+    useUserProfileRealtime();
+    return null;
+  }
 
   const queryClient = React.useMemo(() => new QueryClient(), []);
   const trpcClient = React.useMemo(
@@ -32,6 +38,7 @@ export function Providers(props: React.PropsWithChildren): React.ReactElement {
   return (
     <trpc.Provider client={trpcClient} queryClient={queryClient}>
       <QueryClientProvider client={queryClient}>
+        <GlobalRealtimeSync />
         <ToastProvider
           maxToasts={5}
           defaultPosition="top-right"

@@ -1,5 +1,5 @@
 import { Text, Icon } from '@components/PixelFont';
-import { Counter } from '@components/Counter';
+// Removed animated counter to avoid stale/blank states
 import { Button } from '@components/Button';
 import { Logo } from '@components/Logo';
 import { ProgressBar } from '@components/ProgressBar';
@@ -98,10 +98,9 @@ export function Menu(props: MenuProps) {
         className="level-button hover:opacity-70 transition-opacity cursor-pointer flex flex-col items-center justify-center gap-2"
       >
         <div className="flex relative">
-          <Text scale={2}>Level </Text>
-          <Counter value={userProfile?.level} scale={2} />
+          <Text>{`Level ${userProfile?.level ?? 0}`}</Text>
           <div className="absolute -right-5 level-arrow">
-            <Icon type="arrow-right" scale={2} className="text-tertiary" />
+            <Icon type="arrow-right" className="text-tertiary" />
           </div>
         </div>
 

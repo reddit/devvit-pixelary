@@ -177,6 +177,10 @@ export async function incrementScore(
     // User stayed at same level, update claimed level to match
     const newClaimedKey = REDIS_KEYS.userLevelUpClaim(userId);
     await redis.set(newClaimedKey, level.rank.toString());
+  } else {
+    // User leveled down, update claimed level to the new lower level
+    const newClaimedKey = REDIS_KEYS.userLevelUpClaim(userId);
+    await redis.set(newClaimedKey, level.rank.toString());
   }
 
   if (didUserLevelUp) {

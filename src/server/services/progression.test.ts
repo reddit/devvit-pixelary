@@ -135,6 +135,18 @@ describe('Leaderboard Service', () => {
       expect(result).toBe(900);
     });
 
+    it('updates claimed level when leveling down via decrement', async () => {
+      // Old score places user at Level 3 (>= 1000)
+      vi.mocked(redis.zScore).mockResolvedValueOnce(1000);
+      // Decrement results in score in Level 2 (e.g., 150)
+      vi.mocked(redis.zIncrBy).mockResolvedValue(150);
+
+      await incrementScore('t2_testuser', -850);
+
+      // Expect claimed level to be updated to 2
+      expect(redis.set).toHaveBeenCalledWith('user:t2_testuser:levelup', '2');
+    });
+
     it('schedules level up job when user levels up', async () => {
       vi.mocked(redis.zIncrBy).mockResolvedValue(100); // Level 2 threshold
 
