@@ -38,11 +38,11 @@ describe('Consumables', () => {
     ] as never);
     vi.mocked(redis.hGetAll)
       .mockResolvedValueOnce({
-        itemId: 'score_multiplier_2x_4h',
+        itemId: 'score_multiplier_2x',
         expiresAt: String(Date.now() + 10000),
       } as never)
       .mockResolvedValueOnce({
-        itemId: 'score_multiplier_3x_30m',
+        itemId: 'score_multiplier_3x',
         expiresAt: String(Date.now() + 20000),
       } as never);
 
@@ -52,13 +52,13 @@ describe('Consumables', () => {
 
   it('activateConsumable decrements inventory and tracks activation', async () => {
     vi.mocked(redis.hGetAll).mockResolvedValue({
-      score_multiplier_2x_4h: '2',
+      score_multiplier_2x: '2',
     } as never);
     vi.mocked(redis.hIncrBy).mockResolvedValue(1 as never); // after decrement
 
     const result = await activateConsumable(
       't2_user' as never,
-      'score_multiplier_2x_4h'
+      'score_multiplier_2x'
     );
     expect(result).not.toBeNull();
     expect(redis.hIncrBy).toHaveBeenCalled();

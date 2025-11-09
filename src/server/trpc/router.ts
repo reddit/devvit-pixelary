@@ -582,9 +582,9 @@ export const appRouter = t.router({
         .input(
           z.object({
             itemId: z.union([
-              z.literal('score_multiplier_2x_4h'),
-              z.literal('score_multiplier_3x_30m'),
-              z.literal('draw_time_boost_30s_2h'),
+              z.literal('score_multiplier_2x'),
+              z.literal('score_multiplier_3x'),
+              z.literal('draw_time_boost_30s'),
             ]),
           })
         )
@@ -613,9 +613,9 @@ export const appRouter = t.router({
             items: z.array(
               z.object({
                 itemId: z.union([
-                  z.literal('score_multiplier_2x_4h'),
-                  z.literal('score_multiplier_3x_30m'),
-                  z.literal('draw_time_boost_30s_2h'),
+                  z.literal('score_multiplier_2x'),
+                  z.literal('score_multiplier_3x'),
+                  z.literal('draw_time_boost_30s'),
                 ]),
                 quantity: z.number().int().min(1),
               })

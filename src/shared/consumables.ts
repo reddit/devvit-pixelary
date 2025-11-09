@@ -3,60 +3,40 @@
  * Defines IDs, configs, and effect contracts used by client and server
  */
 
-export type ConsumableId =
-  | 'score_multiplier_2x_4h'
-  | 'score_multiplier_3x_30m'
-  | 'draw_time_boost_30s_2h';
-
 export type ConsumableEffect =
   | { kind: 'score_multiplier'; multiplier: number }
   | { kind: 'extra_drawing_time'; extraSeconds: number };
 
-export type ConsumableConfig = {
-  id: ConsumableId;
-  label: string;
-  durationMs: number; // Duration an activation remains active
-  effect: ConsumableEffect;
-};
-
-export const CONSUMABLES_CONFIG: Record<ConsumableId, ConsumableConfig> = {
-  score_multiplier_2x_4h: {
-    id: 'score_multiplier_2x_4h',
+export const CONSUMABLES_CONFIG = {
+  score_multiplier_2x: {
+    id: 'score_multiplier_2x',
     label: 'DOUBLE POINTS!',
+    description: 'On all points earned while active',
     durationMs: 4 * 60 * 60 * 1000,
     effect: { kind: 'score_multiplier', multiplier: 2 },
   },
-  score_multiplier_3x_30m: {
-    id: 'score_multiplier_3x_30m',
+  score_multiplier_3x: {
+    id: 'score_multiplier_3x',
     label: 'TRIPLE POINTS!',
+    description: 'On all points earned while active',
     durationMs: 30 * 60 * 1000,
     effect: { kind: 'score_multiplier', multiplier: 3 },
   },
-  draw_time_boost_30s_2h: {
-    id: 'draw_time_boost_30s_2h',
-    label: '+30s Drawing Time',
+  draw_time_boost_30s: {
+    id: 'draw_time_boost_30s',
+    label: 'EXTRA TIME!',
+    description: 'Adds +30s to your drawing timer!',
     durationMs: 2 * 60 * 60 * 1000,
     effect: { kind: 'extra_drawing_time', extraSeconds: 30 },
   },
+} as const;
+
+export type ConsumableId = keyof typeof CONSUMABLES_CONFIG;
+export type ConsumableConfig = (typeof CONSUMABLES_CONFIG)[ConsumableId] & {
+  durationMs: number;
+  effect: ConsumableEffect;
 };
-
-export const SCORE_MULTIPLIER_IDS: ConsumableId[] = [
-  'score_multiplier_2x_4h',
-  'score_multiplier_3x_30m',
-];
-
-export const DRAW_TIME_BOOST_IDS: ConsumableId[] = ['draw_time_boost_30s_2h'];
 
 export function getConsumableConfig(id: ConsumableId): ConsumableConfig {
   return CONSUMABLES_CONFIG[id];
-}
-
-/**
- * Get a human-readable description for an effect.
- */
-export function getEffectDescription(effect: ConsumableEffect): string {
-  if (effect.kind === 'score_multiplier') {
-    return 'On all points earned while active';
-  }
-  return `Adds +${effect.extraSeconds}s to your drawing timer!`;
 }

@@ -46,14 +46,14 @@ describe('ActiveEffectsBadge component', () => {
       effects: [
         {
           activationId: 'a',
-          itemId: 'score_multiplier_2x_4h',
+          itemId: 'score_multiplier_2x',
           effect: { kind: 'score_multiplier', multiplier: 2 },
           expiresAt: Date.now() + 100000,
         },
       ],
       currentEffect: {
         activationId: 'a',
-        itemId: 'score_multiplier_2x_4h',
+        itemId: 'score_multiplier_2x',
         effect: { kind: 'score_multiplier', multiplier: 2 },
         expiresAt: Date.now() + 125000,
       },
@@ -71,14 +71,14 @@ describe('ActiveEffectsBadge component', () => {
       effects: [
         {
           activationId: 'a',
-          itemId: 'score_multiplier_2x_4h',
+          itemId: 'score_multiplier_2x',
           effect: { kind: 'score_multiplier', multiplier: 2 },
           expiresAt: Date.now() + 100000,
         },
       ],
       currentEffect: {
         activationId: 'a',
-        itemId: 'score_multiplier_2x_4h',
+        itemId: 'score_multiplier_2x',
         effect: { kind: 'score_multiplier', multiplier: 2 },
         expiresAt: Date.now() + 125000,
       },
@@ -89,7 +89,7 @@ describe('ActiveEffectsBadge component', () => {
     const badge = screen.getByTestId('active-effects-badge');
     fireEvent.click(badge);
     // Modal title derives from consumable config label (aria-label on header)
-    expect(screen.getByLabelText('2x Points Earned!')).toBeInTheDocument();
+    expect(screen.getByLabelText('DOUBLE POINTS!')).toBeInTheDocument();
     // Modal body shows remaining time
     expect(screen.getByLabelText('2m 5s left')).toBeInTheDocument();
   });

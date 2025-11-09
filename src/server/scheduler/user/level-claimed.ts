@@ -19,9 +19,7 @@ export async function handleUserLevelClaimed(
     }
 
     // Grant 5 score multipliers upon claim
-    await grantItems(userId, [
-      { itemId: 'score_multiplier_2x_4h', quantity: 5 },
-    ]);
+    await grantItems(userId, [{ itemId: 'score_multiplier_2x', quantity: 5 }]);
 
     res.json({ status: 'success' });
   } catch (error) {

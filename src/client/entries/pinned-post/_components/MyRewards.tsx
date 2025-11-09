@@ -14,11 +14,7 @@ import {
   getRewardLabel,
   getRewardValue,
 } from '@shared/rewards';
-import {
-  CONSUMABLES_CONFIG,
-  getConsumableConfig,
-  getEffectDescription,
-} from '@shared/consumables';
+import { CONSUMABLES_CONFIG, getConsumableConfig } from '@shared/consumables';
 import { context } from '@devvit/web/client';
 import type { ConsumableId } from '@shared/consumables';
 
@@ -239,7 +235,7 @@ function ItemModal({
 
   // Parse the label and description
   const label = config.label;
-  const description = getEffectDescription(config.effect);
+  const description = config.description;
   const descriptionLines = wrapTextByWidth(description, 128);
 
   return (
@@ -278,11 +274,11 @@ function ItemModal({
 
 function renderConsumableIllustration(id: ConsumableId, size = 36) {
   switch (id) {
-    case 'score_multiplier_2x_4h':
+    case 'score_multiplier_2x':
       return <Multiplier variant="double" size={size} />;
-    case 'score_multiplier_3x_30m':
+    case 'score_multiplier_3x':
       return <Multiplier variant="triple" size={size} />;
-    case 'draw_time_boost_30s_2h':
+    case 'draw_time_boost_30s':
       return <Clock size={size} />;
     default:
       return null;

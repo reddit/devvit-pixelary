@@ -112,9 +112,7 @@ export function DrawStep(props: DrawStepProps) {
     height: 0,
   });
 
-  const debugLog = (...args: unknown[]) => {
-    console.log('[DrawStep]', ...args);
-  };
+  // debug logging removed
 
   // Geometry of the drawable square inside the canvas (in CSS pixels)
   const drawAreaRef = useRef<{
@@ -156,14 +154,12 @@ export function DrawStep(props: DrawStepProps) {
       for (const entry of entries) {
         const cr = entry.contentRect;
         setContainerSize({ width: cr.width, height: cr.height });
-        debugLog('containerSize', { width: cr.width, height: cr.height });
       }
     });
     observer.observe(el);
     // Initialize immediately
     const rect = el.getBoundingClientRect();
     setContainerSize({ width: rect.width, height: rect.height });
-    debugLog('containerSize:init', { width: rect.width, height: rect.height });
     return () => {
       observer.disconnect();
     };
@@ -173,10 +169,6 @@ export function DrawStep(props: DrawStepProps) {
   useEffect(() => {
     const update = () => {
       setViewportSize({ width: window.innerWidth, height: window.innerHeight });
-      debugLog('viewportSize', {
-        width: window.innerWidth,
-        height: window.innerHeight,
-      });
     };
     update();
     window.addEventListener('resize', update);
@@ -380,10 +372,6 @@ export function DrawStep(props: DrawStepProps) {
     ctx.clearRect(0, 0, cssW, cssH);
 
     // Placement using fixed insets from canvas edges
-    debugLog('canvasRectAfterStyle', {
-      width: cssW,
-      height: cssH,
-    });
 
     const insetX = 16; // horizontal inset on each side
     const insetY = 100; // vertical inset on each side
@@ -408,27 +396,6 @@ export function DrawStep(props: DrawStepProps) {
     squareX = Math.max(0, Math.min(squareX, cssW - squareSize));
     squareY = Math.max(0, Math.min(squareY, cssH - squareSize));
     drawAreaRef.current = { x: squareX, y: squareY, size: squareSize };
-
-    debugLog('layout', {
-      vw,
-      vh,
-      dpr,
-      canvasBuffer: { width: canvas.width, height: canvas.height },
-      canvasCss: { width: cssW, height: cssH },
-      insets: { insetX, insetY },
-      allowed: {
-        left: allowedLeft,
-        top: allowedTop,
-        width: allowedW,
-        height: allowedH,
-      },
-      s0,
-      pxRaw: px,
-      gridSize: drawingData.size,
-      squareSize,
-      square: { x: squareX, y: squareY },
-      pixelSize: squareSize / drawingData.size,
-    });
 
     // Expose scaled draw square geometry via CSS variables for overlay positioning
     {
@@ -564,20 +531,6 @@ export function DrawStep(props: DrawStepProps) {
         Math.floor((relY / ss) * drawingData.size)
       );
 
-      debugLog('click', {
-        client: { x: e.clientX, y: e.clientY },
-        canvasRect: {
-          left: rect.left,
-          top: rect.top,
-          width: rect.width,
-          height: rect.height,
-        },
-        drawArea: drawAreaRef.current,
-        rel: { x: relX, y: relY },
-        normalized: { x: relX / ss, y: relY / ss },
-        pixel: { x: pixelX, y: pixelY },
-      });
-
       const index = pixelY * drawingData.size + pixelX;
       // Particle burst (only when entering a new pixel index)
       if (index !== lastPaintedIndexRef.current) {
@@ -665,20 +618,6 @@ export function DrawStep(props: DrawStepProps) {
         setDrawingData((prev) =>
           DrawingUtils.setPixel(prev, index, currentColor)
         );
-
-        debugLog('touch-start', {
-          client: { x: touch.clientX, y: touch.clientY },
-          canvasRect: {
-            left: rect.left,
-            top: rect.top,
-            width: rect.width,
-            height: rect.height,
-          },
-          drawArea: drawAreaRef.current,
-          rel: { x: relX, y: relY },
-          normalized: { x: relX / ss, y: relY / ss },
-          pixel: { x: pixelX, y: pixelY },
-        });
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -727,20 +666,6 @@ export function DrawStep(props: DrawStepProps) {
         setDrawingData((prev) =>
           DrawingUtils.setPixel(prev, index, currentColor)
         );
-
-        debugLog('touch-move', {
-          client: { x: touch.clientX, y: touch.clientY },
-          canvasRect: {
-            left: rect.left,
-            top: rect.top,
-            width: rect.width,
-            height: rect.height,
-          },
-          drawArea: drawAreaRef.current,
-          rel: { x: relX, y: relY },
-          normalized: { x: relX / ss, y: relY / ss },
-          pixel: { x: pixelX, y: pixelY },
-        });
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps

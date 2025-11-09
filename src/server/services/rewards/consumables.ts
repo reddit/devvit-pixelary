@@ -6,7 +6,6 @@ import {
   type ConsumableId,
   type ConsumableEffect,
   getConsumableConfig,
-  SCORE_MULTIPLIER_IDS,
 } from '@shared/consumables';
 
 export type Inventory = Record<ConsumableId, number>;
@@ -177,5 +176,5 @@ export async function getActiveExtraDrawingTimeSeconds(
 }
 
 export function isScoreMultiplier(id: ConsumableId): boolean {
-  return SCORE_MULTIPLIER_IDS.includes(id);
+  return getConsumableConfig(id).effect.kind === 'score_multiplier';
 }
