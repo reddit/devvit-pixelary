@@ -20,7 +20,7 @@ import {
   getEffectDescription,
 } from '@shared/consumables';
 import { context } from '@devvit/web/client';
-import type { ConsumableEffect, ConsumableId } from '@shared/consumables';
+import type { ConsumableId } from '@shared/consumables';
 
 /**
  * Props for the MyRewards component.
@@ -62,11 +62,14 @@ export function MyRewards({ onClose }: MyRewardsProps) {
     });
 
   // Inventory & Active Effects
-  const { data: inventory, refetch: refetchInventory } =
-    trpc.app.rewards.getInventory.useQuery(undefined, {
-      enabled: !!context.userId,
-      staleTime: 5000,
-    });
+  const {
+    data: inventory,
+    isLoading: isInventoryLoading,
+    refetch: refetchInventory,
+  } = trpc.app.rewards.getInventory.useQuery(undefined, {
+    enabled: !!context.userId,
+    staleTime: 5000,
+  });
   const { data: activeEffects, refetch: refetchEffects } =
     trpc.app.rewards.getActiveEffects.useQuery(undefined, {
       enabled: !!context.userId,
@@ -77,6 +80,8 @@ export function MyRewards({ onClose }: MyRewardsProps) {
       success('Used!');
       void refetchInventory();
       void refetchEffects();
+      setSelectedItemId(null);
+      onClose();
     },
   });
 
@@ -85,18 +90,7 @@ export function MyRewards({ onClose }: MyRewardsProps) {
   const [selectedItemId, setSelectedItemId] = useState<ConsumableId | null>(
     null
   );
-  const selectedConfig = useMemo(
-    () => (selectedItemId ? getConsumableConfig(selectedItemId) : null),
-    [selectedItemId]
-  );
-  const selectedDescription = useMemo(
-    () => (selectedConfig ? getEffectDescription(selectedConfig.effect) : ''),
-    [selectedConfig]
-  );
-  const descriptionLines = useMemo(
-    () => wrapTextByWidth(selectedDescription, 128),
-    [selectedDescription]
-  );
+
   const activeExtraDrawingSeconds = useMemo(() => {
     const list = activeEffects ?? [];
     let total = 0;
@@ -108,6 +102,14 @@ export function MyRewards({ onClose }: MyRewardsProps) {
     }
     return total;
   }, [activeEffects]);
+
+  const selectedQuantity = useMemo(() => {
+    if (!selectedItemId) return 0;
+    return inventory?.[selectedItemId] ?? 0;
+  }, [selectedItemId, inventory]);
+
+  const isUseDisabled =
+    activateMutation.isPending || hasAnyActiveEffect || selectedQuantity <= 0;
 
   const inventoryEntries = useMemo(() => {
     const entries = Object.entries(inventory ?? {});
@@ -167,61 +169,110 @@ export function MyRewards({ onClose }: MyRewardsProps) {
 
       {/* Consumables Inventory */}
       <div className="flex flex-row items-start justify-start gap-4">
-        {inventoryEntries.length === 0 ? (
-          <Text className="text-muted">
-            You don't have any consumables yet.
-          </Text>
-        ) : (
+        {/* Loading state */}
+        {isInventoryLoading && (
+          <Text className="text-secondary animate-pulse">Loading ...</Text>
+        )}
+
+        {/* Empty state */}
+        {!isInventoryLoading && inventoryEntries.length === 0 && (
+          <Text className="text-secondary">Your inventory is empty</Text>
+        )}
+
+        {/* Items list */}
+        {!isInventoryLoading &&
+          inventoryEntries.length > 0 &&
           inventoryEntries.map(([itemId, quantity]) => {
             const id = itemId as ConsumableId;
-            const disabled =
-              activateMutation.isPending || hasAnyActiveEffect || quantity <= 0;
             return (
-              <ConsumableItem
+              <Item
                 key={id}
                 itemId={id}
                 quantity={quantity}
                 onView={() => {
                   setSelectedItemId(id);
                 }}
-                onUse={() => {
-                  activateMutation.mutate({ itemId: id });
-                }}
-                disabled={disabled}
               />
             );
-          })
-        )}
+          })}
       </div>
 
-      <Modal
-        isOpen={!!selectedItemId}
+      <ItemModal
+        itemId={selectedItemId}
+        quantity={selectedQuantity}
         onClose={() => {
           setSelectedItemId(null);
         }}
-      >
-        <div className="flex flex-col items-center justify-center gap-6">
-          {selectedItemId && renderConsumableIllustration(selectedItemId, 48)}
-
-          <div className="flex flex-col items-center justify-center gap-2">
-            <Text className="text-primary">{selectedConfig?.label ?? ''}</Text>
-            {descriptionLines.map((line, i) => (
-              <Text key={i} className="text-tertiary">
-                {line}
-              </Text>
-            ))}
-          </div>
-
-          <Button
-            onClick={() => {
-              setSelectedItemId(null);
-            }}
-          >
-            Okay
-          </Button>
-        </div>
-      </Modal>
+        onUse={() => {
+          if (selectedItemId) {
+            activateMutation.mutate({ itemId: selectedItemId });
+          }
+        }}
+        isUseDisabled={isUseDisabled}
+      />
     </main>
+  );
+}
+
+type ItemModalProps = {
+  itemId: ConsumableId | null;
+  quantity: number;
+  onClose: () => void;
+  onUse: () => void;
+  isUseDisabled: boolean;
+};
+
+function ItemModal({
+  itemId,
+  quantity,
+  onClose,
+  onUse,
+  isUseDisabled,
+}: ItemModalProps) {
+  // Get the item config
+  const config = useMemo(
+    () => (itemId ? getConsumableConfig(itemId) : null),
+    [itemId]
+  );
+
+  if (!config || !itemId) return null;
+
+  // Parse the label and description
+  const label = config.label;
+  const description = getEffectDescription(config.effect);
+  const descriptionLines = wrapTextByWidth(description, 128);
+
+  return (
+    <Modal isOpen={!!itemId} onClose={onClose}>
+      <div className="flex flex-col items-center justify-center gap-6">
+        {/* Illustration */}
+        {renderConsumableIllustration(itemId, 48)}
+
+        {/* Titling */}
+        <div className="flex flex-col items-center justify-center gap-2">
+          {/* Label */}
+          <Text className="text-primary">{label}</Text>
+
+          {/* Description */}
+          {descriptionLines.map((line, index) => (
+            <Text key={`${line}-${index}`} className="text-tertiary">
+              {line}
+            </Text>
+          ))}
+        </div>
+
+        {/* Quantity */}
+        <Text className="text-secondary">{`Quantity: ${quantity}`}</Text>
+
+        {/* Actions */}
+        <div className="flex flex-row items-center justify-center gap-6">
+          <Button disabled={isUseDisabled} onClick={onUse}>
+            Use Item
+          </Button>
+          <Button onClick={onClose}>Close</Button>
+        </div>
+      </div>
+    </Modal>
   );
 }
 
@@ -238,47 +289,24 @@ function renderConsumableIllustration(id: ConsumableId, size = 36) {
   }
 }
 
-type ConsumableItemProps = {
+type ItemProps = {
   itemId: ConsumableId;
   quantity: number;
-  disabled: boolean;
-  onUse: () => void;
   onView: () => void;
 };
 
-function ConsumableItem({
-  itemId,
-  quantity,
-  onView,
-  onUse,
-  disabled,
-}: ConsumableItemProps) {
+function Item({ itemId, quantity, onView }: ItemProps) {
   return (
-    <div className="flex flex-col items-center gap-2">
-      <div
-        className="flex h-24 w-24 items-center justify-center relative bg-white pixel-shadow cursor-pointer"
-        onClick={() => {
-          onView();
-        }}
-      >
-        {renderConsumableIllustration(itemId)}
-        <Text scale={2} className="text-muted absolute bottom-2 left-2">
-          {String(quantity)}
-        </Text>
-      </div>
-
-      <Button
-        variant="primary"
-        size="small"
-        className="w-full"
-        disabled={disabled}
-        onClick={() => {
-          onUse();
-        }}
-      >
-        Use
-      </Button>
-    </div>
+    <button
+      type="button"
+      className="flex h-20 w-20 items-center justify-center relative bg-white pixel-shadow cursor-pointer hover:shadow-pixel-sm active:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[4px] active:translate-y-[4px] transition-all"
+      onClick={onView}
+    >
+      {renderConsumableIllustration(itemId)}
+      <Text className="absolute bottom-2 right-2 text-muted">
+        {String(quantity)}
+      </Text>
+    </button>
   );
 }
 

@@ -12,6 +12,15 @@
   --color-shadow: rgba(0, 0, 0, 0.3);
   --color-skeleton: rgba(0, 0, 0, 0.2);
 
+  --color-muted: #808080;
+
+  --color-success: #00ff00;
+  --color-warning: #ffa500;
+  --color-error: #ff0000;
+  --color-success: #27ae60;
+  --color-warning: #f2994a;
+  --color-error: #eb5757;
+
   /* Shadows (Tailwind v4 tokens) */
   --shadow-pixel: 4px 4px 0 var(--color-shadow);
   --shadow-pixel-sm: 2px 2px 0 var(--color-shadow);

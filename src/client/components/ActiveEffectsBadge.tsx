@@ -31,7 +31,7 @@ export function ActiveEffectsBadge() {
 
   const badge = (
     <div
-      className="absolute top-4 left-4 z-50 flex flex-col items-center cursor-pointer gap-1"
+      className="absolute top-4 left-4 z-50 flex flex-col items-center cursor-pointer gap-1 animate-slide-up-fade-in"
       onClick={onOpen}
       role="button"
       tabIndex={0}

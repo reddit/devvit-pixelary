@@ -22,13 +22,13 @@ export type ConsumableConfig = {
 export const CONSUMABLES_CONFIG: Record<ConsumableId, ConsumableConfig> = {
   score_multiplier_2x_4h: {
     id: 'score_multiplier_2x_4h',
-    label: '2x Points Earned!',
+    label: 'DOUBLE POINTS!',
     durationMs: 4 * 60 * 60 * 1000,
     effect: { kind: 'score_multiplier', multiplier: 2 },
   },
   score_multiplier_3x_30m: {
     id: 'score_multiplier_3x_30m',
-    label: '3x Points Earned!',
+    label: 'TRIPLE POINTS!',
     durationMs: 30 * 60 * 1000,
     effect: { kind: 'score_multiplier', multiplier: 3 },
   },
