@@ -93,6 +93,7 @@ export function DrawStep(props: DrawStepProps) {
     () => DRAWING_COLORS.slice(0, 6) as HEX[]
   );
   const [isMRUAnimating, setIsMRUAnimating] = useState(false);
+  const [suppressInitialAnim, setSuppressInitialAnim] = useState(true);
   const [isDrawing, setIsDrawing] = useState(false);
   const [drawingData, setDrawingData] = useState<DrawingData>(() =>
     DrawingUtils.createBlank()
@@ -187,6 +188,8 @@ export function DrawStep(props: DrawStepProps) {
       if (!didInitCurrentRef.current) {
         setCurrentColor((colors[0] as HEX) ?? DRAWING_COLORS[0]);
         didInitCurrentRef.current = true;
+        // After applying the first server MRU, turn off suppression
+        setSuppressInitialAnim(false);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -236,9 +239,14 @@ export function DrawStep(props: DrawStepProps) {
   }
 
   // Activate FLIP for the recent palette (depends on recentColors array content)
-  useFlipRecentTiles(paletteRef, [recentColors, userLevel, currentColor], {
-    selectedKey: currentColor,
-  });
+  useFlipRecentTiles(
+    paletteRef,
+    [recentColors, userLevel, currentColor, suppressInitialAnim],
+    {
+      selectedKey: currentColor,
+      suppress: suppressInitialAnim,
+    }
+  );
 
   const allowedColorsSet = useMemo(
     () => new Set(getAllAvailableColors(userLevel)),
@@ -1178,7 +1186,7 @@ function ColorPickerModal(props: ColorPickerModalProps) {
 function useFlipRecentTiles(
   containerRef: React.RefObject<HTMLDivElement>,
   deps: unknown[],
-  opts?: { selectedKey?: string | null }
+  opts?: { selectedKey?: string | null; suppress?: boolean }
 ) {
   const prevRectsRef = useRef<Map<string, DOMRect>>(new Map());
   const isFirstRenderRef = useRef(true);
@@ -1195,6 +1203,13 @@ function useFlipRecentTiles(
       const key = el.dataset.color;
       if (!key) continue;
       nextRects.set(key, el.getBoundingClientRect());
+    }
+
+    // Suppress animations for this pass (e.g., initial MRU application)
+    if (opts?.suppress) {
+      prevRectsRef.current = nextRects;
+      isFirstRenderRef.current = false;
+      return;
     }
 
     const prevRects = prevRectsRef.current;
