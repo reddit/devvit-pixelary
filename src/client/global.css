@@ -314,6 +314,11 @@
     animation: pixel-breathe 3.5s ease-in-out infinite;
   }
 
+  /* Hide check while tile is moving via FLIP */
+  [data-color][data-moving='1'] .mru-check {
+    opacity: 0 !important;
+  }
+
   .animate-count-pulse {
     animation: count-pulse 0.6s ease-out;
   }

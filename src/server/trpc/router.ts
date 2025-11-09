@@ -313,6 +313,28 @@ export const appRouter = t.router({
 
     // User endpoints
     user: t.router({
+      colors: t.router({
+        getRecent: t.procedure.query(async ({ ctx }) => {
+          const { BASE_DRAWING_COLORS } = await import('@shared/constants');
+          if (!ctx.userId) {
+            // Anonymous users see the seed (base palette) trimmed to limit
+            return BASE_DRAWING_COLORS.slice(0, 6);
+          }
+          const { getRecentColors } = await import('../services/user/colors');
+          return await getRecentColors(ctx.userId, BASE_DRAWING_COLORS, 6);
+        }),
+        pushRecent: t.procedure
+          .input(z.object({ color: z.string() }))
+          .mutation(async ({ ctx, input }) => {
+            if (!ctx.userId) {
+              // No-op for anonymous users
+              return { success: true } as const;
+            }
+            const { pushRecentColor } = await import('../services/user/colors');
+            await pushRecentColor(ctx.userId, input.color, 6);
+            return { success: true } as const;
+          }),
+      }),
       getProfile: t.procedure
         .input(z.object({ postId: z.string() }).optional())
         .query(async ({ ctx, input }) => {

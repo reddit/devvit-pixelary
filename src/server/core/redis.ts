@@ -25,6 +25,8 @@ export const REDIS_KEYS = {
   userInventory: (userId: T2) => `user:inventory:${userId}`, // Hash of itemId -> count
   userActiveBoosts: (userId: T2) => `user:active_boosts:${userId}`, // ZSET of activationId scored by expiresAt
   boostActivation: (activationId: string) => `boost:${activationId}`, // Hash for activation metadata
+  // User preferences
+  userRecentColors: (userId: T2) => `user:colors:recent:${userId}`,
 
   // Words
   wordsAll: (subredditName: string) => `words:all:${subredditName}`,

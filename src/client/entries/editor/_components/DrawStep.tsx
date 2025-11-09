@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useLayoutEffect } from 'react';
 import { Button } from '@components/Button';
 import { Icon } from '@components/PixelFont';
-import { DRAWING_COLORS, getAvailableExtendedColors } from '@client/constants';
+import { DRAWING_COLORS, getAllAvailableColors } from '@client/constants';
 import { Text } from '@components/PixelFont';
 import { DrawingUtils, type DrawingData } from '@shared/schema/drawing';
 import { getContrastColor } from '@shared/utils/color';
@@ -9,6 +9,8 @@ import type { HEX } from '@shared/types';
 import { useTelemetry } from '@client/hooks/useTelemetry';
 import type { SlateAction } from '@shared/types';
 import { Modal } from '@components/Modal';
+import { trpc } from '@client/trpc/client';
+import { useMemo } from 'react';
 
 type DrawStepProps = {
   word: string;
@@ -86,7 +88,11 @@ export function DrawStep(props: DrawStepProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLElement>(null);
   const paletteRef = useRef<HTMLDivElement>(null);
-  const [currentColor, setCurrentColor] = useState<HEX>('#000000');
+  const [currentColor, setCurrentColor] = useState<HEX>(DRAWING_COLORS[0]);
+  const [recentColors, setRecentColors] = useState<HEX[]>(
+    () => DRAWING_COLORS.slice(0, 6) as HEX[]
+  );
+  const [isMRUAnimating, setIsMRUAnimating] = useState(false);
   const [isDrawing, setIsDrawing] = useState(false);
   const [drawingData, setDrawingData] = useState<DrawingData>(() =>
     DrawingUtils.createBlank()
@@ -152,6 +158,92 @@ export function DrawStep(props: DrawStepProps) {
 
   // Color picker modal state
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
+  // Non-blocking MRU write scheduling
+  const pushRecentMutation = trpc.app.user.colors.pushRecent.useMutation();
+  const schedulePushRecent = useCallback(
+    (color: HEX) => {
+      try {
+        // Fire-and-forget; do not await, save every selection immediately
+        pushRecentMutation.mutate({ color });
+      } catch {
+        // ignore best-effort errors
+      }
+    },
+    [pushRecentMutation]
+  );
+
+  // Fetch recent colors (non-blocking; reconcile after initial seed)
+  const didInitCurrentRef = useRef(false);
+  const recentQuery = trpc.app.user.colors.getRecent.useQuery(undefined, {
+    staleTime: 0,
+    cacheTime: 0,
+    refetchOnMount: 'always',
+    refetchOnWindowFocus: false,
+  });
+  useEffect(() => {
+    if (recentQuery.isSuccess && Array.isArray(recentQuery.data)) {
+      const colors = recentQuery.data as HEX[];
+      setRecentColors(colors.slice(0, 6) as HEX[]);
+      if (!didInitCurrentRef.current) {
+        setCurrentColor((colors[0] as HEX) ?? DRAWING_COLORS[0]);
+        didInitCurrentRef.current = true;
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recentQuery.isFetching, recentQuery.isSuccess, recentQuery.isError, recentQuery.data]);
+
+  // Dramatic removal animation for oldest tile before clamping list
+  function animateRemovalIfNeeded(prev: HEX[], next: HEX[]): Promise<void> {
+    const container = paletteRef.current;
+    if (!container) return Promise.resolve();
+    if (prev.length === next.length) return Promise.resolve();
+    const removed = prev.find((c) => !next.includes(c));
+    if (!removed) return Promise.resolve();
+    const el = container.querySelector<HTMLElement>(`[data-color="${removed}"]`);
+    if (!el) return Promise.resolve();
+    return new Promise((resolve) => {
+      el.style.willChange = 'transform, opacity';
+      el.style.transition = 'transform 220ms ease, opacity 180ms ease';
+      el.style.transform = 'scale(0.7) translateY(6px)';
+      el.style.opacity = '0';
+      const onEnd = () => {
+        el.style.transition = '';
+        el.removeEventListener('transitionend', onEnd);
+        resolve();
+      };
+      el.addEventListener('transitionend', onEnd);
+    });
+  }
+
+  // Helper: dramatic MRU update with removal animation and non-blocking write
+  function updateRecentWithDrama(color: HEX) {
+    setRecentColors((prev) => {
+      const already = prev.includes(color);
+      const merged = [color, ...prev.filter((c) => c !== color)];
+      const next = merged.slice(0, 6);
+      if (!already && prev.length >= 6) {
+        setIsMRUAnimating(true);
+        void animateRemovalIfNeeded(prev, next).then(() => {
+          setRecentColors(next);
+          setIsMRUAnimating(false);
+        });
+        schedulePushRecent(color);
+        return prev;
+      }
+      schedulePushRecent(color);
+      return next;
+    });
+  }
+
+  // Activate FLIP for the recent palette (depends on recentColors array content)
+  useFlipRecentTiles(paletteRef, [recentColors, userLevel, currentColor], {
+    selectedKey: currentColor,
+  });
+
+  const allowedColorsSet = useMemo(
+    () => new Set(getAllAvailableColors(userLevel)),
+    [userLevel]
+  );
 
   // Observe container size to size canvas accordingly
   useEffect(() => {
@@ -388,6 +480,8 @@ export function DrawStep(props: DrawStepProps) {
     void track('select_extended_color');
     setCurrentColor(color);
     setIsColorPickerOpen(false);
+    // Dramatic animated MRU update and schedule non-blocking write
+    updateRecentWithDrama(color);
   };
 
   // Render canvas to fill viewport with centered square inside the middle container
@@ -872,21 +966,24 @@ export function DrawStep(props: DrawStepProps) {
         ref={paletteRef}
       >
         {/* Color Palette */}
-        <div className="flex flex-row gap-2 items-center justify-center">
-          {DRAWING_COLORS.map((color) => (
+        <div className="flex flex-row gap-2 items-center justify-center" data-mru-row>
+          {recentColors
+            .filter((color) => allowedColorsSet.has(color))
+            .map((color, idx) => (
             <ColorSwatch
               key={color}
+              dataAttrKey={color}
               onSelect={() => {
                 void track('click_color_swatch');
                 setCurrentColor(color);
+                // Dramatic animated MRU update and schedule non-blocking write
+                updateRecentWithDrama(color);
               }}
               color={color}
-              isSelected={currentColor === color}
+              isSelected={idx === 0 && currentColor === color && !isMRUAnimating}
             />
           ))}
-          {userLevel >= 2 && (
-            <ColorPickerPlusButton onClick={handleOpenColorPicker} />
-          )}
+          <ColorPickerPlusButton onClick={handleOpenColorPicker} />
         </div>
         {/* Tools Toolbar (single row) */}
         <div className="flex flex-row flex-nowrap gap-2 items-center justify-center overflow-x-auto px-3">
@@ -1005,16 +1102,18 @@ type ColorSwatchProps = {
   color: HEX;
   isSelected: boolean;
   onSelect: (color: HEX) => void;
+  dataAttrKey?: string;
 };
 
 function ColorSwatch(props: ColorSwatchProps) {
-  const { color, isSelected, onSelect } = props;
+  const { color, isSelected, onSelect, dataAttrKey } = props;
 
   return (
     <button
       onClick={() => {
         onSelect(color);
       }}
+      data-color={dataAttrKey}
       className="w-8 h-8 border-4 border-black cursor-pointer transition-all flex items-center justify-center hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[4px] active:translate-y-[4px] shadow-pixel hover:shadow-pixel-sm active:shadow-none"
       style={{ backgroundColor: color }}
     >
@@ -1022,7 +1121,7 @@ function ColorSwatch(props: ColorSwatchProps) {
         type="checkmark"
         scale={2}
         color={getContrastColor(color)}
-        className={`transition-opacity ${isSelected ? 'opacity-100' : 'opacity-0'}`}
+        className={`mru-check transition-opacity ${isSelected ? 'opacity-100' : 'opacity-0'}`}
       />
     </button>
   );
@@ -1055,7 +1154,7 @@ type ColorPickerModalProps = {
 
 function ColorPickerModal(props: ColorPickerModalProps) {
   const { isOpen, onClose, onSelectColor, currentColor, userLevel } = props;
-  const availableColors = getAvailableExtendedColors(userLevel);
+  const availableColors = getAllAvailableColors(userLevel);
 
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Select a color">
@@ -1072,3 +1171,95 @@ function ColorPickerModal(props: ColorPickerModalProps) {
     </Modal>
   );
 }
+
+// FLIP animation for recent color tiles (with stagger and bounce for selected)
+// Animates reorders and insertions in the recent palette row
+// Runs after DOM updates using useLayoutEffect to avoid flicker
+function useFlipRecentTiles(
+  containerRef: React.RefObject<HTMLDivElement>,
+  deps: unknown[],
+  opts?: { selectedKey?: string | null }
+) {
+  const prevRectsRef = useRef<Map<string, DOMRect>>(new Map());
+  const isFirstRenderRef = useRef(true);
+
+  useLayoutEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const tiles = Array.from(
+      container.querySelectorAll<HTMLElement>('[data-color]')
+    );
+    const nextRects = new Map<string, DOMRect>();
+    for (const el of tiles) {
+      const key = el.dataset.color;
+      if (!key) continue;
+      nextRects.set(key, el.getBoundingClientRect());
+    }
+
+    const prevRects = prevRectsRef.current;
+    // Skip animation on very first paint
+    if (!isFirstRenderRef.current) {
+      for (let i = 0; i < tiles.length; i++) {
+        const el = tiles[i]!;
+        const key = el.dataset.color;
+        if (!key) continue;
+        const prev = prevRects.get(key);
+        const next = nextRects.get(key);
+        if (!next) continue;
+
+        // New element: pop-in (more dramatic)
+        if (!prev) {
+          el.setAttribute('data-moving', '1');
+          const anim = el.animate(
+            [
+              { transform: 'scale(0.6) translateY(8px)', opacity: 0 },
+              { transform: 'scale(1)', opacity: 1 },
+            ],
+            {
+              duration: 380,
+              delay: 0,
+              easing: 'cubic-bezier(.22,1,.36,1)',
+              fill: 'forwards',
+            }
+          );
+          anim.addEventListener('finish', () => {
+            el.removeAttribute('data-moving');
+          });
+          continue;
+        }
+
+        // Reordered/moved element: single horizontal slide using FLIP
+        const dx = prev.left - next.left;
+        const dy = 0; // ignore vertical movement
+        if (dx !== 0) {
+          el.setAttribute('data-moving', '1');
+          // FLIP via WAAPI: from horizontal delta to identity
+          const move = el.animate(
+            [
+              { transform: `translate(${dx}px, 0)` },
+              { transform: 'translate(0, 0)' },
+            ],
+            {
+              duration: 520,
+              delay: 0,
+              easing: 'cubic-bezier(.22,1,.36,1)',
+              fill: 'both',
+            }
+          );
+          move.addEventListener('finish', () => {
+            el.removeAttribute('data-moving');
+          });
+        }
+      }
+    } else {
+      isFirstRenderRef.current = false;
+    }
+
+    // Update for next pass
+    prevRectsRef.current = nextRects;
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, deps);
+}
+
+// (moved into component scope above)

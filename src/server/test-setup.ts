@@ -20,6 +20,7 @@ vi.mock('@devvit/web/server', () => ({
     zScore: vi.fn(),
     zRank: vi.fn(),
     zIncrBy: vi.fn(),
+    zRem: vi.fn(),
     hGet: vi.fn(),
     hSet: vi.fn(),
     hGetAll: vi.fn(),

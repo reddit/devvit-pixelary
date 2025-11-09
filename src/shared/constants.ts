@@ -1,3 +1,5 @@
+import type { HEX } from './types';
+
 /*
  * Pixelary game constants
  */
@@ -54,6 +56,20 @@ export const TOURNAMENT_ELO_INITIAL_RATING = 1200;
 
 // Default drawing prompt
 export const TOURNAMENT_FALLBACK_WORD = 'Meatloaf';
+
+/*
+ * Colors
+ */
+export const BASE_DRAWING_COLORS: readonly HEX[] = [
+  '#000000', // black
+  '#FFFFFF', // white
+  '#EB5757', // red
+  '#F2994A', // orange
+  '#F2C94C', // yellow
+  '#27AE60', // green
+  '#2F80ED', // blue
+  '#9B51E0', // purple
+] as const;
 
 /*
  * Levels

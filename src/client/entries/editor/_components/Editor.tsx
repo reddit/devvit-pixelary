@@ -42,6 +42,13 @@ export function DrawingEditor({
 
   const { track } = useTelemetry();
 
+  // Prefetch MRU colors early so DrawStep gets instant cached data
+  trpc.app.user.colors.getRecent.useQuery(undefined, {
+    staleTime: 30000,
+    refetchOnMount: false,
+    refetchOnWindowFocus: false,
+  });
+
   // Track editor view on mount
   useEffect(() => {
     void track('view_editor');

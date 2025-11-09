@@ -1,15 +1,7 @@
 import type { HEX } from '@shared/types';
+import { BASE_DRAWING_COLORS } from '@shared/constants';
 
-export const DRAWING_COLORS: readonly HEX[] = [
-  '#FFFFFF', // 0 - white
-  '#000000', // 1 - black
-  '#EB5757', // 2 - red
-  '#F2994A', // 3 - orange
-  '#F2C94C', // 4 - yellow
-  '#27AE60', // 5 - green
-  '#2F80ED', // 6 - blue
-  '#9B51E0', // 7 - purple
-];
+export const DRAWING_COLORS: readonly HEX[] = BASE_DRAWING_COLORS;
 
 // Tier 1 - Pastels & Skin Tones (14 colors)
 // Gradient from lightest to darkest warm pastels
@@ -112,4 +104,8 @@ export function getAvailableExtendedColors(userLevel: number): HEX[] {
   }
 
   return colors;
+}
+
+export function getAllAvailableColors(userLevel: number): HEX[] {
+  return [...DRAWING_COLORS, ...getAvailableExtendedColors(userLevel)];
 }
