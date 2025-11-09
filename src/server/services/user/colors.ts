@@ -13,7 +13,9 @@ export async function getRecentColors(
   limit: number = 6
 ): Promise<HEX[]> {
   // Use global Redis to persist across subreddit-less and cross-subreddit contexts
-  const r = (redis as typeof redis & { global?: typeof redis }).global ?? redis;
+  type RedisLike = typeof redis;
+  const withGlobal = redis as unknown as { global?: RedisLike };
+  const r: RedisLike = withGlobal.global ?? redis;
   const key = REDIS_KEYS.userRecentColors(userId);
   // Get newest-first up to limit
   const existing = (await r.zRange(
@@ -21,9 +23,10 @@ export async function getRecentColors(
     0 as never,
     (limit - 1) as never,
     {
-    reverse: true,
-    by: 'rank',
-  } as never)) as Array<{ member: string; score: number }>;
+      reverse: true,
+      by: 'rank',
+    } as never
+  )) as Array<{ member: string; score: number }>;
 
   if (existing.length > 0) {
     // Return newest-first
@@ -38,15 +41,18 @@ export async function getRecentColors(
     // Use independent calls for compatibility with the Redis client
     await Promise.all(
       seedLimited.map((color, idx) =>
-        r.zAdd(key as never, {
-          member: color as never,
-          score: now - idx,
-        } as never)
+        r.zAdd(
+          key as never,
+          {
+            member: color as never,
+            score: now - idx,
+          } as never
+        )
       )
     );
   }
-  // Newest-first order (first in seed considered most recent)
-  return seedLimited as HEX[];
+  // Newest-first order expected by callers: reverse of the seed slice
+  return seedLimited.slice().reverse();
 }
 
 /**
@@ -58,7 +64,9 @@ export async function pushRecentColor(
   color: HEX,
   limit: number = 6
 ): Promise<void> {
-  const r = (redis as typeof redis & { global?: typeof redis }).global ?? redis;
+  type RedisLike = typeof redis;
+  const withGlobal = redis as unknown as { global?: RedisLike };
+  const r: RedisLike = withGlobal.global ?? redis;
   const key = REDIS_KEYS.userRecentColors(userId);
   const now = Date.now();
   // Upsert with latest timestamp
@@ -70,14 +78,13 @@ export async function pushRecentColor(
     limit as never,
     -1 as never,
     {
-    reverse: true,
-    by: 'rank',
-  } as never)) as Array<{ member: string; score: number }>;
+      reverse: true,
+      by: 'rank',
+    } as never
+  )) as Array<{ member: string; score: number }>;
   if (extras.length > 0) {
     const members = extras.map((e) => e.member);
     // Remove any beyond the limit
     await r.zRem(key as never, members as never);
   }
 }
-
-

@@ -90,23 +90,27 @@ export function Text({
 
   // Render as SVG
   return (
-    <svg
-      width={dimensions.width}
-      height={dimensions.height}
-      viewBox={`0 0 ${dimensions.baseWidth} ${dimensions.baseHeight}`}
-      className={`select-none image-rendering-pixelated ${className}`.trim()}
-      onClick={onPress}
-      xmlns="http://www.w3.org/2000/svg"
-      aria-label={children}
-    >
-      {backgroundColor !== 'transparent' && (
-        <rect
-          width={dimensions.baseWidth}
-          height={dimensions.baseHeight}
-          fill={backgroundColor}
-        />
-      )}
-      {svgPaths}
-    </svg>
+    <>
+      <svg
+        width={dimensions.width}
+        height={dimensions.height}
+        viewBox={`0 0 ${dimensions.baseWidth} ${dimensions.baseHeight}`}
+        className={`select-none image-rendering-pixelated ${className}`.trim()}
+        onClick={onPress}
+        xmlns="http://www.w3.org/2000/svg"
+        aria-label={children}
+      >
+        {backgroundColor !== 'transparent' && (
+          <rect
+            width={dimensions.baseWidth}
+            height={dimensions.baseHeight}
+            fill={backgroundColor}
+          />
+        )}
+        {svgPaths}
+      </svg>
+      {/* Hidden text node for testing and accessibility text queries */}
+      <span className="sr-only">{children}</span>
+    </>
   );
 }

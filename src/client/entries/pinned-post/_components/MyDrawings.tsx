@@ -24,7 +24,7 @@ export function MyDrawings({ onClose }: MyDrawingsProps) {
   const { data, isLoading } = trpc.app.user.getMyArtPage.useQuery({
     limit: 20,
   });
-  const items = data?.items ?? [];
+  const items = useMemo(() => data?.items ?? [], [data?.items]);
   const byId = useMemo(() => {
     const map = new Map<string, (typeof items)[number]>();
     items.forEach((it) => map.set(it.id, it));

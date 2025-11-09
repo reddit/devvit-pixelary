@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useRef, useCallback, useLayoutEffect } from 'react';
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useCallback,
+  useLayoutEffect,
+} from 'react';
 import { Button } from '@components/Button';
 import { Icon } from '@components/PixelFont';
 import { DRAWING_COLORS, getAllAvailableColors } from '@client/constants';
@@ -89,8 +95,8 @@ export function DrawStep(props: DrawStepProps) {
   const headerRef = useRef<HTMLElement>(null);
   const paletteRef = useRef<HTMLDivElement>(null);
   const [currentColor, setCurrentColor] = useState<HEX>(DRAWING_COLORS[0]);
-  const [recentColors, setRecentColors] = useState<HEX[]>(
-    () => DRAWING_COLORS.slice(0, 6) as HEX[]
+  const [recentColors, setRecentColors] = useState<HEX[]>(() =>
+    DRAWING_COLORS.slice(0, 6)
   );
   const [isMRUAnimating, setIsMRUAnimating] = useState(false);
   const [suppressInitialAnim, setSuppressInitialAnim] = useState(true);
@@ -183,17 +189,23 @@ export function DrawStep(props: DrawStepProps) {
   });
   useEffect(() => {
     if (recentQuery.isSuccess && Array.isArray(recentQuery.data)) {
-      const colors = recentQuery.data as HEX[];
-      setRecentColors(colors.slice(0, 6) as HEX[]);
+      const colors = recentQuery.data;
+      setRecentColors(colors.slice(0, 6));
       if (!didInitCurrentRef.current) {
-        setCurrentColor((colors[0] as HEX) ?? DRAWING_COLORS[0]);
-        didInitCurrentRef.current = true;
-        // After applying the first server MRU, turn off suppression
-        setSuppressInitialAnim(false);
+        if (colors.length > 0) {
+          setCurrentColor(colors[0]);
+          didInitCurrentRef.current = true;
+          // After applying the first server MRU, turn off suppression
+          setSuppressInitialAnim(false);
+        }
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [recentQuery.isFetching, recentQuery.isSuccess, recentQuery.isError, recentQuery.data]);
+  }, [
+    recentQuery.isFetching,
+    recentQuery.isSuccess,
+    recentQuery.isError,
+    recentQuery.data,
+  ]);
 
   // Dramatic removal animation for oldest tile before clamping list
   function animateRemovalIfNeeded(prev: HEX[], next: HEX[]): Promise<void> {
@@ -202,7 +214,9 @@ export function DrawStep(props: DrawStepProps) {
     if (prev.length === next.length) return Promise.resolve();
     const removed = prev.find((c) => !next.includes(c));
     if (!removed) return Promise.resolve();
-    const el = container.querySelector<HTMLElement>(`[data-color="${removed}"]`);
+    const el = container.querySelector<HTMLElement>(
+      `[data-color="${removed}"]`
+    );
     if (!el) return Promise.resolve();
     return new Promise((resolve) => {
       el.style.willChange = 'transform, opacity';
@@ -657,7 +671,9 @@ export function DrawStep(props: DrawStepProps) {
   const paintAt = useCallback(
     (pixelX: number, pixelY: number, color: HEX) => {
       const size = drawingDataRef.current.size;
-      const centers: Array<{ x: number; y: number }> = [{ x: pixelX, y: pixelY }];
+      const centers: Array<{ x: number; y: number }> = [
+        { x: pixelX, y: pixelY },
+      ];
       if (mirrorV) centers.push({ x: size - 1 - pixelX, y: pixelY });
       if (mirrorH) centers.push({ x: pixelX, y: size - 1 - pixelY });
       if (mirrorV && mirrorH)
@@ -974,23 +990,28 @@ export function DrawStep(props: DrawStepProps) {
         ref={paletteRef}
       >
         {/* Color Palette */}
-        <div className="flex flex-row gap-2 items-center justify-center" data-mru-row>
+        <div
+          className="flex flex-row gap-2 items-center justify-center"
+          data-mru-row
+        >
           {recentColors
             .filter((color) => allowedColorsSet.has(color))
             .map((color, idx) => (
-            <ColorSwatch
-              key={color}
-              dataAttrKey={color}
-              onSelect={() => {
-                void track('click_color_swatch');
-                setCurrentColor(color);
-                // Dramatic animated MRU update and schedule non-blocking write
-                updateRecentWithDrama(color);
-              }}
-              color={color}
-              isSelected={idx === 0 && currentColor === color && !isMRUAnimating}
-            />
-          ))}
+              <ColorSwatch
+                key={color}
+                dataAttrKey={color}
+                onSelect={() => {
+                  void track('click_color_swatch');
+                  setCurrentColor(color);
+                  // Dramatic animated MRU update and schedule non-blocking write
+                  updateRecentWithDrama(color);
+                }}
+                color={color}
+                isSelected={
+                  idx === 0 && currentColor === color && !isMRUAnimating
+                }
+              />
+            ))}
           <ColorPickerPlusButton onClick={handleOpenColorPicker} />
         </div>
         {/* Tools Toolbar (single row) */}
@@ -1000,7 +1021,9 @@ export function DrawStep(props: DrawStepProps) {
             disabled={isReviewing || undoStack.length === 0}
             onClick={handleUndo}
             className={`px-3 h-8 border-4 border-black cursor-pointer transition-all flex items-center justify-center hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[4px] active:translate-y-[4px] shadow-pixel hover:shadow-pixel-sm active:shadow-none bg-gray-200 ${
-              isReviewing || undoStack.length === 0 ? 'opacity-50 cursor-not-allowed' : ''
+              isReviewing || undoStack.length === 0
+                ? 'opacity-50 cursor-not-allowed'
+                : ''
             }`}
           >
             Undo
@@ -1193,6 +1216,7 @@ function useFlipRecentTiles(
 
   useLayoutEffect(() => {
     const container = containerRef.current;
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (!container) return;
 
     const tiles = Array.from(
@@ -1215,8 +1239,7 @@ function useFlipRecentTiles(
     const prevRects = prevRectsRef.current;
     // Skip animation on very first paint
     if (!isFirstRenderRef.current) {
-      for (let i = 0; i < tiles.length; i++) {
-        const el = tiles[i]!;
+      for (const el of tiles) {
         const key = el.dataset.color;
         if (!key) continue;
         const prev = prevRects.get(key);
@@ -1273,7 +1296,7 @@ function useFlipRecentTiles(
 
     // Update for next pass
     prevRectsRef.current = nextRects;
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 }
 

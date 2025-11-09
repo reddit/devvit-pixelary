@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { connectRealtime, disconnectRealtime } from '@devvit/web/client';
 import { trpc } from '../trpc/client';
@@ -42,10 +42,7 @@ class LevelUpClaimManager {
                 this.subscribers.forEach((callback) => {
                   callback(true);
                 });
-              } else if (
-                message.type === 'levelup_pending' ||
-                message.type === 'score_changed'
-              ) {
+              } else {
                 this.subscribers.forEach((callback) => {
                   callback(false);
                 });
@@ -121,7 +118,7 @@ export function useLevelUpClaim(): {
   }, [unclaimedLevelData]);
 
   // Debounced refetch scheduler
-  const scheduleRefetch = () => {
+  const scheduleRefetch = useCallback(() => {
     if (!context.userId) return;
     if (refetchTimeoutRef.current != null) return;
     refetchTimeoutRef.current = window.setTimeout(() => {
@@ -133,7 +130,7 @@ export function useLevelUpClaim(): {
       void utils.app.user.getLevel.refetch();
       refetchTimeoutRef.current = undefined;
     }, 250);
-  };
+  }, [refetch, utils]);
 
   // Refetch when userId changes (e.g., navigation)
   useEffect(() => {
@@ -172,7 +169,7 @@ export function useLevelUpClaim(): {
         refetchTimeoutRef.current = undefined;
       }
     };
-  }, [context.userId]);
+  }, [scheduleRefetch]);
 
   // Trigger claim when shouldClaim is true
   useEffect(() => {

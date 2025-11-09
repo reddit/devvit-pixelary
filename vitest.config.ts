@@ -45,7 +45,7 @@ export default defineConfig({
     globals: true,
     exclude: ['node_modules', 'dist'],
     environment: 'jsdom',
-    setupFiles: ['src/client/test-setup.ts'],
+    setupFiles: ['src/client/test-setup.ts', 'src/server/test-setup.ts'],
     testTimeout: 10000,
     hookTimeout: 10000,
     mockReset: true,

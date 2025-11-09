@@ -2,6 +2,29 @@ import { afterEach, vi } from 'vitest';
 import { cleanup } from '@testing-library/preact';
 import '@testing-library/jest-dom';
 
+// Mock TRPC client hooks used by components so tests don't require a Provider
+vi.mock('@client/trpc/client', () => ({
+  trpc: {
+    app: {
+      user: {
+        colors: {
+          pushRecent: {
+            useMutation: () => ({ mutate: vi.fn() }),
+          },
+          getRecent: {
+            useQuery: () => ({
+              isSuccess: false,
+              isError: false,
+              isFetching: false,
+              data: undefined,
+            }),
+          },
+        },
+      },
+    },
+  },
+}));
+
 // Mock @devvit/web/client
 vi.mock('@devvit/web/client', () => ({
   context: {

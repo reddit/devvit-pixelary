@@ -121,5 +121,3 @@ describe('user-art service', () => {
     expect(wroteSnapshot).toBe(true);
   });
 });
-
-

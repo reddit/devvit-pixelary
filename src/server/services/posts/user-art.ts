@@ -132,15 +132,16 @@ export async function getMyArtPage(options: {
     return { items: [], nextCursor: -1 };
   }
 
+  // Guard against mocks or backends returning more than requested
+  const page = raw.slice(0, limit);
+
   const items = await Promise.all(
-    raw.map(async (entry) => {
+    page.map(async (entry) => {
       const compositeId = entry.member;
       const createdAt = entry.score;
       // Try snapshot first
       let item = await readSnapshot(userId, compositeId);
-      if (!item) {
-        item = await hydrateFromSource(userId, compositeId);
-      }
+      item ??= await hydrateFromSource(userId, compositeId);
       if (!item) return undefined;
       // Ensure createdAt = zset score for consistent ordering
       return { ...item, createdAt };
@@ -150,8 +151,6 @@ export async function getMyArtPage(options: {
   const filtered = items.filter(Boolean) as UserArtItem[];
   const totalCount = await redis.zCard(REDIS_KEYS.userArt(userId));
   const nextCursor =
-    start + raw.length < totalCount ? start + raw.length : -1;
+    start + page.length < totalCount ? start + page.length : -1;
   return { items: filtered, nextCursor };
 }
-
-
