@@ -114,6 +114,13 @@ export function DrawStep(props: DrawStepProps) {
 
   // debug logging removed
 
+  // Editor tools & history state
+  const [brushSize, setBrushSize] = useState<1 | 3 | 5>(1);
+  const [mirrorV, setMirrorV] = useState(false);
+  const [mirrorH, setMirrorH] = useState(false);
+  const [undoStack, setUndoStack] = useState<DrawingData[]>([]);
+  const hasPushedUndoForStrokeRef = useRef(false);
+
   // Geometry of the drawable square inside the canvas (in CSS pixels)
   const drawAreaRef = useRef<{
     x: number;
@@ -321,6 +328,47 @@ export function DrawStep(props: DrawStepProps) {
 
   const secondsLeft = Math.max(0, Math.round(time - elapsedTime / 1000));
 
+  function handleUndo() {
+    void track('click_undo');
+    setDrawingData((prev) => {
+      let restored: DrawingData | undefined;
+      setUndoStack((s) => {
+        const copy = [...s];
+        const last = copy.pop();
+        if (last) {
+          restored = {
+            data: last.data,
+            colors: [...last.colors],
+            bg: last.bg,
+            size: last.size,
+          };
+        }
+        return copy;
+      });
+      return restored ?? prev;
+    });
+  }
+
+  function handleFill() {
+    void track('click_fill');
+    // Snapshot once
+    setUndoStack((s) => [
+      ...s,
+      {
+        data: drawingDataRef.current.data,
+        colors: [...drawingDataRef.current.colors],
+        bg: drawingDataRef.current.bg,
+        size: drawingDataRef.current.size,
+      },
+    ]);
+    const total = drawingDataRef.current.size * drawingDataRef.current.size;
+    const pixels = Array.from({ length: total }, (_, i) => ({
+      index: i,
+      color: currentColor,
+    }));
+    setDrawingData((prev) => DrawingUtils.setPixels(prev, pixels));
+  }
+
   const handleDone = () => {
     void track('click_done_drawing');
     void track('drawing_done_manual');
@@ -503,6 +551,36 @@ export function DrawStep(props: DrawStepProps) {
     }
   }, [isReviewing]);
 
+  // Paint helper applying brush size and symmetry
+  const paintAt = useCallback(
+    (pixelX: number, pixelY: number, color: HEX) => {
+      const size = drawingDataRef.current.size;
+      const centers: Array<{ x: number; y: number }> = [{ x: pixelX, y: pixelY }];
+      if (mirrorV) centers.push({ x: size - 1 - pixelX, y: pixelY });
+      if (mirrorH) centers.push({ x: pixelX, y: size - 1 - pixelY });
+      if (mirrorV && mirrorH)
+        centers.push({ x: size - 1 - pixelX, y: size - 1 - pixelY });
+
+      const half = (brushSize - 1) / 2;
+      const indexSet = new Set<number>();
+      for (const c of centers) {
+        for (let dx = -half; dx <= half; dx++) {
+          for (let dy = -half; dy <= half; dy++) {
+            const px = c.x + dx;
+            const py = c.y + dy;
+            if (px >= 0 && py >= 0 && px < size && py < size) {
+              indexSet.add(py * size + px);
+            }
+          }
+        }
+      }
+      if (indexSet.size === 0) return;
+      const pixels = [...indexSet].map((index) => ({ index, color }));
+      setDrawingData((prev) => DrawingUtils.setPixels(prev, pixels));
+    },
+    [brushSize, mirrorV, mirrorH]
+  );
+
   const handlePixelClick = useCallback(
     (e: React.MouseEvent<HTMLCanvasElement>) => {
       const canvas = canvasRef.current;
@@ -541,9 +619,7 @@ export function DrawStep(props: DrawStepProps) {
         spawnParticlesAt(cx, cy, currentColor, pixelSize);
         lastPaintedIndexRef.current = index;
       }
-      setDrawingData((prev) =>
-        DrawingUtils.setPixel(prev, index, currentColor)
-      );
+      paintAt(pixelX, pixelY, currentColor);
 
       if (!hasTrackedFirstPixel.current) {
         void track('first_pixel_drawn');
@@ -552,12 +628,24 @@ export function DrawStep(props: DrawStepProps) {
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [currentColor]
+    [currentColor, paintAt]
   );
 
   const handleMouseDown = useCallback(
     (e: React.MouseEvent<HTMLCanvasElement>) => {
       setIsDrawing(true);
+      if (!hasPushedUndoForStrokeRef.current) {
+        hasPushedUndoForStrokeRef.current = true;
+        setUndoStack((s) => [
+          ...s,
+          {
+            data: drawingDataRef.current.data,
+            colors: [...drawingDataRef.current.colors],
+            bg: drawingDataRef.current.bg,
+            size: drawingDataRef.current.size,
+          },
+        ]);
+      }
       handlePixelClick(e);
     },
     [handlePixelClick]
@@ -574,12 +662,25 @@ export function DrawStep(props: DrawStepProps) {
   const handleMouseUp = useCallback(() => {
     setIsDrawing(false);
     lastPaintedIndexRef.current = null;
+    hasPushedUndoForStrokeRef.current = false;
   }, []);
 
   const handleTouchStart = useCallback(
     (e: React.TouchEvent<HTMLCanvasElement>) => {
       e.preventDefault();
       setIsDrawing(true);
+      if (!hasPushedUndoForStrokeRef.current) {
+        hasPushedUndoForStrokeRef.current = true;
+        setUndoStack((s) => [
+          ...s,
+          {
+            data: drawingDataRef.current.data,
+            colors: [...drawingDataRef.current.colors],
+            bg: drawingDataRef.current.bg,
+            size: drawingDataRef.current.size,
+          },
+        ]);
+      }
       const touch = e.touches[0];
       if (touch) {
         const canvas = canvasRef.current;
@@ -615,13 +716,11 @@ export function DrawStep(props: DrawStepProps) {
           spawnParticlesAt(cx, cy, currentColor, pixelSize);
           lastPaintedIndexRef.current = index;
         }
-        setDrawingData((prev) =>
-          DrawingUtils.setPixel(prev, index, currentColor)
-        );
+        paintAt(pixelX, pixelY, currentColor);
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [currentColor]
+    [currentColor, paintAt]
   );
 
   const handleTouchMove = useCallback(
@@ -663,13 +762,11 @@ export function DrawStep(props: DrawStepProps) {
           spawnParticlesAt(cx, cy, currentColor, pixelSize);
           lastPaintedIndexRef.current = index;
         }
-        setDrawingData((prev) =>
-          DrawingUtils.setPixel(prev, index, currentColor)
-        );
+        paintAt(pixelX, pixelY, currentColor);
       }
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [isDrawing, currentColor]
+    [isDrawing, currentColor, paintAt]
   );
 
   const handleTouchEnd = useCallback(
@@ -677,6 +774,7 @@ export function DrawStep(props: DrawStepProps) {
       e.preventDefault();
       setIsDrawing(false);
       lastPaintedIndexRef.current = null;
+      hasPushedUndoForStrokeRef.current = false;
     },
     []
   );
@@ -714,6 +812,8 @@ export function DrawStep(props: DrawStepProps) {
           className="absolute inset-0 z-20 pointer-events-none"
         />
       </div>
+
+      {/* Tools Toolbar removed here; moved to bottom footer below palette */}
 
       {/* Header */}
       <header
@@ -760,9 +860,9 @@ export function DrawStep(props: DrawStepProps) {
         )}
       </div>
 
-      {/* Color Palette */}
+      {/* Palette + Tools Footer (bottom of screen) */}
       <div
-        className={`relative z-20 flex flex-row gap-2 items-center justify-center transition-all duration-300 ease-out delay-150 ${
+        className={`fixed bottom-6 left-0 right-0 z-20 flex flex-col items-center gap-2 transition-all duration-300 ease-out delay-150 ${
           isReviewing
             ? '-translate-y-4 opacity-0'
             : hasEntered
@@ -771,20 +871,122 @@ export function DrawStep(props: DrawStepProps) {
         }`}
         ref={paletteRef}
       >
-        {DRAWING_COLORS.map((color) => (
-          <ColorSwatch
-            key={color}
-            onSelect={() => {
-              void track('click_color_swatch');
-              setCurrentColor(color);
-            }}
-            color={color}
-            isSelected={currentColor === color}
-          />
-        ))}
-        {userLevel >= 2 && (
-          <ColorPickerPlusButton onClick={handleOpenColorPicker} />
-        )}
+        {/* Color Palette */}
+        <div className="flex flex-row gap-2 items-center justify-center">
+          {DRAWING_COLORS.map((color) => (
+            <ColorSwatch
+              key={color}
+              onSelect={() => {
+                void track('click_color_swatch');
+                setCurrentColor(color);
+              }}
+              color={color}
+              isSelected={currentColor === color}
+            />
+          ))}
+          {userLevel >= 2 && (
+            <ColorPickerPlusButton onClick={handleOpenColorPicker} />
+          )}
+        </div>
+        {/* Tools Toolbar (single row) */}
+        <div className="flex flex-row flex-nowrap gap-2 items-center justify-center overflow-x-auto px-3">
+          <button
+            aria-label="Undo"
+            disabled={isReviewing || undoStack.length === 0}
+            onClick={handleUndo}
+            className={`px-3 h-8 border-4 border-black cursor-pointer transition-all flex items-center justify-center hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[4px] active:translate-y-[4px] shadow-pixel hover:shadow-pixel-sm active:shadow-none bg-gray-200 ${
+              isReviewing || undoStack.length === 0 ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+          >
+            Undo
+          </button>
+          <button
+            aria-label="Fill"
+            disabled={isReviewing}
+            onClick={handleFill}
+            className={`px-3 h-8 border-4 border-black cursor-pointer transition-all flex items-center justify-center hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[4px] active:translate-y-[4px] shadow-pixel hover:shadow-pixel-sm active:shadow-none bg-gray-200 ${
+              isReviewing ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
+          >
+            Fill
+          </button>
+          {/* Brush sizes */}
+          <div className="flex items-center gap-1 ml-2">
+            <button
+              aria-label="Brush Small"
+              aria-pressed={brushSize === 1}
+              disabled={isReviewing}
+              onClick={() => {
+                void track('toggle_brush_size');
+                setBrushSize(1);
+              }}
+              className={`w-8 h-8 border-4 border-black transition-all flex items-center justify-center shadow-pixel hover:shadow-pixel-sm active:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[4px] active:translate-y-[4px] ${
+                brushSize === 1 ? 'bg-black text-white' : 'bg-white'
+              } ${isReviewing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+            >
+              S
+            </button>
+            <button
+              aria-label="Brush Medium"
+              aria-pressed={brushSize === 3}
+              disabled={isReviewing}
+              onClick={() => {
+                void track('toggle_brush_size');
+                setBrushSize(3);
+              }}
+              className={`w-8 h-8 border-4 border-black transition-all flex items-center justify-center shadow-pixel hover:shadow-pixel-sm active:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[4px] active:translate-y-[4px] ${
+                brushSize === 3 ? 'bg-black text-white' : 'bg-white'
+              } ${isReviewing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+            >
+              M
+            </button>
+            <button
+              aria-label="Brush Large"
+              aria-pressed={brushSize === 5}
+              disabled={isReviewing}
+              onClick={() => {
+                void track('toggle_brush_size');
+                setBrushSize(5);
+              }}
+              className={`w-8 h-8 border-4 border-black transition-all flex items-center justify-center shadow-pixel hover:shadow-pixel-sm active:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[4px] active:translate-y-[4px] ${
+                brushSize === 5 ? 'bg-black text-white' : 'bg-white'
+              } ${isReviewing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+            >
+              L
+            </button>
+          </div>
+          {/* Symmetry toggles */}
+          <div className="flex items-center gap-1 ml-2">
+            <button
+              aria-label="Mirror Vertical"
+              aria-pressed={mirrorV}
+              disabled={isReviewing}
+              onClick={() => {
+                void track('toggle_mirror_v');
+                setMirrorV((v) => !v);
+              }}
+              className={`w-10 h-8 border-4 border-black transition-all flex items-center justify-center shadow-pixel hover:shadow-pixel-sm active:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[4px] active:translate-y-[4px] ${
+                mirrorV ? 'bg-black text-white' : 'bg-white'
+              } ${isReviewing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+            >
+              ↔
+            </button>
+            <button
+              aria-label="Mirror Horizontal"
+              aria-pressed={mirrorH}
+              disabled={isReviewing}
+              onClick={() => {
+                void track('toggle_mirror_h');
+                setMirrorH((v) => !v);
+              }}
+              className={`w-10 h-8 border-4 border-black transition-all flex items-center justify-center shadow-pixel hover:shadow-pixel-sm active:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[4px] active:translate-y-[4px] ${
+                mirrorH ? 'bg-black text-white' : 'bg-white'
+              } ${isReviewing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+            >
+              ↕
+            </button>
+          </div>
+        </div>
       </div>
 
       {/* Color Picker Modal */}
