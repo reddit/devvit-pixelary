@@ -49,7 +49,7 @@ export function Button({
       : 'bg-white border-4 border-black text-black hover:bg-gray-100 cursor-pointer active:bg-gray-200',
     success: disabled
       ? 'bg-gray-300 text-gray-500 cursor-not-allowed border-transparent'
-      : 'bg-success text-white hover:bg-success/90 cursor-pointer active:bg-success/80 border-transparent',
+      : 'bg-success-background text-white hover:bg-success-background/90 cursor-pointer active:bg-success-background/80 border-transparent',
   };
 
   const sizeClasses = {

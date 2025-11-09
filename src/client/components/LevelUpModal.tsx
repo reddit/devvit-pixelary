@@ -48,8 +48,6 @@ export function LevelUpModal(props: LevelUpModalProps) {
     });
   }
 
-  const rewardCount = displayRewardItems.length + claimConsumables.length;
-
   const content = (
     <ModalScrim persistent>
       {/* Continuous confetti */}
@@ -98,7 +96,12 @@ export function LevelUpModal(props: LevelUpModalProps) {
         )}
 
         {/* Claim button */}
-        <Button onClick={onClaim} size="large" variant="success">
+        <Button
+          onClick={onClaim}
+          size="large"
+          variant="success"
+          className="press-hint"
+        >
           Claim!
         </Button>
       </ModalBody>

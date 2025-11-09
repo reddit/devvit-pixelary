@@ -11,14 +11,14 @@ export const CONSUMABLES_CONFIG = {
   score_multiplier_2x: {
     id: 'score_multiplier_2x',
     label: 'DOUBLE POINTS!',
-    description: 'On all points earned while active',
+    description: 'Earn double points while active',
     durationMs: 4 * 60 * 60 * 1000,
     effect: { kind: 'score_multiplier', multiplier: 2 },
   },
   score_multiplier_3x: {
     id: 'score_multiplier_3x',
     label: 'TRIPLE POINTS!',
-    description: 'On all points earned while active',
+    description: 'Earn triple points while active',
     durationMs: 30 * 60 * 1000,
     effect: { kind: 'score_multiplier', multiplier: 3 },
   },

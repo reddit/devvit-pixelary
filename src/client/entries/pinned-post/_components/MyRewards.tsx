@@ -247,7 +247,7 @@ function ItemModal({
         {/* Titling */}
         <div className="flex flex-col items-center justify-center gap-2">
           {/* Label */}
-          <Text className="text-primary">{label}</Text>
+          <Text scale={2.5}>{label}</Text>
 
           {/* Description */}
           {descriptionLines.map((line, index) => (

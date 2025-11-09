@@ -14,10 +14,8 @@
 
   --color-muted: #808080;
 
-  --color-success: #00ff00;
-  --color-warning: #ffa500;
-  --color-error: #ff0000;
   --color-success: #27ae60;
+  --color-success-background: #009940;
   --color-warning: #f2994a;
   --color-error: #eb5757;
 
@@ -372,6 +370,17 @@
       transform: translate3d(2px, 2px, 0);
       box-shadow: var(--shadow-pixel-sm);
     }
+  }
+
+  .press-hint {
+    animation: tournaments-attract var(--t-attract-duration, 1s) ease-in-out infinite;
+    will-change: transform;
+    backface-visibility: hidden;
+    transform: translateZ(0);
+  }
+
+  .press-hint:hover {
+    animation-play-state: paused;
   }
 
   /* Apply to the inner pixel drawing surface when parent has the flag */
