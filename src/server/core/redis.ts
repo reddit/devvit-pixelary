@@ -94,6 +94,10 @@ export const REDIS_KEYS = {
   tournamentPayoutLedger: (postId: T3) => `tournament:payout:ledger:${postId}`,
   tournamentPayoutLock: (postId: T3, dayIndex: number) =>
     `tournament:payout:lock:${postId}:${dayIndex}`,
+  // Blended user art (drawings + tournaments)
+  userArt: (userId: T2) => `user:art:${userId}`, // ZSET of compositeId with score = createdAt
+  userArtItem: (userId: T2, compositeId: string) =>
+    `user:art:item:${userId}:${compositeId}`, // HASH snapshot for listing hydration
   // Rate limit keys
   rateGuess: (userId: T2) => `rate:guess:${userId}`,
   rateVote: (userId: T2) => `rate:vote:${userId}`,

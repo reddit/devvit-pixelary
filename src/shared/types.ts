@@ -114,3 +114,25 @@ export type SlateMetrics = {
   upvotes: number;
   comments: number;
 };
+
+/*
+ * User art feed item (drawings + tournaments)
+ */
+import type { DrawingData } from './schema/drawing';
+
+export type UserArtItem =
+  | {
+      type: 'drawing';
+      id: string; // d:<postId>
+      postId: string;
+      drawing: DrawingData;
+      createdAt: number;
+    }
+  | {
+      type: 'tournament';
+      id: string; // t:<commentId>
+      postId: string;
+      commentId: string;
+      drawing: DrawingData;
+      createdAt: number;
+    };

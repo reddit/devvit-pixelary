@@ -111,6 +111,17 @@ export const createDrawing = async (options: {
       member: postId,
       score: currentTime,
     }),
+    // Index into blended user art feed and hydrate listing snapshot
+    redis.zAdd(REDIS_KEYS.userArt(authorId), {
+      member: `d:${postId}`,
+      score: currentTime,
+    }),
+    redis.hSet(REDIS_KEYS.userArtItem(authorId, `d:${postId}`), {
+      type: 'drawing',
+      postId,
+      drawing: JSON.stringify(drawing),
+      createdAt: currentTime.toString(),
+    }),
   ]);
 
   try {

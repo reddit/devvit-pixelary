@@ -195,6 +195,7 @@ export async function submitTournamentEntry(
   if (await isRateLimited(REDIS_KEYS.rateSubmit(uid), 2, 10)) {
     throw new Error('Too many submissions, slow down');
   }
+  const now = Date.now();
   let response: MediaAsset;
   try {
     const imageData = encodeDrawingToPngDataUrl(drawing, 256);
@@ -220,6 +221,7 @@ export async function submitTournamentEntry(
     mediaId: response.mediaId,
     votes: '0',
     views: '0',
+    createdAt: now.toString(),
   };
   const sortedSetKey = REDIS_KEYS.tournamentEntries(postId);
   await Promise.all([
@@ -229,6 +231,18 @@ export async function submitTournamentEntry(
     }),
     redis.hSet(entryKey, entryData),
     redis.zIncrBy(REDIS_KEYS.tournamentPlayers(postId), uid, 1),
+    // Index into blended user art feed and hydrate listing snapshot
+    redis.zAdd(REDIS_KEYS.userArt(uid), {
+      member: `t:${comment.id}`,
+      score: now,
+    }),
+    redis.hSet(REDIS_KEYS.userArtItem(uid, `t:${comment.id}`), {
+      type: 'tournament',
+      postId: postId,
+      commentId: comment.id,
+      drawing: JSON.stringify(drawing),
+      createdAt: now.toString(),
+    }),
   ]);
   return comment.id;
 }
@@ -335,6 +349,20 @@ export async function getTournamentEntry(
     mediaUrl: data.mediaUrl,
     mediaId: data.mediaId,
   };
+}
+
+/**
+ * Cached tournament entry fetch (small TTL to reduce hot lookups).
+ */
+export async function getCachedTournamentEntry(
+  commentId: T1
+): Promise<TournamentDrawing | undefined> {
+  return await cache(
+    async () => {
+      return await getTournamentEntry(commentId);
+    },
+    { key: `tournament:entry:cache:${commentId}`, ttl: 30 }
+  );
 }
 
 /**

@@ -8,6 +8,7 @@ vi.mock('@devvit/web/server', () => ({
     userId: 't2_testuser' as `t2_${string}`,
     username: 'testuser',
   },
+  cache: (fn: () => unknown) => fn(),
   redis: {
     get: vi.fn(),
     set: vi.fn(),

@@ -5,6 +5,7 @@ import type { T3, T1 } from '@devvit/shared-types/tid.js';
 import { assertT3 } from '@devvit/shared-types/tid.js';
 import { redis } from '@devvit/web/server';
 import { REDIS_KEYS } from '@server/core/redis';
+import { getMyArtPage } from '@server/services/posts/user-art';
 import {
   getWords,
   addWord,
@@ -382,6 +383,23 @@ export const appRouter = t.router({
         .query(async ({ ctx, input }) => {
           if (!ctx.userId) throw new Error('Must be logged in');
           return await getUserDrawingsWithData(ctx.userId, input.limit);
+        }),
+
+      getMyArtPage: t.procedure
+        .input(
+          z.object({
+            limit: z.number().int().min(1).max(100).default(20),
+            cursor: z.number().int().optional(),
+          })
+        )
+        .query(async ({ ctx, input }) => {
+          if (!ctx.userId) throw new Error('Must be logged in');
+          const result = await getMyArtPage({
+            userId: ctx.userId,
+            limit: input.limit,
+            cursor: input.cursor,
+          });
+          return result;
         }),
 
       getRank: t.procedure.query(async ({ ctx }) => {

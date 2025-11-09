@@ -6,7 +6,7 @@ import { PaginatedDrawingGrid } from '@components/PaginatedDrawingGrid';
 import { navigateTo } from '@devvit/web/client';
 import { context } from '@devvit/web/client';
 import { useTelemetry } from '@client/hooks/useTelemetry';
-import { useEffect } from 'react';
+import { useEffect, useMemo } from 'react';
 
 type MyDrawingsProps = {
   onClose: () => void;
@@ -20,9 +20,19 @@ export function MyDrawings({ onClose }: MyDrawingsProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Grab data
-  const { data: drawings = [], isLoading } = trpc.app.user.getDrawings.useQuery(
-    { limit: 20 }
+  // Grab paginated blended data (first page)
+  const { data, isLoading } = trpc.app.user.getMyArtPage.useQuery({
+    limit: 20,
+  });
+  const items = data?.items ?? [];
+  const byId = useMemo(() => {
+    const map = new Map<string, (typeof items)[number]>();
+    items.forEach((it) => map.set(it.id, it));
+    return map;
+  }, [items]);
+  const drawings = useMemo(
+    () => items.map((it) => ({ postId: it.id, drawing: it.drawing })),
+    [items]
   );
 
   return (
@@ -41,16 +51,23 @@ export function MyDrawings({ onClose }: MyDrawingsProps) {
       {/* Loading and Drawing Tiles */}
       <PaginatedDrawingGrid
         drawings={drawings}
-        onDrawingClick={async (postId) => {
+        onDrawingClick={async (id) => {
           // Track drawing tile click - await to ensure delivery before navigation
           await track('click_drawing_tile');
 
-          // Navigate to drawing post
+          // Navigate to drawing post or tournament comment permalink
+          const item = byId.get(id);
           const subredditName = context.subredditName;
-          if (subredditName) {
-            navigateTo(
-              `https://reddit.com/r/${subredditName}/comments/${postId}`
-            );
+          if (subredditName && item) {
+            if (item.type === 'drawing') {
+              navigateTo(
+                `https://reddit.com/r/${subredditName}/comments/${item.postId}`
+              );
+            } else {
+              navigateTo(
+                `https://reddit.com/r/${subredditName}/comments/${item.postId}/_/${item.commentId}`
+              );
+            }
           }
         }}
         isLoading={isLoading}

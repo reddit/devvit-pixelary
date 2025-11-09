@@ -17,7 +17,7 @@ export function PinnedPost() {
   const [page, setPage] = useState<Page>('menu');
 
   // Prefetch drawings optimistically for maximum performance
-  trpc.app.user.getDrawings.useQuery(
+  trpc.app.user.getMyArtPage.useQuery(
     { limit: 20 },
     {
       staleTime: 60000, // Cache for 1 minute
