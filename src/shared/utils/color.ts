@@ -4,17 +4,21 @@ import type { HEX, RGB } from '../types';
  * Convert hex color to RGB values
  */
 
-function hexToRgb(hex: HEX): RGB | null {
-  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  if (!result) return null;
-  const rHex = result[1] ?? '00';
-  const gHex = result[2] ?? '00';
-  const bHex = result[3] ?? '00';
-  return {
-    r: parseInt(rHex, 16),
-    g: parseInt(gHex, 16),
-    b: parseInt(bHex, 16),
-  };
+export function hexToRgb(hex: HEX): RGB | null {
+  const match = /^#?([a-fA-F\d]{3}|[a-fA-F\d]{6})$/.exec(hex);
+  const raw = match?.[1];
+  if (!raw) return null;
+  const normalized =
+    raw.length === 3
+      ? raw
+          .split('')
+          .map((c) => c + c)
+          .join('')
+      : raw;
+  const r = parseInt(normalized.slice(0, 2), 16);
+  const g = parseInt(normalized.slice(2, 4), 16);
+  const b = parseInt(normalized.slice(4, 6), 16);
+  return { r, g, b };
 }
 
 /**

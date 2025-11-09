@@ -373,7 +373,8 @@
   }
 
   .press-hint {
-    animation: tournaments-attract var(--t-attract-duration, 1s) ease-in-out infinite;
+    animation: tournaments-attract var(--t-attract-duration, 1s) ease-in-out
+      infinite;
     will-change: transform;
     backface-visibility: hidden;
     transform: translateZ(0);

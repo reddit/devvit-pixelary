@@ -8,7 +8,6 @@ import { Text } from '@components/PixelFont';
 import { navigateTo, context, exitExpandedMode } from '@devvit/web/client';
 import { useTelemetry } from '@client/hooks/useTelemetry';
 import type { SlateAction } from '@shared/types';
-import { renderDrawingToCanvas } from '@shared/utils/drawing';
 
 type BaseReviewProps = {
   drawing: DrawingData;
@@ -38,34 +37,6 @@ type TournamentReviewProps = BaseReviewProps & {
 };
 
 type ReviewStepProps = PostReviewProps | TournamentReviewProps;
-
-/**
- * Generate a PNG data URL from DrawingData
- * @param drawingData - The drawing data to convert to PNG
- * @returns Base64-encoded PNG data URL
- */
-function generatePNGFromDrawing(drawingData: DrawingData): string {
-  // Create an off-screen canvas
-  const canvas = document.createElement('canvas');
-  canvas.width = 256;
-  canvas.height = 256;
-
-  const ctx = canvas.getContext('2d');
-  if (!ctx) return '';
-
-  // Disable image smoothing for crisp pixels
-  ctx.imageSmoothingEnabled = false;
-
-  // Create a temporary canvas for the original drawing
-  const tempCanvas = document.createElement('canvas');
-  renderDrawingToCanvas(drawingData, tempCanvas);
-
-  // Scale the drawing to 256x256
-  ctx.drawImage(tempCanvas, 0, 0, 256, 256);
-
-  // Convert to PNG data URL
-  return canvas.toDataURL('image/png');
-}
 
 export function ReviewStep(props: ReviewStepProps) {
   const { drawing, onCancel, onSuccess } = props;
@@ -130,14 +101,10 @@ export function ReviewStep(props: ReviewStepProps) {
     void track('click_post_drawing');
 
     try {
-      // Generate PNG from drawing data
-      const imageData = generatePNGFromDrawing(drawing);
-
       if (props.mode === 'tournament') {
         await submitTournamentDrawing.mutateAsync({
           postId: props.tournamentPostId,
           drawing,
-          imageData,
         });
         // Exit expanded mode after a successful submission
         if (nativeEvent) {
@@ -150,7 +117,6 @@ export function ReviewStep(props: ReviewStepProps) {
           word,
           dictionary,
           drawing,
-          imageData,
         });
         if (result.success) {
           // Attempt to deliver slate event, but cap wait to keep UX snappy

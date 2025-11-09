@@ -27,6 +27,7 @@ import {
   updatePinnedComment,
 } from '@server/services/comments/pinned';
 import { REALTIME_CHANNELS } from '@server/core/realtime';
+import { encodeDrawingToPngDataUrl } from '@server/utils/png';
 
 const DRAWING_DATA_TTL = 5 * 60;
 
@@ -50,22 +51,19 @@ export const createDrawing = async (options: {
   drawing: DrawingData;
   authorName: string;
   authorId: T2;
-  imageData?: string;
-}) => {
-  const { word, dictionary, drawing, authorName, authorId, imageData } =
-    options;
+}): Promise<{ id: T3; createdAt: Date }> => {
+  const { word, dictionary, drawing, authorName, authorId } = options;
 
   let imageUrl: string | undefined;
-  if (imageData) {
-    try {
-      const mediaResponse: MediaAsset = await media.upload({
-        url: imageData,
-        type: 'image',
-      });
-      imageUrl = mediaResponse.mediaUrl;
-    } catch (error) {
-      console.warn('Failed to upload image:', error);
-    }
+  try {
+    const dataUrl = encodeDrawingToPngDataUrl(drawing, 256);
+    const mediaResponse: MediaAsset = await media.upload({
+      url: dataUrl,
+      type: 'image',
+    });
+    imageUrl = mediaResponse.mediaUrl;
+  } catch (error) {
+    console.warn('Failed to generate or upload image:', error);
   }
 
   const postData = {

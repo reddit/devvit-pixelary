@@ -1,7 +1,31 @@
 import { describe, it, expect } from 'vitest';
-import { getContrastColor } from './color';
+import { getContrastColor, hexToRgb } from './color';
 
 describe('color utilities', () => {
+  describe('hexToRgb', () => {
+    it('parses 6-digit hex colors', () => {
+      expect(hexToRgb('#ffffff')).toEqual({ r: 255, g: 255, b: 255 });
+      expect(hexToRgb('#000000')).toEqual({ r: 0, g: 0, b: 0 });
+      expect(hexToRgb('#123456')).toEqual({ r: 18, g: 52, b: 86 });
+      expect(hexToRgb('#AaBbCc')).toEqual({ r: 170, g: 187, b: 204 });
+    });
+
+    it('parses 3-digit hex colors by expansion', () => {
+      expect(hexToRgb('#fff')).toEqual({ r: 255, g: 255, b: 255 });
+      expect(hexToRgb('#000')).toEqual({ r: 0, g: 0, b: 0 });
+      expect(hexToRgb('#0f0')).toEqual({ r: 0, g: 255, b: 0 });
+      expect(hexToRgb('#f0a')).toEqual({ r: 255, g: 0, b: 170 });
+      expect(hexToRgb('#AbC')).toEqual({ r: 170, g: 187, b: 204 });
+    });
+
+    it('returns null for invalid hex strings', () => {
+      expect(hexToRgb('#gggggg' as `#${string}`)).toBeNull();
+      expect(hexToRgb('#12345' as `#${string}`)).toBeNull();
+      expect(hexToRgb('#abcd' as `#${string}`)).toBeNull();
+      expect(hexToRgb('#' as `#${string}`)).toBeNull();
+    });
+  });
+
   describe('getContrastColor', () => {
     it('returns black for light backgrounds', () => {
       expect(getContrastColor('#FFFFFF')).toBe('#000000');

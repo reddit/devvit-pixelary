@@ -29,6 +29,7 @@ import { incrementScore } from '@server/services/progression';
 import { normalizeWord } from '@shared/utils/string';
 import { generateTournamentCommentText } from '@server/services/posts/tournament/comments';
 import { createPinnedComment } from '@server/services/comments/pinned';
+import { encodeDrawingToPngDataUrl } from '@server/utils/png';
 
 export type TournamentDrawing = {
   commentId: T1;
@@ -178,14 +179,12 @@ export async function getTournamentEntries(postId: T3): Promise<T1[]> {
 /**
  * Submits a tournament entry.
  * @param drawing - The drawing data.
- * @param imageData - The image data.
  * @param postId - The ID of the post.
  * @returns The ID of the comment.
  */
 
 export async function submitTournamentEntry(
   drawing: DrawingData,
-  imageData: string,
   tournamentPostId?: T3
 ): Promise<T1> {
   const postId = tournamentPostId ?? context.postId;
@@ -198,6 +197,7 @@ export async function submitTournamentEntry(
   }
   let response: MediaAsset;
   try {
+    const imageData = encodeDrawingToPngDataUrl(drawing, 256);
     response = await media.upload({ url: imageData, type: 'image' });
   } catch (mediaError) {
     const mediaErrorMessage =

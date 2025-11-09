@@ -114,7 +114,6 @@ export const DrawingSubmitInputSchema = z.object({
   word: z.string(),
   dictionary: z.string(),
   drawing: DrawingDataSchema,
-  imageData: z.string().optional(),
 });
 export type DrawingSubmitInput = z.infer<typeof DrawingSubmitInputSchema>;
 
