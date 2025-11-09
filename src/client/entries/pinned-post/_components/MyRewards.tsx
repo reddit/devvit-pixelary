@@ -247,7 +247,9 @@ function ItemModal({
         {/* Titling */}
         <div className="flex flex-col items-center justify-center gap-2">
           {/* Label */}
-          <Text scale={2.5}>{label}</Text>
+          <Text scale={2.5} className="text-primary">
+            {label}
+          </Text>
 
           {/* Description */}
           {descriptionLines.map((line, index) => (
@@ -258,12 +260,12 @@ function ItemModal({
         </div>
 
         {/* Quantity */}
-        <Text className="text-secondary">{`Quantity: ${quantity}`}</Text>
+        <Text className="text-muted">{`Quantity: ${quantity}`}</Text>
 
         {/* Actions */}
         <div className="flex flex-row items-center justify-center gap-6">
-          <Button disabled={isUseDisabled} onClick={onUse}>
-            Use Item
+          <Button disabled={isUseDisabled} onClick={onUse} variant="white">
+            Use
           </Button>
           <Button onClick={onClose}>Close</Button>
         </div>
