@@ -99,14 +99,6 @@ export async function setScore(userId: T2, score: number): Promise<number> {
   }
 
   const didUserLevelUp = level.min > oldScore;
-  console.log('[progression.setScore]', {
-    userId,
-    oldScore,
-    newScore: score,
-    oldLevel: oldLevel.rank,
-    newLevel: level.rank,
-    didUserLevelUp,
-  });
 
   if (didUserLevelUp) {
     await scheduler.runJob({
@@ -121,49 +113,27 @@ export async function setScore(userId: T2, score: number): Promise<number> {
     });
     // Notify client immediately about pending level-up
     try {
-      const channel = REALTIME_CHANNELS.userLevelUp(userId);
-      console.log('[progression.setScore] realtime.send levelup_pending', {
-        channel,
-        userId,
-        level: level.rank,
-        score,
-      });
       await realtime.send(REALTIME_CHANNELS.userLevelUp(userId), {
         type: 'levelup_pending',
         level: level.rank,
         score,
         timestamp: Date.now(),
       });
-    } catch (error) {
+    } catch {
       // Non-blocking realtime error
-      console.warn(
-        '[progression.setScore] realtime.send levelup_pending failed',
-        error
-      );
     }
   }
 
   // Always notify client that score changed (covers level down or no change)
   try {
-    const channel = REALTIME_CHANNELS.userLevelUp(userId);
-    console.log('[progression.setScore] realtime.send score_changed', {
-      channel,
-      userId,
-      level: level.rank,
-      score,
-    });
     await realtime.send(REALTIME_CHANNELS.userLevelUp(userId), {
       type: 'score_changed',
       level: level.rank,
       score,
       timestamp: Date.now(),
     });
-  } catch (error) {
+  } catch {
     // Non-blocking realtime error
-    console.warn(
-      '[progression.setScore] realtime.send score_changed failed',
-      error
-    );
   }
 
   return score;
@@ -198,15 +168,6 @@ export async function incrementScore(
   const level = getLevelByScore(score);
   const oldLevel = getLevelByScore(oldScore);
   const didUserLevelUp = level.min > oldScore;
-  console.log('[progression.incrementScore]', {
-    userId,
-    oldScore,
-    newScore: score,
-    oldLevel: oldLevel.rank,
-    newLevel: level.rank,
-    didUserLevelUp,
-    amount,
-  });
 
   // Update claimed level if user leveled up
   if (level.rank > oldLevel.rank && didUserLevelUp) {
@@ -231,49 +192,27 @@ export async function incrementScore(
     });
     // Notify client immediately about pending level-up
     try {
-      const channel = REALTIME_CHANNELS.userLevelUp(userId);
-      console.log('[progression.incrementScore] realtime.send levelup_pending', {
-        channel,
-        userId,
-        level: level.rank,
-        score,
-      });
       await realtime.send(REALTIME_CHANNELS.userLevelUp(userId), {
         type: 'levelup_pending',
         level: level.rank,
         score,
         timestamp: Date.now(),
       });
-    } catch (error) {
+    } catch {
       // Non-blocking realtime error
-      console.warn(
-        '[progression.incrementScore] realtime.send levelup_pending failed',
-        error
-      );
     }
   }
 
   // Always notify client that score changed (covers level down or no change)
   try {
-    const channel = REALTIME_CHANNELS.userLevelUp(userId);
-    console.log('[progression.incrementScore] realtime.send score_changed', {
-      channel,
-      userId,
-      level: level.rank,
-      score,
-    });
     await realtime.send(REALTIME_CHANNELS.userLevelUp(userId), {
       type: 'score_changed',
       level: level.rank,
       score,
       timestamp: Date.now(),
     });
-  } catch (error) {
+  } catch {
     // Non-blocking realtime error
-    console.warn(
-      '[progression.incrementScore] realtime.send score_changed failed',
-      error
-    );
   }
 
   return score;
@@ -384,10 +323,6 @@ export async function claimLevelUp(userId: T2, level: number): Promise<void> {
  */
 async function broadcastLevelUpClaimed(userId: T2): Promise<void> {
   const channelName = REALTIME_CHANNELS.userLevelUp(userId);
-  console.log('[progression.broadcastLevelUpClaimed] realtime.send', {
-    channelName,
-    userId,
-  });
   await realtime.send(channelName, {
     type: 'levelup_claimed',
     timestamp: Date.now(),

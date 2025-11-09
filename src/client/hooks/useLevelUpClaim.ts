@@ -36,13 +36,9 @@ class LevelUpClaimManager {
         this.connection = await connectRealtime({
           channel: channelName,
           onMessage: (data) => {
-            console.debug('[LevelUpClaimManager] onMessage', data);
             if (data && typeof data === 'object' && 'type' in data) {
               const message = data as LevelUpChannelMessage;
               if (message.type === 'levelup_claimed') {
-                console.debug(
-                  '[LevelUpClaimManager] received levelup_claimed'
-                );
                 this.subscribers.forEach((callback) => {
                   callback(true);
                 });
@@ -50,16 +46,6 @@ class LevelUpClaimManager {
                 message.type === 'levelup_pending' ||
                 message.type === 'score_changed'
               ) {
-                console.debug('[LevelUpClaimManager] received', message.type, {
-                  level:
-                    'level' in message && typeof message.level === 'number'
-                      ? message.level
-                      : undefined,
-                  score:
-                    'score' in message && typeof message.score === 'number'
-                      ? message.score
-                      : undefined,
-                });
                 this.subscribers.forEach((callback) => {
                   callback(false);
                 });
@@ -69,7 +55,6 @@ class LevelUpClaimManager {
         });
       } catch (error) {
         // Failed to connect to realtime channel
-        console.warn('[LevelUpClaimManager] connect failed', error);
       }
     }
 
@@ -116,7 +101,6 @@ export function useLevelUpClaim(): {
   // Claim mutation
   const claimMutation = trpc.app.user.claimLevelUp.useMutation({
     onSuccess: () => {
-      console.debug('[useLevelUpClaim] claimLevelUp success');
       // Reset local state
       setUnclaimedLevel(null);
       setShouldClaim(false);
@@ -136,9 +120,7 @@ export function useLevelUpClaim(): {
   const scheduleRefetch = () => {
     if (!context.userId) return;
     if (refetchTimeoutRef.current != null) return;
-    console.debug('[useLevelUpClaim] scheduleRefetch queued');
     refetchTimeoutRef.current = window.setTimeout(() => {
-      console.debug('[useLevelUpClaim] refetch fired');
       void refetch();
       refetchTimeoutRef.current = undefined;
     }, 250);
@@ -147,9 +129,6 @@ export function useLevelUpClaim(): {
   // Refetch when userId changes (e.g., navigation)
   useEffect(() => {
     if (context.userId) {
-      console.debug('[useLevelUpClaim] userId changed, refetching', {
-        userId: context.userId,
-      });
       void refetch();
     }
   }, [refetch]);
@@ -159,13 +138,8 @@ export function useLevelUpClaim(): {
     if (!context.userId) return;
     const userId = context.userId;
     const channelName = REALTIME_CHANNELS.userLevelUp(userId);
-    console.debug('[useLevelUpClaim] subscribing to realtime', {
-      userId,
-      channelName,
-    });
 
     const handleClaimUpdate = (claimed: boolean) => {
-      console.debug('[useLevelUpClaim] handleClaimUpdate', { claimed });
       if (claimed) {
         // Another instance claimed, clear our state
         setUnclaimedLevel(null);
@@ -177,15 +151,11 @@ export function useLevelUpClaim(): {
     let cleanup: (() => void) | undefined;
 
     void levelUpClaimManager.connect(handleClaimUpdate).then((cleanupFn) => {
-      console.debug('[useLevelUpClaim] realtime connected');
       cleanup = cleanupFn;
     });
 
     return () => {
       if (cleanup) {
-        console.debug('[useLevelUpClaim] unsubscribing from realtime', {
-          channelName,
-        });
         cleanup();
       }
       if (refetchTimeoutRef.current != null) {
@@ -203,7 +173,6 @@ export function useLevelUpClaim(): {
   }, [shouldClaim, unclaimedLevel, claimMutation]);
 
   const claimLevelUp = async (level: number) => {
-    console.debug('[useLevelUpClaim] claimLevelUp requested', { level });
     setShouldClaim(true);
   };
 
