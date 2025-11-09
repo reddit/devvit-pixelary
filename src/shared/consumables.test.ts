@@ -1,5 +1,8 @@
 import { describe, it, expect } from 'vitest';
-import { CONSUMABLES_CONFIG } from './consumables';
+import {
+  CONSUMABLES_CONFIG,
+  getConsumablesGrantedOnLevelClaim,
+} from './consumables';
 
 describe('consumables config', () => {
   it('has reasonable shape for all items', () => {
@@ -31,6 +34,15 @@ describe('consumables config', () => {
           expect(_exhaustiveCheck).toBeUndefined();
         }
       }
+    }
+  });
+});
+
+describe('level-claim consumables', () => {
+  it('grants 5x score_multiplier_2x on any level', () => {
+    for (const level of [2, 5, 10, 25]) {
+      const items = getConsumablesGrantedOnLevelClaim(level);
+      expect(items).toEqual([{ itemId: 'score_multiplier_2x', quantity: 5 }]);
     }
   });
 });

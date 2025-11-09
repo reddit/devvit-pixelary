@@ -5,7 +5,9 @@ import { Icon } from './PixelFont';
 import { ModalScrim } from './ModalScrim';
 import { ModalBody } from './ModalBody';
 import { getRewardsByLevel, getRewardLabel } from '@shared/rewards';
-import type { RewardType } from '@shared/rewards';
+import { getConsumablesGrantedOnLevelClaim } from '@shared/consumables';
+import type { ConsumableId } from '@shared/consumables';
+import { Multiplier, Clock } from '@components/illustrations';
 import { createPortal } from 'react-dom';
 
 type LevelUpModalProps = {
@@ -20,7 +22,33 @@ type LevelUpModalProps = {
 export function LevelUpModal(props: LevelUpModalProps) {
   const { level, onClaim } = props;
   const rewards = getRewardsByLevel(level);
-  const rewardCount = rewards.length;
+  const claimConsumables = getConsumablesGrantedOnLevelClaim(level);
+
+  // Aggregate rewards for display:
+  // - Remove level user flair from the dialog
+  // - Combine all extended color tiers into a single "+N colors" line
+  const EXTENDED_COLOR_PREFIX = 'extended_colors_tier_';
+  const colorTierRewards = rewards.filter((r) =>
+    r.startsWith(EXTENDED_COLOR_PREFIX)
+  );
+  const otherRewards = rewards.filter(
+    (r) => r !== 'level_flair' && !r.startsWith(EXTENDED_COLOR_PREFIX)
+  );
+
+  const displayRewardItems: Array<{ key: string; label: string }> = [
+    ...otherRewards.map((r) => ({ key: r, label: getRewardLabel(r, level) })),
+  ];
+
+  if (colorTierRewards.length > 0) {
+    const COLORS_PER_TIER = 14;
+    const totalColors = colorTierRewards.length * COLORS_PER_TIER;
+    displayRewardItems.push({
+      key: 'extended_colors_aggregate',
+      label: `+${totalColors} colors`,
+    });
+  }
+
+  const rewardCount = displayRewardItems.length + claimConsumables.length;
 
   const content = (
     <ModalScrim persistent>
@@ -28,31 +56,50 @@ export function LevelUpModal(props: LevelUpModalProps) {
       <Confetti count={Infinity} delay={10} speed={4} />
 
       <ModalBody>
-        {/* Title */}
-        <Text scale={4} className="text-primary">
-          {`Level ${level}!`}
-        </Text>
-
-        {/* Description */}
-        <div className="flex flex-col items-center gap-3">
-          <Text scale={2} className="text-success">
-            You leveled up,
-          </Text>
-          <Text scale={2} className="text-success">
-            {`earning reward${rewardCount === 1 ? '' : 's'}!`}
+        {/* Titling */}
+        <div className="flex flex-col gap-2 w-full items-center justify-center">
+          <Text className="text-success">You reached</Text>
+          <Text scale={4} className="text-primary">
+            {`Level ${level}!`}
           </Text>
         </div>
 
         {/* Rewards */}
         <div className="flex flex-col gap-3 w-full">
-          {rewards.map((reward: RewardType) => (
-            <RewardItem key={reward} reward={reward} level={level} />
-          ))}
+          <Text className="text-success w-full">Rewards</Text>
+          <div className="flex flex-col gap-3 w-full">
+            {displayRewardItems.map(({ key, label }) => (
+              <div key={key} className="flex items-center gap-2">
+                <Icon type="checkmark" className="text-success" />
+                <Text>{label}</Text>
+              </div>
+            ))}
+          </div>
         </div>
 
+        {/* Consumables */}
+        {claimConsumables.length > 0 && (
+          <div className="flex flex-col gap-3 w-full">
+            <Text className="text-success w-full">Consumables</Text>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+              {claimConsumables.map(({ itemId, quantity }) => (
+                <div
+                  key={itemId}
+                  className="relative grid place-items-center w-16 h-16 bg-success/30"
+                >
+                  {renderConsumableIllustration(itemId, 12 * 3)}
+                  <div className="absolute bottom-0 right-0 bg-success/80 py-1 px-2">
+                    <Text className="text-white">{String(quantity)}</Text>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Claim button */}
-        <Button onClick={onClaim} size="large">
-          {`CLAIM REWARD${rewardCount === 1 ? '' : 'S'}`}
+        <Button onClick={onClaim} size="large" variant="success">
+          Claim!
         </Button>
       </ModalBody>
     </ModalScrim>
@@ -64,22 +111,15 @@ export function LevelUpModal(props: LevelUpModalProps) {
   return createPortal(content, portalRoot);
 }
 
-type RewardItemProps = {
-  reward: RewardType;
-  level: number;
-};
-
-/**
- * Reward item component for the level up modal
- */
-
-function RewardItem(props: RewardItemProps) {
-  const { reward, level } = props;
-  const label = getRewardLabel(reward, level);
-  return (
-    <div className="flex items-center gap-3">
-      <Icon type="checkmark" className="text-success" scale={2} />
-      <Text scale={2}>{label}</Text>
-    </div>
-  );
+function renderConsumableIllustration(id: ConsumableId, size = 24) {
+  switch (id) {
+    case 'score_multiplier_2x':
+      return <Multiplier variant="double" size={size} />;
+    case 'score_multiplier_3x':
+      return <Multiplier variant="triple" size={size} />;
+    case 'draw_time_boost_30s':
+      return <Clock size={size} />;
+    default:
+      return null;
+  }
 }

@@ -40,3 +40,16 @@ export type ConsumableConfig = (typeof CONSUMABLES_CONFIG)[ConsumableId] & {
 export function getConsumableConfig(id: ConsumableId): ConsumableConfig {
   return CONSUMABLES_CONFIG[id];
 }
+
+// Consumables granted when a user claims a level-up
+export type GrantedConsumable = {
+  itemId: ConsumableId;
+  quantity: number;
+};
+
+export function getConsumablesGrantedOnLevelClaim(
+  _level: number
+): GrantedConsumable[] {
+  // Static grant for now; can evolve by level later
+  return [{ itemId: 'score_multiplier_2x', quantity: 5 }];
+}

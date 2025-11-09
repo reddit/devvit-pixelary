@@ -1,5 +1,6 @@
 import type { Request, Response } from 'express';
 import { grantItems } from '@server/services/rewards/consumables';
+import { getConsumablesGrantedOnLevelClaim } from '@shared/consumables';
 
 /**
  * Job handler for granting score multipliers upon level claim
@@ -18,8 +19,9 @@ export async function handleUserLevelClaimed(
       return;
     }
 
-    // Grant 5 score multipliers upon claim
-    await grantItems(userId, [{ itemId: 'score_multiplier_2x', quantity: 5 }]);
+    // Grant consumables for this level claim
+    const items = getConsumablesGrantedOnLevelClaim(level);
+    await grantItems(userId, items);
 
     res.json({ status: 'success' });
   } catch (error) {

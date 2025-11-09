@@ -9,7 +9,7 @@ type ButtonProps = {
   onClick?: () => void;
   onNativeClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
   onNativePointerDown?: (e: React.PointerEvent<HTMLButtonElement>) => void;
-  variant?: 'primary' | 'secondary' | 'white';
+  variant?: 'primary' | 'secondary' | 'white' | 'success';
   size?: 'small' | 'medium' | 'large';
   disabled?: boolean;
   leadingIcon?: SupportedGlyph;
@@ -47,6 +47,9 @@ export function Button({
     white: disabled
       ? 'bg-gray-200 border-4 border-gray-300 text-gray-500 cursor-not-allowed'
       : 'bg-white border-4 border-black text-black hover:bg-gray-100 cursor-pointer active:bg-gray-200',
+    success: disabled
+      ? 'bg-gray-300 text-gray-500 cursor-not-allowed border-transparent'
+      : 'bg-success text-white hover:bg-success/90 cursor-pointer active:bg-success/80 border-transparent',
   };
 
   const sizeClasses = {
