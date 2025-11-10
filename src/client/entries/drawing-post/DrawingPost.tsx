@@ -16,7 +16,7 @@ import type { DrawingPostData } from '@src/shared/schema';
 
 type DrawingState = 'unsolved' | 'guessing' | 'solved' | 'skipped' | 'author';
 
-export const DrawingPost = () => {
+export function DrawingPost() {
   const postData = getPostData<DrawingPostData>();
   const currentPostId = context.postId;
   const { error: showErrorToast, success } = useToastHelpers();
@@ -291,4 +291,4 @@ export const DrawingPost = () => {
       isLoading={isLoading}
     />
   );
-};
+}

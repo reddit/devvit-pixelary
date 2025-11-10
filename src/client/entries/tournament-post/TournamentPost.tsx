@@ -48,6 +48,17 @@ export function TournamentPost() {
     await refetchStats();
   };
 
+  // When there are enough submissions, prefetch initial voting pairs
+  useEffect(() => {
+    const enough = (stats?.submissionCount ?? 0) >= 2;
+    if (enough) {
+      void utils.app.tournament.getDrawingPairs.prefetch({
+        postId: currentPostId,
+        count: 5,
+      });
+    }
+  }, [stats?.submissionCount, currentPostId, utils]);
+
   // Show gallery/voting UI
   return (
     <>

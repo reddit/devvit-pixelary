@@ -20,8 +20,14 @@ export function Leaderboard({ onClose }: LeaderboardProps) {
 
   // Grab data
   const { data: leaderboard = [], isLoading } =
-    trpc.app.leaderboard.getTop.useQuery({ limit: 10 });
-  const { data: userRank } = trpc.app.user.getRank.useQuery();
+    trpc.app.leaderboard.getTop.useQuery(
+      { limit: 10 },
+      { staleTime: 60000, refetchOnWindowFocus: false }
+    );
+  const { data: userRank } = trpc.app.user.getRank.useQuery(undefined, {
+    staleTime: 60000,
+    refetchOnWindowFocus: false,
+  });
 
   return (
     <CardLayout title="Leaderboard" onClose={onClose}>

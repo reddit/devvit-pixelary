@@ -21,6 +21,7 @@ export function Menu(props: MenuProps) {
 
   // Telemetry
   const { track } = useTelemetry();
+  const utils = trpc.useUtils();
   useEffect(() => {
     void track('view_menu');
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -30,6 +31,14 @@ export function Menu(props: MenuProps) {
   const { data: userProfile } = trpc.app.user.getProfile.useQuery(undefined, {
     enabled: true,
   });
+
+  // Warm editor-related caches as soon as the menu is visible
+  useEffect(() => {
+    void utils.app.user.getProfile.prefetch();
+    void utils.app.rewards.getEffectiveBonuses.prefetch();
+    void utils.app.user.colors.getRecent.prefetch();
+    void utils.app.dictionary.getCandidates.prefetch();
+  }, [utils]);
 
   // Get progress percentage from user profile
   const progressPercentage = userProfile?.levelProgressPercentage ?? 0;
@@ -49,6 +58,13 @@ export function Menu(props: MenuProps) {
       {/* Menu */}
       <nav className="flex flex-col gap-3 w-full max-w-3xs">
         <Button
+          onNativePointerDown={() => {
+            // Ensure caches are warm before entering editor
+            void utils.app.user.getProfile.prefetch();
+            void utils.app.rewards.getEffectiveBonuses.prefetch();
+            void utils.app.user.colors.getRecent.prefetch();
+            void utils.app.dictionary.getCandidates.prefetch();
+          }}
           onNativeClick={(e) => {
             void requestExpandedMode(
               e.nativeEvent as unknown as MouseEvent,

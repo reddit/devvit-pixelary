@@ -39,12 +39,22 @@ export function ResultsView({
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
   const { success } = useToastHelpers();
   const { track } = useTelemetry();
+  const utils = trpc.useUtils();
 
   // Track results view on mount
   useEffect(() => {
     void track('view_results');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Warm editor caches on mount for instant editor open
+  useEffect(() => {
+    void utils.app.user.getProfile.prefetch();
+    void utils.app.rewards.getEffectiveBonuses.prefetch();
+    void utils.app.user.colors.getRecent.prefetch();
+    // dictionary slate is anonymous; still helpful to warm
+    void utils.app.dictionary.getCandidates.prefetch();
+  }, [utils]);
 
   // Mutation for revealing guesses
   const revealGuess = trpc.app.post.revealGuess.useMutation();
@@ -151,6 +161,13 @@ export function ResultsView({
       />
       {/* Primary CTA */}
       <Button
+        onNativePointerDown={() => {
+          // Warm caches right before user clicks
+          void utils.app.user.getProfile.prefetch();
+          void utils.app.rewards.getEffectiveBonuses.prefetch();
+          void utils.app.user.colors.getRecent.prefetch();
+          void utils.app.dictionary.getCandidates.prefetch();
+        }}
         onNativeClick={(e) => {
           void requestExpandedMode(
             e.nativeEvent as unknown as MouseEvent,

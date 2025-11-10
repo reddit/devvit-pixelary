@@ -14,9 +14,12 @@ import { getContrastColor } from '@shared/utils/color';
 import type { HEX } from '@shared/types';
 import { useTelemetry } from '@client/hooks/useTelemetry';
 import type { SlateAction } from '@shared/types';
-import { Modal } from '@components/Modal';
 import { trpc } from '@client/trpc/client';
 import { useMemo } from 'react';
+import { ColorPickerModal } from './ColorPickerModal';
+import { ColorSwatch } from './ColorSwatch';
+import { ColorPickerPlusButton } from './ColorPickerPlusButton';
+import { useFlipRecentTiles } from './useFlipRecentTiles';
 
 type DrawStepProps = {
   word: string;
@@ -674,6 +677,16 @@ export function DrawStep(props: DrawStepProps) {
     root.style.setProperty('--draw-size', `${sizeScaled}px`);
   }, [isReviewing, viewportSize, layoutVersion]);
 
+  // Cleanup CSS variables on unmount to avoid leaking state across views
+  useEffect(() => {
+    return () => {
+      const root = document.documentElement;
+      root.style.removeProperty('--draw-top');
+      root.style.removeProperty('--draw-left');
+      root.style.removeProperty('--draw-size');
+    };
+  }, []);
+
   // When entering review mode, make UI sections inert and ensure focus is not inside them
   useEffect(() => {
     const elements: HTMLElement[] = [];
@@ -1170,177 +1183,6 @@ export function DrawStep(props: DrawStepProps) {
       />
     </main>
   );
-}
-
-type ColorSwatchProps = {
-  color: HEX;
-  isSelected: boolean;
-  onSelect: (color: HEX) => void;
-  dataAttrKey?: string;
-};
-
-function ColorSwatch(props: ColorSwatchProps) {
-  const { color, isSelected, onSelect, dataAttrKey } = props;
-
-  return (
-    <button
-      onClick={() => {
-        onSelect(color);
-      }}
-      data-color={dataAttrKey}
-      className="w-8 h-8 border-4 border-black cursor-pointer transition-all flex items-center justify-center hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[4px] active:translate-y-[4px] shadow-pixel hover:shadow-pixel-sm active:shadow-none"
-      style={{ backgroundColor: color }}
-    >
-      <Icon
-        type="checkmark"
-        scale={2}
-        color={getContrastColor(color)}
-        className={`mru-check transition-opacity ${isSelected ? 'opacity-100' : 'opacity-0'}`}
-      />
-    </button>
-  );
-}
-
-type ColorPickerPlusButtonProps = {
-  onClick: () => void;
-};
-
-function ColorPickerPlusButton(props: ColorPickerPlusButtonProps) {
-  const { onClick } = props;
-
-  return (
-    <button
-      onClick={onClick}
-      className="w-8 h-8 border-4 border-black cursor-pointer transition-all flex items-center justify-center hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[4px] active:translate-y-[4px] shadow-pixel hover:shadow-pixel-sm active:shadow-none bg-gray-200"
-    >
-      <Icon type="plus" scale={2} color="currentColor" />
-    </button>
-  );
-}
-
-type ColorPickerModalProps = {
-  isOpen: boolean;
-  onClose: () => void;
-  onSelectColor: (color: HEX) => void;
-  currentColor: HEX;
-  userLevel: number;
-};
-
-function ColorPickerModal(props: ColorPickerModalProps) {
-  const { isOpen, onClose, onSelectColor, currentColor, userLevel } = props;
-  const availableColors = getAllAvailableColors(userLevel);
-
-  return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Select a color">
-      <div className="grid grid-cols-7 gap-2">
-        {availableColors.map((color) => (
-          <ColorSwatch
-            key={color}
-            color={color}
-            isSelected={currentColor === color}
-            onSelect={onSelectColor}
-          />
-        ))}
-      </div>
-    </Modal>
-  );
-}
-
-// FLIP animation for recent color tiles (with stagger and bounce for selected)
-// Animates reorders and insertions in the recent palette row
-// Runs after DOM updates using useLayoutEffect to avoid flicker
-function useFlipRecentTiles(
-  containerRef: React.RefObject<HTMLDivElement>,
-  deps: unknown[],
-  opts?: { selectedKey?: string | null; suppress?: boolean }
-) {
-  const prevRectsRef = useRef<Map<string, DOMRect>>(new Map());
-  const isFirstRenderRef = useRef(true);
-
-  useLayoutEffect(() => {
-    const container = containerRef.current;
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
-    if (!container) return;
-
-    const tiles = Array.from(
-      container.querySelectorAll<HTMLElement>('[data-color]')
-    );
-    const nextRects = new Map<string, DOMRect>();
-    for (const el of tiles) {
-      const key = el.dataset.color;
-      if (!key) continue;
-      nextRects.set(key, el.getBoundingClientRect());
-    }
-
-    // Suppress animations for this pass (e.g., initial MRU application)
-    if (opts?.suppress) {
-      prevRectsRef.current = nextRects;
-      isFirstRenderRef.current = false;
-      return;
-    }
-
-    const prevRects = prevRectsRef.current;
-    // Skip animation on very first paint
-    if (!isFirstRenderRef.current) {
-      for (const el of tiles) {
-        const key = el.dataset.color;
-        if (!key) continue;
-        const prev = prevRects.get(key);
-        const next = nextRects.get(key);
-        if (!next) continue;
-
-        // New element: pop-in (more dramatic)
-        if (!prev) {
-          el.setAttribute('data-moving', '1');
-          const anim = el.animate(
-            [
-              { transform: 'scale(0.6) translateY(8px)', opacity: 0 },
-              { transform: 'scale(1)', opacity: 1 },
-            ],
-            {
-              duration: 380,
-              delay: 0,
-              easing: 'cubic-bezier(.22,1,.36,1)',
-              fill: 'forwards',
-            }
-          );
-          anim.addEventListener('finish', () => {
-            el.removeAttribute('data-moving');
-          });
-          continue;
-        }
-
-        // Reordered/moved element: single horizontal slide using FLIP
-        const dx = prev.left - next.left;
-        const dy = 0; // ignore vertical movement
-        if (dx !== 0) {
-          el.setAttribute('data-moving', '1');
-          // FLIP via WAAPI: from horizontal delta to identity
-          const move = el.animate(
-            [
-              { transform: `translate(${dx}px, 0)` },
-              { transform: 'translate(0, 0)' },
-            ],
-            {
-              duration: 520,
-              delay: 0,
-              easing: 'cubic-bezier(.22,1,.36,1)',
-              fill: 'both',
-            }
-          );
-          move.addEventListener('finish', () => {
-            el.removeAttribute('data-moving');
-          });
-        }
-      }
-    } else {
-      isFirstRenderRef.current = false;
-    }
-
-    // Update for next pass
-    prevRectsRef.current = nextRects;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, deps);
 }
 
 // (moved into component scope above)

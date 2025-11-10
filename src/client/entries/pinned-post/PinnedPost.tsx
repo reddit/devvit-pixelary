@@ -15,6 +15,7 @@ type Page =
 
 export function PinnedPost() {
   const [page, setPage] = useState<Page>('menu');
+  const utils = trpc.useUtils();
 
   // Prefetch drawings optimistically for maximum performance
   trpc.app.user.getMyArtPage.useQuery(
@@ -34,11 +35,26 @@ export function PinnedPost() {
     }
   );
 
+  // Warm profile and bonuses so downstream views benefit from cache
+  trpc.app.user.getProfile.useQuery(undefined, {
+    staleTime: 60000,
+    refetchOnWindowFocus: false,
+  });
+  trpc.app.rewards.getEffectiveBonuses.useQuery(undefined, {
+    staleTime: 10000,
+    refetchOnWindowFocus: false,
+  });
+
   function handleClose() {
     setPage('menu');
   }
 
   function goToPage(page: Page) {
+    if (page === 'my-rewards') {
+      // Proactively load inventory/effects to avoid flashes in the modal
+      void utils.app.rewards.getInventory.prefetch();
+      void utils.app.rewards.getActiveEffects.prefetch();
+    }
     setPage(page);
   }
 

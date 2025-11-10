@@ -3,6 +3,7 @@ import { render, screen, fireEvent } from '@testing-library/preact';
 import { ReviewStep } from './ReviewStep';
 import { DrawingUtils } from '@shared/schema/drawing';
 import { trpc } from '@client/trpc/client';
+import { ToastProvider } from '@components/ToastManager';
 
 vi.mock('@client/hooks/useTelemetry', () => ({
   useTelemetry: () => ({
@@ -39,15 +40,17 @@ describe('ReviewStep submit flows', () => {
     } as unknown as ReturnType<typeof trpc.app.post.submitDrawing.useMutation>);
 
     render(
-      <ReviewStep
-        drawing={DrawingUtils.createBlank()}
-        onCancel={() => {}}
-        mode="post"
-        word="cat"
-        dictionary="main"
-        slateId={null}
-        trackSlateAction={async () => {}}
-      />
+      <ToastProvider>
+        <ReviewStep
+          drawing={DrawingUtils.createBlank()}
+          onCancel={() => {}}
+          mode="post"
+          word="cat"
+          dictionary="main"
+          slateId={null}
+          trackSlateAction={async () => {}}
+        />
+      </ToastProvider>
     );
     vi.runOnlyPendingTimers();
     const post = screen.getByRole('button', { name: /post/i });
@@ -65,12 +68,14 @@ describe('ReviewStep submit flows', () => {
     >);
 
     render(
-      <ReviewStep
-        drawing={DrawingUtils.createBlank()}
-        onCancel={() => {}}
-        mode="tournament"
-        tournamentPostId="t3_abc"
-      />
+      <ToastProvider>
+        <ReviewStep
+          drawing={DrawingUtils.createBlank()}
+          onCancel={() => {}}
+          mode="tournament"
+          tournamentPostId="t3_abc"
+        />
+      </ToastProvider>
     );
     vi.runOnlyPendingTimers();
     const comment = screen.getByRole('button', { name: /comment/i });

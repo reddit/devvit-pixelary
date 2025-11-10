@@ -8,6 +8,7 @@ import { Text } from '@components/PixelFont';
 import { navigateTo, context, exitExpandedMode } from '@devvit/web/client';
 import { useTelemetry } from '@client/hooks/useTelemetry';
 import type { SlateAction } from '@shared/types';
+import { useToastHelpers } from '@components/ToastManager';
 
 type BaseReviewProps = {
   drawing: DrawingData;
@@ -44,6 +45,7 @@ export function ReviewStep(props: ReviewStepProps) {
   const [entered, setEntered] = useState(false);
   const queryClient = useQueryClient();
   const { track } = useTelemetry();
+  const { error: showErrorToast } = useToastHelpers();
 
   // Track review step view on mount
   useEffect(() => {
@@ -141,7 +143,9 @@ export function ReviewStep(props: ReviewStepProps) {
         }
       }
     } catch (error) {
-      // Handle submission error
+      showErrorToast('Failed to submit. Please try again.', {
+        duration: 4000,
+      });
     }
   };
 
