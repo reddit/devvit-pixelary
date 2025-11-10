@@ -69,6 +69,12 @@ export type TelemetryEventType =
   | 'click_done_drawing'
   | 'click_color_swatch'
   | 'click_color_picker_plus'
+  | 'click_undo'
+  | 'click_fill'
+  // Toggle events
+  | 'toggle_brush_size'
+  | 'toggle_mirror_v'
+  | 'toggle_mirror_h'
   | 'click_post_drawing'
   | 'click_cancel_drawing'
   // Drawing events

@@ -1,16 +1,9 @@
-import React, {
-  useState,
-  useEffect,
-  useRef,
-  useCallback,
-  useLayoutEffect,
-} from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@components/Button';
 import { Icon } from '@components/PixelFont';
 import { DRAWING_COLORS, getAllAvailableColors } from '@client/constants';
 import { Text } from '@components/PixelFont';
 import { DrawingUtils, type DrawingData } from '@shared/schema/drawing';
-import { getContrastColor } from '@shared/utils/color';
 import type { HEX } from '@shared/types';
 import { useTelemetry } from '@client/hooks/useTelemetry';
 import type { SlateAction } from '@shared/types';
@@ -97,7 +90,9 @@ export function DrawStep(props: DrawStepProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const headerRef = useRef<HTMLElement>(null);
   const paletteRef = useRef<HTMLDivElement>(null);
-  const [currentColor, setCurrentColor] = useState<HEX>(DRAWING_COLORS[0]);
+  const [currentColor, setCurrentColor] = useState<HEX>(
+    DRAWING_COLORS[0] ?? '#000000'
+  );
   const [recentColors, setRecentColors] = useState<HEX[]>(() =>
     DRAWING_COLORS.slice(0, 6)
   );
@@ -194,7 +189,7 @@ export function DrawStep(props: DrawStepProps) {
   const didInitCurrentRef = useRef(false);
   const recentQuery = trpc.app.user.colors.getRecent.useQuery(undefined, {
     staleTime: 0,
-    cacheTime: 0,
+    gcTime: 0,
     refetchOnMount: 'always',
     refetchOnWindowFocus: false,
   });
@@ -203,8 +198,9 @@ export function DrawStep(props: DrawStepProps) {
       const colors = recentQuery.data;
       setRecentColors(colors.slice(0, 6));
       if (!didInitCurrentRef.current) {
-        if (colors.length > 0) {
-          setCurrentColor(colors[0]);
+        const firstColor = colors[0];
+        if (firstColor) {
+          setCurrentColor(firstColor);
           didInitCurrentRef.current = true;
           // After applying the first server MRU, turn off suppression
           setSuppressInitialAnim(false);

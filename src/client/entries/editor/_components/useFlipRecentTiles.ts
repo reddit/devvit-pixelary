@@ -1,7 +1,7 @@
 import { useLayoutEffect, useRef, type RefObject } from 'react';
 
 export function useFlipRecentTiles(
-  containerRef: RefObject<HTMLDivElement>,
+  containerRef: RefObject<HTMLDivElement | null>,
   deps: unknown[],
   opts?: { selectedKey?: string | null; suppress?: boolean }
 ) {
@@ -10,7 +10,6 @@ export function useFlipRecentTiles(
 
   useLayoutEffect(() => {
     const container = containerRef.current;
-    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (!container) return;
 
     const tiles = Array.from(
