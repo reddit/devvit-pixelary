@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Button } from '@components/Button';
-import { Modal } from '@components/Modal';
 import { trpc } from '@client/trpc/client';
 import type { DrawingData } from '@shared/schema/drawing';
 import { Text } from '@components/PixelFont';
@@ -9,6 +8,8 @@ import { navigateTo, context, exitExpandedMode } from '@devvit/web/client';
 import { useTelemetry } from '@client/hooks/useTelemetry';
 import type { SlateAction } from '@shared/types';
 import { useToastHelpers } from '@components/ToastManager';
+import { REVIEW_ENTER_DELAY_MS } from '../_constants/motion';
+import { DeleteConfirmationModal } from './DeleteConfirmationModal';
 
 type BaseReviewProps = {
   drawing: DrawingData;
@@ -55,7 +56,7 @@ export function ReviewStep(props: ReviewStepProps) {
   useEffect(() => {
     const id = window.setTimeout(() => {
       setEntered(true);
-    }, 10);
+    }, REVIEW_ENTER_DELAY_MS);
     return () => {
       window.clearTimeout(id);
     };
@@ -240,45 +241,5 @@ export function ReviewStep(props: ReviewStepProps) {
         onDelete={confirmCancel}
       />
     </main>
-  );
-}
-
-/*
- * Delete Confirmation Modal
- */
-
-type DeleteConfirmationModalProps = {
-  isOpen: boolean;
-  onClose: () => void;
-  onDelete: () => void;
-};
-
-function DeleteConfirmationModal(props: DeleteConfirmationModalProps) {
-  const { isOpen, onClose, onDelete } = props;
-  return (
-    <Modal isOpen={isOpen} onClose={onClose} title="Delete drawing?">
-      {/* Body Copy - Concise and to the point. */}
-      <div className="flex flex-col gap-1 items-center justify-center w-full">
-        <Text>You cannot undo</Text>
-        <Text>this action later</Text>
-      </div>
-
-      {/* Actions - The primary action has been placed on the left side and deemphasized to avoid accidental misclicks given the severity of the action.
-       */}
-      <div className="flex flex-row gap-3 items-center justify-center w-full">
-        <Button
-          variant="white"
-          onNativeClick={(e) => {
-            void exitExpandedMode(
-              e.nativeEvent as unknown as PointerEvent
-            ).catch(() => undefined);
-          }}
-          onClick={onDelete}
-        >
-          Delete
-        </Button>
-        <Button onClick={onClose}>Cancel</Button>
-      </div>
-    </Modal>
   );
 }

@@ -218,9 +218,11 @@ describe('DrawStep tools', () => {
     // Complete and inspect drawing
     fireEvent.click(screen.getByRole('button', { name: /done/i }));
     expect(onComplete).toHaveBeenCalled();
-    const drawing = onComplete.mock.calls[0][0] as ReturnType<
-      typeof DrawingUtils.createBlank
-    >;
+    const firstCall = onComplete.mock.calls[0];
+    if (!firstCall) {
+      throw new Error('onComplete not called');
+    }
+    const drawing = firstCall[0] as ReturnType<typeof DrawingUtils.createBlank>;
     const colors = DrawingUtils.getAllPixelColors(drawing);
     const bg = drawing.colors[drawing.bg];
     const nonBgCount = colors.filter((c) => c && c !== bg).length;
@@ -264,9 +266,11 @@ describe('DrawStep tools', () => {
     // Complete and inspect drawing
     fireEvent.click(screen.getByRole('button', { name: /done/i }));
     expect(onComplete).toHaveBeenCalled();
-    const drawing = onComplete.mock.calls[0][0] as ReturnType<
-      typeof DrawingUtils.createBlank
-    >;
+    const firstCall = onComplete.mock.calls[0];
+    if (!firstCall) {
+      throw new Error('onComplete not called');
+    }
+    const drawing = firstCall[0] as ReturnType<typeof DrawingUtils.createBlank>;
     const colors = DrawingUtils.getAllPixelColors(drawing);
     const bg = drawing.colors[drawing.bg];
     const nonBgCount = colors.filter((c) => c && c !== bg).length;

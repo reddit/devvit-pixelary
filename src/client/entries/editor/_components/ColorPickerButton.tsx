@@ -1,10 +1,10 @@
 import { Icon } from '@components/PixelFont';
 
-type ColorPickerPlusButtonProps = {
+type ColorPickerButtonProps = {
   onClick: () => void;
 };
 
-export function ColorPickerPlusButton(props: ColorPickerPlusButtonProps) {
+export function ColorPickerButton(props: ColorPickerButtonProps) {
   const { onClick } = props;
 
   return (

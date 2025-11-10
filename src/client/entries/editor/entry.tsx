@@ -1,5 +1,6 @@
 import { Background } from '@components/Background';
-import { DrawingEditor } from '@client/entries/editor/_components/Editor';
+import { EditorContextProvider } from '@client/entries/editor/_context/EditorContext';
+import { EditorRouter } from '@client/entries/editor/_components/EditorRouter';
 import { context } from '@devvit/web/client';
 import { getPostData } from '@client/utils/context';
 import type { TournamentPostData } from '@shared/schema';
@@ -25,20 +26,24 @@ function App() {
     <>
       <Background />
       {isTournament ? (
-        <DrawingEditor
+        <EditorContextProvider
           onClose={() => {
             return;
           }}
           mode="tournament-comment"
           tournamentPostId={context.postId}
           tournamentWord={postData.word}
-        />
+        >
+          <EditorRouter />
+        </EditorContextProvider>
       ) : (
-        <DrawingEditor
+        <EditorContextProvider
           onClose={() => {
             return;
           }}
-        />
+        >
+          <EditorRouter />
+        </EditorContextProvider>
       )}
     </>
   );

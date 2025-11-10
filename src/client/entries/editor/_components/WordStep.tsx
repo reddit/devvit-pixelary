@@ -4,6 +4,8 @@ import { getExtraWordTime } from '@shared/rewards';
 import { Text, Icon } from '@components/PixelFont';
 import { useTelemetry } from '@client/hooks/useTelemetry';
 import type { SlateAction } from '@shared/types';
+import { useOptionalEditorContext } from '../_context/EditorContext';
+import { EXIT_SHORT_MS, EXIT_LONG_MS } from '../_constants/motion';
 
 type WordStepProps = {
   selectCandidate: (word: string) => void;
@@ -20,15 +22,14 @@ type WordStepProps = {
 };
 
 export function WordStep(props: WordStepProps) {
-  const {
-    selectCandidate,
-    slateId,
-    words,
-    isLoading,
-    refreshCandidates,
-    trackSlateAction,
-    userLevel,
-  } = props;
+  const ctx = useOptionalEditorContext();
+  const selectCandidate = ctx?.actions.selectCandidate ?? props.selectCandidate;
+  const slateId = ctx?.slateId ?? props.slateId;
+  const words = ctx?.words ?? props.words;
+  const isLoading = ctx?.isSlateLoading ?? props.isLoading;
+  const refreshCandidates = ctx?.refreshCandidates ?? props.refreshCandidates;
+  const trackSlateAction = ctx?.trackSlateAction ?? props.trackSlateAction;
+  const userLevel = ctx?.userLevel ?? props.userLevel;
 
   // State management
   const [startTime, setStartTime] = useState<number | null>(null);
@@ -104,7 +105,7 @@ export function WordStep(props: WordStepProps) {
       setSelectedIndex(0);
       window.setTimeout(() => {
         selectCandidate(w);
-      }, 550);
+      }, EXIT_SHORT_MS);
     }
   }, [elapsedTime, selectCandidate, words, trackSlateAction, totalWordTime]);
 
@@ -150,7 +151,7 @@ export function WordStep(props: WordStepProps) {
               setSelectedIndex(index);
               window.setTimeout(() => {
                 selectCandidate(word);
-              }, 700);
+              }, EXIT_LONG_MS);
             }}
           />
         ))}
