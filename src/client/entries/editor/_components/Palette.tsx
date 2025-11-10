@@ -73,7 +73,7 @@ export function Palette(props: PaletteProps) {
 
   return (
     <div
-      className={`fixed bottom-6 left-0 right-0 z-20 flex flex-col items-center gap-2 transition-all duration-300 ease-out delay-150 ${
+      className={`flex flex-col items-center gap-2 transition-all duration-300 ease-out delay-150 ${
         isReviewing
           ? '-translate-y-4 opacity-0'
           : hasEntered
