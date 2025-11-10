@@ -73,9 +73,11 @@ export function Palette(props: PaletteProps) {
 
   return (
     <div
-      className={`flex flex-col items-center gap-2 transition-all duration-300 ease-out delay-150 ${
+      className={`flex flex-col items-center gap-2 transition-all duration-300 ease-out ${
+        isReviewing ? 'delay-0' : 'delay-150'
+      } ${
         isReviewing
-          ? '-translate-y-4 opacity-0'
+          ? 'translate-y-4 opacity-0'
           : hasEntered
             ? 'translate-y-0 opacity-100'
             : 'translate-y-2 opacity-0'

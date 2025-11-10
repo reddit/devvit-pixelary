@@ -12,6 +12,12 @@ export function useTimer(params: UseTimerParams): number {
   const [elapsedMs, setElapsedMs] = useState(0);
   const startTimeMsRef = useRef<number | null>(null);
   const hasExpiredRef = useRef(false);
+  const onExpireRef = useRef(onExpire);
+
+  // Keep the latest onExpire without restarting the timer
+  useEffect(() => {
+    onExpireRef.current = onExpire;
+  }, [onExpire]);
 
   useEffect(() => {
     startTimeMsRef.current = performance.now();
@@ -29,14 +35,15 @@ export function useTimer(params: UseTimerParams): number {
       if (!hasExpiredRef.current && remaining <= 0) {
         hasExpiredRef.current = true;
         clearInterval(intervalId);
-        onExpire();
+        // Call the latest onExpire
+        onExpireRef.current();
       }
     }, tickMs);
 
     return () => {
       clearInterval(intervalId);
     };
-  }, [durationSeconds, onExpire, tickMs]);
+  }, [durationSeconds, tickMs]);
 
   const secondsLeft = Math.max(
     0,

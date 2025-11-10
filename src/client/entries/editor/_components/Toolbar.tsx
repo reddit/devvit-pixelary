@@ -4,11 +4,12 @@ import { useDrawingState } from '../_hooks/useDrawingState';
 
 type ToolbarProps = {
   isReviewing?: boolean;
+  hasEntered?: boolean;
   currentColor: HEX;
 };
 
 export function Toolbar(props: ToolbarProps) {
-  const { isReviewing = false, currentColor } = props;
+  const { isReviewing = false, hasEntered = false, currentColor } = props;
   const { track } = useTelemetry();
   const {
     canUndo,
@@ -23,7 +24,17 @@ export function Toolbar(props: ToolbarProps) {
   } = useDrawingState();
 
   return (
-    <div className="flex flex-row flex-nowrap gap-2 items-center justify-center overflow-x-auto px-3">
+    <div
+      className={`flex flex-row flex-nowrap gap-2 items-center justify-center overflow-x-auto px-3 transition-all duration-300 ease-out ${
+        isReviewing ? 'delay-0' : 'delay-150'
+      } ${
+        isReviewing
+          ? 'translate-y-4 opacity-0'
+          : hasEntered
+            ? 'translate-y-0 opacity-100'
+            : 'translate-y-2 opacity-0'
+      }`}
+    >
       <button
         aria-label="Undo"
         disabled={isReviewing || !canUndo}

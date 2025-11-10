@@ -247,7 +247,9 @@ function DrawStepBody(props: DrawStepProps) {
 
       {/* Header */}
       <header
-        className={`relative z-20 flex flex-row items-center justify-center h-min w-full gap-3 transition-all duration-300 ease-out delay-100 ${
+        className={`relative z-20 flex flex-row items-center justify-center h-min w-full gap-3 transition-all duration-300 ease-out ${
+          isReviewing ? 'delay-0' : 'delay-100'
+        } ${
           isReviewing
             ? '-translate-y-4 opacity-0'
             : hasEntered
@@ -307,7 +309,11 @@ function DrawStepBody(props: DrawStepProps) {
           hasEntered={hasEntered}
           onColorChange={setCurrentColor}
         />
-        <Toolbar isReviewing={isReviewing} currentColor={currentColor} />
+        <Toolbar
+          isReviewing={isReviewing}
+          hasEntered={hasEntered}
+          currentColor={currentColor}
+        />
       </div>
 
       {/* Color Picker Modal moved into Palette */}
