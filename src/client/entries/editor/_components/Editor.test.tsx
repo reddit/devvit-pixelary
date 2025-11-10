@@ -35,11 +35,7 @@ describe('DrawingEditor step transitions', () => {
     } as unknown as ReturnType<
       typeof trpc.app.dictionary.getCandidates.useQuery
     >);
-    // Level/profile/bonuses
-    vi.spyOn(trpc.app.user.getLevel, 'useQuery').mockReturnValue({
-      data: { level: 1 },
-      isLoading: false,
-    } as unknown as ReturnType<typeof trpc.app.user.getLevel.useQuery>);
+    // Profile/bonuses
     vi.spyOn(trpc.app.user.getProfile, 'useQuery').mockReturnValue({
       data: { level: 1 },
       isLoading: false,

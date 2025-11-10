@@ -23,13 +23,23 @@ vi.mock('../services/words/dictionary', () => ({
   getAllowedWords: vi.fn(async () => ['cat', 'dog', 'tree']),
 }));
 
-vi.mock('../services/words/slate', () => ({
-  generateSlate: vi.fn(async () => ({
-    slateId: 'slate_123',
-    words: ['cat', 'dog', 'tree'],
-    timestamp: Date.now(),
+vi.mock('../services/words/slate', () => {
+  return {
+    generateSlate: vi.fn(async () => ({
+      slateId: 'slate_123',
+      words: ['cat', 'dog', 'tree'],
+      timestamp: Date.now(),
+    })),
+    handleSlateEvent: vi.fn(async () => {}),
+    getCurrentTimestamp: vi.fn(() => Date.now()),
+  };
+});
+vi.mock('../services/posts/collection', () => ({
+  getCollectionData: vi.fn(async () => ({
+    label: 'Top drawings',
+    createdAt: Date.now(),
+    drawings: [],
   })),
-  trackSlateAction: vi.fn(async () => {}),
 }));
 
 vi.mock('../services/posts/drawing', () => ({
@@ -199,6 +209,13 @@ describe('appRouter', () => {
       const candidates = await caller.app.dictionary.getCandidates();
       expect(candidates).toBeTruthy();
     });
+    it('app.collection.get returns collection', async () => {
+      const data = await caller.app.collection.get({
+        collectionId: 'collection_1',
+      });
+      expect(data).toBeTruthy();
+      expect((data as { label?: string }).label).toBeDefined();
+    });
 
     it('app.user.getProfile returns user profile', async () => {
       const profile = await caller.app.user.getProfile();
@@ -239,6 +256,16 @@ describe('appRouter', () => {
     it('app.guess.getStats returns guess stats', async () => {
       const stats = await caller.app.guess.getStats({ postId: 't3_test123' });
       expect(stats).toBeTruthy();
+    });
+    it('app.slate.trackAction handles slate_posted with explicit postId', async () => {
+      await expect(
+        caller.app.slate.trackAction({
+          slateId: 'slate_123',
+          action: 'slate_posted',
+          word: 'cat',
+          postId: 't3_test123',
+        })
+      ).resolves.toBeTruthy();
     });
   });
 

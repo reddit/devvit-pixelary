@@ -39,6 +39,7 @@ export const UserProfileSchema = z.object({
   score: z.number().int(),
   level: z.number().int(),
   levelName: z.string(),
+  levelProgressPercentage: z.number().int(),
   rank: z.number().int(),
   solved: z.boolean(),
   skipped: z.boolean(),
@@ -49,8 +50,6 @@ export type UserProfile = z.infer<typeof UserProfileSchema>;
 export const GuessResultSchema = z.object({
   correct: z.boolean(),
   points: z.number().int(),
-  isFirstSolve: z.boolean(),
-  totalSolves: z.number().int(),
 });
 export type GuessResult = z.infer<typeof GuessResultSchema>;
 
@@ -120,7 +119,6 @@ export type DrawingSubmitInput = z.infer<typeof DrawingSubmitInputSchema>;
 export const GuessSubmitInputSchema = z.object({
   postId: z.string(),
   guess: z.string(),
-  createComment: z.boolean().default(false),
 });
 export type GuessSubmitInput = z.infer<typeof GuessSubmitInputSchema>;
 
@@ -161,3 +159,18 @@ export const TournamentPostDataSchema = z.object({
   dictionary: z.string(),
 });
 export type TournamentPostData = z.infer<typeof TournamentPostDataSchema>;
+
+// Tournament submission view (for gallery)
+export const TournamentSubmissionViewSchema = z.object({
+  commentId: z.string(),
+  drawing: DrawingDataSchema,
+  userId: z.string(),
+  username: z.string(),
+  postId: z.string(),
+  rating: z.number().int(),
+  votes: z.number().int(),
+  views: z.number().int(),
+});
+export type TournamentSubmissionView = z.infer<
+  typeof TournamentSubmissionViewSchema
+>;

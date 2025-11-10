@@ -55,10 +55,6 @@ export function DrawingEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // tRPC hooks - fetch level separately for instant access
-  const { data: levelData } = trpc.app.user.getLevel.useQuery(undefined, {
-    staleTime: 30000, // Use prefetched data
-  });
   const { data: userProfile } = trpc.app.user.getProfile.useQuery(undefined, {
     staleTime: 30000, // Use prefetched data
   });
@@ -115,11 +111,16 @@ export function DrawingEditor({
       }
 
       try {
+        const postIdFromMetadata =
+          metadata && typeof metadata.postId === 'string'
+            ? metadata.postId
+            : undefined;
         await trackSlateActionRef.current({
           slateId: effectiveSlateId,
           action,
           word,
           metadata,
+          ...(postIdFromMetadata ? { postId: postIdFromMetadata } : {}),
         });
       } catch {
         // ignore telemetry errors
@@ -134,12 +135,12 @@ export function DrawingEditor({
       setTime(DRAWING_DURATION + effectiveBonuses.extraDrawingTimeSeconds);
       return;
     }
-    const level = levelData?.level ?? userProfile?.level;
+    const level = userProfile?.level;
     if (level) {
       const extraTime = getExtraDrawingTime(level);
       setTime(DRAWING_DURATION + extraTime);
     }
-  }, [effectiveBonuses, levelData?.level, userProfile?.level]);
+  }, [effectiveBonuses, userProfile?.level]);
 
   const handleOnComplete = useCallback((drawingData: DrawingData) => {
     setDrawing(drawingData);
@@ -163,8 +164,8 @@ export function DrawingEditor({
     }
   }, [mode, tournamentWord, tournamentPostId, selectedWord]);
 
-  // Use prefetched level data for instant access, fallback to profile
-  const userLevel = levelData?.level ?? userProfile?.level ?? 1;
+  // Use profile level
+  const userLevel = userProfile?.level ?? 1;
 
   return (
     <>

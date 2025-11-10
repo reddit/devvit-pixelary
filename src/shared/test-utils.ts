@@ -34,6 +34,7 @@ export const createMockUserProfile = (
   score: 100,
   level: 1,
   levelName: 'Newcomer',
+  levelProgressPercentage: 50,
   rank: 1,
   solved: false,
   skipped: false,
@@ -47,8 +48,6 @@ export const createMockGuessResult = (
 ): GuessResult => ({
   correct: true,
   points: 2,
-  isFirstSolve: false,
-  totalSolves: 1,
   ...overrides,
 });
 
@@ -115,7 +114,6 @@ export const createMockGuessSubmitInput = (
 ): GuessSubmitInput => ({
   postId: 't3_test123',
   guess: 'test',
-  createComment: false,
   ...overrides,
 });
 

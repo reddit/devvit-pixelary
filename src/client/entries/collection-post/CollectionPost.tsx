@@ -15,7 +15,7 @@ export function CollectionPost() {
     return null;
   }
 
-  const { data, isLoading, error } = trpc.app.post.getCollection.useQuery({
+  const { data, isLoading, error } = trpc.app.collection.get.useQuery({
     collectionId: postData.collectionId,
   });
 

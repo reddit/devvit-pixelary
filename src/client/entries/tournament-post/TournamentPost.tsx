@@ -35,8 +35,7 @@ export function TournamentPost() {
   // Prefetch user level (lightweight) so editor opens instantly
   const utils = trpc.useUtils();
   useEffect(() => {
-    void utils.app.user.getLevel.prefetch();
-    // Also prefetch full profile in background
+    // Prefetch full profile in background
     void utils.app.user.getProfile.prefetch();
   }, [utils]);
 

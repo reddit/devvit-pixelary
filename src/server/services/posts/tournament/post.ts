@@ -25,6 +25,7 @@ import {
   TOURNAMENT_PAYOUT_INTERVAL_HOURS,
 } from '@shared/constants';
 import { calculateEloChange } from './elo';
+import { TRPCError } from '@trpc/server';
 import { incrementScore } from '@server/services/progression';
 import { normalizeWord } from '@shared/utils/string';
 import { generateTournamentCommentText } from '@server/services/posts/tournament/comments';
@@ -253,10 +254,31 @@ export async function submitTournamentEntry(
  * @param loserId - The ID of the loser.
  */
 
-export async function tournamentVote(winnerId: T1, loserId: T1): Promise<void> {
-  const { postId, userId } = context;
-  if (!postId || !userId)
-    throw new Error('Must be in a tournament post and logged in');
+export async function tournamentVote(
+  postId: T3,
+  winnerId: T1,
+  loserId: T1
+): Promise<void> {
+  const { userId } = context;
+  if (!userId)
+    throw new TRPCError({ code: 'UNAUTHORIZED', message: 'Must be logged in' });
+  // Validate membership: both comment IDs must belong to this post
+  const [winnerEntry, loserEntry] = await Promise.all([
+    getTournamentEntry(winnerId),
+    getTournamentEntry(loserId),
+  ]);
+  if (!winnerEntry || !loserEntry) {
+    throw new TRPCError({
+      code: 'BAD_REQUEST',
+      message: 'Invalid entry ids',
+    });
+  }
+  if (winnerEntry.postId !== postId || loserEntry.postId !== postId) {
+    throw new TRPCError({
+      code: 'FORBIDDEN',
+      message: 'Entries do not belong to this tournament',
+    });
+  }
   if (await isRateLimited(REDIS_KEYS.rateVote(userId), 3, 1)) return;
   const [
     winnerRating,

@@ -1,4 +1,4 @@
-import { initTRPC } from '@trpc/server';
+import { initTRPC, TRPCError } from '@trpc/server';
 import type { Context } from './context';
 
 import type { T3, T1 } from '@devvit/shared-types/tid.js';
@@ -39,7 +39,13 @@ import {
   claimLevelUp,
 } from '@server/services/progression';
 import { isAdmin, isModerator } from '@server/core/redis';
-import { DrawingDataSchema } from '@shared/schema/pixelary';
+import {
+  DrawingDataSchema,
+  DrawingSubmitInputSchema,
+  GuessSubmitInputSchema,
+  GuessStatsInputSchema,
+  PostDataInputSchema,
+} from '@shared/schema/pixelary';
 import type { DrawingData } from '@shared/schema/drawing';
 import { trackEventFromContext } from '@server/services/telemetry';
 import type { TelemetryEventType } from '@shared/types';
@@ -70,7 +76,11 @@ export const appRouter = t.router({
     // System endpoints
     system: t.router({
       initialize: t.procedure.mutation(async ({ ctx }) => {
-        if (!ctx.subredditName) throw new Error('Subreddit not found');
+        if (!ctx.subredditName)
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Subreddit not found',
+          });
 
         // Import initialization functions
         const { initDictionary } = await import(
@@ -90,7 +100,11 @@ export const appRouter = t.router({
       }),
 
       status: t.procedure.query(async ({ ctx }) => {
-        if (!ctx.subredditName) throw new Error('Subreddit not found');
+        if (!ctx.subredditName)
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Subreddit not found',
+          });
 
         // Check if dictionary is initialized
         const wordsResult = await getWords(ctx.subredditName, 0, 1);
@@ -107,7 +121,11 @@ export const appRouter = t.router({
     // Dictionary endpoints
     dictionary: t.router({
       get: t.procedure.query(async ({ ctx }) => {
-        if (!ctx.subredditName) throw new Error('Subreddit not found');
+        if (!ctx.subredditName)
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Subreddit not found',
+          });
         const result = await getWords(ctx.subredditName, 0, 10000);
         return result.words;
       }),
@@ -115,10 +133,17 @@ export const appRouter = t.router({
       add: t.procedure
         .input(z.object({ word: z.string().min(1).max(50) }))
         .mutation(async ({ ctx, input }) => {
-          if (!ctx.subredditName) throw new Error('Subreddit not found');
+          if (!ctx.subredditName)
+            throw new TRPCError({
+              code: 'NOT_FOUND',
+              message: 'Subreddit not found',
+            });
           const success = await addWord(input.word);
           if (!success) {
-            throw new Error('Failed to add word or word already exists');
+            throw new TRPCError({
+              code: 'BAD_REQUEST',
+              message: 'Failed to add word or word already exists',
+            });
           }
           return { success: true };
         }),
@@ -126,22 +151,37 @@ export const appRouter = t.router({
       remove: t.procedure
         .input(z.object({ word: z.string().min(1).max(50) }))
         .mutation(async ({ ctx, input }) => {
-          if (!ctx.subredditName) throw new Error('Subreddit not found');
+          if (!ctx.subredditName)
+            throw new TRPCError({
+              code: 'NOT_FOUND',
+              message: 'Subreddit not found',
+            });
           const success = await removeWord(input.word);
           if (!success) {
-            throw new Error('Failed to remove word or word not found');
+            throw new TRPCError({
+              code: 'BAD_REQUEST',
+              message: 'Failed to remove word or word not found',
+            });
           }
           return { success: true };
         }),
 
       getBanned: t.procedure.query(async ({ ctx }) => {
-        if (!ctx.subredditName) throw new Error('Subreddit not found');
+        if (!ctx.subredditName)
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Subreddit not found',
+          });
         const result = await getBannedWords(0, 10000);
         return result.words;
       }),
 
       getCandidates: t.procedure.query(async ({ ctx }) => {
-        if (!ctx.subredditName) throw new Error('Subreddit not found');
+        if (!ctx.subredditName)
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Subreddit not found',
+          });
 
         const result = await generateSlate();
         return result;
@@ -151,7 +191,7 @@ export const appRouter = t.router({
     // Post endpoints
     post: t.router({
       getDrawing: t.procedure
-        .input(z.object({ postId: z.string() }))
+        .input(PostDataInputSchema)
         .query(async ({ input }) => {
           assertT3(input.postId);
           const postId = input.postId;
@@ -166,29 +206,22 @@ export const appRouter = t.router({
           return await getDrawings(postIds);
         }),
 
-      getCollection: t.procedure
-        .input(z.object({ collectionId: z.string() }))
-        .query(async ({ input }) => {
-          const { getCollectionData } = await import(
-            '../services/posts/collection'
-          );
-          return await getCollectionData(input.collectionId);
-        }),
+      // moved: collection.get
 
       submitDrawing: t.procedure
-        .input(
-          z.object({
-            word: z.string(),
-            dictionary: z.string(),
-            drawing: DrawingDataSchema,
-          })
-        )
+        .input(DrawingSubmitInputSchema)
         .mutation(async ({ ctx, input }) => {
           if (!ctx.userId || !ctx.username) {
-            throw new Error('Must be logged in');
+            throw new TRPCError({
+              code: 'UNAUTHORIZED',
+              message: 'Must be logged in',
+            });
           }
           if (!ctx.subredditId) {
-            throw new Error('Subreddit not found');
+            throw new TRPCError({
+              code: 'NOT_FOUND',
+              message: 'Subreddit not found',
+            });
           }
 
           const post = await createDrawing({
@@ -214,7 +247,11 @@ export const appRouter = t.router({
           })
         )
         .mutation(async ({ ctx, input }) => {
-          if (!ctx.userId) throw new Error('Must be logged in');
+          if (!ctx.userId)
+            throw new TRPCError({
+              code: 'UNAUTHORIZED',
+              message: 'Must be logged in',
+            });
 
           // Check if user is admin or moderator
           const userIsAdmin = await isAdmin(ctx.userId);
@@ -256,10 +293,13 @@ export const appRouter = t.router({
         }),
 
       isAuthorFirstView: t.procedure
-        .input(z.object({ postId: z.string() }))
+        .input(PostDataInputSchema)
         .mutation(async ({ ctx, input }) => {
           if (!ctx.userId) {
-            throw new Error('Must be logged in');
+            throw new TRPCError({
+              code: 'UNAUTHORIZED',
+              message: 'Must be logged in',
+            });
           }
 
           assertT3(input.postId);
@@ -269,17 +309,28 @@ export const appRouter = t.router({
         }),
     }),
 
+    // Collection endpoints
+    collection: t.router({
+      get: t.procedure
+        .input(z.object({ collectionId: z.string() }))
+        .query(async ({ input }) => {
+          const { getCollectionData } = await import(
+            '../services/posts/collection'
+          );
+          return await getCollectionData(input.collectionId);
+        }),
+    }),
+
     // Guess endpoints
     guess: t.router({
       submit: t.procedure
-        .input(
-          z.object({
-            postId: z.string(),
-            guess: z.string(),
-          })
-        )
+        .input(GuessSubmitInputSchema)
         .mutation(async ({ ctx, input }) => {
-          if (!ctx.userId) throw new Error('Must be logged in');
+          if (!ctx.userId)
+            throw new TRPCError({
+              code: 'UNAUTHORIZED',
+              message: 'Must be logged in',
+            });
           assertT3(input.postId);
           const postId = input.postId;
 
@@ -293,7 +344,7 @@ export const appRouter = t.router({
         }),
 
       getStats: t.procedure
-        .input(z.object({ postId: z.string() }))
+        .input(GuessStatsInputSchema)
         .query(async ({ input }) => {
           assertT3(input.postId);
           const postId = input.postId;
@@ -302,9 +353,13 @@ export const appRouter = t.router({
         }),
 
       skip: t.procedure
-        .input(z.object({ postId: z.string() }))
+        .input(PostDataInputSchema)
         .mutation(async ({ ctx, input }) => {
-          if (!ctx.userId) throw new Error('Must be logged in to skip post');
+          if (!ctx.userId)
+            throw new TRPCError({
+              code: 'UNAUTHORIZED',
+              message: 'Must be logged in to skip post',
+            });
           assertT3(input.postId);
           const postId = input.postId;
           await skipDrawing(postId, ctx.userId);
@@ -381,7 +436,11 @@ export const appRouter = t.router({
           z.object({ limit: z.number().int().min(1).max(100).default(20) })
         )
         .query(async ({ ctx, input }) => {
-          if (!ctx.userId) throw new Error('Must be logged in');
+          if (!ctx.userId)
+            throw new TRPCError({
+              code: 'UNAUTHORIZED',
+              message: 'Must be logged in',
+            });
           return await getUserDrawingsWithData(ctx.userId, input.limit);
         }),
 
@@ -393,7 +452,11 @@ export const appRouter = t.router({
           })
         )
         .query(async ({ ctx, input }) => {
-          if (!ctx.userId) throw new Error('Must be logged in');
+          if (!ctx.userId)
+            throw new TRPCError({
+              code: 'UNAUTHORIZED',
+              message: 'Must be logged in',
+            });
           const result = await getMyArtPage({
             userId: ctx.userId,
             limit: input.limit,
@@ -403,7 +466,11 @@ export const appRouter = t.router({
         }),
 
       getRank: t.procedure.query(async ({ ctx }) => {
-        if (!ctx.userId) throw new Error('Must be logged in');
+        if (!ctx.userId)
+          throw new TRPCError({
+            code: 'UNAUTHORIZED',
+            message: 'Must be logged in',
+          });
 
         const [score, rank] = await Promise.all([
           getScore(ctx.userId),
@@ -415,13 +482,6 @@ export const appRouter = t.router({
           score,
           username: ctx.username ?? '',
         };
-      }),
-
-      getLevel: t.procedure.query(async ({ ctx }) => {
-        if (!ctx.userId) return { level: 1 };
-        const score = await getScore(ctx.userId);
-        const level = getUserLevel(score);
-        return { level: level.rank };
       }),
 
       isModerator: t.procedure.query(async ({ ctx }) => {
@@ -459,7 +519,11 @@ export const appRouter = t.router({
       claimLevelUp: t.procedure
         .input(z.object({ level: z.number().int() }))
         .mutation(async ({ ctx, input }) => {
-          if (!ctx.userId) throw new Error('Must be logged in');
+          if (!ctx.userId)
+            throw new TRPCError({
+              code: 'UNAUTHORIZED',
+              message: 'Must be logged in',
+            });
           await claimLevelUp(ctx.userId, input.level);
           return { success: true };
         }),
@@ -481,22 +545,6 @@ export const appRouter = t.router({
           });
           return result.entries;
         }),
-
-      getUserRank: t.procedure.query(async ({ ctx }) => {
-        if (!ctx.userId) {
-          return { rank: -1, score: 0, username: '', userId: '' };
-        }
-        const [userRank, score] = await Promise.all([
-          getRank(ctx.userId),
-          getScore(ctx.userId),
-        ]);
-        return {
-          rank: userRank,
-          score,
-          username: ctx.username ?? '',
-          userId: ctx.userId,
-        };
-      }),
     }),
 
     // Slate endpoints
@@ -512,6 +560,7 @@ export const appRouter = t.router({
             ] as const),
             word: z.string().optional(),
             metadata: z.record(z.union([z.string(), z.number()])).optional(),
+            postId: z.string().optional(),
           })
         )
         .mutation(async ({ ctx, input }) => {
@@ -547,17 +596,20 @@ export const appRouter = t.router({
                     : 0,
               });
               break;
-            case 'slate_posted':
-              if (!input.word || !ctx.postId) {
+            case 'slate_posted': {
+              // Prefer explicit postId from input, fallback to context
+              const postedPostId = input.postId ?? ctx.postId;
+              if (!input.word || !postedPostId) {
                 return { ok: true };
               }
               await handleSlateEvent({
                 slateId: input.slateId as SlateId,
                 name: 'slate_posted',
                 word: input.word,
-                postId: ctx.postId,
+                postId: postedPostId,
               });
               break;
+            }
             default:
               break;
           }
@@ -601,7 +653,11 @@ export const appRouter = t.router({
     // Rewards endpoints
     rewards: t.router({
       getInventory: t.procedure.query(async ({ ctx }) => {
-        if (!ctx.userId) throw new Error('Must be logged in');
+        if (!ctx.userId)
+          throw new TRPCError({
+            code: 'UNAUTHORIZED',
+            message: 'Must be logged in',
+          });
         const { getInventory } = await import(
           '../services/rewards/consumables'
         );
@@ -609,7 +665,11 @@ export const appRouter = t.router({
       }),
 
       getActiveEffects: t.procedure.query(async ({ ctx }) => {
-        if (!ctx.userId) throw new Error('Must be logged in');
+        if (!ctx.userId)
+          throw new TRPCError({
+            code: 'UNAUTHORIZED',
+            message: 'Must be logged in',
+          });
         const { getActiveEffects } = await import(
           '../services/rewards/consumables'
         );
@@ -627,7 +687,11 @@ export const appRouter = t.router({
           })
         )
         .mutation(async ({ ctx, input }) => {
-          if (!ctx.userId) throw new Error('Must be logged in');
+          if (!ctx.userId)
+            throw new TRPCError({
+              code: 'UNAUTHORIZED',
+              message: 'Must be logged in',
+            });
           const { activateConsumable } = await import(
             '../services/rewards/consumables'
           );
@@ -639,7 +703,11 @@ export const appRouter = t.router({
         }),
 
       getEffectiveBonuses: t.procedure.query(async ({ ctx }) => {
-        if (!ctx.userId) throw new Error('Must be logged in');
+        if (!ctx.userId)
+          throw new TRPCError({
+            code: 'UNAUTHORIZED',
+            message: 'Must be logged in',
+          });
         const { getEffectiveBonuses } = await import('../services/rewards');
         return await getEffectiveBonuses(ctx.userId);
       }),
@@ -661,18 +729,29 @@ export const appRouter = t.router({
           })
         )
         .mutation(async ({ ctx, input }) => {
-          if (!ctx.userId) throw new Error('Must be logged in');
+          if (!ctx.userId)
+            throw new TRPCError({
+              code: 'UNAUTHORIZED',
+              message: 'Must be logged in',
+            });
           const { isAdmin, isModerator } = await import('../core/redis');
           const userIsAdmin = await isAdmin(ctx.userId);
           const userIsModerator = ctx.subredditName
             ? await isModerator(ctx.userId, ctx.subredditName)
             : false;
           if (!userIsAdmin && !userIsModerator) {
-            throw new Error('Not authorized');
+            throw new TRPCError({
+              code: 'FORBIDDEN',
+              message: 'Not authorized',
+            });
           }
           const { reddit } = await import('@devvit/web/server');
           const user = await reddit.getUserByUsername(input.username);
-          if (!user) throw new Error('User not found');
+          if (!user)
+            throw new TRPCError({
+              code: 'NOT_FOUND',
+              message: 'User not found',
+            });
           const { grantItems } = await import(
             '../services/rewards/consumables'
           );
@@ -684,11 +763,18 @@ export const appRouter = t.router({
     // Tournament endpoints
     tournament: t.router({
       getTournament: t.procedure.query(async ({ ctx }) => {
-        if (!ctx.subredditName) throw new Error('Subreddit not found');
+        if (!ctx.subredditName)
+          throw new TRPCError({
+            code: 'NOT_FOUND',
+            message: 'Subreddit not found',
+          });
 
         // Get tournament info from current post context
         if (!ctx.postId || ctx.postData?.type !== 'tournament') {
-          throw new Error('Not on a tournament post');
+          throw new TRPCError({
+            code: 'BAD_REQUEST',
+            message: 'Not on a tournament post',
+          });
         }
 
         const tournamentPostData = ctx.postData as {
@@ -711,7 +797,11 @@ export const appRouter = t.router({
           })
         )
         .mutation(async ({ ctx, input }) => {
-          if (!ctx.userId) throw new Error('Must be logged in');
+          if (!ctx.userId)
+            throw new TRPCError({
+              code: 'UNAUTHORIZED',
+              message: 'Must be logged in',
+            });
 
           const { submitTournamentEntry } = await import(
             '../services/posts/tournament/post'
@@ -770,7 +860,11 @@ export const appRouter = t.router({
           })
         )
         .mutation(async ({ ctx, input }) => {
-          if (!ctx.userId) throw new Error('Must be logged in');
+          if (!ctx.userId)
+            throw new TRPCError({
+              code: 'UNAUTHORIZED',
+              message: 'Must be logged in',
+            });
 
           const winnerId = input.winnerCommentId as T1;
           const loserId = input.loserCommentId as T1;
@@ -778,8 +872,7 @@ export const appRouter = t.router({
           const { tournamentVote } = await import(
             '../services/posts/tournament/post'
           );
-          // Context is used inside the function
-          await tournamentVote(winnerId, loserId);
+          await tournamentVote(input.postId as T3, winnerId, loserId);
 
           return { success: true };
         }),
@@ -805,9 +898,7 @@ export const appRouter = t.router({
 
       getSubmissionsWithDrawings: t.procedure
         .input(z.object({ postId: z.string() }))
-        .query(async ({ ctx, input }) => {
-          if (!ctx.userId) throw new Error('Must be logged in');
-
+        .query(async ({ input }) => {
           assertT3(input.postId);
           const { getTournamentEntry } = await import(
             '../services/posts/tournament/post'

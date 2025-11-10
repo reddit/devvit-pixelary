@@ -106,9 +106,7 @@ export function useLevelUpClaim(): {
       void utils.app.user.getUnclaimedLevelUp.invalidate();
       // Refresh profile (level/progress bar) and related user info
       void utils.app.user.getProfile.invalidate();
-      void utils.app.user.getLevel.invalidate();
       void utils.app.user.getProfile.refetch();
-      void utils.app.user.getLevel.refetch();
     },
   });
 
@@ -125,9 +123,7 @@ export function useLevelUpClaim(): {
       void refetch();
       // Also refresh profile (menu, level details, etc.)
       void utils.app.user.getProfile.invalidate();
-      void utils.app.user.getLevel.invalidate();
       void utils.app.user.getProfile.refetch();
-      void utils.app.user.getLevel.refetch();
       refetchTimeoutRef.current = undefined;
     }, 250);
   }, [refetch, utils]);
