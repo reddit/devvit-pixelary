@@ -13,24 +13,6 @@ import { LEVELS } from '@shared/constants';
 import { getUsername } from '../core/user';
 import { REDIS_KEYS } from '../core/redis';
 
-vi.mock('@devvit/web/server', () => ({
-  redis: {
-    zRange: vi.fn(),
-    zScore: vi.fn(),
-    zIncrBy: vi.fn(),
-    zRank: vi.fn(),
-    zAdd: vi.fn(),
-    set: vi.fn(),
-  },
-  scheduler: {
-    runJob: vi.fn(),
-  },
-  cache: vi.fn((fn) => fn()),
-  context: {
-    subredditName: 'testsubreddit',
-  },
-}));
-
 vi.mock('../core/redis', () => ({
   REDIS_KEYS: {
     scores: () => 'scores',
@@ -158,7 +140,7 @@ describe('Leaderboard Service', () => {
           userId: 't2_testuser',
           score: 100,
           level: expect.any(Object),
-          subredditName: 'testsubreddit',
+          subredditName: 'testsub',
         },
         runAt: expect.any(Date),
       });
@@ -223,7 +205,7 @@ describe('Leaderboard Service', () => {
           userId: 't2_testuser',
           score: 100,
           level: expect.any(Object),
-          subredditName: 'testsubreddit',
+          subredditName: 'testsub',
         },
         runAt: expect.any(Date),
       });

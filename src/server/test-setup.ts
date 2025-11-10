@@ -46,6 +46,9 @@ vi.mock('@devvit/web/server', () => {
     reddit: {
       getPostById: vi.fn(),
       getCommentById: vi.fn(),
+      submitComment: vi.fn(),
+      getModerators: vi.fn(),
+      getCurrentUsername: vi.fn(),
       getSubredditByName: vi.fn(),
       getUserByUsername: vi.fn(),
       createComment: vi.fn(),

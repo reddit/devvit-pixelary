@@ -1,16 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-vi.mock('@devvit/web/server', () => ({
-  context: { subredditName: 'testsub' },
-  redis: {
-    get: vi.fn(),
-    exists: vi.fn(),
-    set: vi.fn(),
-    expire: vi.fn(),
-    del: vi.fn(),
-  },
-}));
-
 vi.mock('../../services/posts/tournament/hopper', () => ({
   peekNextHopperPrompt: vi.fn(),
   removeHopperPrompt: vi.fn(),

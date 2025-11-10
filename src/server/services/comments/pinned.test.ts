@@ -1,17 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { Comment } from '@devvit/reddit';
 
-vi.mock('@devvit/web/server', () => ({
-  reddit: {
-    submitComment: vi.fn(),
-    getCommentById: vi.fn(),
-  },
-  redis: {
-    hSet: vi.fn(),
-    hGet: vi.fn(),
-  },
-}));
-
 import { reddit, redis } from '@devvit/web/server';
 import type { T1, T3 } from '@devvit/shared-types/tid.js';
 import { REDIS_KEYS } from '@server/core/redis';

@@ -148,8 +148,16 @@ export function DrawStep(props: DrawStepProps) {
     height: 0,
   });
   const animationFrameRef = useRef<number | null>(null);
+  const particleLoopStarterRef = useRef<(() => void) | null>(null);
   const lastPaintedIndexRef = useRef<number | null>(null);
   const lastSpawnTimeRef = useRef<number>(0);
+  const checkerboardCacheRef = useRef<Map<number, HTMLCanvasElement>>(
+    new Map()
+  );
+  const prefersReducedMotion =
+    typeof window !== 'undefined' &&
+    typeof window.matchMedia === 'function' &&
+    window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
   type Particle = {
     x: number; // CSS px
@@ -333,12 +341,13 @@ export function DrawStep(props: DrawStepProps) {
     const canvas = particleCanvasRef.current;
     const ctx = canvas?.getContext('2d');
     if (!canvas || !ctx) return;
+    if (prefersReducedMotion) return;
 
-    let isRunning = true;
+    let isMounted = true;
     let lastTs = performance.now();
 
     const tick = (now: number) => {
-      if (!isRunning) return;
+      if (!isMounted) return;
       const dt = Math.max(0, (now - lastTs) / 1000);
       lastTs = now;
 
@@ -371,17 +380,31 @@ export function DrawStep(props: DrawStepProps) {
       }
       ctx.globalAlpha = 1;
 
-      animationFrameRef.current = requestAnimationFrame(tick);
-    };
-
-    animationFrameRef.current = requestAnimationFrame(tick);
-    return () => {
-      isRunning = false;
-      if (animationFrameRef.current != null) {
-        cancelAnimationFrame(animationFrameRef.current);
+      // Continue only if there are particles left
+      if (particles.length > 0) {
+        animationFrameRef.current = requestAnimationFrame(tick);
+      } else {
+        animationFrameRef.current = null;
       }
     };
-  }, []);
+
+    // Provide a starter that can be invoked when new particles spawn
+    particleLoopStarterRef.current = () => {
+      if (animationFrameRef.current == null && isMounted) {
+        lastTs = performance.now();
+        animationFrameRef.current = requestAnimationFrame(tick);
+      }
+    };
+
+    return () => {
+      isMounted = false;
+      particleLoopStarterRef.current = null;
+      if (animationFrameRef.current != null) {
+        cancelAnimationFrame(animationFrameRef.current);
+        animationFrameRef.current = null;
+      }
+    };
+  }, [prefersReducedMotion]);
 
   function spawnParticlesAt(
     x: number,
@@ -389,6 +412,7 @@ export function DrawStep(props: DrawStepProps) {
     color: HEX,
     pixelSizeCss: number
   ) {
+    if (prefersReducedMotion) return;
     // throttle very fast spawns (e.g., rapid drags)
     const now = performance.now();
     if (now - lastSpawnTimeRef.current < 45) return;
@@ -420,6 +444,8 @@ export function DrawStep(props: DrawStepProps) {
         particlesRef.current.length - maxParticles
       );
     }
+    // Ensure the particle loop is running
+    particleLoopStarterRef.current?.();
   }
 
   // Timer effect
@@ -605,22 +631,30 @@ export function DrawStep(props: DrawStepProps) {
       }
     }
 
-    // Checkerboard overlay (disabled during review)
+    // Checkerboard overlay (disabled during review) - blit from cached offscreen
     if (!isReviewing) {
-      for (let x = 0; x < drawingData.size; x++) {
-        for (let y = 0; y < drawingData.size; y++) {
-          const isEven = (x + y) % 2 === 0;
-          ctx.fillStyle = isEven
-            ? 'rgba(255, 255, 255, 0.05)'
-            : 'rgba(0, 0, 0, 0.05)';
-          ctx.fillRect(
-            squareX + x * pixelSize,
-            squareY + y * pixelSize,
-            pixelSize,
-            pixelSize
-          );
+      const size = drawingData.size;
+      let overlay = checkerboardCacheRef.current.get(size);
+      if (!overlay) {
+        overlay = document.createElement('canvas');
+        overlay.width = size;
+        overlay.height = size;
+        const octx = overlay.getContext('2d');
+        if (octx) {
+          octx.imageSmoothingEnabled = false;
+          for (let px = 0; px < size; px++) {
+            for (let py = 0; py < size; py++) {
+              const isEven = (px + py) % 2 === 0;
+              octx.fillStyle = isEven
+                ? 'rgba(255, 255, 255, 0.05)'
+                : 'rgba(0, 0, 0, 0.05)';
+              octx.fillRect(px, py, 1, 1);
+            }
+          }
         }
+        checkerboardCacheRef.current.set(size, overlay);
       }
+      ctx.drawImage(overlay, squareX, squareY, squareSize, squareSize);
     }
   }, [drawingData, containerSize, viewportSize, isReviewing, layoutVersion]);
 

@@ -6,7 +6,42 @@ import '@testing-library/jest-dom';
 vi.mock('@client/trpc/client', () => ({
   trpc: {
     app: {
+      dictionary: {
+        getCandidates: {
+          useQuery: () => ({
+            data: { slateId: null, words: [null, null, null] },
+            isLoading: true,
+            refetch: vi.fn(),
+          }),
+        },
+      },
+      slate: {
+        trackAction: {
+          useMutation: () => ({ mutateAsync: vi.fn() }),
+        },
+      },
+      rewards: {
+        getEffectiveBonuses: {
+          useQuery: () => ({ data: undefined, isLoading: false }),
+        },
+      },
+      post: {
+        submitDrawing: {
+          useMutation: () => ({ mutateAsync: vi.fn(), isPending: false }),
+        },
+      },
+      tournament: {
+        submitDrawing: {
+          useMutation: () => ({ mutateAsync: vi.fn(), isPending: false }),
+        },
+      },
       user: {
+        getLevel: {
+          useQuery: () => ({ data: undefined, isLoading: false }),
+        },
+        getProfile: {
+          useQuery: () => ({ data: undefined, isLoading: false }),
+        },
         colors: {
           pushRecent: {
             useMutation: () => ({ mutate: vi.fn() }),
@@ -93,6 +128,30 @@ Object.defineProperty(HTMLCanvasElement.prototype, 'toBlob', {
   unobserve: vi.fn(),
   disconnect: vi.fn(),
 }));
+
+// Stub requestAnimationFrame to avoid tight RAF loops in tests
+// Use timer-based fallback to keep animations advancing predictably
+if (typeof globalThis.requestAnimationFrame !== 'function') {
+  (
+    globalThis as unknown as {
+      requestAnimationFrame: typeof requestAnimationFrame;
+    }
+  ).requestAnimationFrame = ((cb: FrameRequestCallback) => {
+    const id = setTimeout(() => {
+      cb(performance.now());
+    }, 16) as unknown as number;
+    return id;
+  }) as unknown as typeof requestAnimationFrame;
+}
+if (typeof globalThis.cancelAnimationFrame !== 'function') {
+  (
+    globalThis as unknown as {
+      cancelAnimationFrame: typeof cancelAnimationFrame;
+    }
+  ).cancelAnimationFrame = ((id: number) => {
+    clearTimeout(id as unknown as number);
+  }) as unknown as typeof cancelAnimationFrame;
+}
 
 // Cleanup after each test
 afterEach(() => {
