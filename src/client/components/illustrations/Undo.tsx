@@ -2,9 +2,11 @@ import type { IllustrationProps } from './types';
 
 type variant = 'on' | 'off';
 
-export function PaintBucket({
+const ACCENT_COLOR = '#EB5757';
+
+export function Undo({
   size = 12,
-  title = 'Paint Bucket',
+  title = 'Undo',
   className = '',
   variant = 'on',
   ...props
@@ -20,7 +22,7 @@ export function PaintBucket({
       xmlns="http://www.w3.org/2000/svg"
       xmlnsXlink="http://www.w3.org/1999/xlink"
       className={className}
-      aria-label={`${variant} paint bucket`}
+      aria-label={`${variant} undo`}
       role="img"
       {...props}
     >
@@ -62,7 +64,7 @@ export function PaintBucket({
         <>
           <path
             d="M3 3H4V2H5V1H9V2H10V3H11V9H10V10H9V11H3V9H8V8H9V4H8V3H6V4H5V5H7V7H1V1H3V3Z"
-            fill="#27AE60"
+            fill={ACCENT_COLOR}
           />
           <path d="M9 12H3V11H9V12Z" fill="black" fillOpacity="0.8" />
           <path d="M3 11H2V9H3V11Z" fill="black" fillOpacity="0.8" />

@@ -2,6 +2,8 @@ import type { IllustrationProps } from './types';
 
 type variant = 'on' | 'off';
 
+const ACCENT_COLOR = '#EB5757';
+
 export function PaintBucket({
   size = 12,
   title = 'Paint Bucket',
@@ -91,9 +93,9 @@ export function PaintBucket({
           <path d="M7 3H6V2H7V3Z" fill="#FAECD1" />
           <path
             d="M5 5H4V6H5V7H6V6H7V5H8V6H9V7H8V8H7V9H6V10H5V11H4V10H3V9H2V8H1V6H2V5H3V4H4V3H5V5Z"
-            fill="#27AE60"
+            fill={ACCENT_COLOR}
           />
-          <path d="M7 5H6V4H7V5Z" fill="#27AE60" />
+          <path d="M7 5H6V4H7V5Z" fill={ACCENT_COLOR} />
           <path d="M5 12H4V11H5V12Z" fill="black" fillOpacity="0.8" />
           <path
             d="M12 12H8V10H9V11H11V5H12V12Z"

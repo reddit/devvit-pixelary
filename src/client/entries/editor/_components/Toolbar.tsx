@@ -1,6 +1,10 @@
-import type { HEX } from '@shared/types';
+import type { HEX, TelemetryEventType } from '@shared/types';
 import { useTelemetry } from '@client/hooks/useTelemetry';
 import { useDrawingState } from '../_hooks/useDrawingState';
+import { Undo } from '@client/components/illustrations/Undo';
+import { PaintBucket } from '@client/components/illustrations/PaintBucket';
+import { BrushSize } from '@client/components/illustrations/BrushSize';
+import { Mirror } from '@client/components/illustrations/Mirror';
 
 type ToolbarProps = {
   isReviewing?: boolean;
@@ -10,7 +14,6 @@ type ToolbarProps = {
 
 export function Toolbar(props: ToolbarProps) {
   const { isReviewing = false, hasEntered = false, currentColor } = props;
-  const { track } = useTelemetry();
   const {
     canUndo,
     undo,
@@ -25,7 +28,7 @@ export function Toolbar(props: ToolbarProps) {
 
   return (
     <div
-      className={`flex flex-row flex-nowrap gap-2 items-center justify-center overflow-x-auto px-3 transition-all duration-300 ease-out ${
+      className={`flex flex-row flex-nowrap gap-2 items-center justify-center transition-all duration-300 ease-out ${
         isReviewing ? 'delay-0' : 'delay-150'
       } ${
         isReviewing
@@ -35,108 +38,140 @@ export function Toolbar(props: ToolbarProps) {
             : 'translate-y-2 opacity-0'
       }`}
     >
-      <button
-        aria-label="Undo"
-        disabled={isReviewing || !canUndo}
-        onClick={() => {
-          void track('click_undo');
-          undo();
-        }}
-        className={`px-3 h-8 border-4 border-black cursor-pointer transition-all flex items-center justify-center hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[4px] active:translate-y-[4px] shadow-pixel hover:shadow-pixel-sm active:shadow-none bg-gray-200 ${
-          isReviewing || !canUndo ? 'opacity-50 cursor-not-allowed' : ''
-        }`}
+      {/* Undo Tool */}
+      <ToolbarButton
+        title="Undo"
+        telemetryEvent="click_undo"
+        disabled={!canUndo}
+        onClick={undo}
+        active={canUndo}
       >
-        Undo
-      </button>
-      <button
-        aria-label="Fill"
-        disabled={isReviewing}
-        onClick={() => {
-          void track('click_fill');
-          fill(currentColor);
-        }}
-        className={`px-3 h-8 border-4 border-black cursor-pointer transition-all flex items-center justify-center hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[4px] active:translate-y-[4px] shadow-pixel hover:shadow-pixel-sm active:shadow-none bg-gray-200 ${
-          isReviewing ? 'opacity-50 cursor-not-allowed' : ''
-        }`}
+        <Undo size={24} variant={canUndo ? 'on' : 'off'} />
+      </ToolbarButton>
+
+      {/* Paint Bucket Tool */}
+      <ToolbarButton
+        title="Fill"
+        telemetryEvent="click_fill"
+        onClick={() => fill(currentColor)}
+        active
       >
-        Fill
-      </button>
-      {/* Brush sizes */}
-      <div className="flex items-center gap-1 ml-2">
-        <button
-          aria-label="Brush Small"
-          aria-pressed={brushSize === 1}
-          disabled={isReviewing}
-          onClick={() => {
-            void track('toggle_brush_size');
-            setBrushSize(1);
-          }}
-          className={`w-8 h-8 border-4 border-black transition-all flex items-center justify-center shadow-pixel hover:shadow-pixel-sm active:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[4px] active:translate-y-[4px] ${
-            brushSize === 1 ? 'bg-black text-white' : 'bg-white'
-          } ${isReviewing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-        >
-          S
-        </button>
-        <button
-          aria-label="Brush Medium"
-          aria-pressed={brushSize === 3}
-          disabled={isReviewing}
-          onClick={() => {
-            void track('toggle_brush_size');
-            setBrushSize(3);
-          }}
-          className={`w-8 h-8 border-4 border-black transition-all flex items-center justify-center shadow-pixel hover:shadow-pixel-sm active:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[4px] active:translate-y-[4px] ${
-            brushSize === 3 ? 'bg-black text-white' : 'bg-white'
-          } ${isReviewing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-        >
-          M
-        </button>
-        <button
-          aria-label="Brush Large"
-          aria-pressed={brushSize === 5}
-          disabled={isReviewing}
-          onClick={() => {
-            void track('toggle_brush_size');
-            setBrushSize(5);
-          }}
-          className={`w-8 h-8 border-4 border-black transition-all flex items-center justify-center shadow-pixel hover:shadow-pixel-sm active:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[4px] active:translate-y-[4px] ${
-            brushSize === 5 ? 'bg-black text-white' : 'bg-white'
-          } ${isReviewing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-        >
-          L
-        </button>
-      </div>
-      {/* Symmetry toggles */}
-      <div className="flex items-center gap-1 ml-2">
-        <button
-          aria-label="Mirror Vertical"
-          aria-pressed={mirrorV}
-          disabled={isReviewing}
-          onClick={() => {
-            void track('toggle_mirror_v');
-            setMirrorV(!mirrorV);
-          }}
-          className={`w-10 h-8 border-4 border-black transition-all flex items-center justify-center shadow-pixel hover:shadow-pixel-sm active:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[4px] active:translate-y-[4px] ${
-            mirrorV ? 'bg-black text-white' : 'bg-white'
-          } ${isReviewing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-        >
-          ↔
-        </button>
-        <button
-          aria-label="Mirror Horizontal"
-          aria-pressed={mirrorH}
-          disabled={isReviewing}
-          onClick={() => {
-            void track('toggle_mirror_h');
-            setMirrorH(!mirrorH);
-          }}
-          className={`w-10 h-8 border-4 border-black transition-all flex items-center justify-center shadow-pixel hover:shadow-pixel-sm active:shadow-none hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[4px] active:translate-y-[4px] ${
-            mirrorH ? 'bg-black text-white' : 'bg-white'
-          } ${isReviewing ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-        >
-          ↕
-        </button>
-      </div>
+        <PaintBucket size={24} variant={!isReviewing ? 'on' : 'off'} />
+      </ToolbarButton>
+
+      {/* Brush Size: Small */}
+      <ToolbarButton
+        title="Brush Small"
+        telemetryEvent="toggle_brush_size"
+        onClick={() => setBrushSize(1)}
+        active={brushSize === 1}
+      >
+        <BrushSize
+          size={24}
+          brushSize="small"
+          brushVariant={brushSize === 1 ? 'on' : 'off'}
+        />
+      </ToolbarButton>
+
+      {/* Brush Size: Medium */}
+      <ToolbarButton
+        title="Brush Medium"
+        telemetryEvent="toggle_brush_size"
+        active={brushSize === 3}
+        onClick={() => setBrushSize(3)}
+      >
+        <BrushSize
+          size={24}
+          brushSize="medium"
+          brushVariant={brushSize === 3 ? 'on' : 'off'}
+        />
+      </ToolbarButton>
+
+      {/* Brush Size: Large */}
+      <ToolbarButton
+        title="Brush Large"
+        telemetryEvent="toggle_brush_size"
+        active={brushSize === 5}
+        onClick={() => setBrushSize(5)}
+      >
+        <BrushSize
+          size={24}
+          brushSize="large"
+          brushVariant={brushSize === 5 ? 'on' : 'off'}
+        />
+      </ToolbarButton>
+
+      {/* Mirror Vertical */}
+      <ToolbarButton
+        title="Mirror Vertical"
+        telemetryEvent="toggle_mirror_v"
+        active={mirrorV}
+        onClick={() => setMirrorV(!mirrorV)}
+      >
+        <Mirror
+          size={24}
+          direction="horizontal"
+          variant={mirrorV ? 'on' : 'off'}
+        />
+      </ToolbarButton>
+
+      {/* Mirror Horizontal */}
+      <ToolbarButton
+        title="Mirror Horizontal"
+        telemetryEvent="toggle_mirror_h"
+        onClick={() => setMirrorH(!mirrorH)}
+        active={mirrorH}
+      >
+        <Mirror
+          size={24}
+          direction="vertical"
+          variant={mirrorH ? 'on' : 'off'}
+        />
+      </ToolbarButton>
     </div>
+  );
+}
+
+type ToolbarButtonProps = {
+  children: React.ReactNode;
+  onClick: () => void;
+  active?: boolean;
+  disabled?: boolean;
+  className?: string;
+  title?: string;
+  telemetryEvent: TelemetryEventType;
+};
+
+function ToolbarButton(props: ToolbarButtonProps) {
+  const {
+    children,
+    onClick,
+    active,
+    disabled,
+    className,
+    title,
+    telemetryEvent,
+  } = props;
+  const { track } = useTelemetry();
+
+  const disabledClasses = disabled
+    ? 'opacity-50 cursor-not-allowed'
+    : 'cursor-pointer';
+
+  return (
+    <button
+      disabled={disabled}
+      onClick={() => {
+        void track(telemetryEvent);
+        onClick();
+      }}
+      title={title}
+      aria-label={title}
+      className={`h-8 w-8 transition-all flex items-center justify-center   ${
+        disabledClasses
+      } ${className}`}
+    >
+      {children}
+    </button>
   );
 }

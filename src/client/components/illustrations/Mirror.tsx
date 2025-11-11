@@ -3,6 +3,8 @@ import type { IllustrationProps } from './types';
 type direction = 'vertical' | 'horizontal';
 type variant = 'on' | 'off';
 
+const ACCENT_COLOR = '#EB5757';
+
 export function Mirror({
   size = 12,
   title = 'Mirror',
@@ -61,7 +63,7 @@ export function Mirror({
 
           <path
             d="M7 9H8V10H9V11H3V10H4V9H5V8H7V9Z M9 2H8V3H7V4H5V3H4V2H3V1H9V2Z"
-            fill="#27AE60"
+            fill={ACCENT_COLOR}
           />
 
           <path
@@ -112,7 +114,7 @@ export function Mirror({
           />
           <path
             d="M2 4H3V5H4V7H3V8H2V9H1V3H2V4Z M11 9H10V8H9V7H8V5H9V4H10V3H11V9Z"
-            fill="#27AE60"
+            fill={ACCENT_COLOR}
           />
           <path
             d="M7 11H6V2H7V11Z M2 9H1V3H2V9Z M11 9H10V3H11V9Z"
