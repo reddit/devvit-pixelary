@@ -64,7 +64,7 @@ export function useRenderer(params: UseRendererParams) {
 
     // Placement using fixed insets from canvas edges
     const insetX = 16; // horizontal inset on each side
-    const insetY = 100; // vertical inset on each side
+    const insetY = 120; // vertical inset on each side
     const allowedLeft = insetX;
     const allowedTop = insetY;
     const allowedW = Math.max(0, cssW - insetX * 2);
