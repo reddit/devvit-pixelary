@@ -22,6 +22,11 @@ function App() {
     }
   }, [isTournament, utils]);
 
+  // Always warm recent colors so Palette can hydrate quickly
+  useEffect(() => {
+    void utils.app.user.colors.getRecent.prefetch();
+  }, [utils]);
+
   return (
     <>
       <Background />
