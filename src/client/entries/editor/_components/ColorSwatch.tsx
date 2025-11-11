@@ -25,7 +25,7 @@ export function ColorSwatch(props: ColorSwatchProps) {
         type="checkmark"
         scale={2}
         color={getContrastColor(color)}
-        className={`mru-check transition-opacity ${isSelected ? 'opacity-100' : 'opacity-0'}`}
+        className={`mru-check transition-opacity duration-200 ${isSelected ? 'opacity-100' : 'opacity-0'}`}
       />
     </button>
   );

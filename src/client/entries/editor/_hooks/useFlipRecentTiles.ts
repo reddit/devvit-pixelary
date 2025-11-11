@@ -48,7 +48,7 @@ export function useFlipRecentTiles(
               { transform: 'scale(1)', opacity: 1 },
             ],
             {
-              duration: 380,
+              duration: 200,
               delay: 0,
               easing: 'cubic-bezier(.22,1,.36,1)',
               fill: 'forwards',
@@ -71,7 +71,7 @@ export function useFlipRecentTiles(
               { transform: 'translate(0, 0)' },
             ],
             {
-              duration: 520,
+              duration: 200,
               delay: 0,
               easing: 'cubic-bezier(.22,1,.36,1)',
               fill: 'both',
