@@ -3,7 +3,7 @@ import type { IllustrationProps } from './types';
 type BrushSize = 'small' | 'medium' | 'large';
 type BrushVariant = 'on' | 'off';
 
-const ACCENT_COLOR = '#EB5757';
+const BRUSH_PAINT_COLOR = '#FF4500';
 
 export function BrushSize({
   size = 12,
@@ -43,7 +43,7 @@ export function BrushSize({
       {/* Size: Large, Variant: On */}
       {brushSize === 'large' && brushVariant === 'on' && (
         <>
-          <path d="M10 10H2V2H10V10Z" fill={ACCENT_COLOR} />
+          <path d="M10 10H2V2H10V10Z" fill={BRUSH_PAINT_COLOR} />
           <path
             d="M10 11H2V10H10V11ZM2 10H1V2H2V10ZM11 10H10V2H11V10ZM10 2H2V1H10V2Z"
             fill="black"
@@ -71,7 +71,7 @@ export function BrushSize({
       {/* Size: Medium, Variant: On */}
       {brushSize === 'medium' && brushVariant === 'on' && (
         <>
-          <path d="M9 9H3V3H9V9Z" fill={ACCENT_COLOR} />
+          <path d="M9 9H3V3H9V9Z" fill={BRUSH_PAINT_COLOR} />
           <path
             d="M9 10H3V9H9V10Z M3 9H2V3H3V9Z M10 9H9V3H10V9Z M9 3H3V2H9V3Z"
             fill="black"
@@ -99,7 +99,7 @@ export function BrushSize({
       {/* Size: Small, Variant: On */}
       {brushSize === 'small' && brushVariant === 'on' && (
         <>
-          <path d="M8 8H4V4H8V8Z" fill={ACCENT_COLOR} />
+          <path d="M8 8H4V4H8V8Z" fill={BRUSH_PAINT_COLOR} />
           <path
             d="M8 9H4V8H8V9ZM4 8H3V4H4V8ZM9 8H8V4H9V8ZM8 4H4V3H8V4Z"
             fill="black"

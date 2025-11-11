@@ -92,8 +92,14 @@ function DrawStepBody(props: DrawStepProps) {
     DRAWING_COLORS[0] ?? '#000000'
   );
   // pointer state managed in usePointerPainting
-  const { drawingData, paintAt, pushUndoSnapshot, getDrawingData } =
-    useDrawingState();
+  const {
+    drawingData,
+    paintAt,
+    floodFillAt,
+    toolMode,
+    pushUndoSnapshot,
+    getDrawingData,
+  } = useDrawingState();
   const mainCanvasCssSizeRef = useRef<{ width: number; height: number }>({
     width: 0,
     height: 0,
@@ -199,9 +205,11 @@ function DrawStepBody(props: DrawStepProps) {
     drawingData,
     currentColor,
     paintAt,
+    floodFillAt,
     pushUndoSnapshot,
     onFirstPixel: trackFirstPixelOnce,
     spawnAt: spawnParticles,
+    toolMode,
   });
 
   return (
@@ -309,11 +317,7 @@ function DrawStepBody(props: DrawStepProps) {
           hasEntered={hasEntered}
           onColorChange={setCurrentColor}
         />
-        <Toolbar
-          isReviewing={isReviewing}
-          hasEntered={hasEntered}
-          currentColor={currentColor}
-        />
+        <Toolbar isReviewing={isReviewing} hasEntered={hasEntered} />
       </div>
 
       {/* Color Picker Modal moved into Palette */}

@@ -5,6 +5,7 @@ import type { DrawArea } from './useGeometry';
 import type { DrawingData } from '@shared/schema/drawing';
 
 type MutableRef<T> = { current: T };
+type ToolMode = 'draw' | 'fill';
 
 type Params = {
   canvasRef: RefObject<HTMLCanvasElement | null>;
@@ -13,9 +14,11 @@ type Params = {
   drawingData: DrawingData;
   currentColor: HEX;
   paintAt: (pixelX: number, pixelY: number, color: HEX) => void;
+  floodFillAt: (pixelX: number, pixelY: number, color: HEX) => void;
   pushUndoSnapshot: () => void;
   onFirstPixel: () => void;
   spawnAt: (x: number, y: number, color: HEX, pixelSizeCss: number) => void;
+  toolMode: ToolMode;
 };
 
 export function usePointerPainting(params: Params) {
@@ -26,9 +29,11 @@ export function usePointerPainting(params: Params) {
     drawingData,
     currentColor,
     paintAt,
+    floodFillAt,
     pushUndoSnapshot,
     onFirstPixel,
     spawnAt,
+    toolMode,
   } = params;
 
   const isDrawingRef = useRef(false);
@@ -78,6 +83,26 @@ export function usePointerPainting(params: Params) {
     return {
       onPointerDown: (e: ReactPointerEvent<HTMLCanvasElement>) => {
         e.preventDefault();
+        // Fill mode: single click flood-fill
+        if (toolMode === 'fill') {
+          const mapped = mapClientToPixel(e.clientX, e.clientY);
+          if (mapped) {
+            const {
+              pixelX,
+              pixelY,
+              pixelCenterX,
+              pixelCenterY,
+              pixelSize,
+            } = mapped;
+            spawnAt(pixelCenterX, pixelCenterY, currentColor, pixelSize);
+            floodFillAt(pixelX, pixelY, currentColor);
+            if (!hasTrackedFirstPixelRef.current) {
+              onFirstPixel();
+              hasTrackedFirstPixelRef.current = true;
+            }
+          }
+          return;
+        }
         const target = e.currentTarget;
         type PointerCaptureTarget = {
           setPointerCapture?: (pointerId: number) => void;
@@ -112,6 +137,7 @@ export function usePointerPainting(params: Params) {
         }
       },
       onPointerMove: (e: ReactPointerEvent<HTMLCanvasElement>) => {
+        if (toolMode === 'fill') return; // no dragging in fill mode
         if (!isDrawingRef.current) return;
         e.preventDefault();
         const mapped = mapClientToPixel(e.clientX, e.clientY);
@@ -154,7 +180,15 @@ export function usePointerPainting(params: Params) {
     };
     // Dependencies intentionally static; internal refs capture latest values
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentColor, paintAt, pushUndoSnapshot, onFirstPixel, spawnAt]);
+  }, [
+    currentColor,
+    paintAt,
+    floodFillAt,
+    pushUndoSnapshot,
+    onFirstPixel,
+    spawnAt,
+    toolMode,
+  ]);
 
   return handlers;
 }

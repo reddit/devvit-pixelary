@@ -10,7 +10,7 @@ import type { HEX } from '@shared/types';
 export async function getRecentColors(
   userId: T2,
   seed: readonly HEX[],
-  limit: number = 6
+  limit: number = 7
 ): Promise<HEX[]> {
   // Use global Redis to persist across subreddit-less and cross-subreddit contexts
   type RedisLike = typeof redis;
@@ -62,7 +62,7 @@ export async function getRecentColors(
 export async function pushRecentColor(
   userId: T2,
   color: HEX,
-  limit: number = 6
+  limit: number = 7
 ): Promise<void> {
   type RedisLike = typeof redis;
   const withGlobal = redis as unknown as { global?: RedisLike };

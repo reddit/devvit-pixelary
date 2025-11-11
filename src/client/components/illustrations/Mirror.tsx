@@ -4,6 +4,7 @@ type direction = 'vertical' | 'horizontal';
 type variant = 'on' | 'off';
 
 const ACCENT_COLOR = '#EB5757';
+const MIRROR_COLOR = '#C0C0C0';
 
 export function Mirror({
   size = 12,
@@ -54,7 +55,7 @@ export function Mirror({
       {/* Vertical, Variant: On */}
       {direction === 'vertical' && variant === 'on' && (
         <>
-          <path d="M11 7H1V5H11V7Z" fill="#FAECD1" />
+          <path d="M11 7H1V5H11V7Z" fill={MIRROR_COLOR} />
           <path
             d="M3 11H9V10H10V12H2V10H3V11Z M4 10H3V9H4V10Z M9 10H8V9H9V10Z M11 8H8V9H7V8H5V9H4V8H1V7H11V8Z M1 7H0V5H1V7Z M12 7H11V5H12V7Z M11 5H1V4H4V3H5V4H7V3H8V4H11V5Z M4 3H3V2H4V3Z M9 3H8V2H9V3Z M10 2H9V1H3V2H2V0H10V2Z"
             fill="black"
@@ -106,7 +107,7 @@ export function Mirror({
       {/* Horizontal, Variant: On */}
       {direction === 'horizontal' && variant === 'on' && (
         <>
-          <path d="M7 11H5V1H7V11Z" fill="#FAECD1" />
+          <path d="M7 11H5V1H7V11Z" fill={MIRROR_COLOR} />
           <path
             d="M7 12H5V11H7V12Z M5 11H4V8H3V7H4V5H3V4H4V1H5V11Z M8 4H9V5H8V7H9V8H8V11H7V1H8V4Z M2 3H1V9H2V10H0V2H2V3Z M12 10H10V9H11V3H10V2H12V10Z M3 9H2V8H3V9Z M10 9H9V8H10V9Z M3 4H2V3H3V4Z M10 4H9V3H10V4Z M7 1H5V0H7V1Z"
             fill="black"

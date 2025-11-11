@@ -374,10 +374,10 @@ export const appRouter = t.router({
           const { BASE_DRAWING_COLORS } = await import('@shared/constants');
           if (!ctx.userId) {
             // Anonymous users see the seed (base palette) trimmed to limit
-            return BASE_DRAWING_COLORS.slice(0, 6);
+            return BASE_DRAWING_COLORS.slice(0, 7);
           }
           const { getRecentColors } = await import('../services/user/colors');
-          return await getRecentColors(ctx.userId, BASE_DRAWING_COLORS, 6);
+          return await getRecentColors(ctx.userId, BASE_DRAWING_COLORS, 7);
         }),
         pushRecent: t.procedure
           .input(z.object({ color: z.string() }))
@@ -387,7 +387,7 @@ export const appRouter = t.router({
               return { success: true } as const;
             }
             const { pushRecentColor } = await import('../services/user/colors');
-            await pushRecentColor(ctx.userId, input.color, 6);
+            await pushRecentColor(ctx.userId, input.color, 7);
             return { success: true } as const;
           }),
       }),

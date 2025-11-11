@@ -11,16 +11,16 @@ describe('user colors service', () => {
     vi.clearAllMocks();
   });
 
-  it('seeds recent colors when none exist and returns newest-first (limit 6)', async () => {
+  it('seeds recent colors when none exist and returns newest-first (limit 7)', async () => {
     // No existing colors
     (redis.zRange as unknown as vi.Mock).mockResolvedValueOnce([]);
 
-    const result = await getRecentColors(userId, BASE_DRAWING_COLORS, 6);
+    const result = await getRecentColors(userId, BASE_DRAWING_COLORS, 7);
 
-    // Should seed exactly 6 entries
-    expect(redis.zAdd as unknown as vi.Mock).toHaveBeenCalledTimes(6);
-    // Newest-first should be reverse of seed slice(0,6)
-    const expected = BASE_DRAWING_COLORS.slice(0, 6).slice().reverse();
+    // Should seed exactly 7 entries
+    expect(redis.zAdd as unknown as vi.Mock).toHaveBeenCalledTimes(7);
+    // Newest-first should be reverse of seed slice(0,7)
+    const expected = BASE_DRAWING_COLORS.slice(0, 7).slice().reverse();
     expect(result).toEqual(expected);
   });
 
@@ -31,7 +31,7 @@ describe('user colors service', () => {
       { member: '#C8C8C8', score: Date.now() - 20 },
     ]);
 
-    await pushRecentColor(userId, '#123456', 6);
+    await pushRecentColor(userId, '#123456', 7);
 
     expect(redis.zAdd as unknown as vi.Mock).toHaveBeenCalledTimes(1);
     expect(redis.zRem as unknown as vi.Mock).toHaveBeenCalledWith(

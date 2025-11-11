@@ -2,6 +2,9 @@ import type { IllustrationProps } from './types';
 
 type variant = 'on' | 'off';
 
+const PAINT_COLOR = '#FF4500';
+const HANDLE_COLOR = '#C0C0C0';
+
 export function PaintBrush({
   size = 12,
   title = 'Paint Brush',
@@ -60,11 +63,11 @@ export function PaintBrush({
           />
           <path
             d="M6 6H7V7H6V8H5V9H4V10H3V11H1V9H2V8H3V7H4V6H5V5H6V6Z"
-            fill="#27AE60"
+            fill={HANDLE_COLOR}
           />
           <path
             d="M11 10H9V8H10V7H11V10Z M11 3H10V4H9V6H7V5H6V3H7V2H10V1H11V3Z"
-            fill="#FAECD1"
+            fill={PAINT_COLOR}
           />
           <path
             d="M3 11H1V10H3V11Z M4 10H3V9H4V10Z M11 10H10V9H11V10Z M5 9H4V8H5V9Z M6 8H5V7H6V8Z M7 7H6V6H7V7Z M9 6H7V5H8V4H9V6Z M11 3H10V2H11V3Z"

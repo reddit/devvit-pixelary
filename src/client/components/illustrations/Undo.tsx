@@ -2,7 +2,7 @@ import type { IllustrationProps } from './types';
 
 type variant = 'on' | 'off';
 
-const ACCENT_COLOR = '#EB5757';
+const ACCENT_COLOR = '#FF4500';
 
 export function Undo({
   size = 12,

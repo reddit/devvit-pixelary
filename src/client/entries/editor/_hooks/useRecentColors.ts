@@ -11,7 +11,7 @@ export function useRecentColors(
     DRAWING_COLORS[0] ?? '#000000'
   );
   const [recentColors, setRecentColors] = useState<HEX[]>(() =>
-    DRAWING_COLORS.slice(0, 6)
+    DRAWING_COLORS.slice(0, 7)
   );
   const [isMRUAnimating, setIsMRUAnimating] = useState(false);
   const [suppressInitialAnim, setSuppressInitialAnim] = useState(true);
@@ -39,7 +39,7 @@ export function useRecentColors(
   useEffect(() => {
     if (recentQuery.isSuccess && Array.isArray(recentQuery.data)) {
       const colors = recentQuery.data;
-      setRecentColors(colors.slice(0, 6));
+      setRecentColors(colors.slice(0, 7));
       if (!didInitCurrentRef.current) {
         const firstColor = colors[0];
         if (firstColor) {
@@ -90,8 +90,8 @@ export function useRecentColors(
       setRecentColors((prev) => {
         const already = prev.includes(color);
         const merged = [color, ...prev.filter((c) => c !== color)];
-        const next = merged.slice(0, 6);
-        if (!already && prev.length >= 6) {
+        const next = merged.slice(0, 7);
+        if (!already && prev.length >= 7) {
           setIsMRUAnimating(true);
           void animateRemovalIfNeeded(prev, next).then(() => {
             setRecentColors(next);
