@@ -213,8 +213,8 @@ export function ReviewStep(props: ReviewStepProps) {
           {props.mode === 'tournament' ? (
             <Button
               size="large"
-              onNativeClick={(e) => {
-                void handlePost(e.nativeEvent as unknown as PointerEvent);
+              onClick={() => {
+                void handlePost();
               }}
               disabled={submitTournamentDrawing.isPending}
             >

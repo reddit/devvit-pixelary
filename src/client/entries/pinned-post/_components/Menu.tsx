@@ -58,18 +58,8 @@ export function Menu(props: MenuProps) {
       {/* Menu */}
       <nav className="flex flex-col gap-3 w-full max-w-3xs">
         <Button
-          onNativePointerDown={() => {
-            // Ensure caches are warm before entering editor
-            void utils.app.user.getProfile.prefetch();
-            void utils.app.rewards.getEffectiveBonuses.prefetch();
-            void utils.app.user.colors.getRecent.prefetch();
-            void utils.app.dictionary.getCandidates.prefetch();
-          }}
-          onNativeClick={(e) => {
-            void requestExpandedMode(
-              e.nativeEvent as unknown as MouseEvent,
-              'editor'
-            );
+          onClick={async (e) => {
+            void requestExpandedMode(e.nativeEvent, 'editor');
           }}
           size="large"
           telemetryEvent="click_draw"

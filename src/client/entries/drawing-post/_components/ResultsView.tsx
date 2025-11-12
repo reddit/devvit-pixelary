@@ -161,18 +161,8 @@ export function ResultsView({
       />
       {/* Primary CTA */}
       <Button
-        onNativePointerDown={() => {
-          // Warm caches right before user clicks
-          void utils.app.user.getProfile.prefetch();
-          void utils.app.rewards.getEffectiveBonuses.prefetch();
-          void utils.app.user.colors.getRecent.prefetch();
-          void utils.app.dictionary.getCandidates.prefetch();
-        }}
-        onNativeClick={(e) => {
-          void requestExpandedMode(
-            e.nativeEvent as unknown as MouseEvent,
-            'editor'
-          );
+        onClick={async (e) => {
+          void requestExpandedMode(e.nativeEvent, 'editor');
         }}
         size="large"
         telemetryEvent="click_draw_something"

@@ -209,12 +209,9 @@ export function TrophyView({
       )}
       {/* Draw button at the bottom */}
       <Button
-        onNativeClick={(e) => {
+        onClick={async (e) => {
           onDraw();
-          void requestExpandedMode(
-            e.nativeEvent as unknown as MouseEvent,
-            'editor'
-          );
+          void requestExpandedMode(e.nativeEvent, 'editor');
         }}
         size="large"
         className="w-min"

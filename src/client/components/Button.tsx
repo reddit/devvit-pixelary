@@ -6,9 +6,7 @@ import type React from 'react';
 
 type ButtonProps = {
   children?: string;
-  onClick?: () => void;
-  onNativeClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
-  onNativePointerDown?: (e: React.PointerEvent<HTMLButtonElement>) => void;
+  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
   variant?: 'primary' | 'secondary' | 'white' | 'success';
   size?: 'small' | 'medium' | 'large';
   disabled?: boolean;
@@ -22,8 +20,6 @@ type ButtonProps = {
 export function Button({
   children,
   onClick,
-  onNativeClick,
-  onNativePointerDown,
   variant = 'primary',
   size = 'medium',
   disabled = false,
@@ -69,17 +65,12 @@ export function Button({
     if (telemetryEvent) {
       void track(telemetryEvent);
     }
-    // Allow callers to access trusted native event
-    onNativeClick?.(e);
-
-    // Call original onClick
-    onClick?.();
+    onClick?.(e);
   };
 
   return (
     <button
       onClick={disabled ? undefined : handleClick}
-      onPointerDown={disabled ? undefined : onNativePointerDown}
       disabled={disabled}
       className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[4px] active:translate-y-[4px] shadow-pixel hover:shadow-pixel-sm active:shadow-none ${className}`}
       title={title}

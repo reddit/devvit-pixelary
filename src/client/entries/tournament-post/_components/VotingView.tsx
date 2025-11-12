@@ -399,11 +399,8 @@ export function VotingView({
             : 'Wait for entries, or ...'}
         </Text>
         <Button
-          onNativeClick={(e) => {
-            void requestExpandedMode(
-              e.nativeEvent as unknown as MouseEvent,
-              'editor'
-            );
+          onClick={async (e) => {
+            void requestExpandedMode(e.nativeEvent, 'editor');
           }}
           size="large"
           variant="primary"
