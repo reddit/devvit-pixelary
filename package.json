@@ -28,14 +28,14 @@
     "type-check": "tsc --noEmit --project src/client/tsconfig.json --project src/server/tsconfig.json --project src/shared/tsconfig.json"
   },
   "dependencies": {
-    "@devvit/public-api": "0.12.2-next-2025-10-30-20-18-30-6fb7303be.0",
-    "@devvit/pushnotif": "0.12.2-next-2025-10-30-20-18-30-6fb7303be.0",
-    "@devvit/web": "0.12.2-next-2025-10-30-20-18-30-6fb7303be.0",
+    "@devvit/public-api": "0.12.2-next-2025-11-11-19-44-34-f46daf23c.0",
+    "@devvit/pushnotif": "0.12.2-next-2025-11-11-19-44-34-f46daf23c.0",
+    "@devvit/web": "0.12.2-next-2025-11-11-19-44-34-f46daf23c.0",
     "@tanstack/react-query": "^5.90.6",
     "@trpc/client": "^11.7.1",
     "@trpc/react-query": "^11.7.1",
     "@trpc/server": "^11.7.1",
-    "devvit": "0.12.2-next-2025-10-30-20-18-30-6fb7303be.0",
+    "devvit": "0.12.2-next-2025-11-11-19-44-34-f46daf23c.0",
     "express": "5.1.0",
     "preact": "^10.27.2",
     "zod": "^4.1.12"
