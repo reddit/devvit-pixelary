@@ -9,7 +9,6 @@ import { useDrawTelemetry } from '../_hooks/useDrawTelemetry';
 import { useTimer } from '../_hooks/useTimer';
 import type { SlateAction } from '@shared/types';
 // import { trpc } from '@client/trpc/client';
-import { Palette } from './Palette';
 import { Toolbar } from './Toolbar';
 import {
   DrawingStateProvider,
@@ -311,13 +310,12 @@ function DrawStepBody(props: DrawStepProps) {
 
       {/* Palette + Tools Footer (bottom of screen) */}
       <div className="fixed bottom-6 left-0 right-0 z-20 flex flex-col items-center gap-2">
-        <Palette
-          userLevel={userLevel}
+        <Toolbar
           isReviewing={isReviewing}
           hasEntered={hasEntered}
+          userLevel={userLevel}
           onColorChange={setCurrentColor}
         />
-        <Toolbar isReviewing={isReviewing} hasEntered={hasEntered} />
       </div>
 
       {/* Color Picker Modal moved into Palette */}

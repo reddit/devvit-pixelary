@@ -30,32 +30,25 @@ export function Undo({
       {variant === 'off' && (
         <>
           <path
-            d="M3 3H4V2H5V1H9V2H10V3H11V9H10V10H9V11H3V9H8V8H9V4H8V3H6V4H5V5H7V7H1V1H3V3Z"
-            fill="white"
-            fillOpacity="0.4"
-          />
-          <path d="M9 12H3V11H9V12Z" fill="black" fillOpacity="0.5" />
-          <path d="M3 11H2V9H3V11Z" fill="black" fillOpacity="0.5" />
-          <path d="M10 11H9V10H10V11Z" fill="black" fillOpacity="0.5" />
-          <path d="M11 10H10V9H11V10Z" fill="black" fillOpacity="0.5" />
-          <path
-            d="M3 1H1V7H7V5H8V4H9V8H8V9H3V8H0V0H3V1Z"
+            d="M5 11H4V10H5V11Z M11 11H10V10H11V11Z M4 10H3V9H4V10Z M6 5H7V7H6V10H5V2H6V5Z M10 10H9V9H10V10Z M12 10H11V2H12V10Z M3 9H2V8H3V9Z M9 9H8V8H9V9Z M2 8H1V7H2V8Z M8 8H7V7H8V8Z M1 7H0V5H1V7Z M2 5H1V4H2V5Z M8 5H7V4H8V5Z M3 4H2V3H3V4Z M9 4H8V3H9V4Z M4 3H3V2H4V3Z M10 3H9V2H10V3Z M5 2H4V1H5V2Z M11 2H10V1H11V2Z"
             fill="black"
             fillOpacity="0.5"
           />
-          <path d="M12 9H11V3H12V9Z" fill="black" fillOpacity="0.5" />
-          <path d="M8 4H7V5H5V4H6V3H8V4Z" fill="black" fillOpacity="0.5" />
-          <path d="M5 2H4V3H3V1H5V2Z" fill="black" fillOpacity="0.5" />
-          <path d="M11 3H10V2H11V3Z" fill="black" fillOpacity="0.5" />
-          <path d="M10 2H9V1H10V2Z" fill="black" fillOpacity="0.5" />
-          <path d="M9 1H5V0H9V1Z" fill="black" fillOpacity="0.5" />
-          <path d="M3 2H2V5H1V1H3V2Z" fill="white" fillOpacity="0.4" />
-          <path d="M5 3H4V2H5V3Z" fill="white" fillOpacity="0.4" />
-          <path d="M9 2H5V1H9V2Z" fill="white" fillOpacity="0.4" />
-          <path d="M9 11H3V10H9V11Z" fill="black" fillOpacity="0.25" />
-          <path d="M10 10H9V9H10V10Z" fill="black" fillOpacity="0.25" />
-          <path d="M11 9H10V3H11V9Z" fill="black" fillOpacity="0.25" />
-          <path d="M7 7H1V6H7V7Z" fill="black" fillOpacity="0.25" />
+          <path
+            d="M5 10H4V9H3V8H2V7H1V5H2V4H3V3H4V2H5V10Z M11 10H10V9H9V8H8V7H7V5H8V4H9V3H10V2H11V10Z"
+            fill="white"
+            fillOpacity="0.4"
+          />
+          <path
+            d="M5 10H4V2H5V10Z M11 10H10V2H11V10Z"
+            fill="black"
+            fillOpacity="0.25"
+          />
+          <path
+            d="M2 7H1V5H2V7Z M8 7H7V5H8V7Z M3 5H2V4H3V5Z M9 5H8V4H9V5Z"
+            fill="white"
+            fillOpacity="0.4"
+          />
         </>
       )}
 
@@ -63,31 +56,24 @@ export function Undo({
       {variant === 'on' && (
         <>
           <path
-            d="M3 3H4V2H5V1H9V2H10V3H11V9H10V10H9V11H3V9H8V8H9V4H8V3H6V4H5V5H7V7H1V1H3V3Z"
-            fill={ACCENT_COLOR}
-          />
-          <path d="M9 12H3V11H9V12Z" fill="black" fillOpacity="0.8" />
-          <path d="M3 11H2V9H3V11Z" fill="black" fillOpacity="0.8" />
-          <path d="M10 11H9V10H10V11Z" fill="black" fillOpacity="0.8" />
-          <path d="M11 10H10V9H11V10Z" fill="black" fillOpacity="0.8" />
-          <path
-            d="M3 1H1V7H7V5H8V4H9V8H8V9H3V8H0V0H3V1Z"
+            d="M5 11H4V10H5V11Z M11 11H10V10H11V11Z M4 10H3V9H4V10Z M6 5H7V7H6V10H5V2H6V5Z M10 10H9V9H10V10Z M12 10H11V2H12V10Z M3 9H2V8H3V9Z M9 9H8V8H9V9Z M2 8H1V7H2V8Z M8 8H7V7H8V8Z M1 7H0V5H1V7Z M2 5H1V4H2V5Z M8 5H7V4H8V5Z M3 4H2V3H3V4Z M9 4H8V3H9V4Z M4 3H3V2H4V3Z M10 3H9V2H10V3Z M5 2H4V1H5V2Z M11 2H10V1H11V2Z"
             fill="black"
             fillOpacity="0.8"
           />
-          <path d="M12 9H11V3H12V9Z" fill="black" fillOpacity="0.8" />
-          <path d="M8 4H7V5H5V4H6V3H8V4Z" fill="black" fillOpacity="0.8" />
-          <path d="M5 2H4V3H3V1H5V2Z" fill="black" fillOpacity="0.8" />
-          <path d="M11 3H10V2H11V3Z" fill="black" fillOpacity="0.8" />
-          <path d="M10 2H9V1H10V2Z" fill="black" fillOpacity="0.8" />
-          <path d="M9 1H5V0H9V1Z" fill="black" fillOpacity="0.8" />
-          <path d="M3 2H2V5H1V1H3V2Z" fill="white" fillOpacity="0.5" />
-          <path d="M5 3H4V2H5V3Z" fill="white" fillOpacity="0.5" />
-          <path d="M9 2H5V1H9V2Z" fill="white" fillOpacity="0.5" />
-          <path d="M9 11H3V10H9V11Z" fill="black" fillOpacity="0.3" />
-          <path d="M10 10H9V9H10V10Z" fill="black" fillOpacity="0.3" />
-          <path d="M11 9H10V3H11V9Z" fill="black" fillOpacity="0.3" />
-          <path d="M7 7H1V6H7V7Z" fill="black" fillOpacity="0.3" />
+          <path
+            d="M5 10H4V9H3V8H2V7H1V5H2V4H3V3H4V2H5V10Z M11 10H10V9H9V8H8V7H7V5H8V4H9V3H10V2H11V10Z"
+            fill={ACCENT_COLOR}
+          />
+          <path
+            d="M5 10H4V2H5V10Z M11 10H10V2H11V10Z"
+            fill="black"
+            fillOpacity="0.3"
+          />
+          <path
+            d="M2 7H1V5H2V7Z M8 7H7V5H8V7Z M3 5H2V4H3V5Z M9 5H8V4H9V5Z"
+            fill="white"
+            fillOpacity="0.5"
+          />
         </>
       )}
     </svg>
