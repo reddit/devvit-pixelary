@@ -46,9 +46,9 @@ function PickerSwatch(props: PickerSwatchProps) {
       onClick={() => {
         onSelect(color);
       }}
-      className="w-10 h-10 cursor-pointer transition-all flex items-center justify-center relative"
+      className="w-8 h-8 border-4 border-black hover:translate-x-[2px] hover:translate-y-[2px] active:translate-x-[4px] active:translate-y-[4px] shadow-pixel hover:shadow-pixel-sm active:shadow-none cursor-pointer transition-all flex items-center justify-center relative"
+      style={{ backgroundColor: color }}
     >
-      <PaintSwatch size={24} color={color} />
       <Icon
         type="checkmark"
         scale={2}
