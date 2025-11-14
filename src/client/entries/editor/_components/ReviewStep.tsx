@@ -44,6 +44,7 @@ export function ReviewStep(props: ReviewStepProps) {
   const { drawing, onCancel, onSuccess } = props;
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [entered, setEntered] = useState(false);
+  const [submitLocked, setSubmitLocked] = useState(false);
   const queryClient = useQueryClient();
   const { track } = useTelemetry();
   const { error: showErrorToast } = useToastHelpers();
@@ -101,6 +102,8 @@ export function ReviewStep(props: ReviewStepProps) {
   );
 
   const handlePost = async (nativeEvent?: PointerEvent) => {
+    if (submitLocked) return;
+    setSubmitLocked(true);
     void track('click_post_drawing');
 
     try {
@@ -147,6 +150,7 @@ export function ReviewStep(props: ReviewStepProps) {
       showErrorToast('Failed to submit. Please try again.', {
         duration: 4000,
       });
+      setSubmitLocked(false);
     }
   };
 
@@ -202,9 +206,9 @@ export function ReviewStep(props: ReviewStepProps) {
             size="large"
             onClick={handleCancel}
             disabled={
-              props.mode === 'tournament'
+              (props.mode === 'tournament'
                 ? submitTournamentDrawing.isPending
-                : submitDrawing.isPending
+                : submitDrawing.isPending) || submitLocked
             }
           >
             DELETE
@@ -216,17 +220,19 @@ export function ReviewStep(props: ReviewStepProps) {
               onClick={() => {
                 void handlePost();
               }}
-              disabled={submitTournamentDrawing.isPending}
+              disabled={submitTournamentDrawing.isPending || submitLocked}
             >
-              {submitTournamentDrawing.isPending ? 'COMMENTING...' : 'COMMENT'}
+              {submitTournamentDrawing.isPending || submitLocked
+                ? 'COMMENTING...'
+                : 'COMMENT'}
             </Button>
           ) : (
             <Button
               size="large"
               onClick={() => void handlePost()}
-              disabled={submitDrawing.isPending}
+              disabled={submitDrawing.isPending || submitLocked}
             >
-              {submitDrawing.isPending ? 'POSTING...' : 'POST'}
+              {submitDrawing.isPending || submitLocked ? 'POSTING...' : 'POST'}
             </Button>
           )}
         </div>
