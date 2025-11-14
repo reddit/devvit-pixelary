@@ -14,7 +14,7 @@ export const DRAWING_RESOLUTION = 16;
  * Pinned posts
  */
 
-export const DEFAULT_PINNED_POST_TITLE = "Let's play Pixelary!";
+export const DEFAULT_PINNED_POST_TITLE = 'Welcome to Pixelary!';
 
 /*
  * Collection posts
