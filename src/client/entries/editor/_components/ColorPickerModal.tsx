@@ -3,7 +3,6 @@ import { getAllAvailableColors } from '@client/constants';
 import type { HEX } from '@shared/types';
 import { Icon } from '@components/PixelFont';
 import { getContrastColor } from '@shared/utils/color';
-import { PaintSwatch } from '@client/components/illustrations/PaintSwatch';
 
 type ColorPickerModalProps = {
   isOpen: boolean;
