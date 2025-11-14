@@ -1,6 +1,6 @@
 import type { IllustrationProps } from './types';
 
-type BrushSize = 'small' | 'medium' | 'large';
+type BrushSizeName = 'small' | 'medium' | 'large';
 type BrushVariant = 'on' | 'off';
 
 const BRUSH_PAINT_COLOR = '#FF4500';
@@ -12,7 +12,10 @@ export function BrushSize({
   brushSize = 'small',
   brushVariant = 'on',
   ...props
-}: IllustrationProps & { brushSize?: BrushSize; brushVariant?: BrushVariant }) {
+}: IllustrationProps & {
+  brushSize?: BrushSizeName;
+  brushVariant?: BrushVariant;
+}) {
   return (
     <svg
       fill="none"

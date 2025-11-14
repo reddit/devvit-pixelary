@@ -20,8 +20,8 @@ export function useRecentColors(
       if (!raw) return null;
       const parsed = JSON.parse(raw) as unknown;
       if (!Array.isArray(parsed)) return null;
-      const hexes = parsed.filter((c) => typeof c === 'string') as string[];
-      return (hexes as HEX[]).slice(0, 7);
+      const hexes = parsed.filter((c): c is HEX => typeof c === 'string');
+      return hexes.slice(0, 7);
     } catch {
       return null;
     }
@@ -65,10 +65,11 @@ export function useRecentColors(
   const initialRecentFromStorage = readRecentFromStorage();
   const initialCurrentFromStorage = readCurrentFromStorage();
   const initializedFromStorage =
-    Array.isArray(initialRecentFromStorage) && initialRecentFromStorage.length > 0;
+    Array.isArray(initialRecentFromStorage) &&
+    initialRecentFromStorage.length > 0;
 
   const [currentColor, setCurrentColor] = useState<HEX>(
-    initialCurrentFromStorage ?? (DRAWING_COLORS[0] ?? '#000000')
+    initialCurrentFromStorage ?? DRAWING_COLORS[0] ?? '#000000'
   );
   const [recentColors, setRecentColors] = useState<HEX[]>(
     () => initialRecentFromStorage ?? DRAWING_COLORS.slice(0, 7)

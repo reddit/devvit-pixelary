@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { render } from '@testing-library/preact';
+import { render, fireEvent } from '@testing-library/preact';
 import { DrawingStateProvider, useDrawingState } from './useDrawingState';
 import { DrawingUtils } from '@shared/schema/drawing';
 
@@ -42,8 +42,8 @@ describe('useDrawingState', () => {
         <TestComponent />
       </DrawingStateProvider>
     );
-    getByText('fill').click();
-    getByText('undo').click();
+    fireEvent.click(getByText('fill'));
+    fireEvent.click(getByText('undo'));
     // No throw means success; detailed pixel checks exist elsewhere
     expect(true).toBe(true);
   });
@@ -57,7 +57,13 @@ describe('useDrawingState', () => {
       const { drawingData, floodFillAt } = useDrawingState();
       return (
         <div>
-          <button onClick={() => floodFillAt(0, 0, '#ff0000')}>flood</button>
+          <button
+            onClick={() => {
+              floodFillAt(0, 0, '#ff0000');
+            }}
+          >
+            flood
+          </button>
           <div data-testid="p00">
             {DrawingUtils.getPixelColor(drawingData, 0)}
           </div>
@@ -73,7 +79,7 @@ describe('useDrawingState', () => {
         <FillTest />
       </DrawingStateProvider>
     );
-    getByText('flood').click();
+    fireEvent.click(getByText('flood'));
     expect(getByTestId('p00').textContent).toBe('#ff0000');
     expect(getByTestId('p33').textContent).toBe('#000000');
   });
@@ -84,7 +90,13 @@ describe('useDrawingState', () => {
       const { drawingData, floodFillAt } = useDrawingState();
       return (
         <div>
-          <button onClick={() => floodFillAt(0, 0, '#FFFFFF')}>noop</button>
+          <button
+            onClick={() => {
+              floodFillAt(0, 0, '#FFFFFF');
+            }}
+          >
+            noop
+          </button>
           <div data-testid="p00">
             {DrawingUtils.getPixelColor(drawingData, 0)}
           </div>
@@ -96,7 +108,7 @@ describe('useDrawingState', () => {
         <FillNoop />
       </DrawingStateProvider>
     );
-    getByText('noop').click();
+    fireEvent.click(getByText('noop'));
     expect(getByTestId('p00').textContent).toBe('#FFFFFF');
   });
 });

@@ -13,12 +13,14 @@ const HOLD_DURATION = 1000; // ms to hold complete text
 
 type PixelInputProps = {
   value: string;
-  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  onChange: (
+    e: Event & { currentTarget: HTMLInputElement; target: HTMLInputElement }
+  ) => void;
   placeholderPhrases: string[];
   autoFocus?: boolean;
   className?: string;
   disabled?: boolean;
-  onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+  onKeyDown?: (e: KeyboardEvent) => void;
   showClearButton?: boolean;
 };
 
@@ -73,7 +75,7 @@ export const PixelInput = forwardRef<PixelInputRef, PixelInputProps>(
     };
 
     // Handle key events to prevent cursor movement and selection
-    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    const handleKeyDown = (e: KeyboardEvent) => {
       // Prevent arrow keys, home, end, etc.
       if (
         [
@@ -106,21 +108,24 @@ export const PixelInput = forwardRef<PixelInputRef, PixelInputProps>(
     };
 
     // Handle container click to focus input
-    const handleContainerClick = (e: React.MouseEvent) => {
+    const handleContainerClick = (e: MouseEvent) => {
       if (!disabled && e.target === e.currentTarget) {
         inputRef.current?.focus();
       }
     };
 
     // Handle clear button click
-    const handleClear = (e: React.MouseEvent) => {
+    const handleClear = (e: MouseEvent) => {
       e.stopPropagation();
       if (inputRef.current) {
         // Create a synthetic change event to clear the input
         const syntheticEvent = {
           target: { value: '' },
           currentTarget: { value: '' },
-        } as React.ChangeEvent<HTMLInputElement>;
+        } as Event & {
+          currentTarget: HTMLInputElement;
+          target: HTMLInputElement;
+        };
         onChange(syntheticEvent);
         inputRef.current.focus();
       }

@@ -130,7 +130,7 @@ export function DrawingStateProvider(props: ProviderProps) {
   const fill = useCallback(
     (color: HEX) => {
       // snapshot
-      (pushUndoSnapshot as () => void)();
+      pushUndoSnapshot();
       const total = drawingDataRef.current.size * drawingDataRef.current.size;
       const pixels = Array.from({ length: total }, (_, i) => ({
         index: i,
@@ -148,9 +148,11 @@ export function DrawingStateProvider(props: ProviderProps) {
       const seedIndex = pixelY * size + pixelX;
       if (seedIndex < 0 || seedIndex >= size * size) return;
       // snapshot once per fill action
-      (pushUndoSnapshot as () => void)();
+      pushUndoSnapshot();
       // Compare hex colors for connectivity
-      const pixelColors = DrawingUtils.getAllPixelColors(drawingDataRef.current);
+      const pixelColors = DrawingUtils.getAllPixelColors(
+        drawingDataRef.current
+      );
       const seedHex = pixelColors[seedIndex];
       if (seedHex === color) return;
       const visited = new Uint8Array(pixelColors.length);
@@ -158,7 +160,11 @@ export function DrawingStateProvider(props: ProviderProps) {
       visited[seedIndex] = 1;
       const fillIndices: number[] = [];
       while (stack.length) {
-        const i = stack.pop() as number;
+        const poppedIndex = stack.pop();
+        if (poppedIndex === undefined) {
+          break;
+        }
+        const i = poppedIndex;
         fillIndices.push(i);
         const x = i % size;
         const y = Math.floor(i / size);

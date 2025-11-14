@@ -87,13 +87,8 @@ export function usePointerPainting(params: Params) {
         if (toolMode === 'fill') {
           const mapped = mapClientToPixel(e.clientX, e.clientY);
           if (mapped) {
-            const {
-              pixelX,
-              pixelY,
-              pixelCenterX,
-              pixelCenterY,
-              pixelSize,
-            } = mapped;
+            const { pixelX, pixelY, pixelCenterX, pixelCenterY, pixelSize } =
+              mapped;
             spawnAt(pixelCenterX, pixelCenterY, currentColor, pixelSize);
             floodFillAt(pixelX, pixelY, currentColor);
             if (!hasTrackedFirstPixelRef.current) {

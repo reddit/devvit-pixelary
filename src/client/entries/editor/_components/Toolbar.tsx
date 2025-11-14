@@ -35,6 +35,8 @@ export function Toolbar(props: ToolbarProps) {
     undo,
     brushSize,
     setBrushSize,
+    pushUndoSnapshot,
+    fill,
     mirrorV,
     setMirrorV,
     mirrorH,
@@ -141,7 +143,10 @@ export function Toolbar(props: ToolbarProps) {
           telemetryEvent="click_fill"
           onClick={() => {
             setToolMode('fill');
+            pushUndoSnapshot();
+            fill(currentColor);
           }}
+          ariaPressed={toolMode === 'fill'}
         >
           <PaintBucket size={24} variant={toolMode === 'fill' ? 'on' : 'off'} />
         </ToolbarButton>
@@ -165,6 +170,7 @@ export function Toolbar(props: ToolbarProps) {
             if (toolMode === 'fill') setToolMode('draw');
             setBrushSize(1);
           }}
+          ariaPressed={toolMode === 'draw' && brushSize === 1}
         >
           <BrushSize
             size={24}
@@ -181,6 +187,7 @@ export function Toolbar(props: ToolbarProps) {
             if (toolMode === 'fill') setToolMode('draw');
             setBrushSize(3);
           }}
+          ariaPressed={toolMode === 'draw' && brushSize === 3}
         >
           <BrushSize
             size={24}
@@ -197,6 +204,7 @@ export function Toolbar(props: ToolbarProps) {
             if (toolMode === 'fill') setToolMode('draw');
             setBrushSize(5);
           }}
+          ariaPressed={toolMode === 'draw' && brushSize === 5}
         >
           <BrushSize
             size={24}
@@ -213,6 +221,7 @@ export function Toolbar(props: ToolbarProps) {
             if (toolMode === 'fill') setToolMode('draw');
             setMirrorV(!mirrorV);
           }}
+          ariaPressed={toolMode === 'draw' && mirrorV}
         >
           <Mirror
             size={24}
@@ -229,6 +238,7 @@ export function Toolbar(props: ToolbarProps) {
             if (toolMode === 'fill') setToolMode('draw');
             setMirrorH(!mirrorH);
           }}
+          ariaPressed={toolMode === 'draw' && mirrorH}
         >
           <Mirror
             size={24}
@@ -257,11 +267,19 @@ type ToolbarButtonProps = {
   className?: string;
   title?: string;
   telemetryEvent: TelemetryEventType;
+  ariaPressed?: boolean;
 };
 
 function ToolbarButton(props: ToolbarButtonProps) {
-  const { children, onClick, disabled, className, title, telemetryEvent } =
-    props;
+  const {
+    children,
+    onClick,
+    disabled,
+    className,
+    title,
+    telemetryEvent,
+    ariaPressed,
+  } = props;
   const { track } = useTelemetry();
 
   const disabledClasses = disabled
@@ -277,6 +295,9 @@ function ToolbarButton(props: ToolbarButtonProps) {
       }}
       title={title}
       aria-label={title}
+      aria-pressed={
+        ariaPressed === undefined ? undefined : ariaPressed ? 'true' : 'false'
+      }
       className={`h-10 w-10 transition-all flex items-center justify-center   ${
         disabledClasses
       } ${className}`}

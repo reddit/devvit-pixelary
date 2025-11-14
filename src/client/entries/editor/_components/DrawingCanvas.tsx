@@ -3,9 +3,11 @@ import type { DrawingData } from '@shared/schema/drawing';
 import type { Size2D, DrawArea } from '../_hooks/useGeometry';
 import { useRenderer } from '../_hooks/useRenderer';
 import type { RefObject } from 'react';
-import type { PointerEvent as ReactPointerEvent } from 'react';
+/**/
 
 type MutableRef<T> = { current: T };
+
+type PointerHandler = (e: PointerEvent) => void;
 
 type DrawingCanvasProps = {
   isReviewing: boolean;
@@ -18,10 +20,10 @@ type DrawingCanvasProps = {
   checkerboardCacheRef: MutableRef<Map<number, HTMLCanvasElement>>;
   applyDrawAreaCssVariables: (drawArea: DrawArea, isReviewing: boolean) => void;
   // pointer handlers
-  onPointerDown?: React.PointerEventHandler<HTMLCanvasElement>;
-  onPointerMove?: React.PointerEventHandler<HTMLCanvasElement>;
-  onPointerUp?: React.PointerEventHandler<HTMLCanvasElement>;
-  onPointerLeave?: React.PointerEventHandler<HTMLCanvasElement>;
+  onPointerDown?: PointerHandler;
+  onPointerMove?: PointerHandler;
+  onPointerUp?: PointerHandler;
+  onPointerLeave?: PointerHandler;
   className?: string;
 };
 
@@ -63,18 +65,10 @@ export function DrawingCanvas(props: DrawingCanvasProps) {
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerLeave={onPointerLeave}
-      onMouseDown={(e) =>
-        onPointerDown?.(e as unknown as ReactPointerEvent<HTMLCanvasElement>)
-      }
-      onMouseMove={(e) =>
-        onPointerMove?.(e as unknown as ReactPointerEvent<HTMLCanvasElement>)
-      }
-      onMouseUp={(e) =>
-        onPointerUp?.(e as unknown as ReactPointerEvent<HTMLCanvasElement>)
-      }
-      onMouseLeave={(e) =>
-        onPointerLeave?.(e as unknown as ReactPointerEvent<HTMLCanvasElement>)
-      }
+      onMouseDown={(e) => onPointerDown?.(e as unknown as PointerEvent)}
+      onMouseMove={(e) => onPointerMove?.(e as unknown as PointerEvent)}
+      onMouseUp={(e) => onPointerUp?.(e as unknown as PointerEvent)}
+      onMouseLeave={(e) => onPointerLeave?.(e as unknown as PointerEvent)}
     />
   );
 }

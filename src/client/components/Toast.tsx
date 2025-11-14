@@ -182,7 +182,7 @@ export function Toast({
 
   // Handle action click
   const handleAction = useCallback(
-    (e: React.MouseEvent) => {
+    (e: MouseEvent) => {
       e.stopPropagation();
       action?.onClick();
     },
@@ -191,11 +191,11 @@ export function Toast({
 
   // Handle keyboard events
   const handleKeyDown = useCallback(
-    (e: React.KeyboardEvent) => {
+    (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
         handleDismiss();
       } else if (e.key === 'Enter' && action) {
-        handleAction(e as unknown as React.MouseEvent);
+        handleAction(e as unknown as MouseEvent);
       }
     },
     [handleDismiss, handleAction, action]
