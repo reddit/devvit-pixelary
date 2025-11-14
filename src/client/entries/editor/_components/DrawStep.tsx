@@ -238,6 +238,8 @@ function DrawStepBody(props: DrawStepProps) {
           onPointerMove={pointerHandlers.onPointerMove}
           onPointerUp={pointerHandlers.onPointerUp}
           onPointerLeave={pointerHandlers.onPointerLeave}
+          onPointerCancel={pointerHandlers.onPointerCancel}
+          onLostPointerCapture={pointerHandlers.onLostPointerCapture}
           className={`absolute inset-0 z-10 ${
             isReviewing ? 'pointer-events-none' : 'cursor-crosshair'
           }`}

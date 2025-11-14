@@ -104,8 +104,12 @@ export function usePointerPainting(params: Params) {
           releasePointerCapture?: (pointerId: number) => void;
         };
         const el = target as unknown as PointerCaptureTarget;
-        if (el.setPointerCapture) {
-          el.setPointerCapture(e.pointerId);
+        if (el.setPointerCapture && typeof e.pointerId === 'number') {
+          try {
+            el.setPointerCapture(e.pointerId);
+          } catch {
+            // ignore setPointerCapture errors (e.g., if already captured)
+          }
         }
         isDrawingRef.current = true;
         if (!hasPushedUndoForStrokeRef.current) {
@@ -161,13 +165,38 @@ export function usePointerPainting(params: Params) {
           const el = e.currentTarget as unknown as {
             releasePointerCapture?: (pointerId: number) => void;
           };
-          if (el.releasePointerCapture) {
-            el.releasePointerCapture(e.pointerId);
+          if (el.releasePointerCapture && typeof e.pointerId === 'number') {
+            try {
+              el.releasePointerCapture(e.pointerId);
+            } catch {
+              // ignore release errors
+            }
           }
         }
       },
       onPointerLeave: (e: ReactPointerEvent<HTMLCanvasElement>) => {
         e.preventDefault();
+        isDrawingRef.current = false;
+        lastPaintedIndexRef.current = null;
+        hasPushedUndoForStrokeRef.current = false;
+      },
+      onPointerCancel: (e: ReactPointerEvent<HTMLCanvasElement>) => {
+        e.preventDefault();
+        isDrawingRef.current = false;
+        lastPaintedIndexRef.current = null;
+        hasPushedUndoForStrokeRef.current = false;
+        const el = e.currentTarget as unknown as {
+          releasePointerCapture?: (pointerId: number) => void;
+        };
+        if (el.releasePointerCapture && typeof e.pointerId === 'number') {
+          try {
+            el.releasePointerCapture(e.pointerId);
+          } catch {
+            // ignore release errors
+          }
+        }
+      },
+      onLostPointerCapture: (_e: ReactPointerEvent<HTMLCanvasElement>) => {
         isDrawingRef.current = false;
         lastPaintedIndexRef.current = null;
         hasPushedUndoForStrokeRef.current = false;

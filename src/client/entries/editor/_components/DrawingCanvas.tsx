@@ -24,6 +24,8 @@ type DrawingCanvasProps = {
   onPointerMove?: PointerHandler;
   onPointerUp?: PointerHandler;
   onPointerLeave?: PointerHandler;
+  onPointerCancel?: PointerHandler;
+  onLostPointerCapture?: PointerHandler;
   className?: string;
 };
 
@@ -42,6 +44,8 @@ export function DrawingCanvas(props: DrawingCanvasProps) {
     onPointerMove,
     onPointerUp,
     onPointerLeave,
+    onPointerCancel,
+    onLostPointerCapture,
     className,
   } = props;
 
@@ -60,11 +64,13 @@ export function DrawingCanvas(props: DrawingCanvasProps) {
   return (
     <canvas
       ref={canvasRef}
-      className={className}
+      className={`${className} touch-none`}
       onPointerDown={onPointerDown}
       onPointerMove={onPointerMove}
       onPointerUp={onPointerUp}
       onPointerLeave={onPointerLeave}
+      onPointerCancel={onPointerCancel}
+      onLostPointerCapture={onLostPointerCapture}
       onMouseDown={(e) => onPointerDown?.(e as unknown as PointerEvent)}
       onMouseMove={(e) => onPointerMove?.(e as unknown as PointerEvent)}
       onMouseUp={(e) => onPointerUp?.(e as unknown as PointerEvent)}
