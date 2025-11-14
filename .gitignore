@@ -14,11 +14,14 @@ src/**/*.js
 src/**/*.js.map
 src/**/*.d.ts
 !src/client/types.d.ts
+!src/client/react-compat.d.ts
 *.js
 *.js.map
 *.d.ts
 !eslint.config.js
 !tools/tsconfig-base.json
+!src/client/types.d.ts
+!src/client/react-compat.d.ts
 
 # Testing
 .coverage/

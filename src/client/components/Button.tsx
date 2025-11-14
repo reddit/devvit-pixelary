@@ -2,11 +2,10 @@ import { Text, Icon } from './PixelFont';
 import { type SupportedGlyph } from './PixelFont';
 import { useTelemetry } from '@client/hooks/useTelemetry';
 import type { TelemetryEventType } from '@shared/types';
-import type React from 'react';
 
 type ButtonProps = {
   children?: string;
-  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  onClick?: (e: MouseEvent) => void;
   variant?: 'primary' | 'secondary' | 'white' | 'success';
   size?: 'small' | 'medium' | 'large';
   disabled?: boolean;
@@ -60,7 +59,7 @@ export function Button({
     large: 2,
   };
 
-  const handleClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+  const handleClick = (e: MouseEvent) => {
     // Track telemetry if provided
     if (telemetryEvent) {
       void track(telemetryEvent);

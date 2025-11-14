@@ -59,7 +59,7 @@ export function Menu(props: MenuProps) {
       <nav className="flex flex-col gap-3 w-full max-w-3xs">
         <Button
           onClick={async (e) => {
-            void requestExpandedMode(e.nativeEvent, 'editor');
+            void requestExpandedMode(e, 'editor');
           }}
           size="large"
           telemetryEvent="click_draw"

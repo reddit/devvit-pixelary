@@ -69,7 +69,6 @@ export default defineConfig({
         '**/test-setup.ts',
         '**/*.config.ts',
       ],
-      all: true,
       thresholds: {
         lines: 70,
         functions: 70,
