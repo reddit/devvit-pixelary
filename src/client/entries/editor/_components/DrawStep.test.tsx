@@ -74,8 +74,8 @@ describe('DrawStep reviewing state', () => {
 });
 
 describe('DrawStep tools', () => {
-  it('Fill hides hint and Undo restores it', () => {
-    render(
+  it('Fill selection does not act; click canvas hides hint; Undo restores it', () => {
+    const { container } = render(
       <DrawStep
         word="test"
         time={60}
@@ -95,11 +95,29 @@ describe('DrawStep tools', () => {
     // Initially hint is visible
     expect(screen.getByText('Tap to draw')).toBeTruthy();
 
-    // Click Fill
+    // Click Fill (should not immediately act)
     const fillBtn = screen.getByRole('button', { name: /fill/i });
     fireEvent.click(fillBtn);
 
-    // Hint should be gone
+    // Hint should still be visible until user clicks canvas
+    expect(screen.getByText('Tap to draw')).toBeTruthy();
+
+    // Click canvas to trigger fill
+    const mainCanvas = container.querySelector('canvas.z-10');
+    expect(mainCanvas).toBeTruthy();
+    if (!mainCanvas) throw new Error('main canvas not found');
+    const rect = {
+      left: 0,
+      top: 0,
+      width: 600,
+      height: 600,
+      right: 600,
+      bottom: 600,
+    } as DOMRect;
+    vi.spyOn(mainCanvas, 'getBoundingClientRect').mockReturnValue(rect);
+    fireEvent.mouseDown(mainCanvas, { clientX: 300, clientY: 300 });
+
+    // Hint should be gone after fill action
     expect(screen.queryByText('Tap to draw')).toBeNull();
 
     // Click Undo

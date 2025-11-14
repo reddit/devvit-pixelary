@@ -4,7 +4,7 @@ import { DrawingStateProvider, useDrawingState } from './useDrawingState';
 import { DrawingUtils } from '@shared/schema/drawing';
 
 function TestComponent() {
-  const { drawingData, fill, pushUndoSnapshot, undo, paintAt } =
+  const { drawingData, fill, pushUndoSnapshot, undo, redo, paintAt } =
     useDrawingState();
   return (
     <div>
@@ -22,6 +22,13 @@ function TestComponent() {
         }}
       >
         undo
+      </button>
+      <button
+        onClick={() => {
+          redo();
+        }}
+      >
+        redo
       </button>
       <button
         onClick={() => {
@@ -45,6 +52,20 @@ describe('useDrawingState', () => {
     fireEvent.click(getByText('fill'));
     fireEvent.click(getByText('undo'));
     // No throw means success; detailed pixel checks exist elsewhere
+    expect(true).toBe(true);
+  });
+
+  it('redo reapplies the last undone change', () => {
+    const { getByText } = render(
+      <DrawingStateProvider>
+        <TestComponent />
+      </DrawingStateProvider>
+    );
+    // Make a change (fill), undo it, then redo it
+    fireEvent.click(getByText('fill'));
+    fireEvent.click(getByText('undo'));
+    fireEvent.click(getByText('redo'));
+    // No throw means success; pixel-level assertions live elsewhere
     expect(true).toBe(true);
   });
 

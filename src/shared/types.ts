@@ -70,6 +70,7 @@ export type TelemetryEventType =
   | 'click_color_swatch'
   | 'click_color_picker_plus'
   | 'click_undo'
+  | 'click_redo'
   | 'click_fill'
   // Toggle events
   | 'toggle_brush_size'

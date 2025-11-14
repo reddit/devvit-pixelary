@@ -23,6 +23,8 @@ type DrawingStateContextValue = {
   canUndo: boolean;
   pushUndoSnapshot: () => void;
   undo: () => void;
+  canRedo: boolean;
+  redo: () => void;
   paintAt: (pixelX: number, pixelY: number, color: HEX) => void;
   fill: (color: HEX) => void;
   // tool mode
@@ -62,9 +64,13 @@ export function DrawingStateProvider(props: ProviderProps) {
   const [mirrorV, setMirrorV] = useState(false);
   const [mirrorH, setMirrorH] = useState(false);
   const [undoStack, setUndoStack] = useState<DrawingData[]>([]);
+  const [redoStack, setRedoStack] = useState<DrawingData[]>([]);
   const [toolMode, setToolMode] = useState<ToolMode>('draw');
 
   const pushUndoSnapshot = useCallback(() => {
+    // When creating a new undo snapshot, we are starting a new branch of history.
+    // Clear redo stack so redo only applies immediately after an undo.
+    setRedoStack([]);
     setUndoStack((stack) => [
       ...stack,
       {
@@ -89,6 +95,46 @@ export function DrawingStateProvider(props: ProviderProps) {
             bg: last.bg,
             size: last.size,
           };
+          // Current state becomes a candidate for redo
+          setRedoStack((redo) => [
+            ...redo,
+            {
+              data: prev.data,
+              colors: [...prev.colors],
+              bg: prev.bg,
+              size: prev.size,
+            },
+          ]);
+        }
+        return copy;
+      });
+      return restored ?? prev;
+    });
+  }, []);
+
+  const redo = useCallback(() => {
+    setDrawingData((prev) => {
+      let restored: DrawingData | undefined;
+      setRedoStack((s) => {
+        const copy = [...s];
+        const last = copy.pop();
+        if (last) {
+          restored = {
+            data: last.data,
+            colors: [...last.colors],
+            bg: last.bg,
+            size: last.size,
+          };
+          // Current state goes back onto undo stack
+          setUndoStack((undo) => [
+            ...undo,
+            {
+              data: prev.data,
+              colors: [...prev.colors],
+              bg: prev.bg,
+              size: prev.size,
+            },
+          ]);
         }
         return copy;
       });
@@ -198,8 +244,10 @@ export function DrawingStateProvider(props: ProviderProps) {
       mirrorH,
       setMirrorH,
       canUndo: undoStack.length > 0,
+      canRedo: redoStack.length > 0,
       pushUndoSnapshot,
       undo,
+      redo,
       paintAt,
       fill,
       toolMode,
@@ -213,8 +261,10 @@ export function DrawingStateProvider(props: ProviderProps) {
       mirrorV,
       mirrorH,
       undoStack.length,
+      redoStack.length,
       pushUndoSnapshot,
       undo,
+      redo,
       paintAt,
       fill,
       toolMode,

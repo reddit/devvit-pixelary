@@ -1,13 +1,12 @@
 import type { HEX, TelemetryEventType } from '@shared/types';
-import type React from 'react';
 import { useTelemetry } from '@client/hooks/useTelemetry';
 import { useDrawingState } from '../_hooks/useDrawingState';
 import { Undo } from '@client/components/illustrations/Undo';
+import { Redo } from '@client/components/illustrations/Redo';
 import { PaintBucket } from '@client/components/illustrations/PaintBucket';
-import { BrushSize } from '@client/components/illustrations/BrushSize';
 import { Mirror } from '@client/components/illustrations/Mirror';
 import { PaintBrush } from '@client/components/illustrations/PaintBrush';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { getAllAvailableColors } from '@client/constants';
 import { useRecentColors } from '../_hooks/useRecentColors';
 import { useFlipRecentTiles } from '../_hooks/useFlipRecentTiles';
@@ -33,10 +32,10 @@ export function Toolbar(props: ToolbarProps) {
   const {
     canUndo,
     undo,
+    canRedo,
+    redo,
     brushSize,
     setBrushSize,
-    pushUndoSnapshot,
-    fill,
     mirrorV,
     setMirrorV,
     mirrorH,
@@ -59,7 +58,6 @@ export function Toolbar(props: ToolbarProps) {
 
   const [isColorPickerOpen, setIsColorPickerOpen] = useState(false);
   const handleOpenColorPicker = () => {
-    void track('click_color_picker_plus');
     setIsColorPickerOpen(true);
   };
   const handleCloseColorPicker = () => {
@@ -112,22 +110,46 @@ export function Toolbar(props: ToolbarProps) {
       >
         {recentColors
           .filter((color) => allowedColorsSet.has(color))
-          .map((color, idx) => (
-            <ColorSwatch
-              key={color}
-              dataAttrKey={color}
-              onSelect={(selected) => {
-                void track('click_color_swatch');
-                setCurrentColor(selected);
-                updateRecentWithDrama(selected);
-              }}
-              color={color}
-              isSelected={
-                idx === 0 && currentColor === color && !isMRUAnimating
-              }
-            />
-          ))}
-        <ColorPickerButton onClick={handleOpenColorPicker} />
+          .map((color, idx) => {
+            const isSelected =
+              idx === 0 && currentColor === color && !isMRUAnimating;
+            return (
+              <ToolbarButton
+                key={color}
+                title="Color"
+                telemetryEvent="click_color_swatch"
+                onClick={() => {
+                  setCurrentColor(color);
+                  updateRecentWithDrama(color);
+                }}
+                className="relative"
+                ariaPressed={isSelected}
+                dataColor={color}
+              >
+                <PaintSwatch size={24} color={color} />
+                <svg
+                  width="12"
+                  height="10"
+                  viewBox="0 0 12 10"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                  className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 mru-check transition-opacity duration-200 ${isSelected ? 'opacity-100' : 'opacity-0'}`}
+                >
+                  <path
+                    d="M12 4H10V6H8V8H6V10H4V8H2V6H0V4H4V6H6V4H8V2H10V0H12V4Z"
+                    fill={getContrastColor(color)}
+                  />
+                </svg>
+              </ToolbarButton>
+            );
+          })}
+        <ToolbarButton
+          title="Color Picker"
+          telemetryEvent="click_color_picker_plus"
+          onClick={handleOpenColorPicker}
+        >
+          <ColorPalette size={24} />
+        </ToolbarButton>
       </div>
 
       {/* Bottom Row: Tools */}
@@ -136,6 +158,10 @@ export function Toolbar(props: ToolbarProps) {
         <ToolbarButton title="Undo" telemetryEvent="click_undo" onClick={undo}>
           <Undo size={24} variant={canUndo ? 'on' : 'off'} />
         </ToolbarButton>
+        {/* Redo Tool */}
+        <ToolbarButton title="Redo" telemetryEvent="click_redo" onClick={redo}>
+          <Redo size={24} variant={canRedo ? 'on' : 'off'} />
+        </ToolbarButton>
 
         {/* Paint Bucket Tool */}
         <ToolbarButton
@@ -143,23 +169,10 @@ export function Toolbar(props: ToolbarProps) {
           telemetryEvent="click_fill"
           onClick={() => {
             setToolMode('fill');
-            pushUndoSnapshot();
-            fill(currentColor);
           }}
           ariaPressed={toolMode === 'fill'}
         >
           <PaintBucket size={24} variant={toolMode === 'fill' ? 'on' : 'off'} />
-        </ToolbarButton>
-
-        {/* Draw Tool */}
-        <ToolbarButton
-          title="Draw"
-          telemetryEvent="click_draw"
-          onClick={() => {
-            setToolMode('draw');
-          }}
-        >
-          <PaintBrush size={24} variant={toolMode === 'draw' ? 'on' : 'off'} />
         </ToolbarButton>
 
         {/* Brush Size: Small */}
@@ -172,10 +185,10 @@ export function Toolbar(props: ToolbarProps) {
           }}
           ariaPressed={toolMode === 'draw' && brushSize === 1}
         >
-          <BrushSize
+          <PaintBrush
             size={24}
             brushSize="small"
-            brushVariant={toolMode === 'draw' && brushSize === 1 ? 'on' : 'off'}
+            variant={toolMode === 'draw' && brushSize === 1 ? 'on' : 'off'}
           />
         </ToolbarButton>
 
@@ -189,10 +202,10 @@ export function Toolbar(props: ToolbarProps) {
           }}
           ariaPressed={toolMode === 'draw' && brushSize === 3}
         >
-          <BrushSize
+          <PaintBrush
             size={24}
             brushSize="medium"
-            brushVariant={toolMode === 'draw' && brushSize === 3 ? 'on' : 'off'}
+            variant={toolMode === 'draw' && brushSize === 3 ? 'on' : 'off'}
           />
         </ToolbarButton>
 
@@ -206,10 +219,10 @@ export function Toolbar(props: ToolbarProps) {
           }}
           ariaPressed={toolMode === 'draw' && brushSize === 5}
         >
-          <BrushSize
+          <PaintBrush
             size={24}
             brushSize="large"
-            brushVariant={toolMode === 'draw' && brushSize === 5 ? 'on' : 'off'}
+            variant={toolMode === 'draw' && brushSize === 5 ? 'on' : 'off'}
           />
         </ToolbarButton>
 
@@ -261,13 +274,14 @@ export function Toolbar(props: ToolbarProps) {
 }
 
 type ToolbarButtonProps = {
-  children: React.ReactNode;
+  children: ReactNode;
   onClick: () => void;
   disabled?: boolean;
   className?: string;
   title?: string;
   telemetryEvent: TelemetryEventType;
   ariaPressed?: boolean;
+  dataColor?: string;
 };
 
 function ToolbarButton(props: ToolbarButtonProps) {
@@ -279,12 +293,13 @@ function ToolbarButton(props: ToolbarButtonProps) {
     title,
     telemetryEvent,
     ariaPressed,
+    dataColor,
   } = props;
   const { track } = useTelemetry();
 
   const disabledClasses = disabled
     ? 'opacity-50 cursor-not-allowed'
-    : 'cursor-pointer hover:scale-110 active:scale-90';
+    : 'cursor-pointer hover:scale-120 active:scale-90';
 
   return (
     <button
@@ -295,6 +310,7 @@ function ToolbarButton(props: ToolbarButtonProps) {
       }}
       title={title}
       aria-label={title}
+      data-color={dataColor}
       aria-pressed={
         ariaPressed === undefined ? undefined : ariaPressed ? 'true' : 'false'
       }
@@ -303,60 +319,6 @@ function ToolbarButton(props: ToolbarButtonProps) {
       } ${className}`}
     >
       {children}
-    </button>
-  );
-}
-
-// Local components folded from ColorSwatch.tsx and ColorPickerButton.tsx
-type ColorSwatchProps = {
-  color: HEX;
-  isSelected: boolean;
-  onSelect: (color: HEX) => void;
-  dataAttrKey?: string;
-};
-
-function ColorSwatch(props: ColorSwatchProps) {
-  const { color, isSelected, onSelect, dataAttrKey } = props;
-
-  return (
-    <button
-      onClick={() => {
-        onSelect(color);
-      }}
-      data-color={dataAttrKey}
-      className="w-10 h-10 cursor-pointer transition-all flex items-center justify-center relative"
-    >
-      <PaintSwatch size={24} color={color} />
-      <svg
-        width="12"
-        height="10"
-        viewBox="0 0 12 10"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-        className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 mru-check transition-opacity duration-200 ${isSelected ? 'opacity-100' : 'opacity-0'}`}
-      >
-        <path
-          d="M12 4H10V6H8V8H6V10H4V8H2V6H0V4H4V6H6V4H8V2H10V0H12V4Z"
-          fill={getContrastColor(color)}
-        />
-      </svg>
-    </button>
-  );
-}
-
-type ColorPickerButtonProps = {
-  onClick: () => void;
-};
-
-function ColorPickerButton(props: ColorPickerButtonProps) {
-  const { onClick } = props;
-
-  return (
-    <button
-      onClick={onClick}
-      className="w-10 h-10 cursor-pointer flex items-center justify-center"
-    >
-      <ColorPalette size={24} />
     </button>
   );
 }
