@@ -76,6 +76,16 @@ declare module 'react-dom' {
   export default ReactDomDefault;
 }
 
+declare module 'react-dom/client' {
+  import * as Compat from 'preact/compat';
+  export function createRoot(
+    container: Element | Document | DocumentFragment | null
+  ): {
+    render: (children: import('preact').ComponentChild) => void;
+    unmount: () => void;
+  };
+}
+
 declare module 'react/jsx-runtime' {
   export * from 'preact/jsx-runtime';
 }
