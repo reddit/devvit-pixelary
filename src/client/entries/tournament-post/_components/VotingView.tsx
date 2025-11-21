@@ -18,7 +18,6 @@ type VotingViewProps = {
         playerCount: number;
       }
     | undefined;
-  onDraw: () => void;
   hasEnoughSubmissions: boolean;
   word: string;
   onToggleGallery: () => void;
@@ -148,7 +147,6 @@ function DrawingCard({
 export function VotingView({
   postId,
   stats,
-  onDraw,
   hasEnoughSubmissions,
   word,
   onToggleGallery,
@@ -400,7 +398,7 @@ export function VotingView({
         </Text>
         <Button
           onClick={async (e) => {
-            void requestExpandedMode(e.nativeEvent, 'editor');
+            void requestExpandedMode(e, 'editor');
           }}
           size="large"
           variant="primary"

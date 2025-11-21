@@ -39,10 +39,6 @@ export function TournamentPost() {
     void utils.app.user.getProfile.prefetch();
   }, [utils]);
 
-  const handleDrawSomething = () => {
-    return;
-  };
-
   const handleEditorSuccess = async () => {
     showSuccessToast('Submitted!', { duration: 3000 });
     await refetchStats();
@@ -68,7 +64,6 @@ export function TournamentPost() {
           <VotingView
             postId={currentPostId}
             stats={stats}
-            onDraw={handleDrawSomething}
             hasEnoughSubmissions={(stats?.submissionCount ?? 0) >= 2}
             word={word}
             onToggleGallery={() => {
@@ -102,7 +97,6 @@ export function TournamentPost() {
           onToggleView={() => {
             setViewMode('voting');
           }}
-          onDraw={handleDrawSomething}
           word={word}
         />
       </div>

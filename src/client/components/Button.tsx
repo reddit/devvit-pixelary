@@ -5,7 +5,7 @@ import type { TelemetryEventType } from '@shared/types';
 
 type ButtonProps = {
   children?: string;
-  onClick?: (e: MouseEvent) => void;
+  onClick?: (e: MouseEvent) => unknown | Promise<unknown>;
   variant?: 'primary' | 'secondary' | 'white' | 'success';
   size?: 'small' | 'medium' | 'large';
   disabled?: boolean;
@@ -59,12 +59,12 @@ export function Button({
     large: 2,
   };
 
-  const handleClick = (e: MouseEvent) => {
+  const handleClick = async (e: MouseEvent) => {
     // Track telemetry if provided
     if (telemetryEvent) {
       void track(telemetryEvent);
     }
-    onClick?.(e);
+    await onClick?.(e);
   };
 
   return (

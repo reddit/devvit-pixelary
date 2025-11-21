@@ -162,7 +162,11 @@ export function ResultsView({
       {/* Primary CTA */}
       <Button
         onClick={async (e) => {
-          void requestExpandedMode(e.nativeEvent, 'editor');
+          try {
+            await requestExpandedMode(e, 'editor');
+          } catch (error) {
+            console.error('Could not enter expanded mode:', error);
+          }
         }}
         size="large"
         telemetryEvent="click_draw_something"
