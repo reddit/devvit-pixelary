@@ -32,7 +32,7 @@ describe('EditorRouter', () => {
     } as unknown as ReturnType<typeof trpc.app.slate.trackAction.useMutation>);
 
     render(
-      <EditorContextProvider onClose={() => {}}>
+      <EditorContextProvider>
         <EditorRouter />
       </EditorContextProvider>
     );

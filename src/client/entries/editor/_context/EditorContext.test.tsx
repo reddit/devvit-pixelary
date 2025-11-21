@@ -24,7 +24,7 @@ describe('EditorContext', () => {
       refetch: () => {},
     });
     render(
-      <EditorContextProvider onClose={() => {}}>
+      <EditorContextProvider>
         <Probe />
       </EditorContextProvider>
     );

@@ -28,7 +28,7 @@ describe('isClientVersionSufficient', () => {
         name: 'IOS',
         version: {
           yyyy: 2025,
-          release: 46,
+          release: 45,
           attempt: 0,
           number: 1000,
         },
@@ -80,7 +80,7 @@ describe('isClientVersionSufficient', () => {
         name: 'IOS',
         version: {
           yyyy: 2025,
-          release: 45,
+          release: 44,
           attempt: 0,
           number: 1000,
         },
@@ -95,7 +95,7 @@ describe('isClientVersionSufficient', () => {
         name: 'ANDROID',
         version: {
           yyyy: 2025,
-          release: 46,
+          release: 45,
           attempt: 0,
           number: 1000,
         },
@@ -147,7 +147,7 @@ describe('isClientVersionSufficient', () => {
         name: 'ANDROID',
         version: {
           yyyy: 2025,
-          release: 45,
+          release: 44,
           attempt: 0,
           number: 1000,
         },
@@ -156,4 +156,3 @@ describe('isClientVersionSufficient', () => {
     });
   });
 });
-

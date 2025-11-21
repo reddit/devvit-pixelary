@@ -43,7 +43,6 @@ describe('ReviewStep submit flows', () => {
       <ToastProvider>
         <ReviewStep
           drawing={DrawingUtils.createBlank()}
-          onCancel={() => {}}
           mode="post"
           word="cat"
           dictionary="main"
@@ -71,7 +70,6 @@ describe('ReviewStep submit flows', () => {
       <ToastProvider>
         <ReviewStep
           drawing={DrawingUtils.createBlank()}
-          onCancel={() => {}}
           mode="tournament"
           tournamentPostId="t3_abc"
         />

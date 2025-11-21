@@ -13,7 +13,6 @@ import { DeleteConfirmationModal } from './DeleteConfirmationModal';
 
 type BaseReviewProps = {
   drawing: DrawingData;
-  onCancel: () => void;
   onSuccess?: (result?: {
     success: boolean;
     postId?: string;
@@ -41,7 +40,7 @@ type TournamentReviewProps = BaseReviewProps & {
 type ReviewStepProps = PostReviewProps | TournamentReviewProps;
 
 export function ReviewStep(props: ReviewStepProps) {
-  const { drawing, onCancel, onSuccess } = props;
+  const { drawing, onSuccess } = props;
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [entered, setEntered] = useState(false);
   const [submitLocked, setSubmitLocked] = useState(false);
@@ -154,14 +153,9 @@ export function ReviewStep(props: ReviewStepProps) {
     }
   };
 
-  const handleCancel = () => {
+  const handleDelete = async (_event: MouseEvent) => {
     void track('click_cancel_drawing');
     setShowCancelConfirm(true);
-  };
-
-  const confirmCancel = () => {
-    onCancel();
-    setShowCancelConfirm(false);
   };
 
   return (
@@ -204,7 +198,7 @@ export function ReviewStep(props: ReviewStepProps) {
           <Button
             variant="secondary"
             size="large"
-            onClick={handleCancel}
+            onClick={handleDelete}
             disabled={
               (props.mode === 'tournament'
                 ? submitTournamentDrawing.isPending
@@ -244,7 +238,6 @@ export function ReviewStep(props: ReviewStepProps) {
         onClose={() => {
           setShowCancelConfirm(false);
         }}
-        onDelete={confirmCancel}
       />
     </main>
   );

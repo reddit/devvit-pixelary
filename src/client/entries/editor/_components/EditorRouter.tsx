@@ -51,7 +51,6 @@ export function EditorRouter() {
                   mode="tournament"
                   tournamentPostId={ctx.tournamentPostId}
                   drawing={ctx.draft}
-                  onCancel={ctx.onClose}
                   {...(ctx.onSuccess
                     ? {
                         onSuccess: (_result) => {
@@ -66,10 +65,6 @@ export function EditorRouter() {
                   word={ctx.word}
                   dictionary={`r/${context.subredditName}`}
                   drawing={ctx.draft}
-                  onCancel={ctx.onClose}
-                  onSuccess={(_result) => {
-                    ctx.onClose();
-                  }}
                   slateId={ctx.slateId}
                   trackSlateAction={ctx.trackSlateAction}
                 />

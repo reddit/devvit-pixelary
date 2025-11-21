@@ -34,13 +34,7 @@ describe('DeleteConfirmationModal', () => {
   });
 
   it('renders with title and body when open', () => {
-    render(
-      <DeleteConfirmationModal
-        isOpen={true}
-        onClose={() => {}}
-        onDelete={() => {}}
-      />
-    );
+    render(<DeleteConfirmationModal isOpen={true} onClose={() => {}} />);
     const portalRoot = getPortalRoot();
     // Assert there is some text content in the modal (not specific copy)
     expect(within(portalRoot).queryAllByText(/\S/).length).toBeGreaterThan(0);
@@ -48,36 +42,27 @@ describe('DeleteConfirmationModal', () => {
     expect(within(portalRoot).getAllByRole('button').length).toBe(2);
   });
 
-  it('invokes onDelete and exitExpandedMode on Delete click', async () => {
-    const onDelete = vi.fn();
-    render(
-      <DeleteConfirmationModal
-        isOpen={true}
-        onClose={() => {}}
-        onDelete={onDelete}
-      />
-    );
+  it('invokes exitExpandedMode on Delete click', async () => {
+    const exitExpandedModeMock = vi.fn(async () => {});
+    (
+      DevvitClient as unknown as {
+        exitExpandedMode?: (e: unknown) => Promise<void>;
+      }
+    ).exitExpandedMode = exitExpandedModeMock;
+
+    render(<DeleteConfirmationModal isOpen={true} onClose={() => {}} />);
     const portalRoot = getPortalRoot();
     const buttons = within(portalRoot).getAllByRole('button');
     expect(buttons.length).toBeGreaterThanOrEqual(1);
     const deleteButton = buttons[0];
     if (!deleteButton) throw new Error('Delete button not found');
     fireEvent.click(deleteButton);
-    expect(onDelete).toHaveBeenCalledTimes(1);
-    expect(
-      (DevvitClient as { exitExpandedMode: unknown }).exitExpandedMode
-    ).toBeDefined();
+    expect(exitExpandedModeMock).toHaveBeenCalledTimes(1);
   });
 
   it('invokes onClose on Cancel click', () => {
     const onClose = vi.fn();
-    render(
-      <DeleteConfirmationModal
-        isOpen={true}
-        onClose={onClose}
-        onDelete={() => {}}
-      />
-    );
+    render(<DeleteConfirmationModal isOpen={true} onClose={onClose} />);
     const portalRoot = getPortalRoot();
     const buttons = within(portalRoot).getAllByRole('button');
     expect(buttons.length).toBeGreaterThanOrEqual(2);

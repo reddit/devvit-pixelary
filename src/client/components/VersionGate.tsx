@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type ReactNode } from 'react';
 
 import { Text } from './PixelFont';
 import { isClientVersionSufficient } from '@client/utils/versionGate';
 
 type VersionGateProps = {
-  children: React.ReactNode;
+  children: ReactNode;
 };
 
 export function VersionGate({ children }: VersionGateProps) {

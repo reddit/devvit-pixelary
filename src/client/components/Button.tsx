@@ -5,7 +5,7 @@ import type { TelemetryEventType } from '@shared/types';
 
 type ButtonProps = {
   children?: string;
-  onClick?: (e: MouseEvent) => unknown | Promise<unknown>;
+  onClick?: (e: MouseEvent) => unknown;
   variant?: 'primary' | 'secondary' | 'white' | 'success';
   size?: 'small' | 'medium' | 'large';
   disabled?: boolean;

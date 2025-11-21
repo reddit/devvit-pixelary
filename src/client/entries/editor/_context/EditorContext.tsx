@@ -36,7 +36,6 @@ export type EditorContextValue = {
   // mode
   mode: EditorMode;
   tournamentPostId?: string;
-  onClose: () => void;
   onSuccess?: () => void;
 };
 
@@ -57,7 +56,6 @@ export function useOptionalEditorContext(): EditorContextValue | null {
 
 type ProviderProps = {
   children: ReactNode;
-  onClose: () => void;
   onSuccess?: () => void;
   mode?: EditorMode;
   tournamentPostId?: string;
@@ -67,7 +65,6 @@ type ProviderProps = {
 export function EditorContextProvider(props: ProviderProps) {
   const {
     children,
-    onClose,
     onSuccess,
     mode = 'post',
     tournamentPostId,
@@ -163,9 +160,8 @@ export function EditorContextProvider(props: ProviderProps) {
       },
       trackSlateAction,
       mode,
-      tournamentPostId,
-      onClose,
-      onSuccess,
+      ...(tournamentPostId ? { tournamentPostId } : {}),
+      ...(onSuccess ? { onSuccess } : {}),
     }),
     [
       flow,
@@ -178,7 +174,6 @@ export function EditorContextProvider(props: ProviderProps) {
       trackSlateAction,
       mode,
       tournamentPostId,
-      onClose,
       onSuccess,
     ]
   );

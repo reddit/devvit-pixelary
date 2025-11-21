@@ -32,9 +32,6 @@ function App() {
       <Background />
       {isTournament ? (
         <EditorContextProvider
-          onClose={() => {
-            return;
-          }}
           mode="tournament-comment"
           tournamentPostId={context.postId}
           tournamentWord={postData.word}
@@ -42,11 +39,7 @@ function App() {
           <EditorRouter />
         </EditorContextProvider>
       ) : (
-        <EditorContextProvider
-          onClose={() => {
-            return;
-          }}
-        >
+        <EditorContextProvider>
           <EditorRouter />
         </EditorContextProvider>
       )}

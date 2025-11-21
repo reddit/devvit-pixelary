@@ -6,11 +6,10 @@ import { exitExpandedMode } from '@devvit/web/client';
 export type DeleteConfirmationModalProps = {
   isOpen: boolean;
   onClose: () => void;
-  onDelete: () => void;
 };
 
 export function DeleteConfirmationModal(props: DeleteConfirmationModalProps) {
-  const { isOpen, onClose, onDelete } = props;
+  const { isOpen, onClose } = props;
   return (
     <Modal isOpen={isOpen} onClose={onClose} title="Delete drawing?">
       {/* Body Copy - Concise and to the point. */}
@@ -24,12 +23,9 @@ export function DeleteConfirmationModal(props: DeleteConfirmationModalProps) {
       <div className="flex flex-row gap-3 items-center justify-center w-full">
         <Button
           variant="white"
-          onNativeClick={(e) => {
-            void exitExpandedMode(
-              e.nativeEvent as unknown as PointerEvent
-            ).catch(() => undefined);
+          onClick={async (e) => {
+            void exitExpandedMode(e);
           }}
-          onClick={onDelete}
         >
           Delete
         </Button>
