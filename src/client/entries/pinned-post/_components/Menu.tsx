@@ -5,9 +5,14 @@ import { Logo } from '@components/Logo';
 import { ProgressBar } from '@components/ProgressBar';
 import { trpc } from '@client/trpc/client';
 import { useTelemetry } from '@client/hooks/useTelemetry';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { ActiveEffectsBadge } from '@components/ActiveEffectsBadge';
-import { requestExpandedMode } from '@devvit/web/client';
+import {
+  requestExpandedMode,
+  addWebViewModeListener,
+  navigateTo,
+  context,
+} from '@devvit/web/client';
 
 type MenuProps = {
   onMyDrawings: () => void;
@@ -42,6 +47,30 @@ export function Menu(props: MenuProps) {
 
   // Get progress percentage from user profile
   const progressPercentage = userProfile?.levelProgressPercentage ?? 0;
+
+  const getPendingNavigation = trpc.app.user.getPendingNavigation.useMutation();
+  const navigationInProgressRef = useRef(false);
+
+  useEffect(() => {
+    if (!context.userId) return;
+
+    return addWebViewModeListener(async (mode) => {
+      if (mode === 'inline' && !navigationInProgressRef.current) {
+        navigationInProgressRef.current = true;
+        try {
+          const result = await getPendingNavigation.mutateAsync();
+          if (result.url) {
+            navigateTo(result.url);
+          }
+        } finally {
+          // Reset after a short delay to allow navigation to complete
+          setTimeout(() => {
+            navigationInProgressRef.current = false;
+          }, 1000);
+        }
+      }
+    });
+  }, [getPendingNavigation]);
 
   return (
     <main className="absolute inset-0 flex flex-col items-center justify-evenly min-h-screen px-4">

@@ -4,7 +4,7 @@ import { Button } from '@components/Button';
 import { trpc } from '@client/trpc/client';
 import type { DrawingData } from '@shared/schema/drawing';
 import { Text } from '@components/PixelFont';
-import { navigateTo, context, exitExpandedMode } from '@devvit/web/client';
+import { exitExpandedMode } from '@devvit/web/client';
 import { useTelemetry } from '@client/hooks/useTelemetry';
 import type { SlateAction } from '@shared/types';
 import { useToastHelpers } from '@components/ToastManager';
@@ -100,7 +100,7 @@ export function ReviewStep(props: ReviewStepProps) {
     }
   );
 
-  const handlePost = async (nativeEvent?: PointerEvent) => {
+  const handlePost = async (nativeEvent?: MouseEvent) => {
     if (submitLocked) return;
     setSubmitLocked(true);
     void track('click_post_drawing');
@@ -133,16 +133,12 @@ export function ReviewStep(props: ReviewStepProps) {
           } catch {
             // Ignore telemetry errors
           }
-          const url =
-            result.navigateTo ||
-            (context.subredditName
-              ? `https://reddit.com/r/${context.subredditName}/comments/${result.postId}`
-              : undefined);
-          if (url) {
-            navigateTo(url);
-          } else {
-            onSuccess?.(result);
+          // Exit expanded mode before navigating (navigation handled by listener)
+          // The redis flag is already set by the server
+          if (nativeEvent) {
+            await exitExpandedMode(nativeEvent).catch(() => undefined);
           }
+          onSuccess?.(result);
         }
       }
     } catch (error) {
@@ -211,8 +207,8 @@ export function ReviewStep(props: ReviewStepProps) {
           {props.mode === 'tournament' ? (
             <Button
               size="large"
-              onClick={() => {
-                void handlePost();
+              onClick={(e) => {
+                void handlePost(e);
               }}
               disabled={submitTournamentDrawing.isPending || submitLocked}
             >
@@ -223,7 +219,7 @@ export function ReviewStep(props: ReviewStepProps) {
           ) : (
             <Button
               size="large"
-              onClick={() => void handlePost()}
+              onClick={(e) => void handlePost(e)}
               disabled={submitDrawing.isPending || submitLocked}
             >
               {submitDrawing.isPending || submitLocked ? 'POSTING...' : 'POST'}

@@ -27,6 +27,7 @@ export const REDIS_KEYS = {
   boostActivation: (activationId: string) => `boost:${activationId}`, // Hash for activation metadata
   // User preferences
   userRecentColors: (userId: T2) => `user:colors:recent:${userId}`,
+  pendingNavigation: (userId: T2) => `user:pending_navigation:${userId}`,
 
   // Words
   wordsAll: (subredditName: string) => `words:all:${subredditName}`,

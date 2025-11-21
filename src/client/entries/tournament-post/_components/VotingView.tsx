@@ -4,7 +4,12 @@ import { Drawing } from '@components/Drawing';
 import { Button } from '@components/Button';
 import { Text } from '@components/PixelFont';
 import { CyclingMessage } from '@components/CyclingMessage';
-import { requestExpandedMode } from '@devvit/web/client';
+import {
+  requestExpandedMode,
+  addWebViewModeListener,
+  navigateTo,
+  context,
+} from '@devvit/web/client';
 import { Collision } from '@components/Collision';
 import type { DrawingData } from '@shared/schema/drawing';
 import { ActiveEffectsBadge } from '@components/ActiveEffectsBadge';
@@ -285,6 +290,31 @@ export function VotingView({
       timeoutRefs.current = [];
     };
   }, []);
+
+  const getPendingNavigation = trpc.app.user.getPendingNavigation.useMutation();
+  const navigationInProgressRef = useRef(false);
+
+  // Listen for expanded mode closing to handle navigation
+  useEffect(() => {
+    if (!context.userId) return;
+
+    return addWebViewModeListener(async (mode) => {
+      if (mode === 'inline' && !navigationInProgressRef.current) {
+        navigationInProgressRef.current = true;
+        try {
+          const result = await getPendingNavigation.mutateAsync();
+          if (result.url) {
+            navigateTo(result.url);
+          }
+        } finally {
+          // Reset after a short delay to allow navigation to complete
+          setTimeout(() => {
+            navigationInProgressRef.current = false;
+          }, 1000);
+        }
+      }
+    });
+  }, [getPendingNavigation]);
 
   const handleVote = (winnerId: string, loserId: string) => {
     if (animationState !== 'idle' || !leftDrawing || !rightDrawing) return;

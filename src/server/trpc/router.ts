@@ -232,10 +232,22 @@ export const appRouter = t.router({
             authorId: ctx.userId,
           });
 
+          const navigateTo = `https://reddit.com/r/${ctx.subredditName}/comments/${post.id}`;
+
+          // Set pending navigation flag for mobile navigation after expanded mode closes
+          const navigationKey = REDIS_KEYS.pendingNavigation(ctx.userId);
+          await redis.set(
+            navigationKey as never,
+            navigateTo as never,
+            {
+              ex: 60, // 60 second TTL
+            } as never
+          );
+
           return {
             success: true,
             postId: post.id,
-            navigateTo: `https://reddit.com/r/${ctx.subredditName}/comments/${post.id}`,
+            navigateTo,
           };
         }),
 
@@ -464,6 +476,23 @@ export const appRouter = t.router({
           });
           return result;
         }),
+
+      getPendingNavigation: t.procedure.mutation(async ({ ctx }) => {
+        if (!ctx.userId) {
+          return { url: null };
+        }
+        const navigationKey = REDIS_KEYS.pendingNavigation(ctx.userId);
+        // Note: GET + DEL is not atomic, but this is acceptable because:
+        // 1. Client-side ref guards prevent rapid successive calls from the same component
+        // 2. navigateTo to the same URL is idempotent, so multiple navigations are harmless
+        // 3. The race window is very small (microseconds)
+        const url = await redis.get(navigationKey as never);
+        if (url) {
+          await redis.del(navigationKey as never);
+          return { url: url as string };
+        }
+        return { url: null };
+      }),
 
       getRank: t.procedure.query(async ({ ctx }) => {
         if (!ctx.userId)

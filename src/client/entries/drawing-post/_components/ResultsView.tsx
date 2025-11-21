@@ -9,11 +9,16 @@ import { Text } from '@components/PixelFont';
 import { CyclingMessage } from '@components/CyclingMessage';
 import { AUTHOR_REWARD_SUBMIT } from '@shared/constants';
 import { titleCase } from '@shared/utils/string';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useToastHelpers } from '@components/ToastManager';
 import type { PostGuesses } from '@shared/schema/pixelary';
 import { useTelemetry } from '@client/hooks/useTelemetry';
-import { requestExpandedMode } from '@devvit/web/client';
+import {
+  requestExpandedMode,
+  addWebViewModeListener,
+  navigateTo,
+  context,
+} from '@devvit/web/client';
 
 type ResultsViewProps = {
   drawing: DrawingData;
@@ -55,6 +60,31 @@ export function ResultsView({
     // dictionary slate is anonymous; still helpful to warm
     void utils.app.dictionary.getCandidates.prefetch();
   }, [utils]);
+
+  const getPendingNavigation = trpc.app.user.getPendingNavigation.useMutation();
+  const navigationInProgressRef = useRef(false);
+
+  // Listen for expanded mode closing to handle navigation
+  useEffect(() => {
+    if (!context.userId) return;
+
+    return addWebViewModeListener(async (mode) => {
+      if (mode === 'inline' && !navigationInProgressRef.current) {
+        navigationInProgressRef.current = true;
+        try {
+          const result = await getPendingNavigation.mutateAsync();
+          if (result.url) {
+            navigateTo(result.url);
+          }
+        } finally {
+          // Reset after a short delay to allow navigation to complete
+          setTimeout(() => {
+            navigationInProgressRef.current = false;
+          }, 1000);
+        }
+      }
+    });
+  }, [getPendingNavigation]);
 
   // Mutation for revealing guesses
   const revealGuess = trpc.app.post.revealGuess.useMutation();

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { trpc } from '@client/trpc/client';
 import { Drawing } from '@components/Drawing';
 import { Text } from '@components/PixelFont';
@@ -6,7 +6,12 @@ import { IconButton } from '@components/IconButton';
 import { Button } from '@components/Button';
 import { Lightbox } from '@components/Lightbox';
 import type { DrawingData } from '@shared/schema/drawing';
-import { requestExpandedMode } from '@devvit/web/client';
+import {
+  requestExpandedMode,
+  addWebViewModeListener,
+  navigateTo,
+  context,
+} from '@devvit/web/client';
 
 type TrophyViewProps = {
   postId: string;
@@ -106,6 +111,30 @@ export function TrophyView({ postId, onToggleView, word }: TrophyViewProps) {
   );
 
   const incrementViews = trpc.app.tournament.incrementViews.useMutation();
+  const getPendingNavigation = trpc.app.user.getPendingNavigation.useMutation();
+  const navigationInProgressRef = useRef(false);
+
+  // Listen for expanded mode closing to handle navigation
+  useEffect(() => {
+    if (!context.userId) return;
+
+    return addWebViewModeListener(async (mode) => {
+      if (mode === 'inline' && !navigationInProgressRef.current) {
+        navigationInProgressRef.current = true;
+        try {
+          const result = await getPendingNavigation.mutateAsync();
+          if (result.url) {
+            navigateTo(result.url);
+          }
+        } finally {
+          // Reset after a short delay to allow navigation to complete
+          setTimeout(() => {
+            navigationInProgressRef.current = false;
+          }, 1000);
+        }
+      }
+    });
+  }, [getPendingNavigation]);
 
   // Get top 3 submissions
   const top3 = submissions?.slice(0, 3) ?? [];
