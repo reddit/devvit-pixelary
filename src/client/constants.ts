@@ -3,6 +3,19 @@ import { BASE_DRAWING_COLORS } from '@shared/constants';
 
 export const DRAWING_COLORS: readonly HEX[] = BASE_DRAWING_COLORS;
 
+type MinimumVersion = {
+  yyyy: number;
+  release: number;
+};
+
+export const MINIMUM_CLIENT_VERSIONS: {
+  IOS: MinimumVersion;
+  ANDROID: MinimumVersion;
+} = {
+  IOS: { yyyy: 2025, release: 45 },
+  ANDROID: { yyyy: 2025, release: 45 },
+};
+
 // Tier 1 - Pastels & Skin Tones (14 colors)
 // Gradient from lightest to darkest warm pastels
 export const TIER_1_COLORS: readonly HEX[] = [

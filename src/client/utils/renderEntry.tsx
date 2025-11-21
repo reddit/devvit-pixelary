@@ -4,6 +4,7 @@ import type { VNode } from 'preact';
 
 import { Providers } from '@components/Providers';
 import { setupGlobalErrorHandlers } from '@utils/errors';
+import { VersionGate } from '@components/VersionGate';
 
 export function renderEntry(children: React.ReactNode | VNode): void {
   setupGlobalErrorHandlers();
@@ -12,7 +13,9 @@ export function renderEntry(children: React.ReactNode | VNode): void {
   if (!rootElement) throw new Error('Root element not found');
   ReactDOM.createRoot(rootElement).render(
     <React.StrictMode>
-      <Providers>{children as React.ReactNode}</Providers>
+      <Providers>
+        <VersionGate>{children as React.ReactNode}</VersionGate>
+      </Providers>
     </React.StrictMode>
   );
 }
