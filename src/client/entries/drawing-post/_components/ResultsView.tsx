@@ -16,6 +16,7 @@ import { useTelemetry } from '@client/hooks/useTelemetry';
 import {
   requestExpandedMode,
   addWebViewModeListener,
+  removeWebViewModeListener,
   navigateTo,
   context,
 } from '@devvit/web/client';
@@ -68,22 +69,28 @@ export function ResultsView({
   useEffect(() => {
     if (!context.userId) return;
 
-    return addWebViewModeListener(async (mode) => {
+    const listener = (mode: 'inline' | 'expanded') => {
       if (mode === 'inline' && !navigationInProgressRef.current) {
         navigationInProgressRef.current = true;
-        try {
-          const result = await getPendingNavigation.mutateAsync();
-          if (result.url) {
-            navigateTo(result.url);
+        void (async () => {
+          try {
+            const result = await getPendingNavigation.mutateAsync();
+            if (result.url) {
+              navigateTo(result.url);
+            }
+          } finally {
+            // Reset after a short delay to allow navigation to complete
+            setTimeout(() => {
+              navigationInProgressRef.current = false;
+            }, 1000);
           }
-        } finally {
-          // Reset after a short delay to allow navigation to complete
-          setTimeout(() => {
-            navigationInProgressRef.current = false;
-          }, 1000);
-        }
+        })();
       }
-    });
+    };
+    addWebViewModeListener(listener);
+    return () => {
+      removeWebViewModeListener(listener);
+    };
   }, [getPendingNavigation]);
 
   // Mutation for revealing guesses

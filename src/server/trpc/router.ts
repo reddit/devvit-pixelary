@@ -392,14 +392,14 @@ export const appRouter = t.router({
           return await getRecentColors(ctx.userId, BASE_DRAWING_COLORS, 7);
         }),
         pushRecent: t.procedure
-          .input(z.object({ color: z.string() }))
+          .input(z.object({ color: z.string().regex(/^#[0-9A-Fa-f]{6}$/) }))
           .mutation(async ({ ctx, input }) => {
             if (!ctx.userId) {
               // No-op for anonymous users
               return { success: true } as const;
             }
             const { pushRecentColor } = await import('../services/user/colors');
-            await pushRecentColor(ctx.userId, input.color, 7);
+            await pushRecentColor(ctx.userId, input.color as `#${string}`, 7);
             return { success: true } as const;
           }),
       }),
@@ -472,7 +472,7 @@ export const appRouter = t.router({
           const result = await getMyArtPage({
             userId: ctx.userId,
             limit: input.limit,
-            cursor: input.cursor,
+            ...(input.cursor !== undefined && { cursor: input.cursor }),
           });
           return result;
         }),
@@ -588,7 +588,9 @@ export const appRouter = t.router({
               'slate_posted',
             ] as const),
             word: z.string().optional(),
-            metadata: z.record(z.union([z.string(), z.number()])).optional(),
+            metadata: z
+              .record(z.string(), z.union([z.string(), z.number()]))
+              .optional(),
             postId: z.string().optional(),
           })
         )
@@ -631,6 +633,7 @@ export const appRouter = t.router({
               if (!input.word || !postedPostId) {
                 return { ok: true };
               }
+              assertT3(postedPostId);
               await handleSlateEvent({
                 slateId: input.slateId as SlateId,
                 name: 'slate_posted',
@@ -655,7 +658,7 @@ export const appRouter = t.router({
           z.union([
             z.object({
               eventType: z.string(),
-              metadata: z.record(z.union([z.string(), z.number()])),
+              metadata: z.record(z.string(), z.union([z.string(), z.number()])),
             }),
             z.object({
               eventType: z.string(),
@@ -665,7 +668,8 @@ export const appRouter = t.router({
         .mutation(async ({ ctx, input }) => {
           try {
             // Fire-and-forget telemetry tracking with automatic post type detection
-            const metadata = 'metadata' in input ? input.metadata : {};
+            const metadata: Record<string, string | number> =
+              'metadata' in input ? input.metadata : {};
             await trackEventFromContext(
               input.eventType as TelemetryEventType,
               ctx.postData,
@@ -961,7 +965,7 @@ export const appRouter = t.router({
           const userIds: string[] = [];
           entryList.forEach((entry, idx) => {
             const commentId = commentIds[idx];
-            if (entry) {
+            if (entry && commentId) {
               entryMap.set(commentId, entry);
               userIds.push(entry.userId);
             }
