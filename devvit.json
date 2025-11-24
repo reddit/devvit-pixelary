@@ -39,7 +39,7 @@
     "realtime": true,
     "reddit": {
       "enable": true,
-      "asUser": ["SUBMIT_COMMENT"]
+      "asUser": ["SUBMIT_POST", "SUBMIT_COMMENT"]
     }
   },
   "media": {},

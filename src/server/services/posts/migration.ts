@@ -45,9 +45,7 @@ function convertOldDrawingData(oldData: number[]): DrawingData {
  * @param postId - The post ID to migrate
  * @returns true if migration was successful, false otherwise
  */
-export async function migrateOldDrawingPost(
-  postId: T3
-): Promise<boolean> {
+export async function migrateOldDrawingPost(postId: T3): Promise<boolean> {
   const oldPostKey = `post-${postId}`;
   const newDrawingKey = REDIS_KEYS.drawing(postId);
   const migrationMarkerKey = REDIS_KEYS.migrationMarker(postId);
@@ -70,9 +68,13 @@ export async function migrateOldDrawingPost(
 
   if (!oldFormatExists) {
     // Set marker to avoid future checks
-    await redis.set(migrationMarkerKey as never, '1' as never, {
-      ex: 7 * 24 * 60 * 60, // 7 days TTL
-    } as never);
+    await redis.set(
+      migrationMarkerKey as never,
+      '1' as never,
+      {
+        ex: 7 * 24 * 60 * 60, // 7 days TTL
+      } as never
+    );
     return false; // No old format found
   }
 
@@ -84,11 +86,12 @@ export async function migrateOldDrawingPost(
 
   try {
     // Re-check after lock (double-check pattern)
-    const [newFormatExistsAfterLock, markerExistsAfterLock] =
-      await Promise.all([
+    const [newFormatExistsAfterLock, markerExistsAfterLock] = await Promise.all(
+      [
         redis.exists(newDrawingKey as never),
         redis.exists(migrationMarkerKey as never),
-      ]);
+      ]
+    );
 
     if (newFormatExistsAfterLock || markerExistsAfterLock) {
       return false; // Already migrated by another process
@@ -108,10 +111,12 @@ export async function migrateOldDrawingPost(
     const dataStr = oldPostData.data;
 
     if (!authorUsername || !dateStr || !word || !dataStr) {
-      console.error(
-        `Migration failed for ${postId}: missing required fields`,
-        { authorUsername, dateStr, word, dataStr }
-      );
+      console.error(`Migration failed for ${postId}: missing required fields`, {
+        authorUsername,
+        dateStr,
+        word,
+        dataStr,
+      });
       return false;
     }
 
@@ -252,7 +257,11 @@ export async function migrateOldDrawingPost(
       oldUserGuessCounterKey as never
     );
     if (userGuessCounterExists) {
-      const attempts = await redis.zRange(oldUserGuessCounterKey as never, 0, -1);
+      const attempts = await redis.zRange(
+        oldUserGuessCounterKey as never,
+        0,
+        -1
+      );
       if (attempts.length > 0) {
         // Resolve each username individually to preserve guess count mapping
         const attemptPromises = attempts.map(async (attempt) => {
@@ -311,9 +320,13 @@ export async function migrateOldDrawingPost(
     }
 
     // Set migration marker
-    await redis.set(migrationMarkerKey as never, '1' as never, {
-      ex: 7 * 24 * 60 * 60, // 7 days TTL
-    } as never);
+    await redis.set(
+      migrationMarkerKey as never,
+      '1' as never,
+      {
+        ex: 7 * 24 * 60 * 60, // 7 days TTL
+      } as never
+    );
 
     // Clean up old Redis keys
     const oldGuessCommentsKey = `guess-comments:${postId}`;
@@ -353,10 +366,7 @@ export async function cleanupOldDictionary(
     }
     return false;
   } catch (error) {
-    console.error(
-      `Failed to cleanup dictionary ${dictionaryName}:`,
-      error
-    );
+    console.error(`Failed to cleanup dictionary ${dictionaryName}:`, error);
     return false;
   }
 }
@@ -438,4 +448,3 @@ export async function cleanupOldWordSelectionEvents(): Promise<boolean> {
     return false;
   }
 }
-

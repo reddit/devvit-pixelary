@@ -60,7 +60,15 @@ export async function createPost(
     tournament: 'tournament',
   } as const;
 
-  const post = await reddit.submitCustomPost({
+  // Determine runAs based on post type
+  // Drawing and collection posts are created as USER
+  // Pinned and tournament posts are created as APP (default)
+  const runAs =
+    postData.type === 'drawing' || postData.type === 'collection'
+      ? 'USER'
+      : undefined;
+
+  const baseOptions = {
     entry: entryByType[postData.type],
     userGeneratedContent,
     splash: {
@@ -70,6 +78,12 @@ export async function createPost(
     subredditName,
     title,
     postData: postDataToJsonObject(postData),
-  });
+  };
+
+  // Only include runAs when it's 'USER' (APP is the default)
+  const submitOptions =
+    runAs === 'USER' ? { ...baseOptions, runAs: 'USER' as const } : baseOptions;
+
+  const post = await reddit.submitCustomPost(submitOptions);
   return post;
 }

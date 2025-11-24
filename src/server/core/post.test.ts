@@ -58,6 +58,7 @@ describe('Post Service', () => {
         subredditName: 'testsub',
         title,
         postData: postData,
+        runAs: 'USER',
       });
       expect(result).toBe(mockPost);
     });
@@ -83,6 +84,66 @@ describe('Post Service', () => {
         subredditName: 'testsub',
         title,
         postData: postData,
+        // runAs should not be included (defaults to 'APP')
+      });
+      expect(result).toBe(mockPost);
+    });
+
+    it('should create a collection post successfully with runAs USER', async () => {
+      const title = 'Collection Post';
+      const postData: PostData = {
+        type: 'collection',
+        collectionId: 'test-collection-123',
+        label: 'Test Collection',
+      };
+      const mockPost = { id: 't3_post123' };
+
+      vi.mocked(reddit.submitCustomPost).mockResolvedValue(mockPost as Post);
+
+      const result = await createPost(title, postData);
+
+      expect(reddit.submitCustomPost).toHaveBeenCalledWith({
+        entry: 'collection',
+        userGeneratedContent: {
+          text: 'Pixelary',
+        },
+        splash: {
+          appDisplayName: 'Pixelary',
+          backgroundUri: 'transparent.png',
+        },
+        subredditName: 'testsub',
+        title,
+        postData: postData,
+        runAs: 'USER',
+      });
+      expect(result).toBe(mockPost);
+    });
+
+    it('should create a tournament post successfully without runAs', async () => {
+      const title = 'Tournament Post';
+      const postData: PostData = {
+        type: 'tournament',
+        word: 'test-word',
+      };
+      const mockPost = { id: 't3_post123' };
+
+      vi.mocked(reddit.submitCustomPost).mockResolvedValue(mockPost as Post);
+
+      const result = await createPost(title, postData);
+
+      expect(reddit.submitCustomPost).toHaveBeenCalledWith({
+        entry: 'tournament',
+        userGeneratedContent: {
+          text: 'Pixelary',
+        },
+        splash: {
+          appDisplayName: 'Pixelary',
+          backgroundUri: 'transparent.png',
+        },
+        subredditName: 'testsub',
+        title,
+        postData: postData,
+        // runAs should not be included (defaults to 'APP')
       });
       expect(result).toBe(mockPost);
     });

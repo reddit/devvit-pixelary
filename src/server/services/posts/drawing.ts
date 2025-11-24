@@ -203,7 +203,10 @@ export async function getDrawing(
       authorName: migratedAuthorName,
       lastCommentUpdate: migratedLastCommentUpdate,
     } = migratedData;
-    const { playerCount: migratedPlayerCount, solvedPercentage: migratedSolvedPercentage } = migratedStats;
+    const {
+      playerCount: migratedPlayerCount,
+      solvedPercentage: migratedSolvedPercentage,
+    } = migratedStats;
     if (
       migratedType === 'drawing' &&
       migratedWord &&
