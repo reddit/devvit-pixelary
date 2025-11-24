@@ -317,6 +317,7 @@ export async function migrateOldDrawingPost(
 
     // Clean up old Redis keys
     const oldGuessCommentsKey = `guess-comments:${postId}`;
+    const oldUserDrawingsKey = `user-drawings:${authorUsername}`;
     await Promise.all([
       redis.del(oldPostKey as never),
       redis.del(oldSolvesKey as never),
@@ -324,6 +325,7 @@ export async function migrateOldDrawingPost(
       redis.del(oldGuessesKey as never),
       redis.del(oldUserGuessCounterKey as never),
       redis.del(oldGuessCommentsKey as never),
+      redis.del(oldUserDrawingsKey as never),
     ]);
 
     return true;
@@ -411,6 +413,28 @@ export async function cleanupOldUserData(username: string): Promise<boolean> {
     return false;
   } catch (error) {
     console.error(`Failed to cleanup user data for ${username}:`, error);
+    return false;
+  }
+}
+
+/**
+ * Clean up old word selection events keys
+ * These are global sorted sets tracking word selection events (no longer needed)
+ */
+export async function cleanupOldWordSelectionEvents(): Promise<boolean> {
+  try {
+    const oldKeys = ['word-selection-events', 'word-selection-events-v2'];
+    let cleaned = false;
+    for (const key of oldKeys) {
+      const exists = await redis.exists(key as never);
+      if (exists) {
+        await redis.del(key as never);
+        cleaned = true;
+      }
+    }
+    return cleaned;
+  } catch (error) {
+    console.error('Failed to cleanup word selection events:', error);
     return false;
   }
 }
