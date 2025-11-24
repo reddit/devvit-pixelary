@@ -28,6 +28,7 @@ import {
 } from '@server/services/comments/pinned';
 import { REALTIME_CHANNELS } from '@server/core/realtime';
 import { encodeDrawingToPngDataUrl } from '@server/utils/png';
+import { migrateOldDrawingPost } from './migration';
 
 const DRAWING_DATA_TTL = 5 * 60;
 
@@ -161,31 +162,75 @@ export async function getDrawing(
     lastCommentUpdate,
   } = data;
   const { playerCount, solvedPercentage } = stats;
+
+  // If new format exists and is valid, return it
   if (
-    !type ||
-    type !== 'drawing' ||
-    !word ||
-    !dictionary ||
-    !drawing ||
-    !authorId ||
-    !authorName
+    type === 'drawing' &&
+    word &&
+    dictionary &&
+    drawing &&
+    authorId &&
+    authorName
   ) {
-    return null;
+    return {
+      type: 'drawing',
+      postId,
+      word,
+      dictionary,
+      drawing: JSON.parse(drawing),
+      authorId,
+      authorName,
+      playerCount,
+      solvedPercentage,
+      lastCommentUpdate: lastCommentUpdate
+        ? parseInt(lastCommentUpdate)
+        : undefined,
+    };
   }
-  return {
-    type: 'drawing',
-    postId,
-    word,
-    dictionary,
-    drawing: JSON.parse(drawing),
-    authorId,
-    authorName,
-    playerCount,
-    solvedPercentage,
-    lastCommentUpdate: lastCommentUpdate
-      ? parseInt(lastCommentUpdate)
-      : undefined,
-  };
+
+  // New format doesn't exist or is invalid, try migrating from old format
+  const migrationSuccess = await migrateOldDrawingPost(postId);
+  if (migrationSuccess) {
+    // Migration succeeded, fetch the newly migrated data
+    const migratedData = await redis.hGetAll(key);
+    const migratedStats = await getDrawingStats(postId);
+    const {
+      type: migratedType,
+      word: migratedWord,
+      dictionary: migratedDictionary,
+      drawing: migratedDrawing,
+      authorId: migratedAuthorId,
+      authorName: migratedAuthorName,
+      lastCommentUpdate: migratedLastCommentUpdate,
+    } = migratedData;
+    const { playerCount: migratedPlayerCount, solvedPercentage: migratedSolvedPercentage } = migratedStats;
+    if (
+      migratedType === 'drawing' &&
+      migratedWord &&
+      migratedDictionary &&
+      migratedDrawing &&
+      migratedAuthorId &&
+      migratedAuthorName
+    ) {
+      return {
+        type: 'drawing',
+        postId,
+        word: migratedWord,
+        dictionary: migratedDictionary,
+        drawing: JSON.parse(migratedDrawing),
+        authorId: migratedAuthorId,
+        authorName: migratedAuthorName,
+        playerCount: migratedPlayerCount,
+        solvedPercentage: migratedSolvedPercentage,
+        lastCommentUpdate: migratedLastCommentUpdate
+          ? parseInt(migratedLastCommentUpdate)
+          : undefined,
+      };
+    }
+  }
+
+  // Migration failed or no old format found
+  return null;
 }
 
 export async function getDrawings(

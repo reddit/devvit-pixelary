@@ -105,6 +105,10 @@ export const REDIS_KEYS = {
   rateGuess: (userId: T2) => `rate:guess:${userId}`,
   rateVote: (userId: T2) => `rate:vote:${userId}`,
   rateSubmit: (userId: T2) => `rate:submit:${userId}`,
+
+  // Migration
+  migrationLock: (postId: T3) => `migration:drawing:${postId}`,
+  migrationMarker: (postId: T3) => `migrated:drawing:${postId}`,
 };
 
 const MODERATOR_STATUS_TTL = 10 * 24 * 60 * 60; // 10 days.
