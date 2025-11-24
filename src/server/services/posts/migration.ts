@@ -107,7 +107,7 @@ export async function migrateOldDrawingPost(postId: T3): Promise<boolean> {
     const authorUsername = oldPostData.authorUsername;
     const dateStr = oldPostData.date;
     const word = oldPostData.word;
-    const dictionaryName = oldPostData.dictionaryName || 'main';
+    const dictionaryName = oldPostData.dictionaryName ?? 'main';
     const dataStr = oldPostData.data;
 
     if (!authorUsername || !dateStr || !word || !dataStr) {

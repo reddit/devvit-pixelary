@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { trpc } from '@client/trpc/client';
 import { VotingView } from './_components/VotingView';
 import { GalleryView } from './_components/GalleryView';
@@ -53,7 +53,7 @@ export function TournamentPost() {
   const hasCheckedOnMountRef = useRef(false);
 
   // Helper function to handle submission success
-  const handleSubmissionSuccess = () => {
+  const handleSubmissionSuccess = useCallback(() => {
     if (submissionCheckInProgressRef.current) return;
     submissionCheckInProgressRef.current = true;
     showToast('Submitted!');
@@ -65,7 +65,7 @@ export function TournamentPost() {
       void refetchStats();
       submissionCheckInProgressRef.current = false;
     }, 200);
-  };
+  }, [showSuccessToast, refetchStats]);
 
   // Keep confetti visible even if state gets reset by re-renders
   useEffect(() => {
@@ -113,7 +113,7 @@ export function TournamentPost() {
     return () => {
       removeWebViewModeListener(listener);
     };
-  }, [getPendingTournamentSubmission]);
+  }, [getPendingTournamentSubmission, handleSubmissionSuccess]);
 
   // When there are enough submissions, prefetch initial voting pairs
   useEffect(() => {
