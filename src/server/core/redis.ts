@@ -28,6 +28,8 @@ export const REDIS_KEYS = {
   // User preferences
   userRecentColors: (userId: T2) => `user:colors:recent:${userId}`,
   pendingNavigation: (userId: T2) => `user:pending_navigation:${userId}`,
+  pendingTournamentSubmission: (userId: T2) =>
+    `user:pending_tournament_submission:${userId}`,
 
   // Words
   wordsAll: (subredditName: string) => `words:all:${subredditName}`,

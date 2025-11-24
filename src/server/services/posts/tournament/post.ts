@@ -244,6 +244,14 @@ export async function submitTournamentEntry(
       drawing: JSON.stringify(drawing),
       createdAt: now.toString(),
     }),
+    // Set pending tournament submission flag for toast notification
+    redis.set(
+      REDIS_KEYS.pendingTournamentSubmission(uid) as never,
+      '1' as never,
+      {
+        ex: 60, // 60 second TTL
+      } as never
+    ),
   ]);
   return comment.id;
 }

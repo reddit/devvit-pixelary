@@ -494,6 +494,25 @@ export const appRouter = t.router({
         return { url: null };
       }),
 
+      getPendingTournamentSubmission: t.procedure.mutation(async ({ ctx }) => {
+        if (!ctx.userId) {
+          return { submitted: false };
+        }
+        const submissionKey = REDIS_KEYS.pendingTournamentSubmission(
+          ctx.userId
+        );
+        // Note: GET + DEL is not atomic, but this is acceptable because:
+        // 1. Client-side ref guards prevent rapid successive calls from the same component
+        // 2. Showing toast multiple times is harmless
+        // 3. The race window is very small (microseconds)
+        const flag = await redis.get(submissionKey as never);
+        if (flag) {
+          await redis.del(submissionKey as never);
+          return { submitted: true };
+        }
+        return { submitted: false };
+      }),
+
       getRank: t.procedure.query(async ({ ctx }) => {
         if (!ctx.userId)
           throw new TRPCError({

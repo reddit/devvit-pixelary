@@ -8,6 +8,7 @@ yarn-error.log*
 .DS_Store
 webroot
 dist
+old_pixelary
 
 # TypeScript compiled files (prevent accidental compilation in source)
 src/**/*.js
