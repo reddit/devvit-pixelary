@@ -4,7 +4,7 @@ import { Button } from '@components/Button';
 import { trpc } from '@client/trpc/client';
 import type { DrawingData } from '@shared/schema/drawing';
 import { Text } from '@components/PixelFont';
-import { exitExpandedMode } from '@devvit/web/client';
+import { exitExpandedMode, context, navigateTo } from '@devvit/web/client';
 import { useTelemetry } from '@client/hooks/useTelemetry';
 import type { SlateAction } from '@shared/types';
 import { useToastHelpers } from '@components/ToastManager';
@@ -111,8 +111,8 @@ export function ReviewStep(props: ReviewStepProps) {
           postId: props.tournamentPostId,
           drawing,
         });
-        // Exit expanded mode after a successful submission
-        if (nativeEvent) {
+        // Exit expanded mode after a successful submission (iOS only)
+        if (nativeEvent && context.client?.name === 'IOS') {
           await exitExpandedMode(nativeEvent).catch(() => undefined);
         }
         onSuccess?.({ success: true });
@@ -133,10 +133,14 @@ export function ReviewStep(props: ReviewStepProps) {
           } catch {
             // Ignore telemetry errors
           }
-          // Exit expanded mode before navigating (navigation handled by listener)
-          // The redis flag is already set by the server
-          if (nativeEvent) {
-            await exitExpandedMode(nativeEvent).catch(() => undefined);
+          // On iOS, exit expanded mode first (navigation handled by listener)
+          // On Android/web, navigate directly
+          if (context.client?.name === 'IOS') {
+            if (nativeEvent) {
+              await exitExpandedMode(nativeEvent).catch(() => undefined);
+            }
+          } else if (result.navigateTo) {
+            navigateTo(result.navigateTo);
           }
           onSuccess?.(result);
         }
