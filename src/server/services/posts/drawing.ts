@@ -603,7 +603,7 @@ export function generateDrawingCommentText(
 ): string {
   const sections: CommentSection[] = [
     {
-      content: `Pixelary is a community drawing game. Submit your guess in the post above!`,
+      content: `Pixelary is a community drawing and guessing game. Submit your guess in the post above!`,
     },
     {
       content: generateDifficultySection(stats),
@@ -611,7 +611,15 @@ export function generateDrawingCommentText(
     },
     { content: generateLiveStatsSection(stats), condition: () => !!stats },
     {
-      content: `Comment commands:\n- \`!words\` - See dictionary\n- \`!add <word>\` - Add word to dictionary\n- \`!show <word>\` - Check guess stats\n- \`!help\` - All commands`,
+      content: `Comment commands:
+
+* \`!words\` - See dictionary
+* \`!add <word>\` - Add word to dictionary (Level 2 required)
+* \`!remove <word>\` - Remove word from dictionary (Level 2 required)
+* \`!show <word>\` - Reveal an obfuscated guess on the results screen
+* \`!help\` - View more commands
+
+Accountability note: Users add words publicly via comments. Others can remove them. Words removed by Reddit's safety systems cannot be added back.`,
     },
     { content: `Good luck and thanks for playing!` },
   ];

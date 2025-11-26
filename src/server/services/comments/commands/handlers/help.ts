@@ -4,23 +4,17 @@ export async function handleHelp(
   _args: string[],
   _context: CommandContext
 ): Promise<CommandResult> {
-  const response =
-    `I can respond to the following commands:\n\n` +
-    `• \`!words <optional page number>\` - Show dictionary\n` +
-    `  \`!words\` or \`!words 2\` - Show page 1 or specific page\n\n` +
-    `• \`!add <word>\` - Add word to dictionary (Level 2 required)\n` +
-    `  \`!add dog\` - Add "dog" to dictionary\n\n` +
-    `• \`!remove <word>\` - Remove word from dictionary (Level 2 required)\n` +
-    `  \`!remove cat\` - Remove "cat" from dictionary\n\n` +
-    `• \`!stats <word>\` - Show word statistics\n` +
-    `  \`!stats meatloaf\` - Show statistics for "meatloaf"\n\n` +
-    `• \`!show <word>\` - Show guess statistics for a word\n` +
-    `  \`!show meatloaf\` - Shows stats for "meatloaf" on this post\n\n` +
-    `• \`!score <optional username>\` - Show user score\n` +
-    `  \`!score\` or \`!score username\` - Show your score or another user's\n\n` +
-    `• \`!help\` - Show this help\n\n` +
-    `Accountability note:\n` +
-    `Users add words publicly via comments. Others can remove them. Words removed by Reddit's safety systems cannot be added back.`;
+  const response = `I can respond to the following commands:
+    
+* \`!words <optional page number>\` - Show dictionary.  \`!words\` or \`!words 2\` to show specific page.
+* \`!add <word>\` - Add word to dictionary (Level 2 required)
+* \`!remove <word>\` - Remove word from dictionary (Level 2 required)
+* \`!stats <word>\` - Show statistics for a word
+* \`!show <word>\` - Reveal an obfuscated guess on the results screen
+* \`!score <optional username>\` - Shows the score for a user. Or your own score if no username is provided.
+* \`!help\` - Show this list of commands.
+    
+Accountability note: Users can add new words via public comments. Others can remove them. Words removed by Reddit's safety systems cannot be added back.`;
 
   return { success: true, response };
 }
