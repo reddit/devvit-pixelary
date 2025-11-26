@@ -14,14 +14,14 @@ describe('rewards system', () => {
     it('returns true when user level meets minimum requirement', () => {
       expect(hasReward(2, 'extra_drawing_time')).toBe(true);
       expect(hasReward(2, 'extra_word_time')).toBe(true);
-      expect(hasReward(3, 'add_remove_words')).toBe(true);
+      expect(hasReward(2, 'add_remove_words')).toBe(true);
       expect(hasReward(1, 'level_flair')).toBe(true);
     });
 
     it('returns false when user level is below minimum requirement', () => {
       expect(hasReward(1, 'extra_drawing_time')).toBe(false);
       expect(hasReward(1, 'extra_word_time')).toBe(false);
-      expect(hasReward(2, 'add_remove_words')).toBe(false);
+      expect(hasReward(1, 'add_remove_words')).toBe(false);
       expect(hasReward(0, 'level_flair')).toBe(false);
     });
 
@@ -50,7 +50,7 @@ describe('rewards system', () => {
     });
 
     it('returns undefined for rewards without values', () => {
-      expect(getRewardValue(3, 'add_remove_words')).toBeUndefined();
+      expect(getRewardValue(2, 'add_remove_words')).toBeUndefined();
       expect(getRewardValue(1, 'level_flair')).toBeUndefined();
     });
 
@@ -87,7 +87,7 @@ describe('rewards system', () => {
     });
 
     it('returns static labels for non-computed rewards', () => {
-      expect(getRewardLabel('add_remove_words', 3)).toBe('Add/remove words');
+      expect(getRewardLabel('add_remove_words', 2)).toBe('Add/remove words');
       expect(getRewardLabel('add_remove_words', 10)).toBe('Add/remove words');
       expect(getRewardLabel('level_flair', 1)).toBe('Level user flair');
       expect(getRewardLabel('level_flair', 10)).toBe('Level user flair');
@@ -124,6 +124,7 @@ describe('rewards system', () => {
       expect(getRewardsByLevel(2)).toEqual([
         'extra_drawing_time',
         'extra_word_time',
+        'add_remove_words',
         'level_flair',
       ]);
       expect(getRewardsByLevel(3)).toEqual([

@@ -312,7 +312,7 @@ function getRewardMinLevel(reward: string): number {
   const levelMap: Record<string, number> = {
     extra_drawing_time: 2,
     extra_word_time: 2,
-    add_remove_words: 3,
+    add_remove_words: 2,
     level_flair: 1,
   };
   return levelMap[reward] ?? 1;

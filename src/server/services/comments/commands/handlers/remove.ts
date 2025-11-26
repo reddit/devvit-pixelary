@@ -12,7 +12,7 @@ export async function handleRemove(
     const userLevel = getLevelByScore(userScore);
 
     if (!hasReward(userLevel.rank, 'add_remove_words')) {
-      return { success: false, error: 'Requires Level 3 to remove words.' };
+      return { success: false, error: 'Requires Level 2 to remove words.' };
     }
 
     if (args.length === 0) {

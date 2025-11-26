@@ -13,7 +13,7 @@ export async function handleAdd(
     const userLevel = getLevelByScore(userScore);
 
     if (!hasReward(userLevel.rank, 'add_remove_words')) {
-      return { success: false, error: 'Requires Level 3 to add words.' };
+      return { success: false, error: 'Requires Level 2 to add words.' };
     }
 
     if (args.length === 0) {

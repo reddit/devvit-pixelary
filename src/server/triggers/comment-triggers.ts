@@ -69,8 +69,13 @@ export async function handleCommentCreate(
         id: comment.id,
         runAs: 'APP',
       });
-    } else if (!result.success) {
-      // Command failed
+    } else if (!result.success && result.error) {
+      // Command failed - reply with error message
+      await reddit.submitComment({
+        text: result.error,
+        id: comment.id,
+        runAs: 'APP',
+      });
     }
 
     res.json({ status: 'processed' });
@@ -128,6 +133,13 @@ export async function handleCommentUpdate(
       // Reply to the comment
       await reddit.submitComment({
         text: result.response,
+        id: comment.id,
+        runAs: 'APP',
+      });
+    } else if (!result.success && result.error) {
+      // Command failed - reply with error message
+      await reddit.submitComment({
+        text: result.error,
         id: comment.id,
         runAs: 'APP',
       });

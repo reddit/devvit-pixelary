@@ -26,7 +26,7 @@ const REWARDS: Record<RewardType, RewardConfig> = {
     getValue: (level) => Math.max(0, (level - 1) * 2), // Returns seconds as number
   },
   add_remove_words: {
-    minLevel: 3,
+    minLevel: 2,
     getLabel: () => 'Add/remove words',
   },
   level_flair: {

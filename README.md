@@ -27,9 +27,8 @@ Pixelary is an [open source](https://github.com/reddit/devvit-pixelary) project.
 Players earn points to level up, unlocking perks:
 
 - Level 2+: Extra drawing time (+15s per level)
-- Level 3: Add/remove custom words
-- Level 4: +35 extended colors (43 total colors)
-- All levels: Level flair
+- Level 2+: Add/remove custom words
+- All levels: Level flair and consumables
 
 ## Word Selection
 
