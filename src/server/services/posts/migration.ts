@@ -5,17 +5,10 @@ import { DrawingUtils } from '@shared/schema/drawing';
 import type { DrawingData } from '@shared/schema/drawing';
 import type { T2, T3 } from '@devvit/shared-types/tid.js';
 import { isT2 } from '@devvit/shared-types/tid.js';
+import { LEGACY_BASE_DRAWING_COLORS } from '@shared/constants';
 
-const OLD_COLOR_PALETTE = [
-  '#FFFFFF',
-  '#000000',
-  '#EB5757',
-  '#F2994A',
-  '#F2C94C',
-  '#27AE60',
-  '#2F80ED',
-  '#9B51E0',
-];
+// Legacy color palette for migrating old drawings
+const OLD_COLOR_PALETTE = [...LEGACY_BASE_DRAWING_COLORS];
 
 const MIGRATION_LOCK_TTL = 60; // seconds
 

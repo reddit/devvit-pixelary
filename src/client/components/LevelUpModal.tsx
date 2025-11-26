@@ -24,29 +24,10 @@ export function LevelUpModal(props: LevelUpModalProps) {
   const rewards = getRewardsByLevel(level);
   const claimConsumables = getConsumablesGrantedOnLevelClaim(level);
 
-  // Aggregate rewards for display:
-  // - Remove level user flair from the dialog
-  // - Combine all extended color tiers into a single "+N colors" line
-  const EXTENDED_COLOR_PREFIX = 'extended_colors_tier_';
-  const colorTierRewards = rewards.filter((r) =>
-    r.startsWith(EXTENDED_COLOR_PREFIX)
-  );
-  const otherRewards = rewards.filter(
-    (r) => r !== 'level_flair' && !r.startsWith(EXTENDED_COLOR_PREFIX)
-  );
-
-  const displayRewardItems: Array<{ key: string; label: string }> = [
-    ...otherRewards.map((r) => ({ key: r, label: getRewardLabel(r, level) })),
-  ];
-
-  if (colorTierRewards.length > 0) {
-    const COLORS_PER_TIER = 14;
-    const totalColors = colorTierRewards.length * COLORS_PER_TIER;
-    displayRewardItems.push({
-      key: 'extended_colors_aggregate',
-      label: `+${totalColors} colors`,
-    });
-  }
+  // Filter out level user flair from the dialog
+  const displayRewardItems: Array<{ key: string; label: string }> = rewards
+    .filter((r) => r !== 'level_flair')
+    .map((r) => ({ key: r, label: getRewardLabel(r, level) }));
 
   const content = (
     <ModalScrim persistent>

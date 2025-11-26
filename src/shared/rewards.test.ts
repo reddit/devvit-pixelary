@@ -15,10 +15,6 @@ describe('rewards system', () => {
       expect(hasReward(2, 'extra_drawing_time')).toBe(true);
       expect(hasReward(2, 'extra_word_time')).toBe(true);
       expect(hasReward(3, 'add_remove_words')).toBe(true);
-      expect(hasReward(2, 'extended_colors_tier_1')).toBe(true);
-      expect(hasReward(3, 'extended_colors_tier_2')).toBe(true);
-      expect(hasReward(4, 'extended_colors_tier_3')).toBe(true);
-      expect(hasReward(5, 'extended_colors_tier_4')).toBe(true);
       expect(hasReward(1, 'level_flair')).toBe(true);
     });
 
@@ -26,10 +22,6 @@ describe('rewards system', () => {
       expect(hasReward(1, 'extra_drawing_time')).toBe(false);
       expect(hasReward(1, 'extra_word_time')).toBe(false);
       expect(hasReward(2, 'add_remove_words')).toBe(false);
-      expect(hasReward(1, 'extended_colors_tier_1')).toBe(false);
-      expect(hasReward(2, 'extended_colors_tier_2')).toBe(false);
-      expect(hasReward(3, 'extended_colors_tier_3')).toBe(false);
-      expect(hasReward(4, 'extended_colors_tier_4')).toBe(false);
       expect(hasReward(0, 'level_flair')).toBe(false);
     });
 
@@ -59,10 +51,6 @@ describe('rewards system', () => {
 
     it('returns undefined for rewards without values', () => {
       expect(getRewardValue(3, 'add_remove_words')).toBeUndefined();
-      expect(getRewardValue(2, 'extended_colors_tier_1')).toBeUndefined();
-      expect(getRewardValue(3, 'extended_colors_tier_2')).toBeUndefined();
-      expect(getRewardValue(4, 'extended_colors_tier_3')).toBeUndefined();
-      expect(getRewardValue(5, 'extended_colors_tier_4')).toBeUndefined();
       expect(getRewardValue(1, 'level_flair')).toBeUndefined();
     });
 
@@ -101,18 +89,6 @@ describe('rewards system', () => {
     it('returns static labels for non-computed rewards', () => {
       expect(getRewardLabel('add_remove_words', 3)).toBe('Add/remove words');
       expect(getRewardLabel('add_remove_words', 10)).toBe('Add/remove words');
-      expect(getRewardLabel('extended_colors_tier_1', 2)).toBe(
-        '+14 pastel colors'
-      );
-      expect(getRewardLabel('extended_colors_tier_2', 3)).toBe(
-        '+14 dark colors'
-      );
-      expect(getRewardLabel('extended_colors_tier_3', 4)).toBe(
-        '+14 vibrant colors'
-      );
-      expect(getRewardLabel('extended_colors_tier_4', 5)).toBe(
-        '+14 earth colors'
-      );
       expect(getRewardLabel('level_flair', 1)).toBe('Level user flair');
       expect(getRewardLabel('level_flair', 10)).toBe('Level user flair');
     });
@@ -128,14 +104,10 @@ describe('rewards system', () => {
   describe('getAllRewards', () => {
     it('returns all reward types', () => {
       const rewards = getAllRewards();
-      expect(rewards).toHaveLength(8);
+      expect(rewards).toHaveLength(4);
       expect(rewards).toContain('extra_drawing_time');
       expect(rewards).toContain('extra_word_time');
       expect(rewards).toContain('add_remove_words');
-      expect(rewards).toContain('extended_colors_tier_1');
-      expect(rewards).toContain('extended_colors_tier_2');
-      expect(rewards).toContain('extended_colors_tier_3');
-      expect(rewards).toContain('extended_colors_tier_4');
       expect(rewards).toContain('level_flair');
     });
 
@@ -152,34 +124,24 @@ describe('rewards system', () => {
       expect(getRewardsByLevel(2)).toEqual([
         'extra_drawing_time',
         'extra_word_time',
-        'extended_colors_tier_1',
         'level_flair',
       ]);
       expect(getRewardsByLevel(3)).toEqual([
         'extra_drawing_time',
         'extra_word_time',
         'add_remove_words',
-        'extended_colors_tier_1',
-        'extended_colors_tier_2',
         'level_flair',
       ]);
       expect(getRewardsByLevel(4)).toEqual([
         'extra_drawing_time',
         'extra_word_time',
         'add_remove_words',
-        'extended_colors_tier_1',
-        'extended_colors_tier_2',
-        'extended_colors_tier_3',
         'level_flair',
       ]);
       expect(getRewardsByLevel(5)).toEqual([
         'extra_drawing_time',
         'extra_word_time',
         'add_remove_words',
-        'extended_colors_tier_1',
-        'extended_colors_tier_2',
-        'extended_colors_tier_3',
-        'extended_colors_tier_4',
         'level_flair',
       ]);
     });
@@ -191,10 +153,6 @@ describe('rewards system', () => {
         'extra_drawing_time',
         'extra_word_time',
         'add_remove_words',
-        'extended_colors_tier_1',
-        'extended_colors_tier_2',
-        'extended_colors_tier_3',
-        'extended_colors_tier_4',
         'level_flair',
       ]);
     });

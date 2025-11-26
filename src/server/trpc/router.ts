@@ -383,13 +383,13 @@ export const appRouter = t.router({
     user: t.router({
       colors: t.router({
         getRecent: t.procedure.query(async ({ ctx }) => {
-          const { BASE_DRAWING_COLORS } = await import('@shared/constants');
+          const { DEFAULT_MRU_COLORS } = await import('@client/constants');
           if (!ctx.userId) {
-            // Anonymous users see the seed (base palette) trimmed to limit
-            return BASE_DRAWING_COLORS.slice(0, 7);
+            // Anonymous users see the default MRU colors
+            return [...DEFAULT_MRU_COLORS];
           }
           const { getRecentColors } = await import('../services/user/colors');
-          return await getRecentColors(ctx.userId, BASE_DRAWING_COLORS, 7);
+          return await getRecentColors(ctx.userId, DEFAULT_MRU_COLORS, 7);
         }),
         pushRecent: t.procedure
           .input(z.object({ color: z.string().regex(/^#[0-9A-Fa-f]{6}$/) }))

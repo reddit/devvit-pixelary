@@ -5,10 +5,6 @@
 export type RewardType =
   | 'extra_drawing_time'
   | 'extra_word_time'
-  | 'extended_colors_tier_1'
-  | 'extended_colors_tier_2'
-  | 'extended_colors_tier_3'
-  | 'extended_colors_tier_4'
   | 'add_remove_words'
   | 'level_flair';
 
@@ -32,22 +28,6 @@ const REWARDS: Record<RewardType, RewardConfig> = {
   add_remove_words: {
     minLevel: 3,
     getLabel: () => 'Add/remove words',
-  },
-  extended_colors_tier_1: {
-    minLevel: 2,
-    getLabel: () => '+14 pastel colors',
-  },
-  extended_colors_tier_2: {
-    minLevel: 3,
-    getLabel: () => '+14 dark colors',
-  },
-  extended_colors_tier_3: {
-    minLevel: 4,
-    getLabel: () => '+14 vibrant colors',
-  },
-  extended_colors_tier_4: {
-    minLevel: 5,
-    getLabel: () => '+14 earth colors',
   },
   level_flair: {
     minLevel: 1,

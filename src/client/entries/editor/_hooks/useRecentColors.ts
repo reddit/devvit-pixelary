@@ -1,79 +1,18 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import type { RefObject } from 'react';
 import type { HEX } from '@shared/types';
-import { DRAWING_COLORS } from '@client/constants';
+import { DRAWING_COLORS, DEFAULT_MRU_COLORS } from '@client/constants';
 import { trpc } from '@client/trpc/client';
 
 export function useRecentColors(
   paletteContainerRef: RefObject<HTMLDivElement | null>
 ) {
-  // Persistent storage keys
-  const RECENT_COLORS_STORAGE_KEY = 'pixelary:recentColors';
-  const CURRENT_COLOR_STORAGE_KEY = 'pixelary:currentColor';
-
-  const readRecentFromStorage = (): HEX[] | null => {
-    try {
-      const raw =
-        typeof window !== 'undefined'
-          ? window.localStorage.getItem(RECENT_COLORS_STORAGE_KEY)
-          : null;
-      if (!raw) return null;
-      const parsed = JSON.parse(raw) as unknown;
-      if (!Array.isArray(parsed)) return null;
-      const hexes = parsed.filter((c): c is HEX => typeof c === 'string');
-      return hexes.slice(0, 7);
-    } catch {
-      return null;
-    }
-  };
-
-  const readCurrentFromStorage = (): HEX | null => {
-    try {
-      const raw =
-        typeof window !== 'undefined'
-          ? window.localStorage.getItem(CURRENT_COLOR_STORAGE_KEY)
-          : null;
-      if (!raw || typeof raw !== 'string') return null;
-      return raw as HEX;
-    } catch {
-      return null;
-    }
-  };
-
-  const writeRecentToStorage = (colors: HEX[]): void => {
-    try {
-      if (typeof window === 'undefined') return;
-      window.localStorage.setItem(
-        RECENT_COLORS_STORAGE_KEY,
-        JSON.stringify(colors.slice(0, 7))
-      );
-    } catch {
-      // best-effort
-    }
-  };
-
-  const writeCurrentToStorage = (color: HEX): void => {
-    try {
-      if (typeof window === 'undefined') return;
-      window.localStorage.setItem(CURRENT_COLOR_STORAGE_KEY, color);
-    } catch {
-      // best-effort
-    }
-  };
-
-  // Load any locally cached MRU immediately to avoid a flash of defaults
-  const initialRecentFromStorage = readRecentFromStorage();
-  const initialCurrentFromStorage = readCurrentFromStorage();
-  const initializedFromStorage =
-    Array.isArray(initialRecentFromStorage) &&
-    initialRecentFromStorage.length > 0;
-
   const [currentColor, setCurrentColor] = useState<HEX>(
-    initialCurrentFromStorage ?? DRAWING_COLORS[0] ?? '#000000'
+    DEFAULT_MRU_COLORS[0] ?? '#000000'
   );
-  const [recentColors, setRecentColors] = useState<HEX[]>(
-    () => initialRecentFromStorage ?? DRAWING_COLORS.slice(0, 7)
-  );
+  const [recentColors, setRecentColors] = useState<HEX[]>(() => [
+    ...DEFAULT_MRU_COLORS,
+  ]);
   const [isMRUAnimating, setIsMRUAnimating] = useState(false);
   const [suppressInitialAnim, setSuppressInitialAnim] = useState(true);
 
@@ -90,7 +29,7 @@ export function useRecentColors(
     [pushRecentMutation]
   );
 
-  const didInitCurrentRef = useRef(Boolean(initialCurrentFromStorage));
+  const didInitCurrentRef = useRef(false);
   const recentQuery = trpc.app.user.colors.getRecent.useQuery(undefined, {
     staleTime: 0,
     gcTime: 0,
@@ -100,41 +39,55 @@ export function useRecentColors(
   useEffect(() => {
     if (recentQuery.isSuccess && Array.isArray(recentQuery.data)) {
       const colors = recentQuery.data;
-      const next = colors.slice(0, 7);
+      // Filter out invalid colors (not in DRAWING_COLORS) and replace with defaults
+      const validColorsSet = new Set(DRAWING_COLORS);
+      const validFromQuery = colors.filter((c) => validColorsSet.has(c));
+
+      // Start with valid colors from query, then fill with defaults
+      let next: HEX[] = [];
+      const used = new Set<HEX>();
+
+      // Add valid colors from query first
+      for (const color of validFromQuery) {
+        if (!used.has(color) && next.length < DEFAULT_MRU_COLORS.length) {
+          next.push(color);
+          used.add(color);
+        }
+      }
+
+      // Fill remaining slots with defaults
+      for (const defaultColor of DEFAULT_MRU_COLORS) {
+        if (
+          !used.has(defaultColor) &&
+          next.length < DEFAULT_MRU_COLORS.length
+        ) {
+          next.push(defaultColor);
+          used.add(defaultColor);
+        }
+      }
+
+      // Final safety check: ensure we always have exactly the expected number
+      if (next.length !== DEFAULT_MRU_COLORS.length) {
+        next = [...DEFAULT_MRU_COLORS];
+      }
+
       setRecentColors(next);
-      writeRecentToStorage(next);
       if (!didInitCurrentRef.current) {
-        const firstColor = colors[0];
+        const firstColor = next[0];
         if (firstColor) {
           setCurrentColor(firstColor);
           didInitCurrentRef.current = true;
           setSuppressInitialAnim(false);
-          writeCurrentToStorage(firstColor);
         }
       }
     }
+    // Don't update on error - keep the initial defaults
   }, [
     recentQuery.isFetching,
     recentQuery.isSuccess,
     recentQuery.isError,
     recentQuery.data,
   ]);
-
-  // If we started with storage, end the initial suppression after first paint
-  useEffect(() => {
-    if (initializedFromStorage) {
-      setSuppressInitialAnim(false);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Persist changes locally for faster subsequent loads
-  useEffect(() => {
-    writeRecentToStorage(recentColors);
-  }, [recentColors]);
-  useEffect(() => {
-    writeCurrentToStorage(currentColor);
-  }, [currentColor]);
 
   // Animate removal helper
   const animateRemovalIfNeeded = useCallback(

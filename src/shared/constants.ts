@@ -59,8 +59,9 @@ export const TOURNAMENT_FALLBACK_WORD = 'Meatloaf';
 
 /*
  * Colors
+ * Legacy colors - only used for migration of old drawings
  */
-export const BASE_DRAWING_COLORS: readonly HEX[] = [
+export const LEGACY_BASE_DRAWING_COLORS: readonly HEX[] = [
   '#000000', // black
   '#FFFFFF', // white
   '#EB5757', // red
