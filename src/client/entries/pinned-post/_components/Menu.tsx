@@ -38,6 +38,11 @@ export function Menu(props: MenuProps) {
     enabled: true,
   });
 
+  // Check if user is admin
+  const { data: isUserAdmin } = trpc.app.user.isAdmin.useQuery(undefined, {
+    enabled: true,
+  });
+
   // Warm editor-related caches as soon as the menu is visible
   useEffect(() => {
     void utils.app.user.getProfile.prefetch();
@@ -84,7 +89,19 @@ export function Menu(props: MenuProps) {
       <ActiveEffectsBadge />
       {/* Logo + Wordmark */}
       <div className="flex flex-col items-center gap-4">
-        <Logo size={64} />
+        {isUserAdmin ? (
+          <button
+            onClick={async (e) => {
+              void requestExpandedMode(e, 'analytics');
+            }}
+            className="cursor-default"
+            type="button"
+          >
+            <Logo size={64} />
+          </button>
+        ) : (
+          <Logo size={64} />
+        )}
         <Text scale={4}>Pixelary</Text>
       </div>
 

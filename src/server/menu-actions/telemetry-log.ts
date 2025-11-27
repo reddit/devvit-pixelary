@@ -15,7 +15,8 @@ export async function handleTelemetryLog(
   try {
     const today = getTelemetryDateKey();
     const telemetryKey = REDIS_KEYS.telemetry(today);
-    await redis.hGetAll(telemetryKey);
+    const telemetryData = await redis.hGetAll(telemetryKey);
+    console.log(`Telemetry data for ${today}:`, telemetryData);
     res.json({ showToast: 'Done. See server logs' });
   } catch (error) {
     console.error('Error logging telemetry:', error);

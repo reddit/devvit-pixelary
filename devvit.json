@@ -28,6 +28,11 @@
         "entry": "editor.html",
         "height": "tall",
         "inline": false
+      },
+      "analytics": {
+        "entry": "analytics.html",
+        "height": "tall",
+        "inline": false
       }
     }
   },

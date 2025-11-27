@@ -108,6 +108,37 @@ export async function getEventStats(
 }
 
 /**
+ * Get aggregated event stats for a date range (last N days)
+ */
+export async function getEventStatsRange(
+  endDate: string,
+  days: number,
+  postType?: PostType
+): Promise<Record<string, number>> {
+  const end = new Date(endDate + 'T00:00:00');
+  const result: Record<string, number> = {};
+
+  try {
+    // Get stats for each day in the range
+    for (let i = 0; i < days; i++) {
+      const date = new Date(end);
+      date.setDate(date.getDate() - i);
+      const dateKey = getTelemetryDateKey(date);
+      const dayStats = await getEventStats(dateKey, postType);
+
+      // Aggregate into result
+      for (const [field, value] of Object.entries(dayStats)) {
+        result[field] = (result[field] ?? 0) + value;
+      }
+    }
+
+    return result;
+  } catch (error) {
+    return {};
+  }
+}
+
+/**
  * Clear telemetry data for a specific date
  * Returns the number of records that were deleted
  */

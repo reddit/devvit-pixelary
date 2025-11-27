@@ -47,7 +47,11 @@ import {
   PostDataInputSchema,
 } from '@shared/schema/pixelary';
 import type { DrawingData } from '@shared/schema/drawing';
-import { trackEventFromContext } from '@server/services/telemetry';
+import {
+  trackEventFromContext,
+  getEventStats,
+  getEventStatsRange,
+} from '@server/services/telemetry';
 import type { TelemetryEventType } from '@shared/types';
 import { z, ZodError } from 'zod';
 
@@ -186,6 +190,65 @@ export const appRouter = t.router({
         const result = await generateSlate();
         return result;
       }),
+
+      getWordStats: t.procedure
+        .input(
+          z.object({
+            limit: z.number().min(1).max(100).default(20),
+          })
+        )
+        .query(async ({ ctx, input }) => {
+          // Only admins can access word stats
+          if (!ctx.userId) {
+            throw new TRPCError({
+              code: 'UNAUTHORIZED',
+              message: 'Must be logged in',
+            });
+          }
+
+          const userIsAdmin = await isAdmin(ctx.userId);
+          if (!userIsAdmin) {
+            throw new TRPCError({
+              code: 'FORBIDDEN',
+              message: 'Admin access required',
+            });
+          }
+
+          if (!ctx.subredditName) {
+            throw new TRPCError({
+              code: 'NOT_FOUND',
+              message: 'Subreddit not found',
+            });
+          }
+
+          // Get top words by score (highest scores first)
+          // Words are stored in global Redis, not subreddit-specific
+          const wordsByScore = await redis.global.zRange(
+            REDIS_KEYS.wordsAll(ctx.subredditName),
+            0,
+            input.limit - 1,
+            { reverse: true, by: 'rank' }
+          );
+
+          // Get top words by uncertainty (highest uncertainty first)
+          const wordsByUncertainty = await redis.global.zRange(
+            REDIS_KEYS.wordsUncertainty(ctx.subredditName),
+            0,
+            input.limit - 1,
+            { reverse: true, by: 'rank' }
+          );
+
+          return {
+            byScore: wordsByScore.map((item) => ({
+              word: item.member,
+              score: item.score,
+            })),
+            byUncertainty: wordsByUncertainty.map((item) => ({
+              word: item.member,
+              uncertainty: item.score,
+            })),
+          };
+        }),
     }),
 
     // Post endpoints
@@ -559,6 +622,14 @@ export const appRouter = t.router({
         return await isModerator(ctx.userId, ctx.subredditName);
       }),
 
+      isAdmin: t.procedure.query(async ({ ctx }) => {
+        if (!ctx.userId) {
+          return false;
+        }
+
+        return await isAdmin(ctx.userId);
+      }),
+
       getUnclaimedLevelUp: t.procedure.query(async ({ ctx }) => {
         if (!ctx.userId) return null;
         return await getUnclaimedLevelUp(ctx.userId);
@@ -699,6 +770,37 @@ export const appRouter = t.router({
           }
 
           return { ok: true };
+        }),
+
+      getStats: t.procedure
+        .input(
+          z.object({
+            date: z.string(),
+            days: z.number().optional(),
+          })
+        )
+        .query(async ({ ctx, input }) => {
+          // Only admins can access telemetry stats
+          if (!ctx.userId) {
+            throw new TRPCError({
+              code: 'UNAUTHORIZED',
+              message: 'Must be logged in',
+            });
+          }
+
+          const userIsAdmin = await isAdmin(ctx.userId);
+          if (!userIsAdmin) {
+            throw new TRPCError({
+              code: 'FORBIDDEN',
+              message: 'Admin access required',
+            });
+          }
+
+          if (input.days && input.days > 1) {
+            return await getEventStatsRange(input.date, input.days);
+          }
+
+          return await getEventStats(input.date);
         }),
     }),
 

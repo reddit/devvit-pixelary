@@ -55,6 +55,7 @@ export default defineConfig({
           collection: './collection.html',
           tournament: './tournament.html',
           editor: './editor.html',
+          analytics: './analytics.html',
         };
       })(),
       output: {
