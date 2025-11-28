@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { GuessView } from './_components/GuessView';
 import { ResultsView } from './_components/ResultsView';
@@ -21,6 +21,21 @@ export function DrawingPost() {
   const currentPostId = context.postId;
   const { error: showErrorToast, success } = useToastHelpers();
 
+  // If postData is missing, try to trigger migration via API
+  const { data: migratedDrawing, isLoading: isMigrating } =
+    trpc.app.post.getDrawing.useQuery(
+      { postId: currentPostId },
+      {
+        enabled: !postData && !!currentPostId,
+        retry: false,
+        refetchOnWindowFocus: false,
+      }
+    );
+
+
+  // Use migrated data if available and postData is still missing
+  const effectivePostData = postData || migratedDrawing || null;
+
   // Telemetry
   const { track } = useTelemetry();
   useEffect(() => {
@@ -33,7 +48,11 @@ export function DrawingPost() {
 
   // Initialize state based on immediate author check to prevent flash
   const getInitialState = (): DrawingState => {
-    if (postData && context.userId && postData.authorId === context.userId) {
+    if (
+      effectivePostData &&
+      context.userId &&
+      effectivePostData.authorId === context.userId
+    ) {
       return 'author';
     }
     return 'unsolved';
@@ -44,6 +63,7 @@ export function DrawingPost() {
   const [feedback, setFeedback] = useState<boolean | null>(null);
   const [earnedPoints, setEarnedPoints] = useState<number | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
+  const lastShownPointsRef = useRef<number | null>(null);
   const { data: userProfile } = trpc.app.user.getProfile.useQuery(
     { postId: currentPostId },
     { enabled: true }
@@ -89,7 +109,9 @@ export function DrawingPost() {
   });
 
   const isAuthor =
-    postData && context.userId && postData.authorId === context.userId;
+    effectivePostData &&
+    context.userId &&
+    effectivePostData.authorId === context.userId;
 
   const isAuthorFirstView = trpc.app.post.isAuthorFirstView.useMutation({
     onSuccess: (result) => {
@@ -120,7 +142,7 @@ export function DrawingPost() {
 
   // Update state based on user's interaction with this post
   useEffect(() => {
-    if (userProfile && postData) {
+    if (userProfile && effectivePostData) {
       if (isAuthor) {
         setCurrentState('author');
       } else {
@@ -134,18 +156,25 @@ export function DrawingPost() {
         }
       }
     }
-  }, [userProfile, postData, isAuthor]);
+  }, [userProfile, effectivePostData, isAuthor]);
 
   // Clear earned points when transitioning away from solved state
   useEffect(() => {
     if (currentState !== 'solved') {
       setEarnedPoints(null);
+      lastShownPointsRef.current = null;
     }
   }, [currentState]);
 
   // Show points toast when earnedPoints changes
   useEffect(() => {
-    if (earnedPoints && earnedPoints > 0 && userProfile) {
+    if (
+      earnedPoints &&
+      earnedPoints > 0 &&
+      userProfile &&
+      lastShownPointsRef.current !== earnedPoints
+    ) {
+      lastShownPointsRef.current = earnedPoints;
       const attachment = (
         <ProgressBar
           percentage={getLevelProgressPercentage(
@@ -242,10 +271,10 @@ export function DrawingPost() {
     }
   };
 
-  // Use actual post data
-  const drawingData = postData?.drawing;
-  const word = postData?.word;
-  const dictionary = postData?.dictionary;
+  // Use actual post data (prefer postData, fallback to migratedDrawing)
+  const drawingData = effectivePostData?.drawing;
+  const word = effectivePostData?.word;
+  const dictionary = effectivePostData?.dictionary;
   const currentSubreddit = context.subredditName;
 
   // Reset state if we're in solved state but missing essential data (broken state)
@@ -254,6 +283,11 @@ export function DrawingPost() {
       setCurrentState('unsolved');
     }
   }, [currentState, drawingData, word]);
+
+  // Show loading state while migrating
+  if ((!drawingData || !word) && isMigrating) {
+    return <div>Loading...</div>;
+  }
 
   if (!drawingData || !word) {
     return null;
@@ -269,7 +303,7 @@ export function DrawingPost() {
         <ResultsView
           drawing={drawingData}
           word={word}
-          authorUsername={postData.authorName}
+          authorUsername={effectivePostData.authorName}
           dictionary={dictionary}
           currentSubreddit={currentSubreddit}
           stats={stats}

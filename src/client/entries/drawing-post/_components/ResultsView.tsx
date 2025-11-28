@@ -1,5 +1,4 @@
 import { Button } from '@components/Button';
-import { Icon } from '@components/PixelFont';
 import { Drawing } from '@components/Drawing';
 import { Lightbox } from '@components/Lightbox';
 import { trpc } from '@client/trpc/client';
@@ -60,10 +59,17 @@ export function ResultsView({
     void utils.app.user.colors.getRecent.prefetch();
     // dictionary slate is anonymous; still helpful to warm
     void utils.app.dictionary.getCandidates.prefetch();
-  }, [utils]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const getPendingNavigation = trpc.app.user.getPendingNavigation.useMutation();
   const navigationInProgressRef = useRef(false);
+  const getPendingNavigationRef = useRef(getPendingNavigation);
+  
+  // Keep ref in sync with mutation
+  useEffect(() => {
+    getPendingNavigationRef.current = getPendingNavigation;
+  }, [getPendingNavigation]);
 
   // Listen for expanded mode closing to handle navigation
   useEffect(() => {
@@ -74,7 +80,7 @@ export function ResultsView({
         navigationInProgressRef.current = true;
         void (async () => {
           try {
-            const result = await getPendingNavigation.mutateAsync();
+            const result = await getPendingNavigationRef.current.mutateAsync();
             if (result.url) {
               navigateTo(result.url);
             }
@@ -91,7 +97,8 @@ export function ResultsView({
     return () => {
       removeWebViewModeListener(listener);
     };
-  }, [getPendingNavigation]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Mutation for revealing guesses
   const revealGuess = trpc.app.post.revealGuess.useMutation();
@@ -124,12 +131,6 @@ export function ResultsView({
     .sort(([, a], [, b]) => b - a)
     .slice(0, 5);
 
-  // Rendering flags
-  const showTag =
-    dictionary &&
-    dictionary !== 'main' &&
-    dictionary !== `r/${currentSubreddit}`;
-
   return (
     <main className="absolute inset-0 flex flex-col items-center justify-center h-full p-6 gap-6">
       {/* Header */}
@@ -146,13 +147,6 @@ export function ResultsView({
           <Text>{word}</Text>
           {/* Author */}
           <Text className="text-secondary">{`By u/${authorUsername}`}</Text>
-          {/* Dictionary Tag */}
-          {showTag && (
-            <div className="flex items-center gap-2 text-secondary">
-              <Icon type="clock" />
-              <Text>{`${dictionary} event`}</Text>
-            </div>
-          )}
         </div>
       </header>
       {/* Guess and Player Count */}

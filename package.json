@@ -25,7 +25,8 @@
     "test:shared": "vitest run src/shared/**/*.test.*",
     "test:ui": "vitest --ui",
     "test:watch": "vitest",
-    "type-check": "tsc --noEmit --project src/client/tsconfig.json --project src/server/tsconfig.json --project src/shared/tsconfig.json"
+    "type-check": "tsc --noEmit --project src/client/tsconfig.json --project src/server/tsconfig.json --project src/shared/tsconfig.json",
+    "logs": "devvit logs r/pixelary --since=5m"
   },
   "dependencies": {
     "@devvit/public-api": "0.12.4",
