@@ -157,7 +157,14 @@ export async function migrateOldDrawingPost(postId: T3): Promise<boolean> {
     // Set postData on the post to mark it as migrated
     try {
       const post = await reddit.getPostById(postId);
-      await post.setPostData({ type: 'drawing' });
+      await post.setPostData({
+        type: 'drawing',
+        word,
+        dictionary: dictionaryName,
+        drawing: drawingData,
+        authorId,
+        authorName,
+      });
     } catch (error) {
       console.warn(
         `Failed to set postData for ${postId} (migration continues):`,
