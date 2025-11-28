@@ -1,6 +1,6 @@
 {
   "$schema": "https://developers.reddit.com/schema/config-file.v1.json",
-  "name": "pixelary-beta",
+  "name": "pixelary-game",
   "post": {
     "dir": "dist/client",
     "entrypoints": {
@@ -210,6 +210,6 @@
     }
   },
   "dev": {
-    "subreddit": "lekegrind"
+    "subreddit": "pixelarybeta"
   }
 }
