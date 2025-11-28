@@ -7,7 +7,6 @@ import type { DrawingData } from '@shared/schema/drawing';
 import { Text } from '@components/PixelFont';
 import { CyclingMessage } from '@components/CyclingMessage';
 import { AUTHOR_REWARD_SUBMIT } from '@shared/constants';
-import { titleCase } from '@shared/utils/string';
 import { useState, useEffect, useRef } from 'react';
 import { useToastHelpers } from '@components/ToastManager';
 import type { PostGuesses } from '@shared/schema/pixelary';
@@ -104,20 +103,33 @@ export function ResultsView({
   const revealGuess = trpc.app.post.revealGuess.useMutation();
 
   const handleGuessRowClick = async (guess: string) => {
+    // Don't proceed if postId is missing
+    if (!postId) {
+      return;
+    }
+
     try {
-      // Fire event for all users, server will decide if they get the reveal
-      const normalizedGuess = titleCase(guess.trim());
+      // Send the obfuscated guess as-is (it's already in the correct format from the server)
+      const trimmedGuess = guess.trim();
+      if (!trimmedGuess) {
+        return;
+      }
+
       const result = await revealGuess.mutateAsync({
-        postId: postId ?? '',
-        guess: normalizedGuess,
+        postId,
+        guess: trimmedGuess,
       });
 
       // Show toast if server revealed the guess
-      if (result.revealed) {
-        success(result.guess ?? normalizedGuess, { duration: 2000 });
+      if (result?.revealed && result.guess) {
+        success(result.guess, { duration: 2000 });
       }
     } catch (error) {
       // Server will handle permission checks, so we can ignore errors silently
+      // Log for debugging in development
+      if (process.env.NODE_ENV === 'development') {
+        console.error('Error revealing guess:', error);
+      }
     }
   };
 

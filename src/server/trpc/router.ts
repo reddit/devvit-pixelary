@@ -53,6 +53,7 @@ import {
   getEventStatsRange,
 } from '@server/services/telemetry';
 import type { TelemetryEventType } from '@shared/types';
+import { obfuscateString } from '@shared/utils/string';
 import { z, ZodError } from 'zod';
 
 const t = initTRPC.context<Context>().create({
@@ -328,6 +329,11 @@ export const appRouter = t.router({
               message: 'Must be logged in',
             });
 
+          // Validate postId
+          if (!input.postId || !assertT3(input.postId)) {
+            return { success: false, revealed: false };
+          }
+
           // Check if user is admin or moderator
           const userIsAdmin = await isAdmin(ctx.userId);
           const userIsModerator = ctx.subredditName
@@ -339,32 +345,41 @@ export const appRouter = t.router({
             return { success: false, revealed: false };
           }
 
-          // Get all guesses for this post to find the original word
-          const { obfuscateString } = await import('../../shared/utils/string');
+          try {
+            // Get the raw guesses (before obfuscation)
+            const rawGuesses = await redis.zRange(
+              REDIS_KEYS.drawingGuesses(input.postId as T3),
+              0,
+              -1,
+              { reverse: true, by: 'rank' }
+            );
 
-          // Get the raw guesses (before obfuscation)
-          const rawGuesses = await redis.zRange(
-            REDIS_KEYS.drawingGuesses(input.postId as T3),
-            0,
-            -1,
-            { reverse: true, by: 'rank' }
-          );
-
-          // Find the original word that matches the obfuscated input
-          let originalWord = input.guess;
-          for (const guess of rawGuesses) {
-            if (obfuscateString(guess.member) === input.guess) {
-              originalWord = guess.member;
-              break;
+            // Find the original word that matches the obfuscated input
+            let originalWord = input.guess;
+            if (Array.isArray(rawGuesses)) {
+              for (const guess of rawGuesses) {
+                if (
+                  guess &&
+                  typeof guess.member === 'string' &&
+                  obfuscateString(guess.member) === input.guess
+                ) {
+                  originalWord = guess.member;
+                  break;
+                }
+              }
             }
-          }
 
-          // Return the original word for privileged users
-          return {
-            success: true,
-            revealed: true,
-            guess: originalWord,
-          };
+            // Return the original word for privileged users
+            return {
+              success: true,
+              revealed: true,
+              guess: originalWord,
+            };
+          } catch (error) {
+            // Log error but return gracefully
+            console.error('Error revealing guess:', error);
+            return { success: false, revealed: false };
+          }
         }),
 
       isAuthorFirstView: t.procedure
