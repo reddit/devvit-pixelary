@@ -40,7 +40,12 @@ export async function handleNewDrawingPinnedComment(
     await createDrawingPostComment(validatedPostId);
     res.json({ status: 'success' });
   } catch (error) {
-    res.status(500).json({ status: 'error', message: 'Job failed' });
+    console.error('Error creating drawing pinned comment:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Job failed',
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 }
 
@@ -57,11 +62,13 @@ export async function handleUpdateDrawingPinnedComment(
     // Extract data from the scheduler payload
     const jobData = req.body.data ?? req.body;
 
-    // Validate and parse postId as validateT3
+    // Validate and parse postId as T3
     let postId: T3;
     try {
+      assertT3(jobData.postId);
       postId = jobData.postId;
     } catch (error) {
+      console.error('Invalid postId in update drawing pinned comment:', error);
       res.status(400).json({
         status: 'error',
         message: 'PostId is required and must be a valid T3 ID',
@@ -83,10 +90,16 @@ export async function handleUpdateDrawingPinnedComment(
       }
     } catch (error) {
       // Don't fail the job if flair setting fails
+      console.error('Error setting flair (non-blocking):', error);
     }
 
     res.json({ status: 'success' });
   } catch (error) {
-    res.status(500).json({ status: 'error', message: 'Job failed' });
+    console.error('Error updating drawing pinned comment:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Job failed',
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 }

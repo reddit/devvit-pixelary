@@ -1,4 +1,4 @@
-import { redis, reddit } from '@devvit/web/server';
+import { redis, reddit, scheduler } from '@devvit/web/server';
 import { REDIS_KEYS, acquireLock, releaseLock } from '@server/core/redis';
 import { normalizeWord } from '@shared/utils/string';
 import { DrawingUtils } from '@shared/schema/drawing';
@@ -14,21 +14,21 @@ const MIGRATION_LOCK_TTL = 60; // seconds
 
 /**
  * Convert old drawing data format (number[]) to new DrawingData format
- * 
+ *
  * Old system:
  * - Settings.colors = ["#FFFFFF", "#000000", "#EB5757", ...] (white at 0, black at 1)
  * - Drawing component: `if (colorIndex > 0)` means value 0 = background (white, not rendered)
  * - So: value 0 = white background, value 1 = black, value 2+ = other colors
- * 
+ *
  * New system:
  * - We want white as background (bg: 0) to match the default
  * - Palette: [white(0), black(1), red(2), ...]
- * 
+ *
  * Solution: The old data already has the correct mapping!
  * - Old value 0 = white background (not rendered) -> new value 0 = white background (bg: 0)
  * - Old value 1 = black -> new value 1 = black (no change needed)
  * - Other colors stay the same
- * 
+ *
  * But LEGACY_BASE_DRAWING_COLORS has [black(0), white(1), ...] which is wrong!
  * We need to reorder it to match the old system: [white(0), black(1), ...]
  */
@@ -70,13 +70,18 @@ export async function migrateOldDrawingPost(postId: T3): Promise<boolean> {
   const migrationLockKey = REDIS_KEYS.migrationLock(postId);
 
   // Pre-flight checks - check both old formats
-  const [newFormatExists, markerExists, oldFormatExistsDash, oldFormatExistsColon] = await Promise.all([
+  const [
+    newFormatExists,
+    markerExists,
+    oldFormatExistsDash,
+    oldFormatExistsColon,
+  ] = await Promise.all([
     redis.exists(newDrawingKey as never),
     redis.exists(migrationMarkerKey as never),
     redis.exists(oldPostKeyDash as never),
     redis.exists(oldPostKeyColon as never),
   ]);
-  
+
   const oldFormatExists = oldFormatExistsDash || oldFormatExistsColon;
   const oldPostKey = oldFormatExistsDash ? oldPostKeyDash : oldPostKeyColon;
 
@@ -89,9 +94,10 @@ export async function migrateOldDrawingPost(postId: T3): Promise<boolean> {
     // Check if postData exists on the post itself (might be in old format or new format)
     try {
       const post = await reddit.getPostById(postId);
-      const postData = (await post.getPostData()) as
-        | { type?: string; [key: string]: unknown }
-        | null;
+      const postData = (await post.getPostData()) as {
+        type?: string;
+        [key: string]: unknown;
+      } | null;
 
       // If postData exists and is in new format, sync it to Redis
       if (postData && postData.type === 'drawing') {
@@ -191,12 +197,15 @@ export async function migrateOldDrawingPost(postId: T3): Promise<boolean> {
     const dataStr = oldPostData.data;
 
     if (!authorUsername || !dateStr || !word || !dataStr) {
-      console.error(`[Migration] Failed for ${postId}: missing required fields`, {
-        authorUsername,
-        dateStr,
-        word,
-        dataStr,
-      });
+      console.error(
+        `[Migration] Failed for ${postId}: missing required fields`,
+        {
+          authorUsername,
+          dateStr,
+          word,
+          dataStr,
+        }
+      );
       return false;
     }
 
@@ -414,6 +423,21 @@ export async function migrateOldDrawingPost(postId: T3): Promise<boolean> {
         ex: 7 * 24 * 60 * 60, // 7 days TTL
       } as never
     );
+
+    // Schedule pinned comment creation (non-blocking, best-effort)
+    try {
+      await scheduler.runJob({
+        name: 'NEW_DRAWING_PINNED_COMMENT',
+        data: { postId, authorName, word },
+        runAt: new Date(createdAt),
+      });
+    } catch (error) {
+      // Ignore scheduling errors: comment creation is best-effort
+      console.warn(
+        `[Migration] Failed to schedule pinned comment for ${postId}:`,
+        error
+      );
+    }
 
     // Clean up old Redis keys
     const oldGuessCommentsKey = `guess-comments:${postId}`;

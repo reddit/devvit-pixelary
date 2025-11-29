@@ -25,6 +25,7 @@ import type { MediaAsset } from '@devvit/web/server';
 import {
   createPinnedComment,
   updatePinnedComment,
+  getPinnedCommentId,
 } from '@server/services/comments/pinned';
 import { REALTIME_CHANNELS } from '@server/core/realtime';
 import { encodeDrawingToPngDataUrl } from '@server/utils/png';
@@ -593,7 +594,15 @@ export async function updateDrawingPostComment(postId: T3): Promise<void> {
   }
   const stats = await getDrawingCommentData(postId);
   const commentText = generateDrawingCommentText(stats);
-  await updatePinnedComment(postId, commentText);
+  
+  // If no pinned comment exists, create one instead of updating
+  const pinnedCommentId = await getPinnedCommentId(postId);
+  if (!pinnedCommentId) {
+    await createPinnedComment(postId, commentText);
+  } else {
+    await updatePinnedComment(postId, commentText);
+  }
+  
   await saveLastCommentUpdate(postId, Date.now());
   await clearNextScheduledJobId(postId);
 }

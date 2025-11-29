@@ -44,6 +44,7 @@ export type TelemetryEventType =
   | 'view_draw_step'
   | 'view_review_step'
   | 'view_slate'
+  | 'view_version_gate'
   // Click events
   | 'click_draw'
   | 'click_my_drawings'

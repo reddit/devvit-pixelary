@@ -2,6 +2,7 @@ import { useState, useEffect, type ReactNode } from 'react';
 
 import { Text } from './PixelFont';
 import { isClientVersionSufficient } from '@client/utils/versionGate';
+import { useTelemetry } from '@client/hooks/useTelemetry';
 
 type VersionGateProps = {
   children: ReactNode;
@@ -11,11 +12,19 @@ export function VersionGate({ children }: VersionGateProps) {
   const [isVersionSufficient, setIsVersionSufficient] = useState<
     boolean | null
   >(null);
+  const { track } = useTelemetry();
 
   useEffect(() => {
     const sufficient = isClientVersionSufficient();
     setIsVersionSufficient(sufficient);
   }, []);
+
+  useEffect(() => {
+    if (isVersionSufficient === false) {
+      void track('view_version_gate');
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isVersionSufficient]);
 
   // Don't render children until we've checked the version
   if (isVersionSufficient === null) {

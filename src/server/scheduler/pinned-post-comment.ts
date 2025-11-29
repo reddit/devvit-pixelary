@@ -33,6 +33,11 @@ export async function handleCreatePinnedPostComment(
 
     res.json({ status: 'success', commentId });
   } catch (error) {
-    res.status(500).json({ status: 'error', message: 'Job failed' });
+    console.error('Error creating pinned post comment:', error);
+    res.status(500).json({
+      status: 'error',
+      message: 'Job failed',
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 }
