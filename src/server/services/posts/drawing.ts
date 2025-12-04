@@ -594,7 +594,7 @@ export async function updateDrawingPostComment(postId: T3): Promise<void> {
   }
   const stats = await getDrawingCommentData(postId);
   const commentText = generateDrawingCommentText(stats);
-  
+
   // If no pinned comment exists, create one instead of updating
   const pinnedCommentId = await getPinnedCommentId(postId);
   if (!pinnedCommentId) {
@@ -602,7 +602,7 @@ export async function updateDrawingPostComment(postId: T3): Promise<void> {
   } else {
     await updatePinnedComment(postId, commentText);
   }
-  
+
   await saveLastCommentUpdate(postId, Date.now());
   await clearNextScheduledJobId(postId);
 }
@@ -623,9 +623,9 @@ export function generateDrawingCommentText(
       content: `Comment commands:
 
 * \`!words\` - See dictionary
-* \`!add <word>\` - Add word to dictionary (Level 2 required)
-* \`!remove <word>\` - Remove word from dictionary (Level 2 required)
-* \`!show <word>\` - Reveal an obfuscated guess on the results screen
+* \`!add <word>\` - Add word to dictionary. For example \`!add meatloaf\` or \`!add lava lamp\` (Level 2 required)
+* \`!remove <word>\` - Remove word from dictionary. For example \`!remove meatloaf\` or \`!remove lava lamp\` (Level 2 required)
+* \`!show <word>\` - Reveal an obfuscated guess on the results screen. For example \`!show meatloaf\` or \`!show lava lamp\`
 * \`!help\` - View more commands
 
 Accountability note: Users add words publicly via comments. Others can remove them. Words removed by Reddit's safety systems cannot be added back.`,
