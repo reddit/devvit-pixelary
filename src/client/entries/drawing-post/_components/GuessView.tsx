@@ -73,7 +73,7 @@ export function GuessView({
         <Drawing
           data={drawing}
           size={256}
-          enableBreathing={true}
+          enableBreathing={false}
           isPaused={feedback === false}
         />
         {/* Feedback overlay - covers whole game area */}

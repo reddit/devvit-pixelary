@@ -4,11 +4,9 @@ import { normalizeWord } from '@shared/utils/string';
 import { DrawingUtils } from '@shared/schema/drawing';
 import type { DrawingData } from '@shared/schema/drawing';
 import type { T2, T3 } from '@devvit/shared-types/tid.js';
-import { isT2 } from '@devvit/shared-types/tid.js';
+import { isT2, isT3 } from '@devvit/shared-types/tid.js';
 import { LEGACY_BASE_DRAWING_COLORS } from '@shared/constants';
-
-// Legacy color palette for migrating old drawings (used for reference, actual palette is created in convertOldDrawingData)
-const OLD_COLOR_PALETTE = [...LEGACY_BASE_DRAWING_COLORS];
+import { getUsername } from '@server/core/user';
 
 const MIGRATION_LOCK_TTL = 60; // seconds
 
@@ -415,6 +413,28 @@ export async function migrateOldDrawingPost(postId: T3): Promise<boolean> {
       });
     }
 
+    // Add to user-art sorted set and create snapshot (for "My Drawings" page)
+    const userArtKey = REDIS_KEYS.userArt(authorId);
+    const compositeId = `d:${postId}`;
+    const userArtExists = await redis.zScore(
+      userArtKey as never,
+      compositeId as never
+    );
+    if (userArtExists === null) {
+      await Promise.all([
+        redis.zAdd(userArtKey as never, {
+          member: compositeId,
+          score: createdAt,
+        }),
+        redis.hSet(REDIS_KEYS.userArtItem(authorId, compositeId), {
+          type: 'drawing',
+          postId,
+          drawing: JSON.stringify(drawingData),
+          createdAt: createdAt.toString(),
+        }),
+      ]);
+    }
+
     // Set migration marker
     await redis.set(
       migrationMarkerKey as never,
@@ -459,6 +479,214 @@ export async function migrateOldDrawingPost(postId: T3): Promise<boolean> {
   } finally {
     await releaseLock(migrationLockKey);
   }
+}
+
+/**
+ * Migrate all drawings from old user-drawings sorted set to new user-art format
+ * Also ensures drawings in userDrawings (new format) are in userArt
+ * @param userId - The user ID to migrate drawings for
+ * @returns The number of drawings migrated
+ */
+export async function migrateUserDrawings(userId: T2): Promise<number> {
+  try {
+    let migratedCount = 0;
+    const userArtKey = REDIS_KEYS.userArt(userId);
+    const userDrawingsKey = REDIS_KEYS.userDrawings(userId);
+
+    // First, migrate from old user-drawings:${username} format
+    try {
+      const username = await getUsername(userId);
+      console.log(
+        `[Migration] Resolved username: ${username} for userId: ${userId}`
+      );
+      const oldUserDrawingsKey = `user-drawings:${username}`;
+
+      // Check if old sorted set exists
+      const exists = await redis.exists(oldUserDrawingsKey as never);
+      console.log(
+        `[Migration] Old user-drawings key ${oldUserDrawingsKey} exists: ${exists}`
+      );
+      if (exists) {
+        // Get all postIds from old sorted set (with scores)
+        const oldDrawings = (await redis.zRange(
+          oldUserDrawingsKey as never,
+          0,
+          -1,
+          { by: 'rank' }
+        )) as Array<{ member: string; score: number }>;
+
+        console.log(
+          `[Migration] Found ${oldDrawings.length} drawings in old format`
+        );
+
+        // Process each drawing from old format
+        for (const entry of oldDrawings) {
+          const postId = entry.member;
+          const createdAt = entry.score;
+
+          console.log(
+            `[Migration] Processing old drawing: ${postId}, createdAt: ${createdAt}`
+          );
+
+          // Validate postId
+          if (!isT3(postId)) {
+            console.warn(
+              `[Migration] Invalid postId in user-drawings for ${username}: ${postId}`
+            );
+            continue;
+          }
+
+          try {
+            const count = await migrateDrawingToUserArt(
+              userId,
+              postId,
+              createdAt
+            );
+            migratedCount += count;
+            if (count > 0) {
+              console.log(
+                `[Migration] Successfully migrated old drawing ${postId}`
+              );
+            }
+          } catch (error) {
+            console.error(
+              `[Migration] Failed to migrate drawing ${postId} for user ${username}:`,
+              error
+            );
+          }
+        }
+      }
+    } catch (error) {
+      console.warn(
+        `[Migration] Failed to migrate from old user-drawings format:`,
+        error
+      );
+    }
+
+    // Second, ensure all drawings in userDrawings are also in userArt
+    // (in case they were migrated individually before user-art code was added)
+    try {
+      const newDrawings = (await redis.zRange(userDrawingsKey as never, 0, -1, {
+        by: 'rank',
+      })) as Array<{ member: string; score: number }>;
+
+      for (const entry of newDrawings) {
+        const postId = entry.member;
+        const createdAt = entry.score;
+
+        if (!isT3(postId)) {
+          continue;
+        }
+
+        try {
+          const compositeId = `d:${postId}`;
+          const userArtExists = await redis.zScore(
+            userArtKey as never,
+            compositeId as never
+          );
+
+          if (userArtExists === null) {
+            // Not in user-art, add it
+            const drawingData = await redis.hGetAll(REDIS_KEYS.drawing(postId));
+            if (drawingData?.drawing) {
+              await Promise.all([
+                redis.zAdd(userArtKey as never, {
+                  member: compositeId,
+                  score: createdAt,
+                }),
+                redis.hSet(REDIS_KEYS.userArtItem(userId, compositeId), {
+                  type: 'drawing',
+                  postId,
+                  drawing: drawingData.drawing,
+                  createdAt: createdAt.toString(),
+                }),
+              ]);
+              migratedCount++;
+            }
+          }
+        } catch (error) {
+          console.error(
+            `[Migration] Failed to migrate drawing ${postId} from userDrawings:`,
+            error
+          );
+        }
+      }
+    } catch (error) {
+      console.warn(
+        `[Migration] Failed to migrate from userDrawings format:`,
+        error
+      );
+    }
+
+    return migratedCount;
+  } catch (error) {
+    console.error(
+      `[Migration] Failed to migrate user drawings for userId ${userId}:`,
+      error
+    );
+    return 0;
+  }
+}
+
+/**
+ * Helper function to migrate a single drawing to user-art format
+ */
+async function migrateDrawingToUserArt(
+  userId: T2,
+  postId: T3,
+  createdAt: number
+): Promise<number> {
+  const userArtKey = REDIS_KEYS.userArt(userId);
+  const compositeId = `d:${postId}`;
+
+  // Check if already in user-art first (idempotent check)
+  const userArtExists = await redis.zScore(
+    userArtKey as never,
+    compositeId as never
+  );
+
+  if (userArtExists !== null) {
+    // Already migrated, skip
+    return 0;
+  }
+
+  // Migrate the post if not already migrated
+  await migrateOldDrawingPost(postId);
+
+  // Get drawing data (either from migration or existing)
+  const drawingData = await redis.hGetAll(REDIS_KEYS.drawing(postId));
+  if (!drawingData?.drawing) {
+    // No drawing data available, skip
+    console.warn(
+      `[Migration] No drawing data found for ${postId} after migration attempt`
+    );
+    return 0;
+  }
+
+  // Double-check user-art wasn't added by migrateOldDrawingPost
+  const userArtExistsAfter = await redis.zScore(
+    userArtKey as never,
+    compositeId as never
+  );
+
+  if (userArtExistsAfter === null) {
+    // Add to user-art sorted set and create snapshot
+    await Promise.all([
+      redis.zAdd(userArtKey as never, {
+        member: compositeId,
+        score: createdAt,
+      }),
+      redis.hSet(REDIS_KEYS.userArtItem(userId, compositeId), {
+        type: 'drawing',
+        postId,
+        drawing: drawingData.drawing,
+        createdAt: createdAt.toString(),
+      }),
+    ]);
+    return 1;
+  }
+
+  return 0;
 }
 
 /**

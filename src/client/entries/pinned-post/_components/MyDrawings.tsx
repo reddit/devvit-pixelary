@@ -21,9 +21,28 @@ export function MyDrawings({ onClose }: MyDrawingsProps) {
   }, []);
 
   // Grab paginated blended data (first page)
-  const { data, isLoading } = trpc.app.user.getMyArtPage.useQuery({
+  const { data, isLoading, refetch } = trpc.app.user.getMyArtPage.useQuery({
     limit: 20,
   });
+
+  // Migrate historical drawings on mount
+  const migrateDrawings = trpc.app.user.migrateMyDrawings.useMutation();
+  const utils = trpc.useUtils();
+  useEffect(() => {
+    void (async () => {
+      try {
+        await migrateDrawings.mutateAsync();
+        // Always refetch after migration to ensure we have the latest data
+        await utils.app.user.getMyArtPage.invalidate();
+        await refetch();
+      } catch (error) {
+        // Silently fail - migration is best-effort
+        console.warn('[Migration] Failed to migrate drawings:', error);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const items = useMemo(() => data?.items ?? [], [data?.items]);
   const byId = useMemo(() => {
     const map = new Map<string, (typeof items)[number]>();

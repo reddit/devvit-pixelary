@@ -572,6 +572,20 @@ export const appRouter = t.router({
         return { url: null };
       }),
 
+      migrateMyDrawings: t.procedure.mutation(async ({ ctx }) => {
+        if (!ctx.userId) {
+          throw new TRPCError({
+            code: 'UNAUTHORIZED',
+            message: 'Must be logged in',
+          });
+        }
+        const { migrateUserDrawings } = await import(
+          '../services/posts/migration'
+        );
+        const count = await migrateUserDrawings(ctx.userId);
+        return { success: true, count };
+      }),
+
       getPendingTournamentSubmission: t.procedure.mutation(async ({ ctx }) => {
         if (!ctx.userId) {
           return { submitted: false };

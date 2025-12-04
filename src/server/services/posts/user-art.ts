@@ -91,26 +91,49 @@ async function readSnapshot(
   userId: T2,
   compositeId: string
 ): Promise<UserArtItem | undefined> {
-  const data = await redis.hGetAll(REDIS_KEYS.userArtItem(userId, compositeId));
-  if (!data?.type || !data?.postId || !data?.drawing) return undefined;
+  const snapshotKey = REDIS_KEYS.userArtItem(userId, compositeId);
+  const data = await redis.hGetAll(snapshotKey);
+  if (!data?.type || !data?.postId || !data?.drawing) {
+    return undefined;
+  }
   if (data.type === 'drawing') {
-    return {
-      type: 'drawing',
-      id: compositeId,
-      postId: data.postId as T3,
-      drawing: JSON.parse(data.drawing) as DrawingData,
-      createdAt: data.createdAt ? parseInt(data.createdAt) : Date.now(),
-    };
+    try {
+      const drawing = JSON.parse(data.drawing) as DrawingData;
+      return {
+        type: 'drawing',
+        id: compositeId,
+        postId: data.postId as T3,
+        drawing,
+        createdAt: data.createdAt ? parseInt(data.createdAt) : Date.now(),
+      };
+    } catch (error) {
+      console.error(
+        `[readSnapshot] Failed to parse drawing data for ${compositeId}:`,
+        error
+      );
+      return undefined;
+    }
   } else {
-    if (!data.commentId) return undefined;
-    return {
-      type: 'tournament',
-      id: compositeId,
-      postId: data.postId as T3,
-      commentId: data.commentId as T1,
-      drawing: JSON.parse(data.drawing) as DrawingData,
-      createdAt: data.createdAt ? parseInt(data.createdAt) : Date.now(),
-    };
+    if (!data.commentId) {
+      return undefined;
+    }
+    try {
+      const drawing = JSON.parse(data.drawing) as DrawingData;
+      return {
+        type: 'tournament',
+        id: compositeId,
+        postId: data.postId as T3,
+        commentId: data.commentId as T1,
+        drawing,
+        createdAt: data.createdAt ? parseInt(data.createdAt) : Date.now(),
+      };
+    } catch (error) {
+      console.error(
+        `[readSnapshot] Failed to parse tournament drawing data for ${compositeId}:`,
+        error
+      );
+      return undefined;
+    }
   }
 }
 
@@ -121,8 +144,9 @@ export async function getMyArtPage(options: {
 }): Promise<{ items: UserArtItem[]; nextCursor: number }> {
   const { userId, limit, cursor } = options;
   const start = cursor ?? 0;
+  const userArtKey = REDIS_KEYS.userArt(userId);
   const raw = (await redis.zRange(
-    REDIS_KEYS.userArt(userId),
+    userArtKey,
     start,
     start + limit - 1,
     { reverse: true, by: 'rank' }
@@ -149,7 +173,7 @@ export async function getMyArtPage(options: {
   );
 
   const filtered = items.filter(Boolean) as UserArtItem[];
-  const totalCount = await redis.zCard(REDIS_KEYS.userArt(userId));
+  const totalCount = await redis.zCard(userArtKey);
   const nextCursor =
     start + page.length < totalCount ? start + page.length : -1;
   return { items: filtered, nextCursor };
