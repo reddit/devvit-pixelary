@@ -38,10 +38,8 @@ import {
   handleUpdateDrawingPinnedComment,
   handleUserLevelUp,
   handleUserLevelClaimed,
-  handleCreatePinnedPostComment,
   handleSetUserFlair,
   handleUpdateWords,
-  handleCreateTournamentPostComment,
   handleTournamentScheduler,
   handleTournamentPayoutSnapshot,
 } from './scheduler';
@@ -88,14 +86,6 @@ router.post(
 );
 router.post('/internal/scheduler/users/level-up', handleUserLevelUp);
 router.post('/internal/scheduler/users/level-claimed', handleUserLevelClaimed);
-router.post(
-  '/internal/scheduler/posts/pinned-comment/create',
-  handleCreatePinnedPostComment
-);
-router.post(
-  '/internal/scheduler/tournaments/post-comment/create',
-  handleCreateTournamentPostComment
-);
 router.post(
   '/internal/scheduler/tournaments/payout',
   handleTournamentPayoutSnapshot

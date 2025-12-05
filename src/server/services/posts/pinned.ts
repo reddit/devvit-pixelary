@@ -1,4 +1,3 @@
-import { scheduler } from '@devvit/web/server';
 import { createPost } from '@server/core/post';
 import { getLeaderboard } from '@server/services/progression';
 import type { T1, T3 } from '@devvit/shared-types/tid.js';
@@ -12,13 +11,9 @@ export async function createPinnedPost(title: string): Promise<T3> {
     const post = await createPost(title, { type: 'pinned' });
     await post.sticky(1);
     try {
-      await scheduler.runJob({
-        name: 'CREATE_PINNED_POST_COMMENT',
-        data: { postId: post.id },
-        runAt: new Date(),
-      });
+      await createPinnedPostComment(post.id);
     } catch (error) {
-      console.error('Failed to schedule pinned comment creation:', error);
+      console.error('Failed to create pinned comment:', error);
     }
     return post.id;
   } catch (error) {

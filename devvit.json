@@ -181,12 +181,6 @@
       "USER_LEVEL_UP": {
         "endpoint": "/internal/scheduler/users/level-up"
       },
-      "CREATE_PINNED_POST_COMMENT": {
-        "endpoint": "/internal/scheduler/posts/pinned-comment/create"
-      },
-      "CREATE_TOURNAMENT_POST_COMMENT": {
-        "endpoint": "/internal/scheduler/tournaments/post-comment/create"
-      },
       "SET_USER_FLAIR": {
         "endpoint": "/internal/scheduler/users/flair/set"
       },
