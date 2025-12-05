@@ -35,7 +35,6 @@ import {
 
 // Import scheduler handlers
 import {
-  handleNewDrawingPinnedComment,
   handleUpdateDrawingPinnedComment,
   handleUserLevelUp,
   handleUserLevelClaimed,
@@ -83,10 +82,6 @@ router.post('/internal/triggers/test/scheduler', handleTestScheduler);
 // SCHEDULER
 // ============================================================================
 
-router.post(
-  '/internal/scheduler/drawings/pinned-comment/create',
-  handleNewDrawingPinnedComment
-);
 router.post(
   '/internal/scheduler/drawings/pinned-comment/update',
   handleUpdateDrawingPinnedComment

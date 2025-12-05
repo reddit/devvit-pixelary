@@ -175,9 +175,6 @@
   },
   "scheduler": {
     "tasks": {
-      "NEW_DRAWING_PINNED_COMMENT": {
-        "endpoint": "/internal/scheduler/drawings/pinned-comment/create"
-      },
       "UPDATE_DRAWING_PINNED_COMMENT": {
         "endpoint": "/internal/scheduler/drawings/pinned-comment/update"
       },

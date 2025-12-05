@@ -1,7 +1,4 @@
-export {
-  handleNewDrawingPinnedComment,
-  handleUpdateDrawingPinnedComment,
-} from './drawing-post-comment';
+export { handleUpdateDrawingPinnedComment } from './drawing-post-comment';
 export { handleUserLevelUp } from './user/level-up';
 export { handleUserLevelClaimed } from './user/level-claimed';
 export { handleCreatePinnedPostComment } from './pinned-post-comment';

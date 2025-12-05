@@ -1,4 +1,4 @@
-import { redis, reddit, scheduler } from '@devvit/web/server';
+import { redis, reddit } from '@devvit/web/server';
 import { REDIS_KEYS, acquireLock, releaseLock } from '@server/core/redis';
 import { normalizeWord } from '@shared/utils/string';
 import { DrawingUtils } from '@shared/schema/drawing';
@@ -7,6 +7,7 @@ import type { T2, T3 } from '@devvit/shared-types/tid.js';
 import { isT2, isT3 } from '@devvit/shared-types/tid.js';
 import { LEGACY_BASE_DRAWING_COLORS } from '@shared/constants';
 import { getUsername } from '@server/core/user';
+import { createDrawingPostComment } from './drawing';
 
 const MIGRATION_LOCK_TTL = 60; // seconds
 
@@ -444,17 +445,13 @@ export async function migrateOldDrawingPost(postId: T3): Promise<boolean> {
       } as never
     );
 
-    // Schedule pinned comment creation (non-blocking, best-effort)
+    // Create pinned comment (non-blocking, best-effort)
     try {
-      await scheduler.runJob({
-        name: 'NEW_DRAWING_PINNED_COMMENT',
-        data: { postId, authorName, word },
-        runAt: new Date(createdAt),
-      });
+      await createDrawingPostComment(postId);
     } catch (error) {
-      // Ignore scheduling errors: comment creation is best-effort
+      // Ignore comment creation errors: comment creation is best-effort
       console.warn(
-        `[Migration] Failed to schedule pinned comment for ${postId}:`,
+        `[Migration] Failed to create pinned comment for ${postId}:`,
         error
       );
     }

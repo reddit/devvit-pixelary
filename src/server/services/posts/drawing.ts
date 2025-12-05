@@ -127,13 +127,9 @@ export const createDrawing = async (options: {
   ]);
 
   try {
-    await scheduler.runJob({
-      name: 'NEW_DRAWING_PINNED_COMMENT',
-      data: { postId, authorName, word },
-      runAt: currentDate,
-    });
+    await createDrawingPostComment(postId);
   } catch (error) {
-    // Ignore scheduling errors: comment creation is best-effort
+    // Ignore comment creation errors: comment creation is best-effort
   }
 
   try {
