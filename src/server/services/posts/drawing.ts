@@ -316,14 +316,21 @@ export async function handleCommentUpdateCooldown(postId: T3): Promise<void> {
         }
       }
       try {
-        await scheduleCommentUpdate(postId, new Date(now));
+        // Update immediately since cooldown period has passed
+        await updateDrawingPostComment(postId);
       } catch (e) {
-        // Ignore scheduling errors
+        // Ignore update errors
       }
     } else if (!nextJobId) {
       const nextUpdateTime = lastUpdateTime + ONE_MINUTE;
       try {
-        await scheduleCommentUpdate(postId, new Date(nextUpdateTime));
+        // Schedule update for after cooldown period
+        const jobId = await scheduler.runJob({
+          name: 'UPDATE_DRAWING_PINNED_COMMENT',
+          data: { postId },
+          runAt: new Date(nextUpdateTime),
+        });
+        await saveNextScheduledJobId(postId, jobId);
       } catch (e) {
         // Ignore scheduling errors
       }
@@ -335,19 +342,6 @@ export async function handleCommentUpdateCooldown(postId: T3): Promise<void> {
       // Ignore lock release errors
     }
   }
-}
-
-export async function scheduleCommentUpdate(
-  postId: T3,
-  runAt: Date
-): Promise<string> {
-  const jobId = await scheduler.runJob({
-    name: 'UPDATE_DRAWING_PINNED_COMMENT',
-    data: { postId },
-    runAt,
-  });
-  await saveNextScheduledJobId(postId, jobId);
-  return jobId;
 }
 
 export async function getUserDrawings(
