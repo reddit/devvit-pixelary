@@ -8,7 +8,11 @@ import {
 } from '@devvit/web/server';
 import { incrementScore } from '@server/services/progression';
 import { REDIS_KEYS, acquireLock, isRateLimited } from '@server/core/redis';
-import { normalizeWord, obfuscateString } from '@shared/utils/string';
+import {
+  normalizeWord,
+  obfuscateString,
+  sanitizeUtf8,
+} from '@shared/utils/string';
 import { shouldShowWord } from '@server/services/words/word-backing';
 import type { DrawingPostDataExtended } from '@shared/schema/pixelary';
 import { createPost } from '@server/core/post';
@@ -423,7 +427,7 @@ export async function submitGuess(options: {
     skipped != null
   )
     return empty;
-  const normalizedGuess = normalizeWord(guess);
+  const normalizedGuess = sanitizeUtf8(normalizeWord(guess));
   const normalizedWord = drawingNormalizedWord ?? normalizeWord(word);
   const correct = normalizedGuess === normalizedWord;
   const now = Date.now();
@@ -446,12 +450,22 @@ export async function submitGuess(options: {
   void handleCommentUpdateCooldown(postId);
   const channelName = REALTIME_CHANNELS.post(postId);
   const finalStats = await getGuesses(postId);
+  // Sanitize guesses keys to ensure valid UTF-8
+  const sanitizedStats = {
+    ...finalStats,
+    guesses: Object.fromEntries(
+      Object.entries(finalStats.guesses).map(([key, value]) => [
+        sanitizeUtf8(key),
+        value,
+      ])
+    ),
+  };
   void realtime.send(channelName, {
     type: 'guess_submitted',
     postId,
     correct,
     timestamp: now,
-    stats: finalStats,
+    stats: sanitizedStats,
   });
   const points = correct ? GUESSER_REWARD_SOLVE : 0;
   return { correct, points };

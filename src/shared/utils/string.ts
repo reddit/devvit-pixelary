@@ -31,3 +31,27 @@ export function titleCase(word: string): string {
 export function normalizeWord(word: string): string {
   return titleCase(word.trim());
 }
+
+/**
+ * Sanitize a string to ensure it contains only valid UTF-8 characters
+ * Replaces invalid UTF-8 sequences with the replacement character (U+FFFD)
+ * @param str - The string to sanitize
+ * @returns A valid UTF-8 string
+ */
+export function sanitizeUtf8(str: string): string {
+  try {
+    // Convert string to buffer and back, which will replace invalid UTF-8 sequences
+    // Buffer.from with 'utf8' encoding handles invalid sequences gracefully
+    if (typeof Buffer !== 'undefined') {
+      return Buffer.from(str, 'utf8').toString('utf8');
+    }
+    // Fallback for environments without Buffer (shouldn't happen in server)
+    const encoder = new TextEncoder();
+    const decoder = new TextDecoder('utf-8', { fatal: false });
+    const encoded = encoder.encode(str);
+    return decoder.decode(encoded);
+  } catch {
+    // If conversion fails, return empty string as fallback
+    return '';
+  }
+}
