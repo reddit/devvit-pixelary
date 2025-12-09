@@ -13,6 +13,16 @@ import {
   removeTournamentEntry,
   getTournamentEntry,
 } from '../services/posts/tournament/post';
+import type { TriggerResponse } from '../../shared/api.js';
+import {
+  T1,
+  T2,
+  T3,
+  T5,
+  type OnCommentCreateRequest,
+  type TriggerResponse as DevvitTriggerResponse,
+} from '@devvit/web/shared';
+import type { HttpReq, HttpRsp } from '@server/services/types.js';
 
 // EventSource enum values from Reddit API
 enum EventSource {
@@ -29,8 +39,8 @@ enum EventSource {
  */
 
 export async function handleCommentCreate(
-  req: Request,
-  res: Response
+  req: HttpReq<unknown, unknown, OnCommentCreateRequest>,
+  res: HttpRsp<TriggerResponse & DevvitTriggerResponse> // to-do: probably just want DevvitTriggerResponse here.
 ): Promise<void> {
   try {
     const { comment, author, subreddit } = req.body;
@@ -50,12 +60,12 @@ export async function handleCommentCreate(
 
     // Create command context
     const commandContext: CommandContext = {
-      commentId: comment.id,
+      commentId: T1(comment.id),
       authorName: author.name,
-      authorId: author.id,
-      subredditName: subreddit.name,
-      subredditId: subreddit.id,
-      postId: comment.postId,
+      authorId: T2(author.id),
+      subredditName: subreddit?.name ?? '', // to-do: allow undefined? filter out?
+      subredditId: subreddit?.id ? T5(subreddit.id) : 't5_0', // to-do: allow undefined? filter out?
+      postId: T3(comment.postId),
       timestamp: Date.now(),
     };
 
@@ -66,14 +76,14 @@ export async function handleCommentCreate(
       // Reply to the comment
       await reddit.submitComment({
         text: result.response,
-        id: comment.id,
+        id: T1(comment.id),
         runAs: 'APP',
       });
     } else if (!result.success && result.error) {
       // Command failed - reply with error message
       await reddit.submitComment({
         text: result.error,
-        id: comment.id,
+        id: T1(comment.id),
         runAs: 'APP',
       });
     }
