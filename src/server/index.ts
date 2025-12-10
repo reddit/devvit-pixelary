@@ -34,6 +34,7 @@ import {
   showEditMigrationForm,
   handleEditMigration,
   handleShowMigrationStatus,
+  handleUpdateWordScores,
 } from './menu-actions';
 
 // Import scheduler handlers
@@ -139,6 +140,10 @@ router.post('/internal/menu-actions/migration/edit', showEditMigrationForm);
 router.post(
   '/internal/menu-actions/migration/status',
   handleShowMigrationStatus
+);
+router.post(
+  '/internal/menu-actions/words/scores/update',
+  handleUpdateWordScores
 );
 
 // ============================================================================

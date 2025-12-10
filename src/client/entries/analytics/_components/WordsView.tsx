@@ -7,7 +7,11 @@ export function WordsView(_props: WordsViewProps) {
   const [limit, setLimit] = useState(20);
   const { data, isLoading } = trpc.app.dictionary.getWordStats.useQuery(
     { limit },
-    { enabled: true }
+    {
+      enabled: true,
+      refetchInterval: 30000, // Refetch every 30 seconds
+      refetchOnWindowFocus: true,
+    }
   );
 
   if (isLoading) {

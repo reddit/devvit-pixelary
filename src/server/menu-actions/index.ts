@@ -64,3 +64,6 @@ export {
   handleEditMigration,
   handleShowMigrationStatus,
 } from './migration';
+
+// Update word scores
+export { handleUpdateWordScores } from './update-word-scores';

@@ -43,6 +43,8 @@ export const REDIS_KEYS = {
     `words:uncertainty:${subredditName}`,
   wordsLastServed: (subredditName: string) =>
     `words:lastServed:${subredditName}`,
+  wordsUpdateLock: (subredditName: string) =>
+    `words:update:lock:${subredditName}`,
 
   // Word backing
   wordBackingComment: (commentId: T1) => `word:backing:comment:${commentId}`,

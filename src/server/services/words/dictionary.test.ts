@@ -91,7 +91,7 @@ describe('Dictionary Service', () => {
         REDIS_KEYS.wordsAll('testsub'),
         ['Test']
       );
-      expect(redis.zRem).toHaveBeenCalledWith(
+      expect(redis.global.zRem).toHaveBeenCalledWith(
         REDIS_KEYS.wordsUncertainty('testsub'),
         ['Test']
       );
@@ -200,7 +200,7 @@ describe('Dictionary Service', () => {
         REDIS_KEYS.wordsAll('testsub'),
         ['Cat']
       );
-      expect(redis.zRem).toHaveBeenCalledWith(
+      expect(redis.global.zRem).toHaveBeenCalledWith(
         REDIS_KEYS.wordsUncertainty('testsub'),
         ['Cat']
       );
@@ -222,7 +222,7 @@ describe('Dictionary Service', () => {
         REDIS_KEYS.wordsAll('testsub'),
         ['Cat', 'Dog']
       );
-      expect(redis.zRem).toHaveBeenCalledWith(
+      expect(redis.global.zRem).toHaveBeenCalledWith(
         REDIS_KEYS.wordsUncertainty('testsub'),
         ['Cat', 'Dog']
       );

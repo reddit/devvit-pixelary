@@ -79,6 +79,13 @@
         "endpoint": "/internal/menu-actions/words/edit"
       },
       {
+        "label": "[Pixelary] Update Word Scores",
+        "description": "Manually trigger word score calculation and update",
+        "location": "subreddit",
+        "forUserType": "moderator",
+        "endpoint": "/internal/menu-actions/words/scores/update"
+      },
+      {
         "label": "[Pixelary] Edit Banned Words",
         "description": "View and edit the banned words list",
         "location": "subreddit",
