@@ -138,24 +138,6 @@
     }
   }
 
-  @keyframes incorrect-guess {
-    0% {
-      transform: translateX(0);
-    }
-    25% {
-      transform: translateX(-4px);
-    }
-    50% {
-      transform: translateX(0);
-    }
-    75% {
-      transform: translateX(4px);
-    }
-    100% {
-      transform: translateX(0);
-    }
-  }
-
   @keyframes pixel-breathe {
     0%,
     100% {
@@ -304,10 +286,6 @@
 
   .level-button:hover .level-arrow {
     animation: nudge-right 1s ease-in-out infinite;
-  }
-
-  .animate-incorrect-guess {
-    animation: incorrect-guess 0.2s ease-out infinite;
   }
 
   .animate-pixel-breathe {
