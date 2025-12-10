@@ -354,31 +354,42 @@ async function validatePost(post: Post, logErrors = false): Promise<boolean> {
   }
 
   // Validate indices
+  // Get word from hash to ensure we're checking the same word that was used for index creation
+  const hashWord = await redis.hGet(REDIS_KEYS.drawing(id), 'word');
+  const wordForValidation = hashWord ?? data.word; // Fallback to postData word if hash read fails
+
   const userArtKey = REDIS_KEYS.userArt(authorId);
   const compositeId = `d:${id}`;
   const [wordDrawingEntry, userDrawingEntry, allDrawingEntry, userArtEntry] =
     await Promise.all([
-      redis.zScore(REDIS_KEYS.wordDrawings(data.word), id),
+      redis.zScore(REDIS_KEYS.wordDrawings(wordForValidation), id),
       redis.zScore(REDIS_KEYS.userDrawings(authorId), id),
       redis.zScore(REDIS_KEYS.allDrawings(), id),
       redis.zScore(userArtKey, compositeId),
     ]);
 
+  // Check for null (not found) - note: zScore returns number | null, and 0 is a valid score
   if (
-    !wordDrawingEntry ||
-    !userDrawingEntry ||
-    !allDrawingEntry ||
-    !userArtEntry
+    wordDrawingEntry === null ||
+    userDrawingEntry === null ||
+    allDrawingEntry === null ||
+    userArtEntry === null
   ) {
     if (logErrors) {
       console.error('[Migration] Missing indices', {
         postId: id,
-        word: data.word,
+        wordFromHash: hashWord,
+        wordFromPostData: data.word,
+        wordUsedForCheck: wordForValidation,
         authorId,
-        hasWordDrawing: !!wordDrawingEntry,
-        hasUserDrawing: !!userDrawingEntry,
-        hasAllDrawing: !!allDrawingEntry,
-        hasUserArt: !!userArtEntry,
+        wordDrawingsKey: REDIS_KEYS.wordDrawings(wordForValidation),
+        userDrawingsKey: REDIS_KEYS.userDrawings(authorId),
+        allDrawingsKey: REDIS_KEYS.allDrawings(),
+        userArtKey,
+        wordDrawingScore: wordDrawingEntry,
+        userDrawingScore: userDrawingEntry,
+        allDrawingScore: allDrawingEntry,
+        userArtScore: userArtEntry,
       });
     }
     return false;
@@ -435,80 +446,38 @@ async function ensureV3Indexes(post: Post): Promise<boolean> {
     const userArtKey = REDIS_KEYS.userArt(authorId);
     const compositeId = `d:${id}`;
 
-    // Check which indexes are missing
-    const [
-      wordDrawingExists,
-      userDrawingExists,
-      allDrawingExists,
-      userArtExists,
-    ] = await Promise.all([
-      redis.zScore(REDIS_KEYS.wordDrawings(word), id),
-      redis.zScore(REDIS_KEYS.userDrawings(authorId), id),
-      redis.zScore(REDIS_KEYS.allDrawings(), id),
-      redis.zScore(userArtKey, compositeId),
+    // Always ensure indexes exist - zAdd is idempotent so this is safe
+    // This ensures indexes match the hash data, even if stale indexes existed
+    await Promise.all([
+      redis.zAdd(REDIS_KEYS.wordDrawings(word), {
+        member: id,
+        score: createdAtTimestamp,
+      }),
+      redis.zAdd(REDIS_KEYS.userDrawings(authorId), {
+        member: id,
+        score: createdAtTimestamp,
+      }),
+      redis.zAdd(REDIS_KEYS.allDrawings(), {
+        member: id,
+        score: createdAtTimestamp,
+      }),
+      redis.zAdd(userArtKey, {
+        member: compositeId,
+        score: createdAtTimestamp,
+      }),
+      redis.hSet(REDIS_KEYS.userArtItem(authorId, compositeId), {
+        type: 'drawing',
+        postId: id,
+        drawing: drawingData,
+        createdAt: createdAtTimestamp.toString(),
+      }),
     ]);
 
-    const userArtItemExists = await redis.exists(
-      REDIS_KEYS.userArtItem(authorId, compositeId)
-    );
-
-    // Add missing indexes
-    const promises: Array<Promise<unknown>> = [];
-
-    if (wordDrawingExists === null) {
-      promises.push(
-        redis.zAdd(REDIS_KEYS.wordDrawings(word), {
-          member: id,
-          score: createdAtTimestamp,
-        })
-      );
-    }
-
-    if (userDrawingExists === null) {
-      promises.push(
-        redis.zAdd(REDIS_KEYS.userDrawings(authorId), {
-          member: id,
-          score: createdAtTimestamp,
-        })
-      );
-    }
-
-    if (allDrawingExists === null) {
-      promises.push(
-        redis.zAdd(REDIS_KEYS.allDrawings(), {
-          member: id,
-          score: createdAtTimestamp,
-        })
-      );
-    }
-
-    if (userArtExists === null) {
-      promises.push(
-        redis.zAdd(userArtKey, {
-          member: compositeId,
-          score: createdAtTimestamp,
-        })
-      );
-    }
-
-    if (!userArtItemExists) {
-      promises.push(
-        redis.hSet(REDIS_KEYS.userArtItem(authorId, compositeId), {
-          type: 'drawing',
-          postId: id,
-          drawing: drawingData,
-          createdAt: createdAtTimestamp.toString(),
-        })
-      );
-    }
-
-    if (promises.length > 0) {
-      await Promise.all(promises);
-      console.log('[Migration] Fixed missing indexes for v3 drawing', {
-        postId: id,
-        indexesFixed: promises.length,
-      });
-    }
+    console.log('[Migration] Ensured indexes exist for v3 drawing', {
+      postId: id,
+      word,
+      authorId,
+    });
 
     return true;
   } catch (error) {
@@ -836,83 +805,60 @@ export async function migrateV1ToV3(postId: T3, post?: Post): Promise<boolean> {
       );
     }
 
-    // Update indices (only if not already present)
+    // Ensure indices exist - always create/update them after writing hash
+    // Use word from hash to ensure consistency with what was written
+    // Note: zAdd is idempotent (adding same member/score is a no-op), so this is safe
+    const hashWord = await redis.hGet(v3Key, 'word');
+    const wordForIndices = hashWord ?? word; // Fallback to original word if hash read fails
+
     try {
       const userDrawingsKey = REDIS_KEYS.userDrawings(authorId);
-      const wordDrawingsKey = REDIS_KEYS.wordDrawings(word);
+      const wordDrawingsKey = REDIS_KEYS.wordDrawings(wordForIndices);
       const allDrawingsKey = REDIS_KEYS.allDrawings();
-
-      const [userDrawingsExists, wordDrawingsExists, allDrawingsExists] =
-        await Promise.all([
-          redis.zScore(userDrawingsKey, postId),
-          redis.zScore(wordDrawingsKey, postId),
-          redis.zScore(allDrawingsKey, postId),
-        ]);
-
-      const indexPromises: Array<Promise<unknown>> = [];
-
-      if (userDrawingsExists === null) {
-        indexPromises.push(
-          redis.zAdd(userDrawingsKey, {
-            member: postId,
-            score: createdAt,
-          })
-        );
-      }
-
-      if (wordDrawingsExists === null) {
-        indexPromises.push(
-          redis.zAdd(wordDrawingsKey, {
-            member: postId,
-            score: createdAt,
-          })
-        );
-      }
-
-      if (allDrawingsExists === null) {
-        indexPromises.push(
-          redis.zAdd(allDrawingsKey, {
-            member: postId,
-            score: createdAt,
-          })
-        );
-      }
-
-      // Add to user-art sorted set and create snapshot (for "My Drawings" page)
       const userArtKey = REDIS_KEYS.userArt(authorId);
       const compositeId = `d:${postId}`;
-      const userArtExists = await redis.zScore(userArtKey, compositeId);
-      if (userArtExists === null) {
-        indexPromises.push(
-          redis.zAdd(userArtKey, {
-            member: compositeId,
-            score: createdAt,
-          }),
-          redis.hSet(REDIS_KEYS.userArtItem(authorId, compositeId), {
-            type: 'drawing',
-            postId,
-            drawing: JSON.stringify(drawingData),
-            createdAt: createdAt.toString(),
-          })
-        );
-      }
 
-      // Create all indices in parallel
-      if (indexPromises.length > 0) {
-        await Promise.all(indexPromises);
-        console.log('[Migration] Created indices for post', {
+      // Always ensure indices exist - zAdd is idempotent so this is safe
+      // This ensures indices match the hash we just wrote, even if stale indices existed
+      await Promise.all([
+        redis.zAdd(userDrawingsKey, {
+          member: postId,
+          score: createdAt,
+        }),
+        redis.zAdd(wordDrawingsKey, {
+          member: postId,
+          score: createdAt,
+        }),
+        redis.zAdd(allDrawingsKey, {
+          member: postId,
+          score: createdAt,
+        }),
+        redis.zAdd(userArtKey, {
+          member: compositeId,
+          score: createdAt,
+        }),
+        redis.hSet(REDIS_KEYS.userArtItem(authorId, compositeId), {
+          type: 'drawing',
           postId,
-          indexCount: indexPromises.length,
-        });
-      } else {
-        console.log('[Migration] All indices already exist for post', {
-          postId,
-        });
-      }
+          drawing: JSON.stringify(drawingData),
+          createdAt: createdAt.toString(),
+        }),
+      ]);
+
+      console.log('[Migration] Ensured indices exist for post', {
+        postId,
+        word: wordForIndices,
+        wordFromHash: hashWord,
+        wordFromData: word,
+        authorId,
+      });
     } catch (error) {
       // Index creation is critical - if it fails, migration should fail
-      console.error('[Migration] Failed to create indices', {
+      console.error('[Migration] Failed to ensure indices', {
         postId,
+        word: wordForIndices,
+        wordFromHash: hashWord,
+        wordFromData: word,
         error: error instanceof Error ? error.message : String(error),
         errorStack: error instanceof Error ? error.stack : undefined,
       });
@@ -1175,83 +1121,60 @@ export async function migrateV2ToV3(postId: T3, post?: Post): Promise<boolean> {
       );
     }
 
-    // Update indices (only if not already present)
+    // Ensure indices exist - always create/update them after writing hash
+    // Use word from hash to ensure consistency with what was written
+    // Note: zAdd is idempotent (adding same member/score is a no-op), so this is safe
+    const hashWord = await redis.hGet(v3Key, 'word');
+    const wordForIndices = hashWord ?? word; // Fallback to original word if hash read fails
+
     try {
       const userDrawingsKey = REDIS_KEYS.userDrawings(authorId);
-      const wordDrawingsKey = REDIS_KEYS.wordDrawings(word);
+      const wordDrawingsKey = REDIS_KEYS.wordDrawings(wordForIndices);
       const allDrawingsKey = REDIS_KEYS.allDrawings();
-
-      const [userDrawingsExists, wordDrawingsExists, allDrawingsExists] =
-        await Promise.all([
-          redis.zScore(userDrawingsKey, postId),
-          redis.zScore(wordDrawingsKey, postId),
-          redis.zScore(allDrawingsKey, postId),
-        ]);
-
-      const indexPromises: Array<Promise<unknown>> = [];
-
-      if (userDrawingsExists === null) {
-        indexPromises.push(
-          redis.zAdd(userDrawingsKey, {
-            member: postId,
-            score: createdAt,
-          })
-        );
-      }
-
-      if (wordDrawingsExists === null) {
-        indexPromises.push(
-          redis.zAdd(wordDrawingsKey, {
-            member: postId,
-            score: createdAt,
-          })
-        );
-      }
-
-      if (allDrawingsExists === null) {
-        indexPromises.push(
-          redis.zAdd(allDrawingsKey, {
-            member: postId,
-            score: createdAt,
-          })
-        );
-      }
-
-      // Add to user-art sorted set and create snapshot (for "My Drawings" page)
       const userArtKey = REDIS_KEYS.userArt(authorId);
       const compositeId = `d:${postId}`;
-      const userArtExists = await redis.zScore(userArtKey, compositeId);
-      if (userArtExists === null) {
-        indexPromises.push(
-          redis.zAdd(userArtKey, {
-            member: compositeId,
-            score: createdAt,
-          }),
-          redis.hSet(REDIS_KEYS.userArtItem(authorId, compositeId), {
-            type: 'drawing',
-            postId,
-            drawing: JSON.stringify(drawingData),
-            createdAt: createdAt.toString(),
-          })
-        );
-      }
 
-      // Create all indices in parallel
-      if (indexPromises.length > 0) {
-        await Promise.all(indexPromises);
-        console.log('[Migration] Created indices for post', {
+      // Always ensure indices exist - zAdd is idempotent so this is safe
+      // This ensures indices match the hash we just wrote, even if stale indices existed
+      await Promise.all([
+        redis.zAdd(userDrawingsKey, {
+          member: postId,
+          score: createdAt,
+        }),
+        redis.zAdd(wordDrawingsKey, {
+          member: postId,
+          score: createdAt,
+        }),
+        redis.zAdd(allDrawingsKey, {
+          member: postId,
+          score: createdAt,
+        }),
+        redis.zAdd(userArtKey, {
+          member: compositeId,
+          score: createdAt,
+        }),
+        redis.hSet(REDIS_KEYS.userArtItem(authorId, compositeId), {
+          type: 'drawing',
           postId,
-          indexCount: indexPromises.length,
-        });
-      } else {
-        console.log('[Migration] All indices already exist for post', {
-          postId,
-        });
-      }
+          drawing: JSON.stringify(drawingData),
+          createdAt: createdAt.toString(),
+        }),
+      ]);
+
+      console.log('[Migration] Ensured indices exist for post', {
+        postId,
+        word: wordForIndices,
+        wordFromHash: hashWord,
+        wordFromData: word,
+        authorId,
+      });
     } catch (error) {
       // Index creation is critical - if it fails, migration should fail
-      console.error('[Migration] Failed to create indices', {
+      console.error('[Migration] Failed to ensure indices', {
         postId,
+        word: wordForIndices,
+        wordFromHash: hashWord,
+        wordFromData: word,
         error: error instanceof Error ? error.message : String(error),
         errorStack: error instanceof Error ? error.stack : undefined,
       });
