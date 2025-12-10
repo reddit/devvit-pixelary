@@ -130,9 +130,9 @@ export async function migratePost(post: Post): Promise<boolean> {
   let migrationSuccess = false;
   try {
     if (schema === 1) {
-      migrationSuccess = await migrateV1ToV3(post.id);
+      migrationSuccess = await migrateV1ToV3(post.id, post);
     } else if (schema === 2) {
-      migrationSuccess = await migrateV2ToV3(post.id);
+      migrationSuccess = await migrateV2ToV3(post.id, post);
     } else {
       // Already version 3, but validation failed - might be missing indexes
       // Try to ensure all indexes are present
@@ -159,7 +159,7 @@ export async function migratePost(post: Post): Promise<boolean> {
 
     if (migrationSuccess) {
       // Post-migration validation: verify migration actually succeeded
-      const postMigrationValid = await validatePost(post);
+      const postMigrationValid = await validatePost(post, true);
       if (!postMigrationValid) {
         console.error(
           '[Migration] Post migration completed but validation failed',
@@ -205,9 +205,10 @@ export async function migratePost(post: Post): Promise<boolean> {
 /**
  * Validate that a Post conforms with the latest drawing post schema
  * @param post - The post to validate
+ * @param logErrors - Whether to log validation errors (default: false)
  * @returns `true` if the post conforms to the latest drawing post schema, `false` otherwise
  */
-async function validatePost(post: Post): Promise<boolean> {
+async function validatePost(post: Post, logErrors = false): Promise<boolean> {
   const { authorId, authorName, id, createdAt } = post;
 
   // Has complete Post object
@@ -217,9 +218,27 @@ async function validatePost(post: Post): Promise<boolean> {
   }
 
   // Validate post data using Zod schema
-  const postData = await post.getPostData();
+  let postData: unknown;
+  try {
+    postData = await post.getPostData();
+  } catch (error) {
+    if (logErrors) {
+      console.error('[Migration] Failed to get postData during validation', {
+        postId: id,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+    return false;
+  }
+
   const postDataResult = DrawingPostDataSchema.safeParse(postData);
   if (!postDataResult.success) {
+    if (logErrors) {
+      console.error('[Migration] PostData schema validation failed', {
+        postId: id,
+        errors: postDataResult.error.issues,
+      });
+    }
     return false;
   }
 
@@ -227,6 +246,15 @@ async function validatePost(post: Post): Promise<boolean> {
 
   // Validate that post data matches post metadata
   if (data.authorId !== authorId || data.authorName !== authorName) {
+    if (logErrors) {
+      console.error('[Migration] PostData metadata mismatch', {
+        postId: id,
+        postAuthorId: authorId,
+        postAuthorName: authorName,
+        dataAuthorId: data.authorId,
+        dataAuthorName: data.authorName,
+      });
+    }
     return false;
   }
 
@@ -234,6 +262,13 @@ async function validatePost(post: Post): Promise<boolean> {
   const hash = await redis.hGetAll(REDIS_KEYS.drawing(id));
   const hashResult = DrawingRedisHashSchema.safeParse(hash);
   if (!hashResult.success) {
+    if (logErrors) {
+      console.error('[Migration] Redis hash schema validation failed', {
+        postId: id,
+        errors: hashResult.error.issues,
+        hashKeys: Object.keys(hash),
+      });
+    }
     return false;
   }
 
@@ -249,6 +284,22 @@ async function validatePost(post: Post): Promise<boolean> {
     hashData.authorId !== authorId ||
     hashData.authorName !== authorName
   ) {
+    if (logErrors) {
+      console.error('[Migration] Redis hash data mismatch', {
+        postId: id,
+        hashPostId: hashData.postId,
+        hashCreatedAt: hashData.createdAt,
+        postCreatedAt: createdAt.getTime().toString(),
+        hashWord: hashData.word,
+        dataWord: data.word,
+        hashDictionary: hashData.dictionary,
+        dataDictionary: data.dictionary,
+        hashAuthorId: hashData.authorId,
+        postAuthorId: authorId,
+        hashAuthorName: hashData.authorName,
+        postAuthorName: authorName,
+      });
+    }
     return false;
   }
 
@@ -256,12 +307,24 @@ async function validatePost(post: Post): Promise<boolean> {
   let hashDrawing: unknown;
   try {
     hashDrawing = JSON.parse(hashData.drawing);
-  } catch {
+  } catch (error) {
+    if (logErrors) {
+      console.error('[Migration] Failed to parse drawing JSON from hash', {
+        postId: id,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
     return false;
   }
 
   const drawingResult = DrawingDataSchema.safeParse(hashDrawing);
   if (!drawingResult.success) {
+    if (logErrors) {
+      console.error('[Migration] Drawing schema validation failed', {
+        postId: id,
+        errors: drawingResult.error.issues,
+      });
+    }
     return false;
   }
 
@@ -274,6 +337,19 @@ async function validatePost(post: Post): Promise<boolean> {
     JSON.stringify([...parsedHashDrawing.colors].sort()) !==
       JSON.stringify([...data.drawing.colors].sort())
   ) {
+    if (logErrors) {
+      console.error('[Migration] Drawing data mismatch', {
+        postId: id,
+        hashData: parsedHashDrawing.data,
+        postData: data.drawing.data,
+        hashBg: parsedHashDrawing.bg,
+        postBg: data.drawing.bg,
+        hashSize: parsedHashDrawing.size,
+        postSize: data.drawing.size,
+        hashColors: parsedHashDrawing.colors,
+        postColors: data.drawing.colors,
+      });
+    }
     return false;
   }
 
@@ -294,6 +370,17 @@ async function validatePost(post: Post): Promise<boolean> {
     !allDrawingEntry ||
     !userArtEntry
   ) {
+    if (logErrors) {
+      console.error('[Migration] Missing indices', {
+        postId: id,
+        word: data.word,
+        authorId,
+        hasWordDrawing: !!wordDrawingEntry,
+        hasUserDrawing: !!userDrawingEntry,
+        hasAllDrawing: !!allDrawingEntry,
+        hasUserArt: !!userArtEntry,
+      });
+    }
     return false;
   }
 
@@ -302,6 +389,13 @@ async function validatePost(post: Post): Promise<boolean> {
     REDIS_KEYS.userArtItem(authorId, compositeId)
   );
   if (!userArtItemExists) {
+    if (logErrors) {
+      console.error('[Migration] Missing userArtItem hash', {
+        postId: id,
+        authorId,
+        compositeId,
+      });
+    }
     return false;
   }
 
@@ -504,9 +598,10 @@ export async function detectDrawingSchemaVersion(
  * Migrate a drawing post from version 1 (JSON string at `post-${postId}`) to version 3 (hash at `drawing:${postId}`)
  *
  * @param postId - The post ID to migrate
+ * @param post - Optional Post object to use for createdAt timestamp (preferred over v1 data)
  * @returns `true` if migration was successful, `false` otherwise
  */
-export async function migrateV1ToV3(postId: T3): Promise<boolean> {
+export async function migrateV1ToV3(postId: T3, post?: Post): Promise<boolean> {
   const v1Key = `post-${postId}`;
   const v3Key = REDIS_KEYS.drawing(postId);
   const lockKey = REDIS_KEYS.migrationLock(postId);
@@ -677,9 +772,12 @@ export async function migrateV1ToV3(postId: T3): Promise<boolean> {
       return false;
     }
 
-    // Parse date
+    // Parse date - prefer post.createdAt if available, otherwise use v1 data
     let createdAt: number;
-    if (typeof date === 'string') {
+    if (post) {
+      // Use post's createdAt as source of truth
+      createdAt = post.createdAt.getTime();
+    } else if (typeof date === 'string') {
       createdAt = parseInt(date, 10);
       if (isNaN(createdAt)) {
         // Try parsing as Date string
@@ -693,8 +791,8 @@ export async function migrateV1ToV3(postId: T3): Promise<boolean> {
     } else {
       // Fallback: try to get from post
       try {
-        const post = await reddit.getPostById(postId);
-        createdAt = post.createdAt.getTime();
+        const fetchedPost = await reddit.getPostById(postId);
+        createdAt = fetchedPost.createdAt.getTime();
       } catch (error) {
         // Post might be deleted, use current time as fallback
         console.warn(
@@ -739,55 +837,86 @@ export async function migrateV1ToV3(postId: T3): Promise<boolean> {
     }
 
     // Update indices (only if not already present)
-    const userDrawingsKey = REDIS_KEYS.userDrawings(authorId);
-    const wordDrawingsKey = REDIS_KEYS.wordDrawings(word);
-    const allDrawingsKey = REDIS_KEYS.allDrawings();
+    try {
+      const userDrawingsKey = REDIS_KEYS.userDrawings(authorId);
+      const wordDrawingsKey = REDIS_KEYS.wordDrawings(word);
+      const allDrawingsKey = REDIS_KEYS.allDrawings();
 
-    const [userDrawingsExists, wordDrawingsExists, allDrawingsExists] =
-      await Promise.all([
-        redis.zScore(userDrawingsKey, postId),
-        redis.zScore(wordDrawingsKey, postId),
-        redis.zScore(allDrawingsKey, postId),
-      ]);
+      const [userDrawingsExists, wordDrawingsExists, allDrawingsExists] =
+        await Promise.all([
+          redis.zScore(userDrawingsKey, postId),
+          redis.zScore(wordDrawingsKey, postId),
+          redis.zScore(allDrawingsKey, postId),
+        ]);
 
-    if (userDrawingsExists === null) {
-      await redis.zAdd(userDrawingsKey, {
-        member: postId,
-        score: createdAt,
-      });
-    }
+      const indexPromises: Array<Promise<unknown>> = [];
 
-    if (wordDrawingsExists === null) {
-      await redis.zAdd(wordDrawingsKey, {
-        member: postId,
-        score: createdAt,
-      });
-    }
+      if (userDrawingsExists === null) {
+        indexPromises.push(
+          redis.zAdd(userDrawingsKey, {
+            member: postId,
+            score: createdAt,
+          })
+        );
+      }
 
-    if (allDrawingsExists === null) {
-      await redis.zAdd(allDrawingsKey, {
-        member: postId,
-        score: createdAt,
-      });
-    }
+      if (wordDrawingsExists === null) {
+        indexPromises.push(
+          redis.zAdd(wordDrawingsKey, {
+            member: postId,
+            score: createdAt,
+          })
+        );
+      }
 
-    // Add to user-art sorted set and create snapshot (for "My Drawings" page)
-    const userArtKey = REDIS_KEYS.userArt(authorId);
-    const compositeId = `d:${postId}`;
-    const userArtExists = await redis.zScore(userArtKey, compositeId);
-    if (userArtExists === null) {
-      await Promise.all([
-        redis.zAdd(userArtKey, {
-          member: compositeId,
-          score: createdAt,
-        }),
-        redis.hSet(REDIS_KEYS.userArtItem(authorId, compositeId), {
-          type: 'drawing',
+      if (allDrawingsExists === null) {
+        indexPromises.push(
+          redis.zAdd(allDrawingsKey, {
+            member: postId,
+            score: createdAt,
+          })
+        );
+      }
+
+      // Add to user-art sorted set and create snapshot (for "My Drawings" page)
+      const userArtKey = REDIS_KEYS.userArt(authorId);
+      const compositeId = `d:${postId}`;
+      const userArtExists = await redis.zScore(userArtKey, compositeId);
+      if (userArtExists === null) {
+        indexPromises.push(
+          redis.zAdd(userArtKey, {
+            member: compositeId,
+            score: createdAt,
+          }),
+          redis.hSet(REDIS_KEYS.userArtItem(authorId, compositeId), {
+            type: 'drawing',
+            postId,
+            drawing: JSON.stringify(drawingData),
+            createdAt: createdAt.toString(),
+          })
+        );
+      }
+
+      // Create all indices in parallel
+      if (indexPromises.length > 0) {
+        await Promise.all(indexPromises);
+        console.log('[Migration] Created indices for post', {
           postId,
-          drawing: JSON.stringify(drawingData),
-          createdAt: createdAt.toString(),
-        }),
-      ]);
+          indexCount: indexPromises.length,
+        });
+      } else {
+        console.log('[Migration] All indices already exist for post', {
+          postId,
+        });
+      }
+    } catch (error) {
+      // Index creation is critical - if it fails, migration should fail
+      console.error('[Migration] Failed to create indices', {
+        postId,
+        error: error instanceof Error ? error.message : String(error),
+        errorStack: error instanceof Error ? error.stack : undefined,
+      });
+      throw error;
     }
 
     // Create pinned comment (best-effort, non-blocking)
@@ -844,9 +973,10 @@ export async function migrateV1ToV3(postId: T3): Promise<boolean> {
  * The new format uses `drawing:${postId}` and is detected as version 3.
  *
  * @param postId - The post ID to migrate
+ * @param post - Optional Post object to use for createdAt timestamp (preferred over v2 data)
  * @returns `true` if migration was successful, `false` otherwise
  */
-export async function migrateV2ToV3(postId: T3): Promise<boolean> {
+export async function migrateV2ToV3(postId: T3, post?: Post): Promise<boolean> {
   const v2Key = `post:${postId}`;
   const v3Key = REDIS_KEYS.drawing(postId);
   const lockKey = REDIS_KEYS.migrationLock(postId);
@@ -986,23 +1116,29 @@ export async function migrateV2ToV3(postId: T3): Promise<boolean> {
       return false;
     }
 
-    // Parse date
-    let createdAt = parseInt(dateStr, 10);
-    if (isNaN(createdAt)) {
-      // Fallback: try to get from post
-      try {
-        const post = await reddit.getPostById(postId);
-        createdAt = post.createdAt.getTime();
-      } catch (error) {
-        // Post might be deleted, use current time as fallback
-        console.warn(
-          '[Migration] Could not fetch post for date, using fallback',
-          {
-            postId,
-            error: error instanceof Error ? error.message : String(error),
-          }
-        );
-        createdAt = Date.now();
+    // Parse date - prefer post.createdAt if available, otherwise use v2 data
+    let createdAt: number;
+    if (post) {
+      // Use post's createdAt as source of truth
+      createdAt = post.createdAt.getTime();
+    } else {
+      createdAt = parseInt(dateStr, 10);
+      if (isNaN(createdAt)) {
+        // Fallback: try to get from post
+        try {
+          const fetchedPost = await reddit.getPostById(postId);
+          createdAt = fetchedPost.createdAt.getTime();
+        } catch (error) {
+          // Post might be deleted, use current time as fallback
+          console.warn(
+            '[Migration] Could not fetch post for date, using fallback',
+            {
+              postId,
+              error: error instanceof Error ? error.message : String(error),
+            }
+          );
+          createdAt = Date.now();
+        }
       }
     }
 
@@ -1040,55 +1176,86 @@ export async function migrateV2ToV3(postId: T3): Promise<boolean> {
     }
 
     // Update indices (only if not already present)
-    const userDrawingsKey = REDIS_KEYS.userDrawings(authorId);
-    const wordDrawingsKey = REDIS_KEYS.wordDrawings(word);
-    const allDrawingsKey = REDIS_KEYS.allDrawings();
+    try {
+      const userDrawingsKey = REDIS_KEYS.userDrawings(authorId);
+      const wordDrawingsKey = REDIS_KEYS.wordDrawings(word);
+      const allDrawingsKey = REDIS_KEYS.allDrawings();
 
-    const [userDrawingsExists, wordDrawingsExists, allDrawingsExists] =
-      await Promise.all([
-        redis.zScore(userDrawingsKey, postId),
-        redis.zScore(wordDrawingsKey, postId),
-        redis.zScore(allDrawingsKey, postId),
-      ]);
+      const [userDrawingsExists, wordDrawingsExists, allDrawingsExists] =
+        await Promise.all([
+          redis.zScore(userDrawingsKey, postId),
+          redis.zScore(wordDrawingsKey, postId),
+          redis.zScore(allDrawingsKey, postId),
+        ]);
 
-    if (userDrawingsExists === null) {
-      await redis.zAdd(userDrawingsKey, {
-        member: postId,
-        score: createdAt,
-      });
-    }
+      const indexPromises: Array<Promise<unknown>> = [];
 
-    if (wordDrawingsExists === null) {
-      await redis.zAdd(wordDrawingsKey, {
-        member: postId,
-        score: createdAt,
-      });
-    }
+      if (userDrawingsExists === null) {
+        indexPromises.push(
+          redis.zAdd(userDrawingsKey, {
+            member: postId,
+            score: createdAt,
+          })
+        );
+      }
 
-    if (allDrawingsExists === null) {
-      await redis.zAdd(allDrawingsKey, {
-        member: postId,
-        score: createdAt,
-      });
-    }
+      if (wordDrawingsExists === null) {
+        indexPromises.push(
+          redis.zAdd(wordDrawingsKey, {
+            member: postId,
+            score: createdAt,
+          })
+        );
+      }
 
-    // Add to user-art sorted set and create snapshot (for "My Drawings" page)
-    const userArtKey = REDIS_KEYS.userArt(authorId);
-    const compositeId = `d:${postId}`;
-    const userArtExists = await redis.zScore(userArtKey, compositeId);
-    if (userArtExists === null) {
-      await Promise.all([
-        redis.zAdd(userArtKey, {
-          member: compositeId,
-          score: createdAt,
-        }),
-        redis.hSet(REDIS_KEYS.userArtItem(authorId, compositeId), {
-          type: 'drawing',
+      if (allDrawingsExists === null) {
+        indexPromises.push(
+          redis.zAdd(allDrawingsKey, {
+            member: postId,
+            score: createdAt,
+          })
+        );
+      }
+
+      // Add to user-art sorted set and create snapshot (for "My Drawings" page)
+      const userArtKey = REDIS_KEYS.userArt(authorId);
+      const compositeId = `d:${postId}`;
+      const userArtExists = await redis.zScore(userArtKey, compositeId);
+      if (userArtExists === null) {
+        indexPromises.push(
+          redis.zAdd(userArtKey, {
+            member: compositeId,
+            score: createdAt,
+          }),
+          redis.hSet(REDIS_KEYS.userArtItem(authorId, compositeId), {
+            type: 'drawing',
+            postId,
+            drawing: JSON.stringify(drawingData),
+            createdAt: createdAt.toString(),
+          })
+        );
+      }
+
+      // Create all indices in parallel
+      if (indexPromises.length > 0) {
+        await Promise.all(indexPromises);
+        console.log('[Migration] Created indices for post', {
           postId,
-          drawing: JSON.stringify(drawingData),
-          createdAt: createdAt.toString(),
-        }),
-      ]);
+          indexCount: indexPromises.length,
+        });
+      } else {
+        console.log('[Migration] All indices already exist for post', {
+          postId,
+        });
+      }
+    } catch (error) {
+      // Index creation is critical - if it fails, migration should fail
+      console.error('[Migration] Failed to create indices', {
+        postId,
+        error: error instanceof Error ? error.message : String(error),
+        errorStack: error instanceof Error ? error.stack : undefined,
+      });
+      throw error;
     }
 
     // Create pinned comment (best-effort, non-blocking)
