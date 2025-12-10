@@ -64,7 +64,7 @@ export function ResultsView({
   const getPendingNavigation = trpc.app.user.getPendingNavigation.useMutation();
   const navigationInProgressRef = useRef(false);
   const getPendingNavigationRef = useRef(getPendingNavigation);
-  
+
   // Keep ref in sync with mutation
   useEffect(() => {
     getPendingNavigationRef.current = getPendingNavigation;

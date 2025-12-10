@@ -145,12 +145,10 @@ export async function getMyArtPage(options: {
   const { userId, limit, cursor } = options;
   const start = cursor ?? 0;
   const userArtKey = REDIS_KEYS.userArt(userId);
-  const raw = (await redis.zRange(
-    userArtKey,
-    start,
-    start + limit - 1,
-    { reverse: true, by: 'rank' }
-  )) as ZRangeEntry[];
+  const raw = (await redis.zRange(userArtKey, start, start + limit - 1, {
+    reverse: true,
+    by: 'rank',
+  })) as ZRangeEntry[];
 
   if (raw.length === 0) {
     return { items: [], nextCursor: -1 };

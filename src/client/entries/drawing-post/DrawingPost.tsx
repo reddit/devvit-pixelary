@@ -32,7 +32,6 @@ export function DrawingPost() {
       }
     );
 
-
   // Use migrated data if available and postData is still missing
   const effectivePostData = postData || migratedDrawing || null;
 

@@ -31,6 +31,9 @@ import {
   handleTelemetryLog,
   handleUpdateUserFlair,
   handleRunTournamentPayout,
+  showEditMigrationForm,
+  handleEditMigration,
+  handleShowMigrationStatus,
 } from './menu-actions';
 
 // Import scheduler handlers
@@ -42,6 +45,7 @@ import {
   handleUpdateWords,
   handleTournamentScheduler,
   handleTournamentPayoutSnapshot,
+  handleMigrationBatch,
 } from './scheduler';
 
 // Import trigger handlers
@@ -93,6 +97,7 @@ router.post(
 router.post('/internal/scheduler/users/flair/set', handleSetUserFlair);
 router.post('/internal/scheduler/words/scores/update', handleUpdateWords);
 router.post('/internal/scheduler/tournaments/run', handleTournamentScheduler);
+router.post('/internal/scheduler/migration/batch', handleMigrationBatch);
 
 // ============================================================================
 // MENU ACTIONS
@@ -130,6 +135,11 @@ router.post(
   '/internal/menu-actions/tournaments/payout-now',
   handleRunTournamentPayout
 );
+router.post('/internal/menu-actions/migration/edit', showEditMigrationForm);
+router.post(
+  '/internal/menu-actions/migration/status',
+  handleShowMigrationStatus
+);
 
 // ============================================================================
 // FORM HANDLERS
@@ -149,6 +159,7 @@ router.post(
 router.post('/internal/forms/users/points/set', handleSetUserPoints);
 router.post('/internal/forms/users/points/get', handleGetUserPoints);
 router.post('/internal/forms/legacy-users/update', handleEditLegacyUsers);
+router.post('/internal/forms/migration/edit', handleEditMigration);
 router.post(
   '/internal/forms/posts/tournament/submit',
   handleCreateTournamentPost

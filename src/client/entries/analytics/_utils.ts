@@ -37,4 +37,3 @@ export function getEventCount(
   const key = `${postType}:${eventType}`;
   return telemetryData[key] ?? 0;
 }
-

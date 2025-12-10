@@ -88,7 +88,9 @@ export function RawEventsView(props: RawEventsViewProps) {
                 <div key={category}>
                   <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-2 uppercase tracking-wide">
                     {category} (
-                    {events.reduce((sum, e) => sum + e.count, 0).toLocaleString()}
+                    {events
+                      .reduce((sum, e) => sum + e.count, 0)
+                      .toLocaleString()}
                     )
                   </h3>
                   <div className="space-y-1 pl-2">
@@ -116,4 +118,3 @@ export function RawEventsView(props: RawEventsViewProps) {
     </>
   );
 }
-

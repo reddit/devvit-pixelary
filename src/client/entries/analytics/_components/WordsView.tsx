@@ -23,7 +23,9 @@ export function WordsView(_props: WordsViewProps) {
   if (!data) {
     return (
       <div className="text-center py-8">
-        <p className="text-gray-600 dark:text-gray-400">No word data available</p>
+        <p className="text-gray-600 dark:text-gray-400">
+          No word data available
+        </p>
       </div>
     );
   }
@@ -121,4 +123,3 @@ export function WordsView(_props: WordsViewProps) {
     </div>
   );
 }
-

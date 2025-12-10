@@ -33,7 +33,7 @@ import {
 } from '@server/services/comments/pinned';
 import { REALTIME_CHANNELS } from '@server/core/realtime';
 import { encodeDrawingToPngDataUrl } from '@server/utils/png';
-import { migrateOldDrawingPost } from './migration';
+import { migratePostById } from '../migration/post';
 
 const DRAWING_DATA_TTL = 5 * 60;
 
@@ -190,7 +190,7 @@ export async function getDrawing(
   }
 
   // New format doesn't exist or is invalid, try migrating from old format
-  const migrationSuccess = await migrateOldDrawingPost(postId);
+  const migrationSuccess = await migratePostById(postId);
   if (migrationSuccess) {
     // Migration succeeded, fetch the newly migrated data
     const migratedData = await redis.hGetAll(key);

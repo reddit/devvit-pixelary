@@ -112,4 +112,3 @@ export function DrawingCTRView(props: DrawingCTRViewProps) {
     </div>
   );
 }
-

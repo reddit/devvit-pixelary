@@ -9,11 +9,11 @@ export type HttpReq<
   RspBody = unknown,
   ReqBody = unknown,
   ReqQuery = Query,
-  Locals extends Record<string, unknown> = Record<string, unknown>
+  Locals extends Record<string, unknown> = Record<string, unknown>,
 > = Request<QueryParams, RspBody, ReqBody, ReqQuery, Locals>;
 
 /** Express response with unknowns instead of anys to require good typing. */
 export type HttpRsp<
   RspBody = unknown,
-  Locals extends Record<string, unknown> = Record<string, unknown>
+  Locals extends Record<string, unknown> = Record<string, unknown>,
 > = Response<RspBody, Locals>;

@@ -166,17 +166,13 @@ export async function isAdmin(userId: T2): Promise<boolean> {
  */
 export async function acquireLock(
   key: string,
-  ttlSeconds: number
+  ttl_ms: number
 ): Promise<boolean> {
-  const result = await redis.set(
-    key as never,
-    '1' as never,
-    {
-      ex: ttlSeconds,
-      nx: true,
-    } as never
-  );
-  // Some clients return 'OK', others truthy
+  const result = await redis.set(key, '1', {
+    expiration: new Date(Date.now() + ttl_ms),
+    nx: true,
+  });
+
   return Boolean(result);
 }
 
@@ -185,7 +181,7 @@ export async function acquireLock(
  */
 export async function releaseLock(key: string): Promise<void> {
   try {
-    await redis.del(key as never);
+    await redis.del(key);
   } catch {
     // noop
   }

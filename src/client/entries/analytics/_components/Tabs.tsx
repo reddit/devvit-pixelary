@@ -53,4 +53,3 @@ export function Tabs(props: TabsProps) {
     </div>
   );
 }
-

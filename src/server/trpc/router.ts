@@ -55,6 +55,7 @@ import {
 import type { TelemetryEventType } from '@shared/types';
 import { obfuscateString } from '@shared/utils/string';
 import { z, ZodError } from 'zod';
+import { getMigrationStatus } from '@server/services/migration/status';
 
 const t = initTRPC.context<Context>().create({
   errorFormatter({ shape, error }) {
@@ -580,7 +581,7 @@ export const appRouter = t.router({
           });
         }
         const { migrateUserDrawings } = await import(
-          '../services/posts/migration'
+          '../services/migration/old/old_migrate-post'
         );
         const count = await migrateUserDrawings(ctx.userId);
         return { success: true, count };
@@ -768,6 +769,33 @@ export const appRouter = t.router({
 
           return { ok: true } as const;
         }),
+    }),
+
+    // Migration endpoints
+    migration: t.router({
+      getStatus: t.procedure.query(async ({ ctx }) => {
+        // Only admins and moderators can access migration status
+        if (!ctx.userId) {
+          throw new TRPCError({
+            code: 'UNAUTHORIZED',
+            message: 'Must be logged in',
+          });
+        }
+
+        const userIsAdmin = await isAdmin(ctx.userId);
+        const userIsModerator = ctx.subredditName
+          ? await isModerator(ctx.userId, ctx.subredditName)
+          : false;
+
+        if (!userIsAdmin && !userIsModerator) {
+          throw new TRPCError({
+            code: 'FORBIDDEN',
+            message: 'Admin or moderator access required',
+          });
+        }
+
+        return await getMigrationStatus();
+      }),
     }),
 
     // Telemetry endpoints

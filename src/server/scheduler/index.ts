@@ -5,3 +5,4 @@ export { handleSetUserFlair } from './user/flair';
 export { handleUpdateWords } from './update-word-stats';
 export { handleTournamentScheduler } from './tournament/scheduler';
 export { handleTournamentPayoutSnapshot } from './tournament/payout';
+export { handleMigrationBatch } from './migration';

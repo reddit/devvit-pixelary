@@ -70,8 +70,7 @@ export function EditorFunnelView(props: EditorFunnelViewProps) {
       {
         step: 'Drawing Started',
         count: drawingStart,
-        conversion:
-          viewDrawStep > 0 ? (drawingStart / viewDrawStep) * 100 : 0,
+        conversion: viewDrawStep > 0 ? (drawingStart / viewDrawStep) * 100 : 0,
       },
       {
         step: 'Drawing Completed',
@@ -111,9 +110,7 @@ export function EditorFunnelView(props: EditorFunnelViewProps) {
         {mainSteps.map((step, index) => {
           const prevStep = index > 0 ? mainSteps[index - 1] : null;
           const dropoff =
-            prevStep && prevStep.count > 0
-              ? prevStep.count - step.count
-              : 0;
+            prevStep && prevStep.count > 0 ? prevStep.count - step.count : 0;
           const dropoffPercent =
             prevStep && prevStep.count > 0
               ? (dropoff / prevStep.count) * 100
@@ -196,4 +193,3 @@ export function EditorFunnelView(props: EditorFunnelViewProps) {
     </div>
   );
 }
-

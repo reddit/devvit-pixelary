@@ -59,7 +59,8 @@
     "setUserPointsForm": "/internal/forms/users/points/set",
     "getUserPointsForm": "/internal/forms/users/points/get",
     "editLegacyUsersForm": "/internal/forms/legacy-users/update",
-    "editSlateBanditForm": "/internal/forms/slate-bandit/update"
+    "editSlateBanditForm": "/internal/forms/slate-bandit/update",
+    "editMigrationForm": "/internal/forms/migration/edit"
   },
   "menu": {
     "items": [
@@ -163,6 +164,20 @@
         "location": "subreddit",
         "forUserType": "moderator",
         "endpoint": "/internal/menu-actions/legacy-users/manage"
+      },
+      {
+        "label": "[Pixelary] Edit Migration",
+        "description": "Enable or disable the migration process",
+        "location": "subreddit",
+        "forUserType": "moderator",
+        "endpoint": "/internal/menu-actions/migration/edit"
+      },
+      {
+        "label": "[Pixelary] Migration Status",
+        "description": "View current migration progress and metrics",
+        "location": "subreddit",
+        "forUserType": "moderator",
+        "endpoint": "/internal/menu-actions/migration/status"
       }
     ]
   },
@@ -197,6 +212,10 @@
       },
       "TOURNAMENT_PAYOUT_SNAPSHOT": {
         "endpoint": "/internal/scheduler/tournaments/payout"
+      },
+      "MIGRATION_BATCH": {
+        "endpoint": "/internal/scheduler/migration/batch",
+        "cron": "*/30 * * * * *"
       }
     }
   },
