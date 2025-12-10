@@ -2,6 +2,7 @@ import type { CommandContext, CommandResult } from '../comment-commands';
 import { removeWord } from '@server/services/words/dictionary';
 import { getScore, getLevelByScore } from '@server/services/progression';
 import { hasReward } from '@shared/rewards';
+import { normalizeCommandWord } from '@shared/utils/string';
 
 export async function handleRemove(
   args: string[],
@@ -22,10 +23,15 @@ export async function handleRemove(
       };
     }
 
-    const word = args[0]?.trim();
-    if (!word) {
-      return { success: false, error: 'Invalid word.' };
+    // Join all args to support multi-word inputs (e.g., "lava lamp")
+    const input = args.join(' ');
+    const normalized = normalizeCommandWord(input);
+
+    if ('error' in normalized) {
+      return { success: false, error: normalized.error };
     }
+
+    const word = normalized.word;
 
     const success = await removeWord(word);
 

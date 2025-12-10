@@ -3,6 +3,7 @@ import { addWord, getBannedWords } from '@server/services/words/dictionary';
 import { getScore, getLevelByScore } from '@server/services/progression';
 import { hasReward } from '@shared/rewards';
 import { addBacker } from '@server/services/words/word-backing';
+import { normalizeCommandWord } from '@shared/utils/string';
 
 export async function handleAdd(
   args: string[],
@@ -20,10 +21,15 @@ export async function handleAdd(
       return { success: false, error: 'Provide a word. Usage: `!add <word>`' };
     }
 
-    const word = args[0]?.trim();
-    if (!word || word.length > 50) {
-      return { success: false, error: 'Invalid word. Max 50 characters.' };
+    // Join all args to support multi-word inputs (e.g., "lava lamp")
+    const input = args.join(' ');
+    const normalized = normalizeCommandWord(input);
+
+    if ('error' in normalized) {
+      return { success: false, error: normalized.error };
     }
+
+    const word = normalized.word;
 
     const bannedWordsResult = await getBannedWords(0, 10000);
     const isBanned = bannedWordsResult.words.some(

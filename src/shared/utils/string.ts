@@ -33,6 +33,53 @@ export function normalizeWord(word: string): string {
 }
 
 /**
+ * Normalize a word from a command input
+ * Strips !add/!remove prefixes, removes invalid characters, and validates length
+ * @param input - The raw input string to normalize
+ * @returns Object with normalized word or error message
+ */
+export function normalizeCommandWord(
+  input: string
+): { word: string } | { error: string } {
+  // Strip !add or !remove prefixes (case-insensitive, anywhere in string)
+  let normalized = input
+    .replace(/!add/gi, '')
+    .replace(/!remove/gi, '')
+    .trim();
+
+  // Remove all characters except a-z, A-Z, 0-9, hyphens, and spaces
+  normalized = normalized.replace(/[^a-zA-Z0-9\s-]/g, '');
+
+  // Normalize multiple consecutive spaces to single space
+  normalized = normalized.replace(/\s+/g, ' ');
+
+  // Trim whitespace
+  normalized = normalized.trim();
+
+  // Check length
+  if (normalized.length > 12) {
+    return { error: 'Too long. Max 12 characters.' };
+  }
+
+  if (normalized.length === 0) {
+    return { error: 'Invalid word.' };
+  }
+
+  // Reject words that contain only non-alphanumeric characters
+  // (after normalization, this means only hyphens and spaces)
+  if (!/[a-zA-Z0-9]/.test(normalized)) {
+    return { error: 'Invalid word. Must contain at least one letter or number.' };
+  }
+
+  // Reject words that start or end with hyphens
+  if (normalized.startsWith('-') || normalized.endsWith('-')) {
+    return { error: 'Invalid word. Cannot start or end with hyphen.' };
+  }
+
+  return { word: normalized };
+}
+
+/**
  * Sanitize a string to ensure it contains only valid UTF-8 characters
  * Replaces invalid UTF-8 sequences with the replacement character (U+FFFD)
  * @param str - The string to sanitize

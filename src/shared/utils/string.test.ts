@@ -1,5 +1,10 @@
 import { describe, it, expect } from 'vitest';
-import { obfuscateString, titleCase, normalizeWord } from './string';
+import {
+  obfuscateString,
+  titleCase,
+  normalizeWord,
+  normalizeCommandWord,
+} from './string';
 
 describe('string utilities', () => {
   describe('obfuscateString', () => {
@@ -157,6 +162,128 @@ describe('string utilities', () => {
       expect(normalizeWord('  a  ')).toBe('A');
       expect(normalizeWord('123')).toBe('123');
       expect(normalizeWord('  hello123world  ')).toBe('Hello123world');
+    });
+  });
+
+  describe('normalizeCommandWord', () => {
+    it('strips !add prefix', () => {
+      const result = normalizeCommandWord('!add test');
+      expect('word' in result && result.word).toBe('test');
+    });
+
+    it('strips !remove prefix', () => {
+      const result = normalizeCommandWord('!remove test');
+      expect('word' in result && result.word).toBe('test');
+    });
+
+    it('strips prefix anywhere in string', () => {
+      const result = normalizeCommandWord('test!add');
+      expect('word' in result && result.word).toBe('test');
+    });
+
+    it('strips prefix case-insensitively', () => {
+      const result = normalizeCommandWord('!ADD test');
+      expect('word' in result && result.word).toBe('test');
+    });
+
+    it('removes special characters except hyphens and spaces', () => {
+      const result = normalizeCommandWord('word@#$%test');
+      expect('word' in result && result.word).toBe('wordtest');
+    });
+
+    it('preserves hyphens', () => {
+      const result = normalizeCommandWord('hello-world');
+      expect('word' in result && result.word).toBe('hello-world');
+    });
+
+    it('preserves spaces', () => {
+      const result = normalizeCommandWord('lava lamp');
+      expect('word' in result && result.word).toBe('lava lamp');
+    });
+
+    it('preserves alphanumeric characters', () => {
+      const result = normalizeCommandWord('test123');
+      expect('word' in result && result.word).toBe('test123');
+    });
+
+    it('trims whitespace', () => {
+      const result = normalizeCommandWord('  test  ');
+      expect('word' in result && result.word).toBe('test');
+    });
+
+    it('rejects words longer than 12 characters', () => {
+      const result = normalizeCommandWord('thisiswaytoolong');
+      expect('error' in result && result.error).toBe(
+        'Too long. Max 12 characters.'
+      );
+    });
+
+    it('accepts words exactly 12 characters', () => {
+      const result = normalizeCommandWord('123456789012');
+      expect('word' in result && result.word).toBe('123456789012');
+    });
+
+    it('rejects empty strings after normalization', () => {
+      const result = normalizeCommandWord('!add');
+      expect('error' in result && result.error).toBe('Invalid word.');
+    });
+
+    it('handles multiple prefixes', () => {
+      const result = normalizeCommandWord('!add !remove test');
+      expect('word' in result && result.word).toBe('test');
+    });
+
+    it('handles complex input with special characters and prefixes', () => {
+      const result = normalizeCommandWord('!add word@#$%test');
+      expect('word' in result && result.word).toBe('wordtest');
+    });
+
+    it('handles multi-word input with hyphens', () => {
+      const result = normalizeCommandWord('hello-world');
+      expect('word' in result && result.word).toBe('hello-world');
+    });
+
+    it('rejects words starting with hyphen', () => {
+      const result = normalizeCommandWord('-test');
+      expect('error' in result && result.error).toBe(
+        'Invalid word. Cannot start or end with hyphen.'
+      );
+    });
+
+    it('rejects words ending with hyphen', () => {
+      const result = normalizeCommandWord('test-');
+      expect('error' in result && result.error).toBe(
+        'Invalid word. Cannot start or end with hyphen.'
+      );
+    });
+
+    it('rejects words that are only hyphens', () => {
+      const result = normalizeCommandWord('---');
+      expect('error' in result && result.error).toBe(
+        'Invalid word. Must contain at least one letter or number.'
+      );
+    });
+
+    it('rejects words with only hyphens and spaces', () => {
+      const result = normalizeCommandWord(' - ');
+      expect('error' in result && result.error).toBe(
+        'Invalid word. Must contain at least one letter or number.'
+      );
+    });
+
+    it('normalizes multiple consecutive spaces to single space', () => {
+      const result = normalizeCommandWord('hello    world');
+      expect('word' in result && result.word).toBe('hello world');
+    });
+
+    it('allows valid hyphenated words', () => {
+      const result = normalizeCommandWord('hello-world');
+      expect('word' in result && result.word).toBe('hello-world');
+    });
+
+    it('allows words with hyphens in the middle', () => {
+      const result = normalizeCommandWord('test-word');
+      expect('word' in result && result.word).toBe('test-word');
     });
   });
 });

@@ -627,8 +627,8 @@ export function generateDrawingCommentText(
       content: `Comment commands:
 
 * \`!words\` - See dictionary
-* \`!add <word>\` - Add word to dictionary. For example \`!add meatloaf\` or \`!add lava lamp\` (Level 2 required)
-* \`!remove <word>\` - Remove word from dictionary. For example \`!remove meatloaf\` or \`!remove lava lamp\` (Level 2 required)
+* \`!add <word>\` - Add word to dictionary. Type the word after the command (max 12 characters, letters/numbers/hyphens/spaces only). For example \`!add meatloaf\` or \`!add lava lamp\` (Level 2 required)
+* \`!remove <word>\` - Remove word from dictionary. Type the word after the command (max 12 characters, letters/numbers/hyphens/spaces only). For example \`!remove meatloaf\` or \`!remove lava lamp\` (Level 2 required)
 * \`!show <word>\` - Reveal an obfuscated guess on the results screen. For example \`!show meatloaf\` or \`!show lava lamp\`
 * \`!help\` - View more commands
 

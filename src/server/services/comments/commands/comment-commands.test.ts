@@ -1,6 +1,7 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
 import type { CommandContext } from './comment-commands';
 import { processCommand } from './comment-commands';
+import * as dictionary from '@server/services/words/dictionary';
 
 // Mock the progression service to return a level 1 user (below level 2 requirement)
 const mockGetScore = vi.fn();
@@ -129,6 +130,116 @@ describe('Comment command system', () => {
 
       expect(result.success).toBe(false);
       expect(result.error).toContain('Word not found');
+    });
+  });
+
+  describe('Word normalization', () => {
+    beforeEach(() => {
+      // Set up mocks to return level 2 user (has permission)
+      mockGetScore.mockResolvedValue(100); // Level 2 user
+      mockGetLevelByScore.mockReturnValue({
+        rank: 2,
+        name: 'Level 2',
+        min: 100,
+        max: 199,
+      });
+      mockHasReward.mockImplementation((level: number) => level >= 2);
+      // Ensure mocks are set up correctly after clearAllMocks
+      vi.mocked(dictionary.addWord).mockResolvedValue(true);
+      vi.mocked(dictionary.removeWord).mockResolvedValue(true);
+      vi.mocked(dictionary.getBannedWords).mockResolvedValue({
+        words: [],
+        total: 0,
+        hasMore: false,
+      });
+    });
+
+    test('should strip !add prefix from word', async () => {
+      const context = createContext();
+      const result = await processCommand('!add', ['!add', 'test'], context);
+
+      expect(result.success).toBe(true);
+      expect(result.response).toContain('Added "test"');
+    });
+
+    test('should strip !remove prefix from word', async () => {
+      const context = createContext();
+      const result = await processCommand(
+        '!remove',
+        ['!remove', 'test'],
+        context
+      );
+
+      expect(result.success).toBe(true);
+      expect(result.response).toContain('Removed "test"');
+    });
+
+    test('should strip special characters except hyphens and spaces', async () => {
+      const context = createContext();
+      const result = await processCommand('!add', ['word@#$%test'], context);
+
+      expect(result.success).toBe(true);
+      expect(result.response).toContain('Added "wordtest"');
+    });
+
+    test('should preserve hyphens and spaces', async () => {
+      const context = createContext();
+      const result = await processCommand('!add', ['hello-world'], context);
+
+      expect(result.success).toBe(true);
+      expect(result.response).toContain('Added "hello-world"');
+    });
+
+    test('should support multi-word inputs', async () => {
+      const context = createContext();
+      const result = await processCommand('!add', ['lava', 'lamp'], context);
+
+      expect(result.success).toBe(true);
+      expect(result.response).toContain('Added "lava lamp"');
+    });
+
+    test('should reject words longer than 12 characters', async () => {
+      const context = createContext();
+      const result = await processCommand(
+        '!add',
+        ['thisiswaytoolong'],
+        context
+      );
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Too long. Max 12 characters.');
+    });
+
+    test('should accept words exactly 12 characters', async () => {
+      const context = createContext();
+      const result = await processCommand('!add', ['123456789012'], context);
+
+      expect(result.success).toBe(true);
+      expect(result.response).toContain('Added "123456789012"');
+    });
+
+    test('should handle case-insensitive prefix stripping', async () => {
+      const context = createContext();
+      const result = await processCommand('!add', ['!ADD', 'test'], context);
+
+      expect(result.success).toBe(true);
+      expect(result.response).toContain('Added "test"');
+    });
+
+    test('should strip prefix anywhere in the string', async () => {
+      const context = createContext();
+      const result = await processCommand('!add', ['test!add'], context);
+
+      expect(result.success).toBe(true);
+      expect(result.response).toContain('Added "test"');
+    });
+
+    test('should handle empty word after normalization', async () => {
+      const context = createContext();
+      const result = await processCommand('!add', ['!add'], context);
+
+      expect(result.success).toBe(false);
+      expect(result.error).toBe('Invalid word.');
     });
   });
 });
