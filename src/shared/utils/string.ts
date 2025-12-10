@@ -68,7 +68,9 @@ export function normalizeCommandWord(
   // Reject words that contain only non-alphanumeric characters
   // (after normalization, this means only hyphens and spaces)
   if (!/[a-zA-Z0-9]/.test(normalized)) {
-    return { error: 'Invalid word. Must contain at least one letter or number.' };
+    return {
+      error: 'Invalid word. Must contain at least one letter or number.',
+    };
   }
 
   // Reject words that start or end with hyphens

@@ -315,11 +315,7 @@ async function validatePost(post: Post): Promise<boolean> {
  * @returns `true` if indexes were fixed or already present, `false` if unable to fix
  */
 async function ensureV3Indexes(post: Post): Promise<boolean> {
-  const { authorId, id, createdAt } = post;
-
-  if (!authorId) {
-    return false;
-  }
+  const { authorId: postAuthorId, id, createdAt } = post;
 
   try {
     // Get drawing data from Redis
@@ -327,6 +323,14 @@ async function ensureV3Indexes(post: Post): Promise<boolean> {
     const word = hash?.word;
     const drawingData = hash?.drawing;
     const createdAtStr = hash?.createdAt;
+    const hashAuthorId = hash?.authorId;
+
+    // Use authorId from post if available, otherwise fall back to Redis hash
+    // (user may have deleted account after migration)
+    const authorId = (postAuthorId ?? hashAuthorId) as T2 | undefined;
+    if (!authorId || !isT2(authorId)) {
+      return false;
+    }
 
     if (!word || !drawingData) {
       return false;
@@ -594,33 +598,66 @@ export async function migrateV1ToV3(postId: T3): Promise<boolean> {
       // Try to get username from userId
       try {
         const user = await reddit.getUserById(authorId);
-        authorName = user?.username ?? author ?? 'unknown';
-      } catch {
-        authorName = author ?? 'unknown';
+        if (user?.username) {
+          authorName = user.username;
+        } else {
+          // User account may have been deleted, use fallback
+          authorName = author ?? '[deleted]';
+          console.warn(
+            '[Migration] User account not found, using fallback username',
+            {
+              postId,
+              authorId,
+              fallbackUsername: authorName,
+            }
+          );
+        }
+      } catch (error) {
+        // User account may have been deleted, use fallback
+        authorName = author ?? '[deleted]';
+        console.warn(
+          '[Migration] Failed to fetch user, using fallback username',
+          {
+            postId,
+            authorId,
+            fallbackUsername: authorName,
+            error: error instanceof Error ? error.message : String(error),
+          }
+        );
       }
     } else if (author) {
       // Fallback to resolving username
       try {
         const authorUser = await reddit.getUserByUsername(author);
-        if (!authorUser?.id || !isT2(authorUser.id)) {
-          console.error('[Migration] Failed to resolve author username', {
-            postId,
-            authorUsername: author,
-          });
+        if (authorUser?.id && isT2(authorUser.id)) {
+          authorId = authorUser.id;
+          authorName = authorUser.username;
+        } else {
+          // User account may have been deleted
+          // If we can't resolve, we can't proceed without an authorId
+          console.error(
+            '[Migration] Failed to resolve author username (user may be deleted)',
+            {
+              postId,
+              authorUsername: author,
+            }
+          );
           await redis.zAdd(MIGRATION_FAILED_KEY, {
             member: postId,
             score: Date.now(),
           });
           return false;
         }
-        authorId = authorUser.id;
-        authorName = authorUser.username;
       } catch (error) {
-        console.error('[Migration] Failed to resolve author username', {
-          postId,
-          authorUsername: author,
-          error: error instanceof Error ? error.message : String(error),
-        });
+        // User account may have been deleted or doesn't exist
+        console.error(
+          '[Migration] Failed to resolve author username (user may be deleted)',
+          {
+            postId,
+            authorUsername: author,
+            error: error instanceof Error ? error.message : String(error),
+          }
+        );
         await redis.zAdd(MIGRATION_FAILED_KEY, {
           member: postId,
           score: Date.now(),
@@ -912,25 +949,36 @@ export async function migrateV2ToV3(postId: T3): Promise<boolean> {
     let authorName: string;
     try {
       const authorUser = await reddit.getUserByUsername(authorUsername);
-      if (!authorUser?.id || !isT2(authorUser.id)) {
-        console.error('[Migration] Failed to resolve author username', {
-          postId,
-          authorUsername,
-        });
+      if (authorUser?.id && isT2(authorUser.id)) {
+        authorId = authorUser.id;
+        authorName = authorUser.username;
+      } else {
+        // User account may have been deleted
+        // V2 data only has username, so we can't proceed without resolving to userId
+        console.error(
+          '[Migration] Failed to resolve author username (user may be deleted)',
+          {
+            postId,
+            authorUsername,
+          }
+        );
         await redis.zAdd(MIGRATION_FAILED_KEY, {
           member: postId,
           score: Date.now(),
         });
         return false;
       }
-      authorId = authorUser.id;
-      authorName = authorUser.username;
     } catch (error) {
-      console.error('[Migration] Failed to resolve author username', {
-        postId,
-        authorUsername,
-        error: error instanceof Error ? error.message : String(error),
-      });
+      // User account may have been deleted or doesn't exist
+      // V2 data only has username, so we can't proceed without resolving to userId
+      console.error(
+        '[Migration] Failed to resolve author username (user may be deleted)',
+        {
+          postId,
+          authorUsername,
+          error: error instanceof Error ? error.message : String(error),
+        }
+      );
       await redis.zAdd(MIGRATION_FAILED_KEY, {
         member: postId,
         score: Date.now(),
