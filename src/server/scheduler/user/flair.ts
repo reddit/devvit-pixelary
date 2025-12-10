@@ -89,11 +89,16 @@ export async function handleSetUserFlair(
 
     res.json({ status: 'success' });
   } catch (error) {
+    console.error('Error in set user flair job:', error);
     // Check if it's a 404 error (API endpoint not found)
     if (error instanceof Error && error.message.includes('404')) {
       res.json({ status: 'success', message: 'Flair API not available' });
     } else {
-      res.status(500).json({ status: 'error', message: 'Job failed' });
+      res.status(500).json({
+        status: 'error',
+        message: 'Job failed',
+        error: error instanceof Error ? error.message : String(error),
+      });
     }
   }
 }

@@ -197,6 +197,7 @@ export const appRouter = t.router({
         .input(
           z.object({
             limit: z.number().min(1).max(100).default(20),
+            includeDistribution: z.boolean().default(false),
           })
         )
         .query(async ({ ctx, input }) => {
@@ -240,7 +241,14 @@ export const appRouter = t.router({
             { reverse: true, by: 'rank' }
           );
 
-          return {
+          const result: {
+            byScore: Array<{ word: string; score: number }>;
+            byUncertainty: Array<{ word: string; uncertainty: number }>;
+            distribution?: {
+              scores: number[];
+              uncertainties: number[];
+            };
+          } = {
             byScore: wordsByScore.map((item) => ({
               word: item.member,
               score: item.score,
@@ -250,6 +258,27 @@ export const appRouter = t.router({
               uncertainty: item.score,
             })),
           };
+
+          // If distribution is requested, get all words
+          if (input.includeDistribution) {
+            const allWordsByScore = await redis.global.zRange(
+              REDIS_KEYS.wordsAll(ctx.subredditName),
+              0,
+              -1
+            );
+            const allWordsByUncertainty = await redis.global.zRange(
+              REDIS_KEYS.wordsUncertainty(ctx.subredditName),
+              0,
+              -1
+            );
+
+            result.distribution = {
+              scores: allWordsByScore.map((item) => item.score),
+              uncertainties: allWordsByUncertainty.map((item) => item.score),
+            };
+          }
+
+          return result;
         }),
     }),
 

@@ -1,12 +1,13 @@
 import { trpc } from '@client/trpc/client';
 import { useState } from 'react';
+import { DistributionChart } from './DistributionChart';
 
 type WordsViewProps = Record<string, never>;
 
 export function WordsView(_props: WordsViewProps) {
   const [limit, setLimit] = useState(20);
   const { data, isLoading } = trpc.app.dictionary.getWordStats.useQuery(
-    { limit },
+    { limit, includeDistribution: true },
     {
       enabled: true,
       refetchInterval: 30000, // Refetch every 30 seconds
@@ -124,6 +125,26 @@ export function WordsView(_props: WordsViewProps) {
           </div>
         </div>
       </div>
+
+      {/* Distribution Charts */}
+      {data.distribution && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+            <DistributionChart
+              values={data.distribution.scores}
+              title="Score Distribution"
+              bins={20}
+            />
+          </div>
+          <div className="bg-white dark:bg-gray-900 rounded-lg p-4 border border-gray-200 dark:border-gray-700">
+            <DistributionChart
+              values={data.distribution.uncertainties}
+              title="Uncertainty Distribution"
+              bins={20}
+            />
+          </div>
+        </div>
+      )}
     </div>
   );
 }

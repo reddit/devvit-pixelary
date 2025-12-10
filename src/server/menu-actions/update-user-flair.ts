@@ -16,7 +16,6 @@ export async function handleUpdateUserFlair(
     if (!userId) {
       res.status(400).json({
         showToast: 'No userId found',
-        appearance: 'neutral',
       });
       return;
     }
@@ -25,13 +24,18 @@ export async function handleUpdateUserFlair(
     await setUserFlair(userId, subredditName, level);
 
     res.json({
-      showToast: 'Flair updated',
-      appearance: 'success',
+      showToast: {
+        text: 'Flair updated',
+        appearance: 'success',
+      },
     });
   } catch (error) {
     console.error('Error in update user flair menu action:', error);
     res.status(500).json({
-      showToast: 'Error. Try later.',
+      showToast: {
+        text: 'Error. Try later.',
+        appearance: 'neutral',
+      },
     });
   }
 }
