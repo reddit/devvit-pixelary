@@ -23,7 +23,9 @@ export function Header(props: HeaderProps) {
       <div className="flex flex-col items-center gap-4">
         <div className="flex items-center gap-2">
           <button
-            onClick={() => onViewModeChange('single')}
+            onClick={() => {
+              onViewModeChange('single');
+            }}
             className={`px-3 py-1 text-sm font-medium rounded transition-colors ${
               viewMode === 'single'
                 ? 'bg-blue-500 text-white'
@@ -33,7 +35,9 @@ export function Header(props: HeaderProps) {
             Single Day
           </button>
           <button
-            onClick={() => onViewModeChange('trailing')}
+            onClick={() => {
+              onViewModeChange('trailing');
+            }}
             className={`px-3 py-1 text-sm font-medium rounded transition-colors ${
               viewMode === 'trailing'
                 ? 'bg-blue-500 text-white'

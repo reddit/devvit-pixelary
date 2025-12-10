@@ -56,7 +56,7 @@ export async function migratePostBatch(): Promise<void> {
     console.log('[Migration] Batch starting', {
       subredditName,
       batchSize: clampedBatchSize,
-      beforeAnchor: beforeAnchor || 'none',
+      beforeAnchor: beforeAnchor ?? 'none',
     });
 
     const posts = await reddit
@@ -71,7 +71,7 @@ export async function migratePostBatch(): Promise<void> {
     if (posts.length === 0) {
       console.log('[Migration] Empty batch, migration complete', {
         subredditName,
-        beforeAnchor: beforeAnchor || 'none',
+        beforeAnchor: beforeAnchor ?? 'none',
       });
       await redis.set(ENABLED_KEY, 'false');
       // Lock will be released in finally block
@@ -116,7 +116,7 @@ export async function migratePostBatch(): Promise<void> {
     const lastPost = posts[posts.length - 1];
 
     // Update counters atomically
-    const promises: Promise<unknown>[] = [
+    const promises: Array<Promise<unknown>> = [
       redis.incrBy(PROCESSED_COUNT_KEY, count),
       redis.incrBy(SUCCESS_COUNT_KEY, successCount),
       redis.incrBy(FAILED_COUNT_KEY, failedCount),
@@ -155,7 +155,7 @@ export async function migratePostBatch(): Promise<void> {
     // Log batch failure with full context
     console.error('[Migration] Batch failed', {
       subredditName,
-      beforeAnchor: beforeAnchor || 'none',
+      beforeAnchor: beforeAnchor ?? 'none',
       error: error instanceof Error ? error.message : String(error),
       errorStack: error instanceof Error ? error.stack : undefined,
     });

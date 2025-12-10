@@ -1,15 +1,18 @@
 import { describe, test, expect, vi, beforeEach } from 'vitest';
-import { processCommand } from './comment-commands';
 import type { CommandContext } from './comment-commands';
+import { processCommand } from './comment-commands';
 
 // Mock the progression service to return a level 1 user (below level 2 requirement)
-vi.mock('../../progression', () => ({
-  getScore: vi.fn().mockResolvedValue(50), // Level 1 user (below level 2)
-  getLevelByScore: vi.fn().mockReturnValue({ rank: 1 }),
+const mockGetScore = vi.fn();
+const mockGetLevelByScore = vi.fn();
+
+vi.mock('@server/services/progression', () => ({
+  getScore: (...args: unknown[]) => mockGetScore(...args),
+  getLevelByScore: (...args: unknown[]) => mockGetLevelByScore(...args),
 }));
 
 // Mock the dictionary service
-vi.mock('../../words/dictionary', () => ({
+vi.mock('@server/services/words/dictionary', () => ({
   addWord: vi.fn().mockResolvedValue(true),
   getBannedWords: vi.fn().mockResolvedValue({
     words: [],
@@ -22,27 +25,31 @@ vi.mock('../../words/dictionary', () => ({
 }));
 
 // Mock the word-backing service
-vi.mock('../../words/word-backing', () => ({
+vi.mock('@server/services/words/word-backing', () => ({
   getBacker: vi.fn().mockResolvedValue(null),
   addBacker: vi.fn().mockResolvedValue(undefined),
   shouldShowWord: vi.fn().mockResolvedValue(false),
 }));
 
-// Mock @devvit/web/server to avoid ESM import attribute parsing issues
-vi.mock('@devvit/web/server', () => ({
-  context: { subredditName: 'testsub' },
-  redis: {
-    hGetAll: vi.fn().mockResolvedValue({}),
-    zRange: vi.fn().mockResolvedValue([]),
-    zCard: vi.fn().mockResolvedValue(0),
-  },
-  reddit: {},
-  scheduler: { runJob: vi.fn() },
+// Mock the rewards service
+const mockHasReward = vi.fn();
+
+vi.mock('@shared/rewards', () => ({
+  hasReward: (...args: unknown[]) => mockHasReward(...args),
 }));
 
 describe('Comment command system', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    // Set up mocks to return level 1 user (below level 2 requirement)
+    mockGetScore.mockResolvedValue(50); // Level 1 user (below level 2)
+    mockGetLevelByScore.mockReturnValue({
+      rank: 1,
+      name: 'Level 1',
+      min: 0,
+      max: 99,
+    });
+    mockHasReward.mockImplementation((level: number) => level >= 2);
   });
   const createContext = (
     authorName = 'testuser',
@@ -84,11 +91,11 @@ describe('Comment command system', () => {
 
       const addResult = await processCommand('!add', ['test'], context);
       expect(addResult.success).toBe(false);
-      expect(addResult.error).toContain('Requires Level 2 to add words');
+      expect(addResult.error).toBe('Requires Level 2 to add words.');
 
       const removeResult = await processCommand('!remove', ['test'], context);
       expect(removeResult.success).toBe(false);
-      expect(removeResult.error).toContain('Requires Level 2 to remove words');
+      expect(removeResult.error).toBe('Requires Level 2 to remove words.');
     });
 
     test('should handle !show command without postId', async () => {

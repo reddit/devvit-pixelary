@@ -11,25 +11,17 @@ export function RawEventsView(props: RawEventsViewProps) {
   if (!telemetryData) return null;
 
   // Group telemetry data by post type and category
-  const groupedData = Object.entries(telemetryData).reduce(
-    (acc, [key, value]) => {
-      const [postType, eventType] = key.split(':');
-      if (!postType || !eventType) return acc;
-      if (!acc[postType]) {
-        acc[postType] = {};
-      }
-      const category = getEventCategory(eventType);
-      if (!acc[postType][category]) {
-        acc[postType][category] = [];
-      }
-      acc[postType][category].push({ eventType, count: value });
-      return acc;
-    },
-    {} as Record<
-      string,
-      Record<string, Array<{ eventType: string; count: number }>>
-    >
-  );
+  const groupedData = Object.entries(telemetryData).reduce<
+    Record<string, Record<string, Array<{ eventType: string; count: number }>>>
+  >((acc, [key, value]) => {
+    const [postType, eventType] = key.split(':');
+    if (!postType || !eventType) return acc;
+    acc[postType] ??= {};
+    const category = getEventCategory(eventType);
+    acc[postType][category] ??= [];
+    acc[postType][category].push({ eventType, count: value });
+    return acc;
+  }, {});
 
   const totalEvents = Object.values(telemetryData).reduce(
     (sum, count) => sum + count,

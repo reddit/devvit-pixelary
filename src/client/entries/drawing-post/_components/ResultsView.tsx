@@ -96,7 +96,6 @@ export function ResultsView({
     return () => {
       removeWebViewModeListener(listener);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   // Mutation for revealing guesses
@@ -121,13 +120,17 @@ export function ResultsView({
       });
 
       // Show toast if server revealed the guess
-      if (result?.revealed && result.guess) {
+      if (result.revealed && result.guess) {
         success(result.guess, { duration: 2000 });
       }
     } catch (error) {
       // Server will handle permission checks, so we can ignore errors silently
       // Log for debugging in development
-      if (process.env.NODE_ENV === 'development') {
+      if (
+        typeof process !== 'undefined' &&
+        // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
+        process.env?.NODE_ENV === 'development'
+      ) {
         console.error('Error revealing guess:', error);
       }
     }

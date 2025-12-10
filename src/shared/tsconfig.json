@@ -3,6 +3,7 @@
   "extends": "../../tools/tsconfig-base.json",
   "compilerOptions": {
     "lib": ["WebWorker", "ES2023", "DOM"],
+    "types": ["node"],
 
     "outDir": "../../dist/types/shared",
 

@@ -16,6 +16,9 @@ export default defineConfig([
       ...tseslint.configs.stylisticTypeChecked,
     ],
     languageOptions: {
+      globals: {
+        ...globals.node,
+      },
       parserOptions: {
         project: ['./tsconfig.json', './src/*/tsconfig.json'],
         tsconfigRootDir: import.meta.dirname,

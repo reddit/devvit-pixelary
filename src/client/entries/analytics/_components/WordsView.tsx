@@ -1,9 +1,7 @@
 import { trpc } from '@client/trpc/client';
 import { useState } from 'react';
 
-type WordsViewProps = {
-  // No props needed, fetches its own data
-};
+type WordsViewProps = Record<string, never>;
 
 export function WordsView(_props: WordsViewProps) {
   const [limit, setLimit] = useState(20);
@@ -42,7 +40,9 @@ export function WordsView(_props: WordsViewProps) {
           </label>
           <select
             value={limit}
-            onChange={(e) => setLimit(Number.parseInt(e.target.value, 10))}
+            onChange={(e) => {
+              setLimit(Number.parseInt(e.target.value, 10));
+            }}
             className="px-3 py-1 border border-gray-300 dark:border-gray-600 rounded bg-white dark:bg-gray-800 text-black dark:text-white text-sm"
           >
             <option value={10}>10</option>
@@ -65,7 +65,7 @@ export function WordsView(_props: WordsViewProps) {
                 No words found
               </p>
             ) : (
-              data.byScore.map((item, index) => (
+              data.byScore.map((item, index: number) => (
                 <div
                   key={item.word}
                   className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800 last:border-0"
@@ -98,7 +98,7 @@ export function WordsView(_props: WordsViewProps) {
                 No words found
               </p>
             ) : (
-              data.byUncertainty.map((item, index) => (
+              data.byUncertainty.map((item, index: number) => (
                 <div
                   key={item.word}
                   className="flex items-center justify-between py-2 border-b border-gray-100 dark:border-gray-800 last:border-0"

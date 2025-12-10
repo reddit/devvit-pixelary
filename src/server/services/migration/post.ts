@@ -133,7 +133,7 @@ export async function migratePost(post: Post): Promise<boolean> {
       migrationSuccess = await migrateV1ToV3(post.id);
     } else if (schema === 2) {
       migrationSuccess = await migrateV2ToV3(post.id);
-    } else if (schema === 3) {
+    } else {
       // Already version 3, but validation failed - might be missing indexes
       // Try to ensure all indexes are present
       const indexesFixed = await ensureV3Indexes(post);
@@ -333,7 +333,7 @@ async function ensureV3Indexes(post: Post): Promise<boolean> {
     }
 
     const createdAtTimestamp =
-      (createdAtStr ? parseInt(createdAtStr, 10) : null) || createdAt.getTime();
+      (createdAtStr ? parseInt(createdAtStr, 10) : null) ?? createdAt.getTime();
     const userArtKey = REDIS_KEYS.userArt(authorId);
     const compositeId = `d:${id}`;
 
@@ -355,7 +355,7 @@ async function ensureV3Indexes(post: Post): Promise<boolean> {
     );
 
     // Add missing indexes
-    const promises: Promise<unknown>[] = [];
+    const promises: Array<Promise<unknown>> = [];
 
     if (wordDrawingExists === null) {
       promises.push(

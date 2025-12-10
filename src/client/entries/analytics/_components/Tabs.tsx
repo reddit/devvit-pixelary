@@ -11,7 +11,9 @@ export function Tabs(props: TabsProps) {
   return (
     <div className="flex border-b border-gray-200 dark:border-gray-700">
       <button
-        onClick={() => onTabChange('raw')}
+        onClick={() => {
+          onTabChange('raw');
+        }}
         className={`px-4 py-2 font-medium text-sm transition-colors ${
           activeTab === 'raw'
             ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
@@ -21,7 +23,9 @@ export function Tabs(props: TabsProps) {
         Raw Events
       </button>
       <button
-        onClick={() => onTabChange('editor-funnel')}
+        onClick={() => {
+          onTabChange('editor-funnel');
+        }}
         className={`px-4 py-2 font-medium text-sm transition-colors ${
           activeTab === 'editor-funnel'
             ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
@@ -31,7 +35,9 @@ export function Tabs(props: TabsProps) {
         Editor Funnel
       </button>
       <button
-        onClick={() => onTabChange('drawing-ctr')}
+        onClick={() => {
+          onTabChange('drawing-ctr');
+        }}
         className={`px-4 py-2 font-medium text-sm transition-colors ${
           activeTab === 'drawing-ctr'
             ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'
@@ -41,7 +47,9 @@ export function Tabs(props: TabsProps) {
         Drawing CTR
       </button>
       <button
-        onClick={() => onTabChange('words')}
+        onClick={() => {
+          onTabChange('words');
+        }}
         className={`px-4 py-2 font-medium text-sm transition-colors ${
           activeTab === 'words'
             ? 'border-b-2 border-blue-500 text-blue-600 dark:text-blue-400'

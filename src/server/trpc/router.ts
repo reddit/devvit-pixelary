@@ -331,9 +331,17 @@ export const appRouter = t.router({
             });
 
           // Validate postId
-          if (!input.postId || !assertT3(input.postId)) {
+          if (!input.postId) {
             return { success: false, revealed: false };
           }
+          try {
+            assertT3(input.postId);
+          } catch {
+            return { success: false, revealed: false };
+          }
+
+          // TypeScript now knows input.postId is T3 after assertT3
+          const postId = input.postId;
 
           // Check if user is admin or moderator
           const userIsAdmin = await isAdmin(ctx.userId);
@@ -349,7 +357,7 @@ export const appRouter = t.router({
           try {
             // Get the raw guesses (before obfuscation)
             const rawGuesses = await redis.zRange(
-              REDIS_KEYS.drawingGuesses(input.postId as T3),
+              REDIS_KEYS.drawingGuesses(postId),
               0,
               -1,
               { reverse: true, by: 'rank' }
@@ -580,11 +588,40 @@ export const appRouter = t.router({
             message: 'Must be logged in',
           });
         }
-        const { migrateUserDrawings } = await import(
-          '../services/migration/old/old_migrate-post'
-        );
-        const count = await migrateUserDrawings(ctx.userId);
-        return { success: true, count };
+        const { migratePostById } = await import('../services/migration/post');
+        const { REDIS_KEYS } = await import('@server/core/redis');
+        const { redis } = await import('@devvit/web/server');
+        const { assertT3 } = await import('@devvit/shared-types/tid.js');
+
+        const userArtKey = REDIS_KEYS.userArt(ctx.userId);
+        const entries = await redis.zRange(userArtKey, 0, -1, {
+          reverse: false,
+          by: 'rank',
+        });
+
+        let successCount = 0;
+        for (const entry of entries) {
+          const compositeId = entry.member as string;
+          if (typeof compositeId === 'string' && compositeId.startsWith('d:')) {
+            const postId = compositeId.slice(2);
+            try {
+              assertT3(postId);
+              const success = await migratePostById(postId as T3);
+              if (success) {
+                successCount++;
+              }
+            } catch (error) {
+              // Log but continue with other posts
+              console.warn('[Migration] Failed to migrate user drawing', {
+                userId: ctx.userId,
+                postId,
+                error: error instanceof Error ? error.message : String(error),
+              });
+            }
+          }
+        }
+
+        return { success: true, count: successCount };
       }),
 
       getPendingTournamentSubmission: t.procedure.mutation(async ({ ctx }) => {

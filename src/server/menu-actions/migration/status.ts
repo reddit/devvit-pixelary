@@ -14,7 +14,7 @@ export async function handleShowMigrationStatus(
     const status = await getMigrationStatus();
 
     const statusText = [
-      `${status.enabled ? 'Enabled' : 'Disabled'}`,
+      status.enabled ? 'Enabled' : 'Disabled',
       `Processed: ${status.processed.toLocaleString()}`,
       `Migrated: ${status.migrated.toLocaleString()}`,
       `Failed: ${status.failed.toLocaleString()}`,
