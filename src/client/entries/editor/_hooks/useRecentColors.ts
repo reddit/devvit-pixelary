@@ -11,7 +11,7 @@ export function useRecentColors(
     DEFAULT_MRU_COLORS[0] ?? '#000000'
   );
   const [recentColors, setRecentColors] = useState<HEX[]>(() => [
-    ...DEFAULT_MRU_COLORS,
+    ...DEFAULT_MRU_COLORS.slice(0, 6),
   ]);
   const [isMRUAnimating, setIsMRUAnimating] = useState(false);
   const [suppressInitialAnim, setSuppressInitialAnim] = useState(true);
@@ -49,7 +49,7 @@ export function useRecentColors(
 
       // Add valid colors from query first
       for (const color of validFromQuery) {
-        if (!used.has(color) && next.length < DEFAULT_MRU_COLORS.length) {
+        if (!used.has(color) && next.length < 6) {
           next.push(color);
           used.add(color);
         }
@@ -57,18 +57,15 @@ export function useRecentColors(
 
       // Fill remaining slots with defaults
       for (const defaultColor of DEFAULT_MRU_COLORS) {
-        if (
-          !used.has(defaultColor) &&
-          next.length < DEFAULT_MRU_COLORS.length
-        ) {
+        if (!used.has(defaultColor) && next.length < 6) {
           next.push(defaultColor);
           used.add(defaultColor);
         }
       }
 
       // Final safety check: ensure we always have exactly the expected number
-      if (next.length !== DEFAULT_MRU_COLORS.length) {
-        next = [...DEFAULT_MRU_COLORS];
+      if (next.length !== 6) {
+        next = [...DEFAULT_MRU_COLORS.slice(0, 6)];
       }
 
       setRecentColors(next);
@@ -123,8 +120,8 @@ export function useRecentColors(
       setRecentColors((prev) => {
         const already = prev.includes(color);
         const merged = [color, ...prev.filter((c) => c !== color)];
-        const next = merged.slice(0, 7);
-        if (!already && prev.length >= 7) {
+        const next = merged.slice(0, 6);
+        if (!already && prev.length >= 6) {
           setIsMRUAnimating(true);
           void animateRemovalIfNeeded(prev, next).then(() => {
             setRecentColors(next);

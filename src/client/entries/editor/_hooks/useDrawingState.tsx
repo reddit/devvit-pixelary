@@ -20,6 +20,8 @@ type DrawingStateContextValue = {
   setMirrorV: (value: boolean) => void;
   mirrorH: boolean;
   setMirrorH: (value: boolean) => void;
+  showGrid: boolean;
+  setShowGrid: (value: boolean) => void;
   canUndo: boolean;
   pushUndoSnapshot: () => void;
   undo: () => void;
@@ -63,6 +65,7 @@ export function DrawingStateProvider(props: ProviderProps) {
   const [brushSize, setBrushSize] = useState<BrushSize>(1);
   const [mirrorV, setMirrorV] = useState(false);
   const [mirrorH, setMirrorH] = useState(false);
+  const [showGrid, setShowGrid] = useState(true);
   const [undoStack, setUndoStack] = useState<DrawingData[]>([]);
   const [redoStack, setRedoStack] = useState<DrawingData[]>([]);
   const [toolMode, setToolMode] = useState<ToolMode>('draw');
@@ -243,6 +246,8 @@ export function DrawingStateProvider(props: ProviderProps) {
       setMirrorV,
       mirrorH,
       setMirrorH,
+      showGrid,
+      setShowGrid,
       canUndo: undoStack.length > 0,
       canRedo: redoStack.length > 0,
       pushUndoSnapshot,
@@ -260,6 +265,7 @@ export function DrawingStateProvider(props: ProviderProps) {
       brushSize,
       mirrorV,
       mirrorH,
+      showGrid,
       undoStack.length,
       redoStack.length,
       pushUndoSnapshot,

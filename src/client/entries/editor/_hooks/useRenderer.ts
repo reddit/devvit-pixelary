@@ -19,6 +19,7 @@ type UseRendererParams = {
     drawArea: { x: number; y: number; size: number },
     isReviewing: boolean
   ) => void;
+  showGrid?: boolean;
 };
 
 export function useRenderer(params: UseRendererParams) {
@@ -32,6 +33,7 @@ export function useRenderer(params: UseRendererParams) {
     mainCanvasCssSizeRef,
     checkerboardCacheRef,
     applyDrawAreaCssVariables,
+    showGrid,
   } = params;
 
   useEffect(() => {
@@ -126,7 +128,7 @@ export function useRenderer(params: UseRendererParams) {
     }
 
     // Checkerboard overlay (disabled during review) - blit from cached offscreen
-    if (!isReviewing) {
+    if (!isReviewing && showGrid) {
       const size = drawingData.size;
       let overlay = checkerboardCacheRef.current.get(size);
       if (!overlay) {
@@ -160,5 +162,6 @@ export function useRenderer(params: UseRendererParams) {
     mainCanvasCssSizeRef,
     checkerboardCacheRef,
     applyDrawAreaCssVariables,
+    showGrid,
   ]);
 }

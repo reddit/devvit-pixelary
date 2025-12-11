@@ -19,6 +19,7 @@ type DrawingCanvasProps = {
   mainCanvasCssSizeRef: MutableRef<{ width: number; height: number }>;
   checkerboardCacheRef: MutableRef<Map<number, HTMLCanvasElement>>;
   applyDrawAreaCssVariables: (drawArea: DrawArea, isReviewing: boolean) => void;
+  showGrid?: boolean;
   // pointer handlers
   onPointerDown?: PointerHandler;
   onPointerMove?: PointerHandler;
@@ -40,6 +41,7 @@ export function DrawingCanvas(props: DrawingCanvasProps) {
     mainCanvasCssSizeRef,
     checkerboardCacheRef,
     applyDrawAreaCssVariables,
+    showGrid,
     onPointerDown,
     onPointerMove,
     onPointerUp,
@@ -59,6 +61,7 @@ export function DrawingCanvas(props: DrawingCanvasProps) {
     mainCanvasCssSizeRef,
     checkerboardCacheRef,
     applyDrawAreaCssVariables,
+    showGrid,
   });
 
   return (

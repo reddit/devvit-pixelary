@@ -14,6 +14,7 @@ import { ColorPickerModal } from './ColorPickerModal';
 import { getContrastColor } from '@shared/utils/color';
 import { PaintSwatch } from '@client/components/illustrations/PaintSwatch';
 import { ColorPalette } from '@client/components/illustrations';
+import { Grid } from '@client/components/illustrations/Grid';
 
 type ToolbarProps = {
   isReviewing?: boolean;
@@ -42,6 +43,8 @@ export function Toolbar(props: ToolbarProps) {
     setMirrorH,
     toolMode,
     setToolMode,
+    showGrid,
+    setShowGrid,
   } = useDrawingState();
   const paletteRef = useRef<HTMLDivElement>(null);
   const { track } = useTelemetry();
@@ -110,6 +113,7 @@ export function Toolbar(props: ToolbarProps) {
       >
         {recentColors
           .filter((color) => allowedColorsSet.has(color))
+          .slice(0, 6)
           .map((color, idx) => {
             const isSelected =
               idx === 0 && currentColor === color && !isMRUAnimating;
@@ -149,6 +153,16 @@ export function Toolbar(props: ToolbarProps) {
           onClick={handleOpenColorPicker}
         >
           <ColorPalette size={24} />
+        </ToolbarButton>
+        <ToolbarButton
+          title="Grid"
+          telemetryEvent="click_toggle_grid"
+          onClick={() => {
+            setShowGrid(!showGrid);
+          }}
+          ariaPressed={showGrid}
+        >
+          <Grid size={24} variant={showGrid ? 'on' : 'off'} />
         </ToolbarButton>
       </div>
 

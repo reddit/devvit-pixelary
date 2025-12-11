@@ -98,6 +98,7 @@ function DrawStepBody(props: DrawStepProps) {
     toolMode,
     pushUndoSnapshot,
     getDrawingData,
+    showGrid,
   } = useDrawingState();
   const mainCanvasCssSizeRef = useRef<{ width: number; height: number }>({
     width: 0,
@@ -234,6 +235,7 @@ function DrawStepBody(props: DrawStepProps) {
           mainCanvasCssSizeRef={mainCanvasCssSizeRef}
           checkerboardCacheRef={checkerboardCacheRef}
           applyDrawAreaCssVariables={applyDrawAreaCssVariables}
+          showGrid={showGrid}
           onPointerDown={pointerHandlers.onPointerDown}
           onPointerMove={pointerHandlers.onPointerMove}
           onPointerUp={pointerHandlers.onPointerUp}
