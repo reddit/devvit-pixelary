@@ -83,11 +83,7 @@ export function GuessView({
           }`}
         >
           {/* Pixel X - Scaled to align with canvas grid */}
-          <svg
-            width="160"
-            height="160"
-            viewBox="0 0 10 10"
-          >
+          <svg width="160" height="160" viewBox="0 0 10 10">
             <path
               d="M2 1H3V2H4V3H6V2H7V1H8V0H10V2H9V3H8V4H7V6H8V7H9V8H10V10H8V9H7V8H6V7H4V8H3V9H2V10H0V8H1V7H2V6H3V4H2V3H1V2H0V0H2V1Z"
               fill="white"

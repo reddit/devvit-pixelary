@@ -35,6 +35,8 @@ import {
   handleEditMigration,
   handleShowMigrationStatus,
   handleUpdateWordScores,
+  handleFindWordBacker,
+  showFindWordBackerForm,
 } from './menu-actions';
 
 // Import scheduler handlers
@@ -145,6 +147,7 @@ router.post(
   '/internal/menu-actions/words/scores/update',
   handleUpdateWordScores
 );
+router.post('/internal/menu-actions/words/backer/find', showFindWordBackerForm);
 
 // ============================================================================
 // FORM HANDLERS
@@ -163,6 +166,7 @@ router.post(
 );
 router.post('/internal/forms/users/points/set', handleSetUserPoints);
 router.post('/internal/forms/users/points/get', handleGetUserPoints);
+router.post('/internal/forms/words/backer/find', handleFindWordBacker);
 router.post('/internal/forms/legacy-users/update', handleEditLegacyUsers);
 router.post('/internal/forms/migration/edit', handleEditMigration);
 router.post(

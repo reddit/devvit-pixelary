@@ -112,7 +112,8 @@ export function DistributionChart({
           {/* Grid lines */}
           <g className="text-gray-300 dark:text-gray-700">
             {yTickValues.map((tick, i) => {
-              const y = padding.top + chartHeight - (tick / maxCount) * chartHeight;
+              const y =
+                padding.top + chartHeight - (tick / maxCount) * chartHeight;
               return (
                 <line
                   key={`grid-y-${i}`}
@@ -150,7 +151,8 @@ export function DistributionChart({
           {/* Y-axis labels */}
           <g className="text-xs text-gray-600 dark:text-gray-400">
             {yTickValues.map((tick, i) => {
-              const y = padding.top + chartHeight - (tick / maxCount) * chartHeight;
+              const y =
+                padding.top + chartHeight - (tick / maxCount) * chartHeight;
               return (
                 <text
                   key={`y-label-${i}`}
@@ -234,10 +236,9 @@ export function DistributionChart({
         </svg>
       </div>
       <div className="mt-2 text-xs text-gray-500 dark:text-gray-500">
-        Total: {values.length} | Min: {min.toFixed(4)} | Max: {max.toFixed(4)}{' '}
-        | Mean: {(values.reduce((a, b) => a + b, 0) / values.length).toFixed(4)}
+        Total: {values.length} | Min: {min.toFixed(4)} | Max: {max.toFixed(4)} |
+        Mean: {(values.reduce((a, b) => a + b, 0) / values.length).toFixed(4)}
       </div>
     </div>
   );
 }
-

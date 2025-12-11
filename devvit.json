@@ -58,6 +58,7 @@
     "tournamentPostForm": "/internal/forms/posts/tournament/submit",
     "setUserPointsForm": "/internal/forms/users/points/set",
     "getUserPointsForm": "/internal/forms/users/points/get",
+    "findWordBackerForm": "/internal/forms/words/backer/find",
     "editLegacyUsersForm": "/internal/forms/legacy-users/update",
     "editSlateBanditForm": "/internal/forms/slate-bandit/update",
     "editMigrationForm": "/internal/forms/migration/edit"
@@ -157,6 +158,13 @@
         "location": "subreddit",
         "forUserType": "moderator",
         "endpoint": "/internal/menu-actions/users/points/get"
+      },
+      {
+        "label": "[Pixelary] Find Word Backer",
+        "description": "Find the backer comment for a word",
+        "location": "subreddit",
+        "forUserType": "moderator",
+        "endpoint": "/internal/menu-actions/words/backer/find"
       },
       {
         "label": "[Pixelary] Tournament Hopper",

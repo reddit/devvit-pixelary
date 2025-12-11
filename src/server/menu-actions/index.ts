@@ -67,3 +67,9 @@ export {
 
 // Update word scores
 export { handleUpdateWordScores } from './update-word-scores';
+
+// Find word backer
+export {
+  handleFindWordBacker,
+  showFindWordBackerForm,
+} from './find-word-backer';

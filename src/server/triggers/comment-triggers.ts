@@ -8,7 +8,7 @@ import {
   processCommand,
 } from '../services/comments/commands/comment-commands';
 import { getBackedWord, removeBacker } from '../services/words/word-backing';
-import { banWord } from '../services/words/dictionary';
+import { banWord, removeWord } from '../services/words/dictionary';
 import {
   removeTournamentEntry,
   getTournamentEntry,
@@ -187,8 +187,8 @@ export async function handleCommentDelete(
     const deletedByUser = source === EventSource.USER;
 
     if (backedWord && deletedByUser) {
-      // The user deleted their own comment. Let's assume positive intent and only remove the backing so that another user can back it again later.
-      await removeBacker(backedWord);
+      // The user deleted their own comment. Remove the word from the dictionary and the backing.
+      await Promise.all([removeBacker(backedWord), removeWord(backedWord)]);
     }
 
     if (backedWord && !deletedByUser) {
