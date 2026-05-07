@@ -3,6 +3,7 @@ import { REDIS_KEYS } from '../core/redis';
 import { getUsername } from '../core/user';
 import { getLevelByScore as getLevelByScoreUtil } from '@shared/utils/progression';
 import type { T2 } from '@devvit/shared-types/tid.js';
+import { isT2 } from '@devvit/shared-types/tid.js';
 import type { Level } from '@shared/types';
 import { REALTIME_CHANNELS } from '@server/core/realtime';
 
@@ -41,11 +42,12 @@ export async function getLeaderboard(
     cursor,
     cursor + limit - 1,
     { reverse, by }
-  )) as Array<{ member: T2; score: number }>;
+  )) as Array<{ member: string; score: number }>;
+  const userEntries = entries.filter((entry) => isT2(entry.member));
 
   // Hydrate with usernames (getUsername is already cached for 30 days)
   const data = await Promise.all(
-    entries.map(async (entry, index) => {
+    userEntries.map(async (entry, index) => {
       const username = await getUsername(entry.member);
       return {
         username: username,
@@ -62,14 +64,18 @@ export async function getLeaderboard(
   };
 }
 
+function getScoresKey(userId: string): string {
+  return isT2(userId) ? REDIS_KEYS.scores() : REDIS_KEYS.scoresGuest();
+}
+
 /**
  * Get the score for a user
  * @param userId - The user ID
  * @returns The user score
  */
 
-export async function getScore(userId: T2): Promise<number> {
-  const key = REDIS_KEYS.scores();
+export async function getScore(userId: string): Promise<number> {
+  const key = getScoresKey(userId);
   const score = await redis.zScore(key, userId);
   return score ?? 0; // Default to 0 if user not found
 }
@@ -81,26 +87,29 @@ export async function getScore(userId: T2): Promise<number> {
  * @returns The score that was set
  */
 
-export async function setScore(userId: T2, score: number): Promise<number> {
-  const key = REDIS_KEYS.scores();
+export async function setScore(userId: string, score: number): Promise<number> {
+  const key = getScoresKey(userId);
   const oldScore = await getScore(userId);
   await redis.zAdd(key, { member: userId, score });
   const level = getLevelByScore(score);
   const oldLevel = getLevelByScore(oldScore);
+  const isLoggedInUser = isT2(userId);
 
-  // Update claimed level if user leveled up
-  if (level.rank > oldLevel.rank) {
-    // Keep the old claimed level so the modal will show
-    // Don't update it here - let the user claim the new level
-  } else {
-    // User stayed at same level or went down, update claimed level to match
-    const newClaimedKey = REDIS_KEYS.userLevelUpClaim(userId);
-    await redis.set(newClaimedKey, level.rank.toString());
+  if (isLoggedInUser) {
+    // Update claimed level if user leveled up
+    if (level.rank > oldLevel.rank) {
+      // Keep the old claimed level so the modal will show
+      // Don't update it here - let the user claim the new level
+    } else {
+      // User stayed at same level or went down, update claimed level to match
+      const newClaimedKey = REDIS_KEYS.userLevelUpClaim(userId);
+      await redis.set(newClaimedKey, level.rank.toString());
+    }
   }
 
   const didUserLevelUp = level.min > oldScore;
 
-  if (didUserLevelUp) {
+  if (didUserLevelUp && isLoggedInUser) {
     await scheduler.runJob({
       name: 'USER_LEVEL_UP',
       data: {
@@ -125,15 +134,17 @@ export async function setScore(userId: T2, score: number): Promise<number> {
   }
 
   // Always notify client that score changed (covers level down or no change)
-  try {
-    await realtime.send(REALTIME_CHANNELS.userLevelUp(userId), {
-      type: 'score_changed',
-      level: level.rank,
-      score,
-      timestamp: Date.now(),
-    });
-  } catch {
-    // Non-blocking realtime error
+  if (isLoggedInUser) {
+    try {
+      await realtime.send(REALTIME_CHANNELS.userLevelUp(userId), {
+        type: 'score_changed',
+        level: level.rank,
+        score,
+        timestamp: Date.now(),
+      });
+    } catch {
+      // Non-blocking realtime error
+    }
   }
 
   return score;
@@ -147,21 +158,24 @@ export async function setScore(userId: T2, score: number): Promise<number> {
  */
 
 export async function incrementScore(
-  userId: T2,
+  userId: string,
   amount: number
 ): Promise<number> {
-  const key = REDIS_KEYS.scores();
+  const key = getScoresKey(userId);
+  const isLoggedInUser = isT2(userId);
   // Apply active score multiplier (non-stacking; highest wins)
-  try {
-    const { getEffectiveScoreMultiplier } = await import(
-      '../services/rewards/consumables'
-    );
-    const multiplier = await getEffectiveScoreMultiplier(userId);
-    if (multiplier > 1) {
-      amount = Math.floor(amount * multiplier);
+  if (isLoggedInUser) {
+    try {
+      const { getEffectiveScoreMultiplier } = await import(
+        '../services/rewards/consumables'
+      );
+      const multiplier = await getEffectiveScoreMultiplier(userId);
+      if (multiplier > 1) {
+        amount = Math.floor(amount * multiplier);
+      }
+    } catch {
+      // If rewards provider fails, continue without multiplier
     }
-  } catch {
-    // If rewards provider fails, continue without multiplier
   }
   const oldScore = await getScore(userId);
   const score = await redis.zIncrBy(key, userId, amount);
@@ -169,21 +183,23 @@ export async function incrementScore(
   const oldLevel = getLevelByScore(oldScore);
   const didUserLevelUp = level.min > oldScore;
 
-  // Update claimed level if user leveled up
-  if (level.rank > oldLevel.rank && didUserLevelUp) {
-    // Keep the old claimed level so the modal will show
-    // Don't update it here - let the user claim the new level
-  } else if (level.rank === oldLevel.rank) {
-    // User stayed at same level, update claimed level to match
-    const newClaimedKey = REDIS_KEYS.userLevelUpClaim(userId);
-    await redis.set(newClaimedKey, level.rank.toString());
-  } else {
-    // User leveled down, update claimed level to the new lower level
-    const newClaimedKey = REDIS_KEYS.userLevelUpClaim(userId);
-    await redis.set(newClaimedKey, level.rank.toString());
+  if (isLoggedInUser) {
+    // Update claimed level if user leveled up
+    if (level.rank > oldLevel.rank && didUserLevelUp) {
+      // Keep the old claimed level so the modal will show
+      // Don't update it here - let the user claim the new level
+    } else if (level.rank === oldLevel.rank) {
+      // User stayed at same level, update claimed level to match
+      const newClaimedKey = REDIS_KEYS.userLevelUpClaim(userId);
+      await redis.set(newClaimedKey, level.rank.toString());
+    } else {
+      // User leveled down, update claimed level to the new lower level
+      const newClaimedKey = REDIS_KEYS.userLevelUpClaim(userId);
+      await redis.set(newClaimedKey, level.rank.toString());
+    }
   }
 
-  if (didUserLevelUp) {
+  if (didUserLevelUp && isLoggedInUser) {
     await scheduler.runJob({
       name: 'USER_LEVEL_UP',
       data: {
@@ -208,15 +224,17 @@ export async function incrementScore(
   }
 
   // Always notify client that score changed (covers level down or no change)
-  try {
-    await realtime.send(REALTIME_CHANNELS.userLevelUp(userId), {
-      type: 'score_changed',
-      level: level.rank,
-      score,
-      timestamp: Date.now(),
-    });
-  } catch {
-    // Non-blocking realtime error
+  if (isLoggedInUser) {
+    try {
+      await realtime.send(REALTIME_CHANNELS.userLevelUp(userId), {
+        type: 'score_changed',
+        level: level.rank,
+        score,
+        timestamp: Date.now(),
+      });
+    } catch {
+      // Non-blocking realtime error
+    }
   }
 
   return score;

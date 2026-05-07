@@ -85,7 +85,7 @@ describe('Drawing Service', () => {
 
       const result = await submitGuess({
         postId: 't3_test123',
-        userId: 't2_testuser',
+        playerId: 't2_testuser',
         guess: 'test',
       });
 
@@ -109,7 +109,7 @@ describe('Drawing Service', () => {
 
       const result = await submitGuess({
         postId: 't3_test123',
-        userId: 't2_testuser',
+        playerId: 't2_testuser',
         guess: 'wrong',
       });
 

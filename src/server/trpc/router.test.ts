@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { appRouter } from './router';
 import { redis } from '@devvit/web/server';
+import * as drawingService from '../services/posts/drawing';
 import {
   createMockDictionary,
   createMockUserProfile,
@@ -144,6 +145,7 @@ describe('appRouter', () => {
     subredditName: 'testsub',
     username: 'testuser',
     userId: 't2_user123' as `t2_${string}`,
+    loid: null as string | null,
     subredditId: 't5_testsub' as `t5_${string}`,
     postData: {
       type: 'drawing' as const,
@@ -251,6 +253,45 @@ describe('appRouter', () => {
         createMockGuessSubmitInput()
       );
       expect(result).toBeTruthy();
+    });
+
+    it('app.guess.submit works for logged-out users with loid', async () => {
+      const anonymousCaller = appRouter.createCaller({
+        ...ctx,
+        userId: null,
+        loid: 'loid_test_123',
+      } as unknown as Parameters<typeof appRouter.createCaller>[0]);
+
+      const result = await anonymousCaller.app.guess.submit({
+        ...createMockGuessSubmitInput(),
+        loid: 'loid_test_123',
+      });
+
+      expect(result).toBeTruthy();
+      expect(vi.mocked(drawingService.submitGuess)).toHaveBeenCalledWith(
+        expect.objectContaining({
+          playerId: 'loid_test_123',
+        })
+      );
+    });
+
+    it('app.guess.skip works for logged-out users with loid', async () => {
+      const anonymousCaller = appRouter.createCaller({
+        ...ctx,
+        userId: null,
+        loid: 'loid_test_123',
+      } as unknown as Parameters<typeof appRouter.createCaller>[0]);
+
+      const result = await anonymousCaller.app.guess.skip({
+        postId: 't3_test123',
+        loid: 'loid_test_123',
+      });
+
+      expect(result).toEqual({ success: true });
+      expect(vi.mocked(drawingService.skipDrawing)).toHaveBeenCalledWith(
+        't3_test123',
+        'loid_test_123'
+      );
     });
 
     it('app.guess.getStats returns guess stats', async () => {

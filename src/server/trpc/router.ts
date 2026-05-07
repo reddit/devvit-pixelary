@@ -42,6 +42,7 @@ import { isAdmin, isModerator } from '@server/core/redis';
 import {
   DrawingDataSchema,
   DrawingSubmitInputSchema,
+  GuessSkipInputSchema,
   GuessSubmitInputSchema,
   GuessStatsInputSchema,
   PostDataInputSchema,
@@ -71,6 +72,19 @@ const t = initTRPC.context<Context>().create({
     };
   },
 });
+
+function getPlayerId(ctx: Context, loid?: string): string | null {
+  if (ctx.userId) {
+    return ctx.userId;
+  }
+  if (ctx.loid) {
+    return ctx.loid;
+  }
+  if (loid) {
+    return loid;
+  }
+  return null;
+}
 
 export const appRouter = t.router({
   system: t.router({
@@ -454,7 +468,8 @@ export const appRouter = t.router({
       submit: t.procedure
         .input(GuessSubmitInputSchema)
         .mutation(async ({ ctx, input }) => {
-          if (!ctx.userId)
+          const playerId = getPlayerId(ctx, input.loid);
+          if (!playerId)
             throw new TRPCError({
               code: 'UNAUTHORIZED',
               message: 'Must be logged in',
@@ -464,7 +479,7 @@ export const appRouter = t.router({
 
           const result = await submitGuess({
             postId,
-            userId: ctx.userId,
+            playerId,
             guess: input.guess,
           });
 
@@ -481,16 +496,17 @@ export const appRouter = t.router({
         }),
 
       skip: t.procedure
-        .input(PostDataInputSchema)
+        .input(GuessSkipInputSchema)
         .mutation(async ({ ctx, input }) => {
-          if (!ctx.userId)
+          const playerId = getPlayerId(ctx, input.loid);
+          if (!playerId)
             throw new TRPCError({
               code: 'UNAUTHORIZED',
               message: 'Must be logged in to skip post',
             });
           assertT3(input.postId);
           const postId = input.postId;
-          await skipDrawing(postId, ctx.userId);
+          await skipDrawing(postId, playerId);
           return { success: true };
         }),
     }),
