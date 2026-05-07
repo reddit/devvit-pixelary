@@ -102,6 +102,16 @@ export function DrawingPost() {
     { postId: currentPostId },
     { enabled: true }
   );
+  const { data: anonymousDrawingStatus } = trpc.app.guess.getStatus.useQuery(
+    {
+      postId: currentPostId,
+      ...(loid ? { loid } : {}),
+    },
+    {
+      enabled: !context.userId && !!effectivePostData && !!loid,
+      refetchOnWindowFocus: false,
+    }
+  );
   const queryClient = useQueryClient();
   const submitGuess = trpc.app.guess.submit.useMutation({
     onSuccess: (data, variables) => {
@@ -176,21 +186,41 @@ export function DrawingPost() {
 
   // Update state based on user's interaction with this post
   useEffect(() => {
-    if (userProfile && effectivePostData) {
-      if (isAuthor) {
-        setCurrentState('author');
+    if (!effectivePostData) {
+      return;
+    }
+
+    if (isAuthor) {
+      setCurrentState('author');
+      return;
+    }
+
+    if (context.userId) {
+      if (!userProfile) {
+        return;
+      }
+
+      // Check logged-in user's server state
+      if (userProfile.skipped) {
+        setCurrentState('skipped');
+      } else if (userProfile.solved) {
+        setCurrentState('solved');
       } else {
-        // Check user's server state
-        if (userProfile.skipped) {
-          setCurrentState('skipped');
-        } else if (userProfile.solved) {
-          setCurrentState('solved');
-        } else {
-          setCurrentState('unsolved');
-        }
+        setCurrentState('unsolved');
+      }
+      return;
+    }
+
+    if (anonymousDrawingStatus) {
+      if (anonymousDrawingStatus.skipped) {
+        setCurrentState('skipped');
+      } else if (anonymousDrawingStatus.solved) {
+        setCurrentState('solved');
+      } else {
+        setCurrentState('unsolved');
       }
     }
-  }, [userProfile, effectivePostData, isAuthor]);
+  }, [userProfile, anonymousDrawingStatus, effectivePostData, isAuthor]);
 
   // Clear earned points when transitioning away from solved state
   useEffect(() => {

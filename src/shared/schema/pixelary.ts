@@ -154,6 +154,12 @@ export const GuessStatsInputSchema = z.object({
 });
 export type GuessStatsInput = z.infer<typeof GuessStatsInputSchema>;
 
+export const GuessStatusInputSchema = z.object({
+  postId: z.string(),
+  loid: z.string().optional(),
+});
+export type GuessStatusInput = z.infer<typeof GuessStatusInputSchema>;
+
 export const PostDataInputSchema = z.object({
   postId: z.string(),
 });

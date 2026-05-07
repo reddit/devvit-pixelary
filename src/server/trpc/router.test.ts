@@ -55,6 +55,11 @@ vi.mock('../services/posts/drawing', () => ({
     guessCount: 0,
     playerCount: 0,
   })),
+  getUserDrawingStatus: vi.fn(async () => ({
+    solved: true,
+    skipped: false,
+    guessCount: 1,
+  })),
   getUserDrawings: vi.fn(async () => []),
 }));
 
@@ -297,6 +302,24 @@ describe('appRouter', () => {
     it('app.guess.getStats returns guess stats', async () => {
       const stats = await caller.app.guess.getStats({ postId: 't3_test123' });
       expect(stats).toBeTruthy();
+    });
+
+    it('app.guess.getStatus returns anonymous status using loid', async () => {
+      const anonymousCaller = appRouter.createCaller({
+        ...ctx,
+        userId: null,
+        loid: 'loid_test_123',
+      } as unknown as Parameters<typeof appRouter.createCaller>[0]);
+
+      const status = await anonymousCaller.app.guess.getStatus({
+        postId: 't3_test123',
+        loid: 'loid_test_123',
+      });
+
+      expect(status).toEqual({ solved: true, skipped: false, guessCount: 1 });
+      expect(
+        vi.mocked(drawingService.getUserDrawingStatus)
+      ).toHaveBeenCalledWith('t3_test123', 'loid_test_123');
     });
     it('app.slate.trackAction handles slate_posted with explicit postId', async () => {
       await expect(

@@ -45,6 +45,7 @@ import {
   GuessSkipInputSchema,
   GuessSubmitInputSchema,
   GuessStatsInputSchema,
+  GuessStatusInputSchema,
   PostDataInputSchema,
 } from '@shared/schema/pixelary';
 import type { DrawingData } from '@shared/schema/drawing';
@@ -493,6 +494,17 @@ export const appRouter = t.router({
           const postId = input.postId;
           const result = await getGuesses(postId);
           return result;
+        }),
+
+      getStatus: t.procedure
+        .input(GuessStatusInputSchema)
+        .query(async ({ ctx, input }) => {
+          const playerId = getPlayerId(ctx, input.loid);
+          if (!playerId) {
+            return { solved: false, skipped: false, guessCount: 0 };
+          }
+          assertT3(input.postId);
+          return await getUserDrawingStatus(input.postId, playerId);
         }),
 
       skip: t.procedure
