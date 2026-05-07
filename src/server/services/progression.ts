@@ -256,17 +256,27 @@ export async function mergeGuestScoreIntoUser(
   }
 
   try {
+    const markerKey = REDIS_KEYS.guestScoreMigrationMarker(guestId, userId);
+    const migratedRaw = await redis.get(markerKey);
+    const migratedSoFar =
+      migratedRaw == null ? 0 : Number.parseFloat(String(migratedRaw));
+
     const guestScore = await redis.zScore(REDIS_KEYS.scoresGuest(), guestId);
     const guestScoreValue =
       typeof guestScore === 'number' ? guestScore : Number(guestScore ?? 0);
-    if (guestScoreValue <= 0) {
+    const safeMigratedSoFar = Number.isFinite(migratedSoFar)
+      ? Math.max(0, migratedSoFar)
+      : 0;
+    const delta = guestScoreValue - safeMigratedSoFar;
+
+    if (delta <= 0) {
       return 0;
     }
 
     const existingScore = await getScore(userId);
-    await setScore(userId, existingScore + guestScoreValue);
-    await redis.zRem(REDIS_KEYS.scoresGuest(), guestId);
-    return guestScoreValue;
+    await setScore(userId, existingScore + delta);
+    await redis.set(markerKey, guestScoreValue.toString());
+    return delta;
   } finally {
     await releaseLock(lockKey);
   }

@@ -114,6 +114,8 @@ export const REDIS_KEYS = {
   migrationMarker: (postId: T3) => `migrated:drawing:${postId}`,
   guestProgressMigrationMarker: (postId: T3, guestId: string, userId: T2) =>
     `migration:guest_progress:${postId}:${guestId}:${userId}`,
+  guestScoreMigrationMarker: (guestId: string, userId: T2) =>
+    `migration:guest_score:${guestId}:${userId}`,
 };
 
 const MODERATOR_STATUS_TTL = 10 * 24 * 60 * 60; // 10 days.

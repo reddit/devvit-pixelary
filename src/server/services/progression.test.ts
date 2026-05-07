@@ -19,6 +19,8 @@ vi.mock('../core/redis', () => ({
     scores: () => 'scores',
     scoresGuest: () => 'scores:guest',
     userLevelUpClaim: (userId: string) => `user:${userId}:levelup`,
+    guestScoreMigrationMarker: (guestId: string, userId: string) =>
+      `migration:guest_score:${guestId}:${userId}`,
   },
   acquireLock: vi.fn(async () => true),
   releaseLock: vi.fn(async () => {}),
@@ -265,12 +267,13 @@ describe('Leaderboard Service', () => {
   });
 
   describe('mergeGuestScoreIntoUser', () => {
-    it('moves guest score to logged-in user score', async () => {
+    it('copies full guest score when never migrated before', async () => {
+      vi.mocked(redis.get).mockResolvedValue(undefined);
       vi.mocked(redis.zScore)
         .mockResolvedValueOnce(25) // guest score
         .mockResolvedValueOnce(100); // existing user score (via getScore)
       vi.mocked(redis.zAdd).mockResolvedValue(undefined);
-      vi.mocked(redis.zRem).mockResolvedValue(1);
+      vi.mocked(redis.set).mockResolvedValue('OK');
 
       const moved = await mergeGuestScoreIntoUser(
         'loid_test_123',
@@ -282,10 +285,38 @@ describe('Leaderboard Service', () => {
         member: 't2_testuser',
         score: 125,
       });
-      expect(redis.zRem).toHaveBeenCalledWith('scores:guest', 'loid_test_123');
+      expect(redis.set).toHaveBeenCalledWith(
+        'migration:guest_score:loid_test_123:t2_testuser',
+        '25'
+      );
+    });
+
+    it('copies only new delta after prior migration', async () => {
+      vi.mocked(redis.get).mockResolvedValue('25');
+      vi.mocked(redis.zScore)
+        .mockResolvedValueOnce(40) // guest score now
+        .mockResolvedValueOnce(100); // existing user score
+      vi.mocked(redis.zAdd).mockResolvedValue(undefined);
+      vi.mocked(redis.set).mockResolvedValue('OK');
+
+      const moved = await mergeGuestScoreIntoUser(
+        'loid_test_123',
+        't2_testuser'
+      );
+
+      expect(moved).toBe(15);
+      expect(redis.zAdd).toHaveBeenCalledWith('scores', {
+        member: 't2_testuser',
+        score: 115,
+      });
+      expect(redis.set).toHaveBeenCalledWith(
+        'migration:guest_score:loid_test_123:t2_testuser',
+        '40'
+      );
     });
 
     it('no-ops when guest score does not exist', async () => {
+      vi.mocked(redis.get).mockResolvedValue(undefined);
       vi.mocked(redis.zScore).mockResolvedValue(undefined);
 
       const moved = await mergeGuestScoreIntoUser(
@@ -295,7 +326,21 @@ describe('Leaderboard Service', () => {
 
       expect(moved).toBe(0);
       expect(redis.zAdd).not.toHaveBeenCalled();
-      expect(redis.zRem).not.toHaveBeenCalled();
+      expect(redis.set).not.toHaveBeenCalled();
+    });
+
+    it('no-ops when no new guest progress exists', async () => {
+      vi.mocked(redis.get).mockResolvedValue('25');
+      vi.mocked(redis.zScore).mockResolvedValue(25);
+
+      const moved = await mergeGuestScoreIntoUser(
+        'loid_test_123',
+        't2_testuser'
+      );
+
+      expect(moved).toBe(0);
+      expect(redis.zAdd).not.toHaveBeenCalled();
+      expect(redis.set).not.toHaveBeenCalled();
     });
   });
 });
