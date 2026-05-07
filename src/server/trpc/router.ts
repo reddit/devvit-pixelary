@@ -28,6 +28,7 @@ import {
   getUserDrawingsWithData,
   getUserDrawingStatus,
   isAuthorFirstView,
+  migratePlayerProgressForPost,
 } from '@server/services/posts/drawing';
 import {
   getLeaderboard,
@@ -37,6 +38,7 @@ import {
   getLevelProgressPercentage,
   getUnclaimedLevelUp,
   claimLevelUp,
+  mergeGuestScoreIntoUser,
 } from '@server/services/progression';
 import { isAdmin, isModerator } from '@server/core/redis';
 import {
@@ -548,9 +550,29 @@ export const appRouter = t.router({
           }),
       }),
       getProfile: t.procedure
-        .input(z.object({ postId: z.string() }).optional())
+        .input(
+          z
+            .object({
+              postId: z.string().optional(),
+              loid: z.string().optional(),
+            })
+            .optional()
+        )
         .query(async ({ ctx, input }) => {
           if (!ctx.userId) return null;
+          const guestId = input?.loid ?? ctx.loid;
+
+          if (guestId) {
+            try {
+              await mergeGuestScoreIntoUser(guestId, ctx.userId);
+            } catch (error) {
+              console.warn('Failed to merge guest score into user account', {
+                userId: ctx.userId,
+                loid: guestId,
+                error: error instanceof Error ? error.message : String(error),
+              });
+            }
+          }
 
           const score = await getScore(ctx.userId);
           const [rank, level] = await Promise.all([
@@ -563,6 +585,13 @@ export const appRouter = t.router({
           if (input?.postId) {
             try {
               assertT3(input.postId);
+              if (guestId) {
+                await migratePlayerProgressForPost(
+                  input.postId,
+                  guestId,
+                  ctx.userId
+                );
+              }
               drawingStatus = await getUserDrawingStatus(
                 input.postId,
                 ctx.userId

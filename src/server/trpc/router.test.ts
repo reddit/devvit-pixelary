@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { appRouter } from './router';
 import { redis } from '@devvit/web/server';
 import * as drawingService from '../services/posts/drawing';
+import * as progressionService from '../services/progression';
 import {
   createMockDictionary,
   createMockUserProfile,
@@ -61,6 +62,7 @@ vi.mock('../services/posts/drawing', () => ({
     guessCount: 1,
   })),
   getUserDrawings: vi.fn(async () => []),
+  migratePlayerProgressForPost: vi.fn(async () => true),
 }));
 
 vi.mock('../services/progression', () => ({
@@ -71,6 +73,7 @@ vi.mock('../services/progression', () => ({
   getRank: vi.fn(async () => 1),
   getUserLevel: vi.fn(async () => ({ rank: 1, name: 'Newcomer' })),
   getLevelProgressPercentage: vi.fn(() => 50),
+  mergeGuestScoreIntoUser: vi.fn(async () => 0),
 }));
 
 vi.mock('@devvit/web/server', () => {
@@ -227,6 +230,47 @@ describe('appRouter', () => {
     it('app.user.getProfile returns user profile', async () => {
       const profile = await caller.app.user.getProfile();
       expect(profile).toBeTruthy();
+    });
+
+    it('app.user.getProfile migrates anonymous progress on login', async () => {
+      const withLoidCaller = appRouter.createCaller({
+        ...ctx,
+        userId: 't2_user123',
+        loid: 'loid_test_123',
+      } as unknown as Parameters<typeof appRouter.createCaller>[0]);
+
+      const profile = await withLoidCaller.app.user.getProfile({
+        postId: 't3_test123',
+      });
+
+      expect(profile).toBeTruthy();
+      expect(
+        vi.mocked(progressionService.mergeGuestScoreIntoUser)
+      ).toHaveBeenCalledWith('loid_test_123', 't2_user123');
+      expect(
+        vi.mocked(drawingService.migratePlayerProgressForPost)
+      ).toHaveBeenCalledWith('t3_test123', 'loid_test_123', 't2_user123');
+    });
+
+    it('app.user.getProfile uses input loid when context loid is missing', async () => {
+      const noContextLoidCaller = appRouter.createCaller({
+        ...ctx,
+        userId: 't2_user123',
+        loid: null,
+      } as unknown as Parameters<typeof appRouter.createCaller>[0]);
+
+      const profile = await noContextLoidCaller.app.user.getProfile({
+        postId: 't3_test123',
+        loid: 'loid_from_input',
+      });
+
+      expect(profile).toBeTruthy();
+      expect(
+        vi.mocked(progressionService.mergeGuestScoreIntoUser)
+      ).toHaveBeenCalledWith('loid_from_input', 't2_user123');
+      expect(
+        vi.mocked(drawingService.migratePlayerProgressForPost)
+      ).toHaveBeenCalledWith('t3_test123', 'loid_from_input', 't2_user123');
     });
 
     it('app.user.getRank returns user rank', async () => {

@@ -688,6 +688,89 @@ export async function getUserDrawingStatus(
   return { solved: solved != null, skipped: skipped != null, guessCount };
 }
 
+export async function migratePlayerProgressForPost(
+  postId: T3,
+  fromPlayerId: string,
+  toPlayerId: T2
+): Promise<boolean> {
+  if (!fromPlayerId || fromPlayerId === toPlayerId) {
+    return false;
+  }
+
+  const [
+    fromAttemptCount,
+    toAttemptCount,
+    fromSolvedAt,
+    toSolvedAt,
+    fromSkippedAt,
+    toSkippedAt,
+  ] = await Promise.all([
+    redis.zScore(REDIS_KEYS.drawingAttempts(postId), fromPlayerId),
+    redis.zScore(REDIS_KEYS.drawingAttempts(postId), toPlayerId),
+    redis.zScore(REDIS_KEYS.drawingSolves(postId), fromPlayerId),
+    redis.zScore(REDIS_KEYS.drawingSolves(postId), toPlayerId),
+    redis.zScore(REDIS_KEYS.drawingSkips(postId), fromPlayerId),
+    redis.zScore(REDIS_KEYS.drawingSkips(postId), toPlayerId),
+  ]);
+
+  if (
+    fromAttemptCount == null &&
+    fromSolvedAt == null &&
+    fromSkippedAt == null
+  ) {
+    return false;
+  }
+
+  const markerKey = REDIS_KEYS.guestProgressMigrationMarker(
+    postId,
+    fromPlayerId,
+    toPlayerId
+  );
+  const marked = await redis.set(markerKey, '1', { nx: true });
+  if (!marked) {
+    return false;
+  }
+
+  const operations: Array<Promise<unknown>> = [];
+
+  if (fromAttemptCount != null) {
+    const mergedAttempts =
+      Number(toAttemptCount ?? 0) + Number(fromAttemptCount);
+    operations.push(
+      redis.zAdd(REDIS_KEYS.drawingAttempts(postId), {
+        member: toPlayerId,
+        score: mergedAttempts,
+      })
+    );
+  }
+
+  if (fromSolvedAt != null) {
+    if (toSolvedAt == null) {
+      operations.push(
+        redis.zAdd(REDIS_KEYS.drawingSolves(postId), {
+          member: toPlayerId,
+          score: fromSolvedAt,
+        })
+      );
+    }
+  }
+
+  if (fromSkippedAt != null) {
+    const shouldCarrySkip = fromSolvedAt == null && toSolvedAt == null;
+    if (shouldCarrySkip && toSkippedAt == null) {
+      operations.push(
+        redis.zAdd(REDIS_KEYS.drawingSkips(postId), {
+          member: toPlayerId,
+          score: fromSkippedAt,
+        })
+      );
+    }
+  }
+
+  await Promise.all(operations);
+  return true;
+}
+
 export async function isAuthorFirstView(postId: T3): Promise<boolean> {
   const key = REDIS_KEYS.authorViews(postId);
   const views = await redis.incrBy(key, 1);

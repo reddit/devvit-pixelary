@@ -1,5 +1,6 @@
 import { redis, scheduler, context, realtime } from '@devvit/web/server';
 import { REDIS_KEYS } from '../core/redis';
+import { acquireLock, releaseLock } from '../core/redis';
 import { getUsername } from '../core/user';
 import { getLevelByScore as getLevelByScoreUtil } from '@shared/utils/progression';
 import type { T2 } from '@devvit/shared-types/tid.js';
@@ -238,6 +239,37 @@ export async function incrementScore(
   }
 
   return score;
+}
+
+export async function mergeGuestScoreIntoUser(
+  guestId: string,
+  userId: T2
+): Promise<number> {
+  if (!guestId || isT2(guestId)) {
+    return 0;
+  }
+
+  const lockKey = `migration:guest-score:${userId}:${guestId}`;
+  const hasLock = await acquireLock(lockKey, 5000);
+  if (!hasLock) {
+    return 0;
+  }
+
+  try {
+    const guestScore = await redis.zScore(REDIS_KEYS.scoresGuest(), guestId);
+    const guestScoreValue =
+      typeof guestScore === 'number' ? guestScore : Number(guestScore ?? 0);
+    if (guestScoreValue <= 0) {
+      return 0;
+    }
+
+    const existingScore = await getScore(userId);
+    await setScore(userId, existingScore + guestScoreValue);
+    await redis.zRem(REDIS_KEYS.scoresGuest(), guestId);
+    return guestScoreValue;
+  } finally {
+    await releaseLock(lockKey);
+  }
 }
 
 /**

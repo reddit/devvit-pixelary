@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useMemo } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { GuessView } from './_components/GuessView';
 import { ResultsView } from './_components/ResultsView';
@@ -47,13 +47,31 @@ function getAnonymousPlayerId(
   }
 }
 
+function getStoredAnonymousPlayerId(): string | undefined {
+  const contextLoid =
+    (context as typeof context & { loid?: string | null }).loid ?? undefined;
+  if (contextLoid) {
+    return contextLoid;
+  }
+
+  try {
+    const key = 'pixelary:anonymous-player-id';
+    const existing = window.localStorage.getItem(key);
+    return existing ?? undefined;
+  } catch {
+    return undefined;
+  }
+}
+
 export function DrawingPost() {
   const postData = getPostData<DrawingPostData>();
   const currentPostId = context.postId;
-  const loid = useMemo(
-    () => getAnonymousPlayerId(context.userId),
-    [context.userId]
-  );
+  const loid = getAnonymousPlayerId(context.userId);
+  const migrationLoid = context.userId ? getStoredAnonymousPlayerId() : undefined;
+  const profileInput = {
+    postId: currentPostId,
+    ...(migrationLoid ? { loid: migrationLoid } : {}),
+  };
   const { error: showErrorToast, success } = useToastHelpers();
 
   // If postData is missing, try to trigger migration via API
@@ -98,10 +116,9 @@ export function DrawingPost() {
   const [earnedPoints, setEarnedPoints] = useState<number | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const lastShownPointsRef = useRef<number | null>(null);
-  const { data: userProfile } = trpc.app.user.getProfile.useQuery(
-    { postId: currentPostId },
-    { enabled: true }
-  );
+  const { data: userProfile } = trpc.app.user.getProfile.useQuery(profileInput, {
+    enabled: true,
+  });
   const { data: anonymousDrawingStatus } = trpc.app.guess.getStatus.useQuery(
     {
       postId: currentPostId,
@@ -122,7 +139,7 @@ export function DrawingPost() {
 
       // Invalidate user profile to update score
       void queryClient.invalidateQueries({
-        queryKey: ['pixelary', 'user', 'profile', { postId: variables.postId }],
+        queryKey: ['pixelary', 'user', 'profile', profileInput],
       });
 
       // Invalidate leaderboard
@@ -142,7 +159,7 @@ export function DrawingPost() {
     onSuccess: (_: unknown, variables: { postId: string }) => {
       // Invalidate user profile to update skipped status
       void queryClient.invalidateQueries({
-        queryKey: ['pixelary', 'user', 'profile', { postId: variables.postId }],
+        queryKey: ['pixelary', 'user', 'profile', profileInput],
       });
 
       // Invalidate post data to update skip count
