@@ -9,6 +9,7 @@ import { useEffect, useRef } from 'react';
 import { ActiveEffectsBadge } from '@components/ActiveEffectsBadge';
 import {
   requestExpandedMode,
+  showLoginPrompt,
   addWebViewModeListener,
   removeWebViewModeListener,
   navigateTo,
@@ -24,6 +25,7 @@ type MenuProps = {
 
 export function Menu(props: MenuProps) {
   const { onMyDrawings, onLeaderboard, onHowToPlay, onLevelClick } = props;
+  const isLoggedIn = Boolean(context.userId);
 
   // Telemetry
   const { track } = useTelemetry();
@@ -111,32 +113,40 @@ export function Menu(props: MenuProps) {
       {/* Menu */}
       <nav className="flex flex-col gap-3 w-full max-w-3xs">
         <Button
-          onClick={async (e) => {
+          onClick={(e) => {
+            if (!isLoggedIn) {
+              showLoginPrompt();
+              return;
+            }
             void requestExpandedMode(e, 'editor');
           }}
           size="large"
-          telemetryEvent="click_draw"
+          telemetryEvent={isLoggedIn ? 'click_draw' : 'click_log_in'}
         >
-          Draw
+          {isLoggedIn ? 'Draw' : 'Log in to draw'}
         </Button>
 
-        <Button
-          onClick={onMyDrawings}
-          size="medium"
-          variant="secondary"
-          telemetryEvent="click_my_drawings"
-        >
-          My Drawings
-        </Button>
+        {isLoggedIn && (
+          <Button
+            onClick={onMyDrawings}
+            size="medium"
+            variant="secondary"
+            telemetryEvent="click_my_drawings"
+          >
+            My Drawings
+          </Button>
+        )}
 
-        <Button
-          onClick={onHowToPlay}
-          size="medium"
-          variant="secondary"
-          telemetryEvent="click_my_rewards"
-        >
-          My Rewards
-        </Button>
+        {isLoggedIn && (
+          <Button
+            onClick={onHowToPlay}
+            size="medium"
+            variant="secondary"
+            telemetryEvent="click_my_rewards"
+          >
+            My Rewards
+          </Button>
+        )}
 
         <Button
           onClick={onLeaderboard}

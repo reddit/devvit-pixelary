@@ -73,6 +73,7 @@ export type TelemetryEventType =
   | 'click_undo'
   | 'click_redo'
   | 'click_fill'
+  | 'click_log_in'
   // Toggle events
   | 'toggle_brush_size'
   | 'toggle_mirror_v'
