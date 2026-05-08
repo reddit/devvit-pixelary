@@ -22,17 +22,9 @@ export async function handleAppInstall(
       message: `Pixelary ${context.appVersion} installed in r/${context.subredditName}`,
     });
   } catch (error) {
-    const details = error instanceof Error ? error.message : String(error);
-    console.error('[handleAppInstall] setup failed', {
-      subredditName: context.subredditName,
-      appVersion: context.appVersion,
-      details,
-      error,
-    });
     res.status(400).json({
       status: 'error',
       message: 'Failed to install Pixelary',
-      details,
     });
   }
 }
@@ -62,25 +54,7 @@ export async function handleAppUpgrade(
  */
 
 async function setupPixelary(): Promise<void> {
-  try {
-    await initDictionary();
-  } catch (error) {
-    throw new Error(
-      `setupPixelary:initDictionary failed: ${error instanceof Error ? error.message : String(error)}`
-    );
-  }
-  try {
-    await initFlairTemplates();
-  } catch (error) {
-    throw new Error(
-      `setupPixelary:initFlairTemplates failed: ${error instanceof Error ? error.message : String(error)}`
-    );
-  }
-  try {
-    await initSlateBandit();
-  } catch (error) {
-    throw new Error(
-      `setupPixelary:initSlateBandit failed: ${error instanceof Error ? error.message : String(error)}`
-    );
-  }
+  await initDictionary();
+  await initFlairTemplates();
+  await initSlateBandit();
 }
