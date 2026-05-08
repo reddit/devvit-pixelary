@@ -252,7 +252,7 @@ describe('appRouter', () => {
       ).toHaveBeenCalledWith('t3_test123', 'loid_test_123', 't2_user123');
     });
 
-    it('app.user.getProfile uses input loid when context loid is missing', async () => {
+    it('app.user.getProfile does not migrate when context loid is missing', async () => {
       const noContextLoidCaller = appRouter.createCaller({
         ...ctx,
         userId: 't2_user123',
@@ -261,16 +261,15 @@ describe('appRouter', () => {
 
       const profile = await noContextLoidCaller.app.user.getProfile({
         postId: 't3_test123',
-        loid: 'loid_from_input',
       });
 
       expect(profile).toBeTruthy();
       expect(
         vi.mocked(progressionService.mergeGuestScoreIntoUser)
-      ).toHaveBeenCalledWith('loid_from_input', 't2_user123');
+      ).not.toHaveBeenCalled();
       expect(
         vi.mocked(drawingService.migratePlayerProgressForPost)
-      ).toHaveBeenCalledWith('t3_test123', 'loid_from_input', 't2_user123');
+      ).not.toHaveBeenCalled();
     });
 
     it('app.user.getRank returns user rank', async () => {
@@ -313,7 +312,6 @@ describe('appRouter', () => {
 
       const result = await anonymousCaller.app.guess.submit({
         ...createMockGuessSubmitInput(),
-        loid: 'loid_test_123',
       });
 
       expect(result).toBeTruthy();
@@ -333,7 +331,6 @@ describe('appRouter', () => {
 
       const result = await anonymousCaller.app.guess.skip({
         postId: 't3_test123',
-        loid: 'loid_test_123',
       });
 
       expect(result).toEqual({ success: true });
@@ -357,13 +354,32 @@ describe('appRouter', () => {
 
       const status = await anonymousCaller.app.guess.getStatus({
         postId: 't3_test123',
-        loid: 'loid_test_123',
       });
 
       expect(status).toEqual({ solved: true, skipped: false, guessCount: 1 });
       expect(
         vi.mocked(drawingService.getUserDrawingStatus)
       ).toHaveBeenCalledWith('t3_test123', 'loid_test_123');
+    });
+
+    it('app.guess.submit uses input loid when context loid is missing', async () => {
+      const missingContextLoidCaller = appRouter.createCaller({
+        ...ctx,
+        userId: null,
+        loid: null,
+      } as unknown as Parameters<typeof appRouter.createCaller>[0]);
+
+      const result = await missingContextLoidCaller.app.guess.submit({
+        ...createMockGuessSubmitInput(),
+        loid: 'loid_from_context_client',
+      });
+
+      expect(result).toBeTruthy();
+      expect(vi.mocked(drawingService.submitGuess)).toHaveBeenCalledWith(
+        expect.objectContaining({
+          playerId: 'loid_from_context_client',
+        })
+      );
     });
     it('app.slate.trackAction handles slate_posted with explicit postId', async () => {
       await expect(

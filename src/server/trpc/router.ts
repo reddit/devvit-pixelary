@@ -554,13 +554,12 @@ export const appRouter = t.router({
           z
             .object({
               postId: z.string().optional(),
-              loid: z.string().optional(),
             })
             .optional()
         )
         .query(async ({ ctx, input }) => {
           if (!ctx.userId) return null;
-          const guestId = input?.loid ?? ctx.loid;
+          const guestId = ctx.loid;
 
           if (guestId) {
             try {

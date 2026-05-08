@@ -16,62 +16,12 @@ import type { DrawingPostData } from '@src/shared/schema';
 
 type DrawingState = 'unsolved' | 'guessing' | 'solved' | 'skipped' | 'author';
 
-function getAnonymousPlayerId(
-  userId: string | null | undefined
-): string | undefined {
-  if (userId) {
-    return undefined;
-  }
-
-  const contextLoid =
-    (context as typeof context & { loid?: string | null }).loid ?? undefined;
-  if (contextLoid) {
-    return contextLoid;
-  }
-
-  try {
-    const key = 'pixelary:anonymous-player-id';
-    const existing = window.localStorage.getItem(key);
-    if (existing) {
-      return existing;
-    }
-
-    const generated =
-      typeof crypto !== 'undefined' && 'randomUUID' in crypto
-        ? `anon_${crypto.randomUUID()}`
-        : `anon_${Date.now().toString(36)}_${Math.random().toString(36).slice(2)}`;
-    window.localStorage.setItem(key, generated);
-    return generated;
-  } catch {
-    return undefined;
-  }
-}
-
-function getStoredAnonymousPlayerId(): string | undefined {
-  const contextLoid =
-    (context as typeof context & { loid?: string | null }).loid ?? undefined;
-  if (contextLoid) {
-    return contextLoid;
-  }
-
-  try {
-    const key = 'pixelary:anonymous-player-id';
-    const existing = window.localStorage.getItem(key);
-    return existing ?? undefined;
-  } catch {
-    return undefined;
-  }
-}
-
 export function DrawingPost() {
   const postData = getPostData<DrawingPostData>();
   const currentPostId = context.postId;
-  const loid = getAnonymousPlayerId(context.userId);
-  const migrationLoid = context.userId ? getStoredAnonymousPlayerId() : undefined;
-  const profileInput = {
-    postId: currentPostId,
-    ...(migrationLoid ? { loid: migrationLoid } : {}),
-  };
+  const contextLoid =
+    (context as typeof context & { loid?: string | null }).loid ?? undefined;
+  const profileInput = { postId: currentPostId };
   const { error: showErrorToast, success } = useToastHelpers();
 
   // If postData is missing, try to trigger migration via API
@@ -116,16 +66,19 @@ export function DrawingPost() {
   const [earnedPoints, setEarnedPoints] = useState<number | null>(null);
   const [showConfetti, setShowConfetti] = useState(false);
   const lastShownPointsRef = useRef<number | null>(null);
-  const { data: userProfile } = trpc.app.user.getProfile.useQuery(profileInput, {
-    enabled: true,
-  });
+  const { data: userProfile } = trpc.app.user.getProfile.useQuery(
+    profileInput,
+    {
+      enabled: true,
+    }
+  );
   const { data: anonymousDrawingStatus } = trpc.app.guess.getStatus.useQuery(
     {
       postId: currentPostId,
-      ...(loid ? { loid } : {}),
+      ...(contextLoid ? { loid: contextLoid } : {}),
     },
     {
-      enabled: !context.userId && !!effectivePostData && !!loid,
+      enabled: !context.userId && !!effectivePostData,
       refetchOnWindowFocus: false,
     }
   );
@@ -321,7 +274,7 @@ export function DrawingPost() {
       const result = await submitGuess.mutateAsync({
         postId: currentPostId,
         guess,
-        ...(!context.userId && loid ? { loid } : {}),
+        ...(!context.userId && contextLoid ? { loid: contextLoid } : {}),
       });
 
       // Only change state after server confirms
@@ -346,7 +299,7 @@ export function DrawingPost() {
     try {
       await skipPost.mutateAsync({
         postId: currentPostId,
-        ...(!context.userId && loid ? { loid } : {}),
+        ...(!context.userId && contextLoid ? { loid: contextLoid } : {}),
       });
       setCurrentState('skipped');
     } catch (err) {
