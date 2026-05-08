@@ -21,7 +21,10 @@ export function DrawingPost() {
   const currentPostId = context.postId;
   const contextLoid =
     (context as typeof context & { loid?: string | null }).loid ?? undefined;
-  const profileInput = { postId: currentPostId };
+  const profileInput = {
+    postId: currentPostId,
+    ...(contextLoid ? { loid: contextLoid } : {}),
+  };
   const { error: showErrorToast, success } = useToastHelpers();
 
   // If postData is missing, try to trigger migration via API

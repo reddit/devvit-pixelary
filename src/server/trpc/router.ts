@@ -81,11 +81,26 @@ function getPlayerId(ctx: Context, loid?: string): string | null {
     return ctx.userId;
   }
   if (ctx.loid) {
+    if (loid && loid !== ctx.loid) {
+      console.warn('[LOID] Context/input mismatch; using context.loid', {
+        contextLoid: ctx.loid,
+        inputLoid: loid,
+      });
+    } else {
+      console.log('[LOID] Using context.loid for anonymous player', {
+        contextLoid: ctx.loid,
+        hasInputLoid: Boolean(loid),
+      });
+    }
     return ctx.loid;
   }
   if (loid) {
+    console.warn('[LOID] context.loid missing; falling back to input loid', {
+      inputLoid: loid,
+    });
     return loid;
   }
+  console.warn('[LOID] No loid available for anonymous player');
   return null;
 }
 
@@ -554,12 +569,13 @@ export const appRouter = t.router({
           z
             .object({
               postId: z.string().optional(),
+              loid: z.string().optional(),
             })
             .optional()
         )
         .query(async ({ ctx, input }) => {
           if (!ctx.userId) return null;
-          const guestId = ctx.loid;
+          const guestId = ctx.loid ?? input?.loid;
 
           if (guestId) {
             try {

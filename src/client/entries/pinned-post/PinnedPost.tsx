@@ -18,6 +18,8 @@ export function PinnedPost() {
   const [page, setPage] = useState<Page>('menu');
   const utils = trpc.useUtils();
   const isLoggedIn = Boolean(context.userId);
+  const contextLoid =
+    (context as typeof context & { loid?: string | null }).loid ?? undefined;
 
   // Prefetch drawings optimistically for maximum performance
   trpc.app.user.getMyArtPage.useQuery(
@@ -39,10 +41,13 @@ export function PinnedPost() {
   );
 
   // Warm profile and bonuses so downstream views benefit from cache
-  trpc.app.user.getProfile.useQuery(undefined, {
-    staleTime: 60000,
-    refetchOnWindowFocus: false,
-  });
+  trpc.app.user.getProfile.useQuery(
+    contextLoid ? { loid: contextLoid } : undefined,
+    {
+      staleTime: 60000,
+      refetchOnWindowFocus: false,
+    }
+  );
   trpc.app.rewards.getEffectiveBonuses.useQuery(undefined, {
     enabled: isLoggedIn,
     staleTime: 10000,
