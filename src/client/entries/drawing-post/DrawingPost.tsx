@@ -19,6 +19,12 @@ type DrawingState = 'unsolved' | 'guessing' | 'solved' | 'skipped' | 'author';
 export function DrawingPost() {
   const postData = getPostData<DrawingPostData>();
   const currentPostId = context.postId;
+  const contextLoid =
+    (context as typeof context & { loid?: string | null }).loid ?? undefined;
+  const profileInput = {
+    postId: currentPostId,
+    ...(contextLoid ? { loid: contextLoid } : {}),
+  };
   const { error: showErrorToast, success } = useToastHelpers();
 
   // If postData is missing, try to trigger migration via API
@@ -64,8 +70,20 @@ export function DrawingPost() {
   const [showConfetti, setShowConfetti] = useState(false);
   const lastShownPointsRef = useRef<number | null>(null);
   const { data: userProfile } = trpc.app.user.getProfile.useQuery(
-    { postId: currentPostId },
-    { enabled: true }
+    profileInput,
+    {
+      enabled: true,
+    }
+  );
+  const { data: anonymousDrawingStatus } = trpc.app.guess.getStatus.useQuery(
+    {
+      postId: currentPostId,
+      ...(contextLoid ? { loid: contextLoid } : {}),
+    },
+    {
+      enabled: !context.userId && !!effectivePostData,
+      refetchOnWindowFocus: false,
+    }
   );
   const queryClient = useQueryClient();
   const submitGuess = trpc.app.guess.submit.useMutation({
@@ -77,7 +95,7 @@ export function DrawingPost() {
 
       // Invalidate user profile to update score
       void queryClient.invalidateQueries({
-        queryKey: ['pixelary', 'user', 'profile', { postId: variables.postId }],
+        queryKey: ['pixelary', 'user', 'profile', profileInput],
       });
 
       // Invalidate leaderboard
@@ -97,7 +115,7 @@ export function DrawingPost() {
     onSuccess: (_: unknown, variables: { postId: string }) => {
       // Invalidate user profile to update skipped status
       void queryClient.invalidateQueries({
-        queryKey: ['pixelary', 'user', 'profile', { postId: variables.postId }],
+        queryKey: ['pixelary', 'user', 'profile', profileInput],
       });
 
       // Invalidate post data to update skip count
@@ -141,21 +159,41 @@ export function DrawingPost() {
 
   // Update state based on user's interaction with this post
   useEffect(() => {
-    if (userProfile && effectivePostData) {
-      if (isAuthor) {
-        setCurrentState('author');
+    if (!effectivePostData) {
+      return;
+    }
+
+    if (isAuthor) {
+      setCurrentState('author');
+      return;
+    }
+
+    if (context.userId) {
+      if (!userProfile) {
+        return;
+      }
+
+      // Check logged-in user's server state
+      if (userProfile.skipped) {
+        setCurrentState('skipped');
+      } else if (userProfile.solved) {
+        setCurrentState('solved');
       } else {
-        // Check user's server state
-        if (userProfile.skipped) {
-          setCurrentState('skipped');
-        } else if (userProfile.solved) {
-          setCurrentState('solved');
-        } else {
-          setCurrentState('unsolved');
-        }
+        setCurrentState('unsolved');
+      }
+      return;
+    }
+
+    if (anonymousDrawingStatus) {
+      if (anonymousDrawingStatus.skipped) {
+        setCurrentState('skipped');
+      } else if (anonymousDrawingStatus.solved) {
+        setCurrentState('solved');
+      } else {
+        setCurrentState('unsolved');
       }
     }
-  }, [userProfile, effectivePostData, isAuthor]);
+  }, [userProfile, anonymousDrawingStatus, effectivePostData, isAuthor]);
 
   // Clear earned points when transitioning away from solved state
   useEffect(() => {
@@ -239,6 +277,7 @@ export function DrawingPost() {
       const result = await submitGuess.mutateAsync({
         postId: currentPostId,
         guess,
+        ...(!context.userId && contextLoid ? { loid: contextLoid } : {}),
       });
 
       // Only change state after server confirms
@@ -261,7 +300,10 @@ export function DrawingPost() {
     // currentPostId is always present for drawing posts
 
     try {
-      await skipPost.mutateAsync({ postId: currentPostId });
+      await skipPost.mutateAsync({
+        postId: currentPostId,
+        ...(!context.userId && contextLoid ? { loid: contextLoid } : {}),
+      });
       setCurrentState('skipped');
     } catch (err) {
       showErrorToast('Failed to skip post. Please try again.', {

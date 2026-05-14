@@ -1,6 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { appRouter } from './router';
 import { redis } from '@devvit/web/server';
+import * as drawingService from '../services/posts/drawing';
+import * as progressionService from '../services/progression';
 import {
   createMockDictionary,
   createMockUserProfile,
@@ -54,7 +56,13 @@ vi.mock('../services/posts/drawing', () => ({
     guessCount: 0,
     playerCount: 0,
   })),
+  getUserDrawingStatus: vi.fn(async () => ({
+    solved: true,
+    skipped: false,
+    guessCount: 1,
+  })),
   getUserDrawings: vi.fn(async () => []),
+  migratePlayerProgressForPost: vi.fn(async () => true),
 }));
 
 vi.mock('../services/progression', () => ({
@@ -65,6 +73,7 @@ vi.mock('../services/progression', () => ({
   getRank: vi.fn(async () => 1),
   getUserLevel: vi.fn(async () => ({ rank: 1, name: 'Newcomer' })),
   getLevelProgressPercentage: vi.fn(() => 50),
+  mergeGuestScoreIntoUser: vi.fn(async () => 0),
 }));
 
 vi.mock('@devvit/web/server', () => {
@@ -144,6 +153,7 @@ describe('appRouter', () => {
     subredditName: 'testsub',
     username: 'testuser',
     userId: 't2_user123' as `t2_${string}`,
+    loid: null as string | null,
     subredditId: 't5_testsub' as `t5_${string}`,
     postData: {
       type: 'drawing' as const,
@@ -222,6 +232,46 @@ describe('appRouter', () => {
       expect(profile).toBeTruthy();
     });
 
+    it('app.user.getProfile migrates anonymous progress on login', async () => {
+      const withLoidCaller = appRouter.createCaller({
+        ...ctx,
+        userId: 't2_user123',
+        loid: 'loid_test_123',
+      } as unknown as Parameters<typeof appRouter.createCaller>[0]);
+
+      const profile = await withLoidCaller.app.user.getProfile({
+        postId: 't3_test123',
+      });
+
+      expect(profile).toBeTruthy();
+      expect(
+        vi.mocked(progressionService.mergeGuestScoreIntoUser)
+      ).toHaveBeenCalledWith('loid_test_123', 't2_user123');
+      expect(
+        vi.mocked(drawingService.migratePlayerProgressForPost)
+      ).toHaveBeenCalledWith('t3_test123', 'loid_test_123', 't2_user123');
+    });
+
+    it('app.user.getProfile does not migrate when context loid is missing', async () => {
+      const noContextLoidCaller = appRouter.createCaller({
+        ...ctx,
+        userId: 't2_user123',
+        loid: null,
+      } as unknown as Parameters<typeof appRouter.createCaller>[0]);
+
+      const profile = await noContextLoidCaller.app.user.getProfile({
+        postId: 't3_test123',
+      });
+
+      expect(profile).toBeTruthy();
+      expect(
+        vi.mocked(progressionService.mergeGuestScoreIntoUser)
+      ).not.toHaveBeenCalled();
+      expect(
+        vi.mocked(drawingService.migratePlayerProgressForPost)
+      ).not.toHaveBeenCalled();
+    });
+
     it('app.user.getRank returns user rank', async () => {
       const rank = await caller.app.user.getRank();
       expect(rank).toBeTruthy();
@@ -253,9 +303,83 @@ describe('appRouter', () => {
       expect(result).toBeTruthy();
     });
 
+    it('app.guess.submit works for logged-out users with loid', async () => {
+      const anonymousCaller = appRouter.createCaller({
+        ...ctx,
+        userId: null,
+        loid: 'loid_test_123',
+      } as unknown as Parameters<typeof appRouter.createCaller>[0]);
+
+      const result = await anonymousCaller.app.guess.submit({
+        ...createMockGuessSubmitInput(),
+      });
+
+      expect(result).toBeTruthy();
+      expect(vi.mocked(drawingService.submitGuess)).toHaveBeenCalledWith(
+        expect.objectContaining({
+          playerId: 'loid_test_123',
+        })
+      );
+    });
+
+    it('app.guess.skip works for logged-out users with loid', async () => {
+      const anonymousCaller = appRouter.createCaller({
+        ...ctx,
+        userId: null,
+        loid: 'loid_test_123',
+      } as unknown as Parameters<typeof appRouter.createCaller>[0]);
+
+      const result = await anonymousCaller.app.guess.skip({
+        postId: 't3_test123',
+      });
+
+      expect(result).toEqual({ success: true });
+      expect(vi.mocked(drawingService.skipDrawing)).toHaveBeenCalledWith(
+        't3_test123',
+        'loid_test_123'
+      );
+    });
+
     it('app.guess.getStats returns guess stats', async () => {
       const stats = await caller.app.guess.getStats({ postId: 't3_test123' });
       expect(stats).toBeTruthy();
+    });
+
+    it('app.guess.getStatus returns anonymous status using loid', async () => {
+      const anonymousCaller = appRouter.createCaller({
+        ...ctx,
+        userId: null,
+        loid: 'loid_test_123',
+      } as unknown as Parameters<typeof appRouter.createCaller>[0]);
+
+      const status = await anonymousCaller.app.guess.getStatus({
+        postId: 't3_test123',
+      });
+
+      expect(status).toEqual({ solved: true, skipped: false, guessCount: 1 });
+      expect(
+        vi.mocked(drawingService.getUserDrawingStatus)
+      ).toHaveBeenCalledWith('t3_test123', 'loid_test_123');
+    });
+
+    it('app.guess.submit uses input loid when context loid is missing', async () => {
+      const missingContextLoidCaller = appRouter.createCaller({
+        ...ctx,
+        userId: null,
+        loid: null,
+      } as unknown as Parameters<typeof appRouter.createCaller>[0]);
+
+      const result = await missingContextLoidCaller.app.guess.submit({
+        ...createMockGuessSubmitInput(),
+        loid: 'loid_from_context_client',
+      });
+
+      expect(result).toBeTruthy();
+      expect(vi.mocked(drawingService.submitGuess)).toHaveBeenCalledWith(
+        expect.objectContaining({
+          playerId: 'loid_from_context_client',
+        })
+      );
     });
     it('app.slate.trackAction handles slate_posted with explicit postId', async () => {
       await expect(

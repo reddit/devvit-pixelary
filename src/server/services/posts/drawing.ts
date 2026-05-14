@@ -249,9 +249,9 @@ export async function getDrawings(
   );
 }
 
-export async function skipDrawing(postId: T3, userId: T2): Promise<void> {
+export async function skipDrawing(postId: T3, playerId: string): Promise<void> {
   const key = REDIS_KEYS.drawingSkips(postId);
-  await redis.zAdd(key, { member: userId, score: Date.now() });
+  await redis.zAdd(key, { member: playerId, score: Date.now() });
 }
 
 export async function getDrawingStats(
@@ -405,16 +405,16 @@ export async function getUserDrawingsWithData(
 
 export async function submitGuess(options: {
   postId: T3;
-  userId: T2;
+  playerId: string;
   guess: string;
 }): Promise<{ correct: boolean; points: number }> {
-  const { postId, userId, guess } = options;
+  const { postId, playerId, guess } = options;
   const empty = { correct: false, points: 0 };
-  if (await isRateLimited(REDIS_KEYS.rateGuess(userId), 3, 1)) return empty;
+  if (await isRateLimited(REDIS_KEYS.rateGuess(playerId), 3, 1)) return empty;
   const [drawingData, solved, skipped] = await Promise.all([
     getCachedDrawingData(postId),
-    redis.zScore(REDIS_KEYS.drawingSolves(postId), userId),
-    redis.zScore(REDIS_KEYS.drawingSkips(postId), userId),
+    redis.zScore(REDIS_KEYS.drawingSolves(postId), playerId),
+    redis.zScore(REDIS_KEYS.drawingSkips(postId), playerId),
   ]);
   const word = drawingData.word;
   const drawingNormalizedWord = drawingData.normalizedWord;
@@ -432,17 +432,17 @@ export async function submitGuess(options: {
   const correct = normalizedGuess === normalizedWord;
   const now = Date.now();
   const redisOperations: Array<Promise<unknown>> = [
-    redis.zIncrBy(REDIS_KEYS.drawingAttempts(postId), userId, 1),
+    redis.zIncrBy(REDIS_KEYS.drawingAttempts(postId), playerId, 1),
     redis.zIncrBy(REDIS_KEYS.wordDrawings(word), postId, 1),
     redis.zIncrBy(REDIS_KEYS.drawingGuesses(postId), normalizedGuess, 1),
   ];
   if (correct) {
     redisOperations.push(
       redis.zAdd(REDIS_KEYS.drawingSolves(postId), {
-        member: userId,
+        member: playerId,
         score: now,
       }),
-      incrementScore(userId, GUESSER_REWARD_SOLVE),
+      incrementScore(playerId, GUESSER_REWARD_SOLVE),
       incrementScore(authorId, AUTHOR_REWARD_CORRECT_GUESS)
     );
   }
@@ -676,16 +676,99 @@ function generateLiveStatsSection(
 
 export async function getUserDrawingStatus(
   postId: T3,
-  userId: T2
+  playerId: string
 ): Promise<{ solved: boolean; skipped: boolean; guessCount: number }> {
   const [solved, skipped, guesses] = await Promise.all([
-    redis.zScore(REDIS_KEYS.drawingSolves(postId), userId),
-    redis.zScore(REDIS_KEYS.drawingSkips(postId), userId),
+    redis.zScore(REDIS_KEYS.drawingSolves(postId), playerId),
+    redis.zScore(REDIS_KEYS.drawingSkips(postId), playerId),
     redis.zRange(REDIS_KEYS.drawingGuesses(postId), 0, -1, { by: 'rank' }),
   ]);
   const guessesTyped2 = guesses as Array<{ member: string; score: number }>;
   const guessCount = guessesTyped2.reduce<number>((sum, g) => sum + g.score, 0);
   return { solved: solved != null, skipped: skipped != null, guessCount };
+}
+
+export async function migratePlayerProgressForPost(
+  postId: T3,
+  fromPlayerId: string,
+  toPlayerId: T2
+): Promise<boolean> {
+  if (!fromPlayerId || fromPlayerId === toPlayerId) {
+    return false;
+  }
+
+  const [
+    fromAttemptCount,
+    toAttemptCount,
+    fromSolvedAt,
+    toSolvedAt,
+    fromSkippedAt,
+    toSkippedAt,
+  ] = await Promise.all([
+    redis.zScore(REDIS_KEYS.drawingAttempts(postId), fromPlayerId),
+    redis.zScore(REDIS_KEYS.drawingAttempts(postId), toPlayerId),
+    redis.zScore(REDIS_KEYS.drawingSolves(postId), fromPlayerId),
+    redis.zScore(REDIS_KEYS.drawingSolves(postId), toPlayerId),
+    redis.zScore(REDIS_KEYS.drawingSkips(postId), fromPlayerId),
+    redis.zScore(REDIS_KEYS.drawingSkips(postId), toPlayerId),
+  ]);
+
+  if (
+    fromAttemptCount == null &&
+    fromSolvedAt == null &&
+    fromSkippedAt == null
+  ) {
+    return false;
+  }
+
+  const markerKey = REDIS_KEYS.guestProgressMigrationMarker(
+    postId,
+    fromPlayerId,
+    toPlayerId
+  );
+  const marked = await redis.set(markerKey, '1', { nx: true });
+  if (!marked) {
+    return false;
+  }
+
+  const operations: Array<Promise<unknown>> = [];
+
+  if (fromAttemptCount != null) {
+    const mergedAttempts =
+      Number(toAttemptCount ?? 0) + Number(fromAttemptCount);
+    operations.push(
+      redis.zAdd(REDIS_KEYS.drawingAttempts(postId), {
+        member: toPlayerId,
+        score: mergedAttempts,
+      })
+    );
+  }
+
+  if (fromSolvedAt != null) {
+    if (toSolvedAt == null) {
+      operations.push(
+        redis.zAdd(REDIS_KEYS.drawingSolves(postId), {
+          member: toPlayerId,
+          score: fromSolvedAt,
+        })
+      );
+    }
+  }
+
+  if (fromSkippedAt != null) {
+    const shouldCarrySkip = fromSolvedAt == null && toSolvedAt == null;
+    if (shouldCarrySkip && toSkippedAt == null) {
+      operations.push(
+        redis.zAdd(REDIS_KEYS.drawingSkips(postId), {
+          member: toPlayerId,
+          score: fromSkippedAt,
+        })
+      );
+    }
+  }
+
+  await Promise.all(operations);
+  return true;
 }
 
 export async function isAuthorFirstView(postId: T3): Promise<boolean> {

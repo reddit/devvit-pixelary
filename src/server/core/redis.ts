@@ -65,6 +65,7 @@ export const REDIS_KEYS = {
 
   // Progression system
   scores: () => 'scores',
+  scoresGuest: () => 'scores:guest',
 
   // Flair templates
   flairTemplates: {
@@ -104,13 +105,17 @@ export const REDIS_KEYS = {
   userArtItem: (userId: T2, compositeId: string) =>
     `user:art:item:${userId}:${compositeId}`, // HASH snapshot for listing hydration
   // Rate limit keys
-  rateGuess: (userId: T2) => `rate:guess:${userId}`,
+  rateGuess: (userId: string) => `rate:guess:${userId}`,
   rateVote: (userId: T2) => `rate:vote:${userId}`,
   rateSubmit: (userId: T2) => `rate:submit:${userId}`,
 
   // Migration
   migrationLock: (postId: T3) => `migration:drawing:${postId}`,
   migrationMarker: (postId: T3) => `migrated:drawing:${postId}`,
+  guestProgressMigrationMarker: (postId: T3, guestId: string, userId: T2) =>
+    `migration:guest_progress:${postId}:${guestId}:${userId}`,
+  guestScoreMigrationMarker: (guestId: string, userId: T2) =>
+    `migration:guest_score:${guestId}:${userId}`,
 };
 
 const MODERATOR_STATUS_TTL = 10 * 24 * 60 * 60; // 10 days.

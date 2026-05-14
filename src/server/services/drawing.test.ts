@@ -9,6 +9,7 @@ vi.mock('@devvit/web/server', () => ({
     hSet: vi.fn(),
     zAdd: vi.fn(),
     zIncrBy: vi.fn(),
+    zRem: vi.fn(),
     zCard: vi.fn(),
     zRange: vi.fn(),
     exists: vi.fn(),
@@ -55,12 +56,22 @@ vi.mock('./redis', () => ({
     commentUpdateLock: (postId: string) => `comment_update_lock:${postId}`,
     scores: () => 'scores',
     rateGuess: (userId: string) => `rate:guess:${userId}`,
+    guestProgressMigrationMarker: (
+      postId: string,
+      guestId: string,
+      userId: string
+    ) => `migration:guest_progress:${postId}:${guestId}:${userId}`,
   },
   isRateLimited: vi.fn().mockResolvedValue(false),
   acquireLock: vi.fn().mockResolvedValue(true),
 }));
 
-import { submitGuess, getGuesses, isAuthorFirstView } from './posts/drawing';
+import {
+  submitGuess,
+  getGuesses,
+  isAuthorFirstView,
+  migratePlayerProgressForPost,
+} from './posts/drawing';
 import { REDIS_KEYS } from '../core/redis';
 import { redis } from '@devvit/web/server';
 
@@ -85,7 +96,7 @@ describe('Drawing Service', () => {
 
       const result = await submitGuess({
         postId: 't3_test123',
-        userId: 't2_testuser',
+        playerId: 't2_testuser',
         guess: 'test',
       });
 
@@ -109,7 +120,7 @@ describe('Drawing Service', () => {
 
       const result = await submitGuess({
         postId: 't3_test123',
-        userId: 't2_testuser',
+        playerId: 't2_testuser',
         guess: 'wrong',
       });
 
@@ -165,6 +176,82 @@ describe('Drawing Service', () => {
         REDIS_KEYS.authorViews('t3_test123'),
         1
       );
+    });
+  });
+
+  describe('migratePlayerProgressForPost', () => {
+    it('copies attempts and solve status to logged-in user', async () => {
+      vi.mocked(redis.zScore)
+        .mockResolvedValueOnce(3) // from attempts
+        .mockResolvedValueOnce(undefined) // to attempts
+        .mockResolvedValueOnce(1715139959000) // from solved
+        .mockResolvedValueOnce(undefined) // to solved
+        .mockResolvedValueOnce(undefined) // from skipped
+        .mockResolvedValueOnce(undefined); // to skipped
+      vi.mocked(redis.set).mockResolvedValue('OK');
+
+      const migrated = await migratePlayerProgressForPost(
+        't3_test123',
+        'loid_test_123',
+        't2_testuser'
+      );
+
+      expect(migrated).toBe(true);
+      expect(redis.zAdd).toHaveBeenCalledWith(
+        REDIS_KEYS.drawingAttempts('t3_test123'),
+        {
+          member: 't2_testuser',
+          score: 3,
+        }
+      );
+      expect(redis.zAdd).toHaveBeenCalledWith(
+        REDIS_KEYS.drawingSolves('t3_test123'),
+        {
+          member: 't2_testuser',
+          score: 1715139959000,
+        }
+      );
+      expect(redis.zRem).not.toHaveBeenCalled();
+    });
+
+    it('returns false when no anonymous progress exists', async () => {
+      vi.mocked(redis.zScore)
+        .mockResolvedValueOnce(undefined)
+        .mockResolvedValueOnce(undefined)
+        .mockResolvedValueOnce(undefined)
+        .mockResolvedValueOnce(undefined)
+        .mockResolvedValueOnce(undefined)
+        .mockResolvedValueOnce(undefined);
+
+      const migrated = await migratePlayerProgressForPost(
+        't3_test123',
+        'loid_test_123',
+        't2_testuser'
+      );
+
+      expect(migrated).toBe(false);
+      expect(redis.zAdd).not.toHaveBeenCalled();
+      expect(redis.zRem).not.toHaveBeenCalled();
+    });
+
+    it('returns false if migration marker already exists', async () => {
+      vi.mocked(redis.zScore)
+        .mockResolvedValueOnce(1)
+        .mockResolvedValueOnce(undefined)
+        .mockResolvedValueOnce(undefined)
+        .mockResolvedValueOnce(undefined)
+        .mockResolvedValueOnce(undefined)
+        .mockResolvedValueOnce(undefined);
+      vi.mocked(redis.set).mockResolvedValue(undefined);
+
+      const migrated = await migratePlayerProgressForPost(
+        't3_test123',
+        'loid_test_123',
+        't2_testuser'
+      );
+
+      expect(migrated).toBe(false);
+      expect(redis.zAdd).not.toHaveBeenCalled();
     });
   });
 });

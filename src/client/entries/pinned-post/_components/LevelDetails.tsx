@@ -6,6 +6,7 @@ import { IconButton } from '@components/IconButton';
 import { trpc } from '@client/trpc/client';
 import { useTelemetry } from '@client/hooks/useTelemetry';
 import { getRewardsByLevel, getRewardLabel } from '@shared/rewards';
+import { context } from '@devvit/web/client';
 
 type LevelDetailsProps = {
   onClose: () => void;
@@ -13,6 +14,8 @@ type LevelDetailsProps = {
 
 export function LevelDetails({ onClose }: LevelDetailsProps) {
   const { track } = useTelemetry();
+  const contextLoid =
+    (context as typeof context & { loid?: string | null }).loid ?? undefined;
 
   // Track level details view on mount
   useEffect(() => {
@@ -20,9 +23,12 @@ export function LevelDetails({ onClose }: LevelDetailsProps) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   // Get user profile to show their actual progress
-  const { data: userProfile } = trpc.app.user.getProfile.useQuery(undefined, {
-    enabled: true,
-  });
+  const { data: userProfile } = trpc.app.user.getProfile.useQuery(
+    contextLoid ? { loid: contextLoid } : undefined,
+    {
+      enabled: true,
+    }
+  );
 
   const [currentLevelRank, setCurrentLevelRank] = useState<number>(1);
   const [displayProgress, setDisplayProgress] = useState<number>(0);

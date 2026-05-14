@@ -5,6 +5,7 @@ import { MyRewards } from './_components/MyRewards';
 import { LevelDetails } from './_components/LevelDetails';
 import { Menu } from './_components/Menu';
 import { trpc } from '@client/trpc/client';
+import { context } from '@devvit/web/client';
 
 type Page =
   | 'menu'
@@ -16,11 +17,15 @@ type Page =
 export function PinnedPost() {
   const [page, setPage] = useState<Page>('menu');
   const utils = trpc.useUtils();
+  const isLoggedIn = Boolean(context.userId);
+  const contextLoid =
+    (context as typeof context & { loid?: string | null }).loid ?? undefined;
 
   // Prefetch drawings optimistically for maximum performance
   trpc.app.user.getMyArtPage.useQuery(
     { limit: 20 },
     {
+      enabled: isLoggedIn,
       staleTime: 60000, // Cache for 1 minute
       refetchOnWindowFocus: false, // Don't refetch on window focus
     }
@@ -36,11 +41,15 @@ export function PinnedPost() {
   );
 
   // Warm profile and bonuses so downstream views benefit from cache
-  trpc.app.user.getProfile.useQuery(undefined, {
-    staleTime: 60000,
-    refetchOnWindowFocus: false,
-  });
+  trpc.app.user.getProfile.useQuery(
+    contextLoid ? { loid: contextLoid } : undefined,
+    {
+      staleTime: 60000,
+      refetchOnWindowFocus: false,
+    }
+  );
   trpc.app.rewards.getEffectiveBonuses.useQuery(undefined, {
+    enabled: isLoggedIn,
     staleTime: 10000,
     refetchOnWindowFocus: false,
   });
@@ -50,7 +59,7 @@ export function PinnedPost() {
   }
 
   function goToPage(page: Page) {
-    if (page === 'my-rewards') {
+    if (page === 'my-rewards' && isLoggedIn) {
       // Proactively load inventory/effects to avoid flashes in the modal
       void utils.app.rewards.getInventory.prefetch();
       void utils.app.rewards.getActiveEffects.prefetch();

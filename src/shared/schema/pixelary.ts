@@ -119,8 +119,15 @@ export type DrawingSubmitInput = z.infer<typeof DrawingSubmitInputSchema>;
 export const GuessSubmitInputSchema = z.object({
   postId: z.string(),
   guess: z.string(),
+  loid: z.string().optional(),
 });
 export type GuessSubmitInput = z.infer<typeof GuessSubmitInputSchema>;
+
+export const GuessSkipInputSchema = z.object({
+  postId: z.string(),
+  loid: z.string().optional(),
+});
+export type GuessSkipInput = z.infer<typeof GuessSkipInputSchema>;
 
 export const DictionaryAddInputSchema = z.object({
   word: z.string().min(1).max(50),
@@ -146,6 +153,12 @@ export const GuessStatsInputSchema = z.object({
   postId: z.string(),
 });
 export type GuessStatsInput = z.infer<typeof GuessStatsInputSchema>;
+
+export const GuessStatusInputSchema = z.object({
+  postId: z.string(),
+  loid: z.string().optional(),
+});
+export type GuessStatusInput = z.infer<typeof GuessStatusInputSchema>;
 
 export const PostDataInputSchema = z.object({
   postId: z.string(),

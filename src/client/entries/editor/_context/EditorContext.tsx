@@ -70,6 +70,8 @@ export function EditorContextProvider(props: ProviderProps) {
     tournamentPostId,
     tournamentWord,
   } = props;
+  const contextLoid =
+    (context as typeof context & { loid?: string | null }).loid ?? undefined;
 
   // flow
   const flow = useEditorFlow({
@@ -84,9 +86,12 @@ export function EditorContextProvider(props: ProviderProps) {
   });
 
   // queries
-  const { data: userProfile } = trpc.app.user.getProfile.useQuery(undefined, {
-    staleTime: 30000,
-  });
+  const { data: userProfile } = trpc.app.user.getProfile.useQuery(
+    contextLoid ? { loid: contextLoid } : undefined,
+    {
+      staleTime: 30000,
+    }
+  );
   const { data: effectiveBonuses } =
     trpc.app.rewards.getEffectiveBonuses.useQuery(undefined, {
       enabled: !!context.userId,

@@ -28,6 +28,7 @@ import {
   getUserDrawingsWithData,
   getUserDrawingStatus,
   isAuthorFirstView,
+  migratePlayerProgressForPost,
 } from '@server/services/posts/drawing';
 import {
   getLeaderboard,
@@ -37,13 +38,16 @@ import {
   getLevelProgressPercentage,
   getUnclaimedLevelUp,
   claimLevelUp,
+  mergeGuestScoreIntoUser,
 } from '@server/services/progression';
 import { isAdmin, isModerator } from '@server/core/redis';
 import {
   DrawingDataSchema,
   DrawingSubmitInputSchema,
+  GuessSkipInputSchema,
   GuessSubmitInputSchema,
   GuessStatsInputSchema,
+  GuessStatusInputSchema,
   PostDataInputSchema,
 } from '@shared/schema/pixelary';
 import type { DrawingData } from '@shared/schema/drawing';
@@ -71,6 +75,34 @@ const t = initTRPC.context<Context>().create({
     };
   },
 });
+
+function getPlayerId(ctx: Context, loid?: string): string | null {
+  if (ctx.userId) {
+    return ctx.userId;
+  }
+  if (ctx.loid) {
+    if (loid && loid !== ctx.loid) {
+      console.warn('[LOID] Context/input mismatch; using context.loid', {
+        contextLoid: ctx.loid,
+        inputLoid: loid,
+      });
+    } else {
+      console.log('[LOID] Using context.loid for anonymous player', {
+        contextLoid: ctx.loid,
+        hasInputLoid: Boolean(loid),
+      });
+    }
+    return ctx.loid;
+  }
+  if (loid) {
+    console.warn('[LOID] context.loid missing; falling back to input loid', {
+      inputLoid: loid,
+    });
+    return loid;
+  }
+  console.warn('[LOID] No loid available for anonymous player');
+  return null;
+}
 
 export const appRouter = t.router({
   system: t.router({
@@ -454,7 +486,8 @@ export const appRouter = t.router({
       submit: t.procedure
         .input(GuessSubmitInputSchema)
         .mutation(async ({ ctx, input }) => {
-          if (!ctx.userId)
+          const playerId = getPlayerId(ctx, input.loid);
+          if (!playerId)
             throw new TRPCError({
               code: 'UNAUTHORIZED',
               message: 'Must be logged in',
@@ -464,7 +497,7 @@ export const appRouter = t.router({
 
           const result = await submitGuess({
             postId,
-            userId: ctx.userId,
+            playerId,
             guess: input.guess,
           });
 
@@ -480,17 +513,29 @@ export const appRouter = t.router({
           return result;
         }),
 
+      getStatus: t.procedure
+        .input(GuessStatusInputSchema)
+        .query(async ({ ctx, input }) => {
+          const playerId = getPlayerId(ctx, input.loid);
+          if (!playerId) {
+            return { solved: false, skipped: false, guessCount: 0 };
+          }
+          assertT3(input.postId);
+          return await getUserDrawingStatus(input.postId, playerId);
+        }),
+
       skip: t.procedure
-        .input(PostDataInputSchema)
+        .input(GuessSkipInputSchema)
         .mutation(async ({ ctx, input }) => {
-          if (!ctx.userId)
+          const playerId = getPlayerId(ctx, input.loid);
+          if (!playerId)
             throw new TRPCError({
               code: 'UNAUTHORIZED',
               message: 'Must be logged in to skip post',
             });
           assertT3(input.postId);
           const postId = input.postId;
-          await skipDrawing(postId, ctx.userId);
+          await skipDrawing(postId, playerId);
           return { success: true };
         }),
     }),
@@ -520,9 +565,29 @@ export const appRouter = t.router({
           }),
       }),
       getProfile: t.procedure
-        .input(z.object({ postId: z.string() }).optional())
+        .input(
+          z
+            .object({
+              postId: z.string().optional(),
+              loid: z.string().optional(),
+            })
+            .optional()
+        )
         .query(async ({ ctx, input }) => {
           if (!ctx.userId) return null;
+          const guestId = ctx.loid ?? input?.loid;
+
+          if (guestId) {
+            try {
+              await mergeGuestScoreIntoUser(guestId, ctx.userId);
+            } catch (error) {
+              console.warn('Failed to merge guest score into user account', {
+                userId: ctx.userId,
+                loid: guestId,
+                error: error instanceof Error ? error.message : String(error),
+              });
+            }
+          }
 
           const score = await getScore(ctx.userId);
           const [rank, level] = await Promise.all([
@@ -535,6 +600,13 @@ export const appRouter = t.router({
           if (input?.postId) {
             try {
               assertT3(input.postId);
+              if (guestId) {
+                await migratePlayerProgressForPost(
+                  input.postId,
+                  guestId,
+                  ctx.userId
+                );
+              }
               drawingStatus = await getUserDrawingStatus(
                 input.postId,
                 ctx.userId

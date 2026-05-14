@@ -26,6 +26,8 @@ type MenuProps = {
 export function Menu(props: MenuProps) {
   const { onMyDrawings, onLeaderboard, onHowToPlay, onLevelClick } = props;
   const isLoggedIn = Boolean(context.userId);
+  const contextLoid =
+    (context as typeof context & { loid?: string | null }).loid ?? null;
 
   // Telemetry
   const { track } = useTelemetry();
@@ -36,9 +38,12 @@ export function Menu(props: MenuProps) {
   }, []);
 
   // Grab data
-  const { data: userProfile } = trpc.app.user.getProfile.useQuery(undefined, {
-    enabled: true,
-  });
+  const { data: userProfile } = trpc.app.user.getProfile.useQuery(
+    contextLoid ? { loid: contextLoid } : undefined,
+    {
+      enabled: true,
+    }
+  );
 
   // Check if user is admin
   const { data: isUserAdmin } = trpc.app.user.isAdmin.useQuery(undefined, {
@@ -47,11 +52,13 @@ export function Menu(props: MenuProps) {
 
   // Warm editor-related caches as soon as the menu is visible
   useEffect(() => {
-    void utils.app.user.getProfile.prefetch();
+    void utils.app.user.getProfile.prefetch(
+      contextLoid ? { loid: contextLoid } : undefined
+    );
     void utils.app.rewards.getEffectiveBonuses.prefetch();
     void utils.app.user.colors.getRecent.prefetch();
     void utils.app.dictionary.getCandidates.prefetch();
-  }, [utils]);
+  }, [contextLoid, utils]);
 
   // Get progress percentage from user profile
   const progressPercentage = userProfile?.levelProgressPercentage ?? 0;

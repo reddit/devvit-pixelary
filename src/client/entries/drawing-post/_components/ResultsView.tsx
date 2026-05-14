@@ -13,6 +13,7 @@ import type { PostGuesses } from '@shared/schema/pixelary';
 import { useTelemetry } from '@client/hooks/useTelemetry';
 import {
   requestExpandedMode,
+  showLoginPrompt,
   addWebViewModeListener,
   removeWebViewModeListener,
   navigateTo,
@@ -41,6 +42,7 @@ export function ResultsView({
   postId,
 }: ResultsViewProps) {
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const isLoggedIn = Boolean(context.userId);
   const { success } = useToastHelpers();
   const { track } = useTelemetry();
   const utils = trpc.useUtils();
@@ -198,26 +200,34 @@ export function ResultsView({
         })}
       </div>
       {/* Secondary CTA */}
-      <CyclingMessage
-        messages={[
-          'See comments for more',
-          `Draw for ${AUTHOR_REWARD_SUBMIT} points`,
-          'Join r/Pixelary today',
-        ]}
-      />
+      {isLoggedIn ? (
+        <CyclingMessage
+          messages={[
+            'See comments for more',
+            `Draw for ${AUTHOR_REWARD_SUBMIT} points`,
+            'Join r/Pixelary today',
+          ]}
+        />
+      ) : (
+        <Text>log in to save your rewards</Text>
+      )}
       {/* Primary CTA */}
       <Button
-        onClick={async (e) => {
+        onClick={(e) => {
+          if (!isLoggedIn) {
+            showLoginPrompt();
+            return;
+          }
           try {
-            await requestExpandedMode(e, 'editor');
+            requestExpandedMode(e, 'editor');
           } catch (error) {
             console.error('Could not enter expanded mode:', error);
           }
         }}
         size="large"
-        telemetryEvent="click_draw_something"
+        telemetryEvent={isLoggedIn ? 'click_draw_something' : 'click_log_in'}
       >
-        DRAW SOMETHING
+        {isLoggedIn ? 'DRAW SOMETHING' : 'LOG IN'}
       </Button>
       {/* Lightbox */}
       <Lightbox

@@ -41,9 +41,13 @@ export function MyRewards({ onClose }: MyRewardsProps) {
     void track('view_my_rewards');
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+  const contextLoid =
+    (context as typeof context & { loid?: string | null }).loid ?? undefined;
 
   // Get user profile data
-  const { data: userProfile } = trpc.app.user.getProfile.useQuery();
+  const { data: userProfile } = trpc.app.user.getProfile.useQuery(
+    contextLoid ? { loid: contextLoid } : undefined
+  );
 
   const userLevel = userProfile?.level ?? 1;
   const allRewards = getAllRewards();
