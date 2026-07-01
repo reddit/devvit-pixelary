@@ -30,13 +30,14 @@
     "upload": "npm run build && devvit upload"
   },
   "dependencies": {
-    "@devvit/public-api": "0.12.4",
-    "@devvit/web": "0.12.4",
+    "@devvit/public-api": "0.12.23-next-2026-05-04-20-45-11-9c6d33a22.0",
+    "@devvit/start": "0.12.23-next-2026-05-04-20-45-11-9c6d33a22.0",
+    "@devvit/web": "0.12.23-next-2026-05-04-20-45-11-9c6d33a22.0",
     "@tanstack/react-query": "^5.90.10",
     "@trpc/client": "^11.7.1",
     "@trpc/react-query": "^11.7.1",
     "@trpc/server": "^11.7.1",
-    "devvit": "0.12.4",
+    "devvit": "0.12.23-next-2026-05-04-20-45-11-9c6d33a22.0",
     "express": "5.1.0",
     "preact": "^10.27.2",
     "zod": "^4.1.12"
